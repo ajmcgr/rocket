@@ -16,8 +16,9 @@ import {
   Eye, EyeOff, Lock, Unlock, ArrowUp, ArrowDown, Download, Save,
   Minus, StickyNote, Table as TableIcon, Triangle as TriangleIcon, Star as StarIcon,
   Undo2, Redo2, Copy, Keyboard, LayoutTemplate, Sparkles, Check, Loader2, Upload,
-  History, FilePlus, Pencil, ChevronDown, Settings2, Grid3X3, Printer, FolderPlus,
-  Maximize2, Minimize2, Paintbrush, ClipboardPaste,
+ History, FilePlus, Pencil, ChevronDown, Settings2, Grid3X3, Printer, FolderPlus,
+ Maximize2, Minimize2, Paintbrush, ClipboardPaste,
+ Scissors,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -91,6 +92,175 @@ function normalizeCanvasElements(value: unknown): El[] {
     locked: Boolean((element as El).locked),
   })) as El[];
 }
+
+const IMAGE_SPLIT_MAX_SIDE = 1024;
+const IMAGE_SPLIT_MAX_PIECES = 40;
+
+type ImagePiece = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+const loadEditorImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Rocket couldn't read that image."));
+    image.src = src;
+  });
+
+const colorDistance = (data: Uint8ClampedArray, offset: number, color: [number, number, number]) =>
+  Math.max(
+    Math.abs(data[offset] - color[0]),
+    Math.abs(data[offset + 1] - color[1]),
+    Math.abs(data[offset + 2] - color[2]),
+  );
+
+const splitImageIntoPieces = async (element: ImgEl): Promise<ImgEl[]> => {
+  const image = await loadEditorImage(element.src);
+  const naturalWidth = image.naturalWidth || image.width;
+  const naturalHeight = image.naturalHeight || image.height;
+
+  if (!naturalWidth || !naturalHeight) {
+    throw new Error("Rocket couldn't read this image.");
+  }
+
+  const scale = Math.min(1, IMAGE_SPLIT_MAX_SIDE / Math.max(naturalWidth, naturalHeight));
+  const width = Math.max(1, Math.round(naturalWidth * scale));
+  const height = Math.max(1, Math.round(naturalHeight * scale));
+  const sourceCanvas = document.createElement("canvas");
+  sourceCanvas.width = width;
+  sourceCanvas.height = height;
+  const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+
+  if (!sourceContext) {
+    throw new Error("Your browser couldn't prepare this image.");
+  }
+
+  sourceContext.drawImage(image, 0, 0, width, height);
+
+  let imageData: ImageData;
+  try {
+    imageData = sourceContext.getImageData(0, 0, width, height);
+  } catch {
+    throw new Error("This image cannot be separated because its pixels are unavailable.");
+  }
+
+  const data = imageData.data;
+  const background: [number, number, number] = [data[0], data[1], data[2]];
+  const cornerOffsets = [0, (width - 1) * 4, (height - 1) * width * 4, (width * height - 1) * 4];
+  const hasSolidBackground = cornerOffsets.every(
+    (offset) => data[offset + 3] > 240 && colorDistance(data, offset, background) < 18,
+  );
+  const totalPixels = width * height;
+  const isForeground = (index: number) => {
+    const offset = index * 4;
+    if (data[offset + 3] < 24) return false;
+    return !hasSolidBackground || colorDistance(data, offset, background) > 36;
+  };
+  const visited = new Uint8Array(totalPixels);
+  const queue = new Int32Array(totalPixels);
+  const minimumPiecePixels = Math.max(16, Math.floor(totalPixels * 0.00008));
+  const pieces: ImagePiece[] = [];
+
+  for (let start = 0; start < totalPixels; start += 1) {
+    if (visited[start] || !isForeground(start)) continue;
+
+    visited[start] = 1;
+    queue[0] = start;
+    let read = 0;
+    let write = 1;
+    let minX = start % width;
+    let maxX = minX;
+    let minY = Math.floor(start / width);
+    let maxY = minY;
+
+    while (read < write) {
+      const current = queue[read++];
+      const currentX = current % width;
+      const currentY = Math.floor(current / width);
+      minX = Math.min(minX, currentX);
+      maxX = Math.max(maxX, currentX);
+      minY = Math.min(minY, currentY);
+      maxY = Math.max(maxY, currentY);
+
+      for (let verticalOffset = -1; verticalOffset <= 1; verticalOffset += 1) {
+        for (let horizontalOffset = -1; horizontalOffset <= 1; horizontalOffset += 1) {
+          if (!horizontalOffset && !verticalOffset) continue;
+          const nextX = currentX + horizontalOffset;
+          const nextY = currentY + verticalOffset;
+          if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height) continue;
+
+          const next = nextY * width + nextX;
+          if (visited[next] || !isForeground(next)) continue;
+          visited[next] = 1;
+          queue[write++] = next;
+        }
+      }
+    }
+
+    if (write >= minimumPiecePixels) {
+      pieces.push({ minX, minY, maxX, maxY });
+    }
+  }
+
+  if (pieces.length < 2) {
+    throw new Error("No separate pieces were found. Try an image with a transparent or solid background.");
+  }
+
+  if (pieces.length > IMAGE_SPLIT_MAX_PIECES) {
+    throw new Error("This image has too many small pieces to separate safely.");
+  }
+
+  const rotation = ((element.rotation || 0) * Math.PI) / 180;
+
+  return pieces.map((piece) => {
+    const padding = 2;
+    const cropX = Math.max(0, piece.minX - padding);
+    const cropY = Math.max(0, piece.minY - padding);
+    const cropWidth = Math.min(width - cropX, piece.maxX - piece.minX + 1 + padding * 2);
+    const cropHeight = Math.min(height - cropY, piece.maxY - piece.minY + 1 + padding * 2);
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = cropWidth;
+    cropCanvas.height = cropHeight;
+    const cropContext = cropCanvas.getContext("2d", { willReadFrequently: true });
+
+    if (!cropContext) {
+      throw new Error("Your browser couldn't prepare this image.");
+    }
+
+    cropContext.drawImage(sourceCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+    if (hasSolidBackground) {
+      const cropData = cropContext.getImageData(0, 0, cropWidth, cropHeight);
+      for (let offset = 0; offset < cropData.data.length; offset += 4) {
+        if (colorDistance(cropData.data, offset, background) <= 42) {
+          cropData.data[offset + 3] = 0;
+        }
+      }
+      cropContext.putImageData(cropData, 0, 0);
+    }
+
+    const localX = (cropX / width) * element.w;
+    const localY = (cropY / height) * element.h;
+
+    return {
+      id: uid(),
+      kind: "image",
+      x: element.x + localX * Math.cos(rotation) - localY * Math.sin(rotation),
+      y: element.y + localX * Math.sin(rotation) + localY * Math.cos(rotation),
+      w: (cropWidth / width) * element.w,
+      h: (cropHeight / height) * element.h,
+      rotation: element.rotation,
+      visible: element.visible,
+      locked: false,
+      src: cropCanvas.toDataURL("image/png"),
+    } as ImgEl;
+  });
+};
 
 function applyTextTransform(text: string, transform?: LogotypeState["transform"]): string {
   if (transform === "uppercase") return text.toUpperCase();
@@ -478,6 +648,7 @@ const Editor = () => {
     return Array.from(set);
   }, [selectedId, extraSelectedIds]);
   const [canvasMenu, setCanvasMenu] = useState<{ x: number; y: number } | null>(null);
+  const [isSeparating, setIsSeparating] = useState(false);
   const [autosaveTick, setAutosaveTick] = useState(0);
   const skipAutosaveRef = useRef(false);
   const previewBackfillRef = useRef<string | null>(null);
@@ -1041,6 +1212,41 @@ const Editor = () => {
     const j = i + dir; if (j < 0 || j >= prev.length) return prev;
     const copy = [...prev]; [copy[i], copy[j]] = [copy[j], copy[i]]; return copy;
   });
+
+  const separateSelectedImage = async () => {
+    if (!selected || selected.kind !== "image") return;
+
+    if (selected.locked) {
+      toast({ title: "Unlock the image first" });
+      return;
+    }
+
+    setIsSeparating(true);
+    try {
+      const pieces = await splitImageIntoPieces(selected);
+      setEls((current) => {
+        const index = current.findIndex((element) => element.id === selected.id);
+        if (index === -1) return current;
+        return [...current.slice(0, index), ...pieces, ...current.slice(index + 1)];
+      });
+      selectOnly(pieces[0].id);
+      toast({
+        title: `Separated into ${pieces.length} pieces`,
+        description: "Each piece is now an independent layer.",
+      });
+    } catch (error) {
+      toast({
+        title: "Couldn't separate this image",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Try an image with a transparent or solid background.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSeparating(false);
+    }
+  };
 
   /* add functions */
   const add = (el: El) => { setEls((p) => [...p, el]); setSelectedId(el.id); };
@@ -1788,7 +1994,7 @@ const Editor = () => {
       disabled?: boolean;
       danger?: boolean;
       onClick: () => void;
-      shortcut: string;
+      shortcut?: string;
     }) => (
       <button
         type="button"
@@ -1806,7 +2012,9 @@ const Editor = () => {
         } disabled:pointer-events-none disabled:text-neutral-400`}
       >
         <span className="flex min-w-0 flex-1 items-center gap-3">{children}</span>
-        <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-500">{shortcut}</span>
+        {shortcut && (
+          <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-500">{shortcut}</span>
+        )}
       </button>
     );
 
@@ -1833,6 +2041,13 @@ const Editor = () => {
         <MenuButton onClick={() => selected && duplicate(selected.id)} disabled={!selected} shortcut="⌘D">
           <Copy className="h-4 w-4" />
           Duplicate
+        </MenuButton>
+        <MenuButton
+          onClick={() => void separateSelectedImage()}
+          disabled={!selected || selected.kind !== "image" || selected.locked || isSeparating}
+        >
+          <Scissors className="h-4 w-4" />
+          {isSeparating ? "Separating pieces…" : "Separate pieces"}
         </MenuButton>
         <MenuButton onClick={() => selected && remove(selected.id)} disabled={!selected} danger shortcut="DELETE">
           <Trash2 className="h-4 w-4" />
@@ -2165,7 +2380,7 @@ const Editor = () => {
           )}
           {selected && (
             <div className="space-y-3 rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Selected</p>
                   <p className="text-sm font-semibold capitalize text-neutral-900">{selected.kind}</p>
@@ -2176,8 +2391,21 @@ const Editor = () => {
                   <IconAction onClick={() => duplicate(selected.id)} label="Duplicate"><Copy className="h-3.5 w-3.5" /></IconAction>
                   <IconAction onClick={() => remove(selected.id)} label="Delete"><Trash2 className="h-3.5 w-3.5" /></IconAction>
                 </div>
-              </div>
-              {selected.kind !== "text" && selected.kind !== "image" && (
+          </div>
+          {selected.kind === "image" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+              disabled={selected.locked || isSeparating}
+              onClick={() => void separateSelectedImage()}
+            >
+              <Scissors className="h-3.5 w-3.5" />
+              {isSeparating ? "Separating pieces…" : "Separate pieces"}
+            </Button>
+          )}
+          {selected.kind !== "text" && selected.kind !== "image" && (
                 <Inspector el={selected} fonts={fontFamilies} onChange={(patch) => update(selected.id, patch as any)} />
               )}
               <div className="border-t border-neutral-200 pt-3">
