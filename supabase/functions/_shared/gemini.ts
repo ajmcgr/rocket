@@ -1,6 +1,10 @@
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
-const GEMINI_IMAGE_MODEL = Deno.env.get("GEMINI_IMAGE_MODEL") || "gemini-2.5-flash-image-preview";
+const configuredImageModel = Deno.env.get("GEMINI_IMAGE_MODEL")?.trim();
+const GEMINI_IMAGE_MODEL =
+  !configuredImageModel || configuredImageModel === "gemini-2.5-flash-image-preview"
+    ? "gemini-2.5-flash-image"
+    : configuredImageModel;
 
 const RETRYABLE_STATUS = [429, 500, 502, 503, 504];
 const RETRY_DELAYS_MS = [800, 2000, 5000];
