@@ -1,6 +1,7 @@
 // redeploy: 2026-07-01
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { cors, geminiText, geminiImage, GeminiUnavailableError, hasGeminiKey } from "../_shared/gemini.ts";
+import { cors, geminiText, GeminiUnavailableError, hasGeminiKey } from "../_shared/gemini.ts";
+import { generateImage, ImageProviderUnavailableError } from "../_shared/image-generation.ts";
 import { GENERATORS, ASSET_TITLES, CLASSIFIER_SYSTEM, REFUSAL_TEXT, type AssetType, type BrandContext } from "../_shared/generators.ts";
 import { buildLogoLockupEditorState, buildLogotypeVariants, pickLogotypeText } from "../_shared/logotype.ts";
 
@@ -390,7 +391,7 @@ Deno.serve(async (req) => {
             imgPrompt += "\n\nReference images are attached. Evolve their existing visual language and do not invent a separate identity.";
           }
         }
-        const png = await geminiImage(imgPrompt, logoRefs);
+        const png = await generateImage(imgPrompt, logoRefs);
         const path = `${user.id}/${Date.now()}-${i}.png`;
         const { error: upErr } = await admin.storage.from("rocket-images").upload(path, png, { contentType: "image/png", upsert: false });
         if (upErr) throw new Error(`storage: ${upErr.message}`);
@@ -408,14 +409,14 @@ Deno.serve(async (req) => {
         return asset?.id ? { id: asset.id, image_url: pub.publicUrl, variant: i + 1 } : undefined;
       };
       // Per-variant failures must not abort the whole batch. Image requests are
-      // bounded inside geminiImage, so repeating them here risks exceeding the
+      // bounded inside generateImage, so repeating them here risks exceeding the
       // Edge Function timeout and discarding otherwise successful results.
-      let lastUnavailable: GeminiUnavailableError | null = null;
+      let lastUnavailable: ImageProviderUnavailableError | null = null;
       const safeVariant = async (i: number) => {
         try {
           return await createImageVariant(i);
         } catch (error) {
-          if (error instanceof GeminiUnavailableError) lastUnavailable = error;
+          if (error instanceof ImageProviderUnavailableError) lastUnavailable = error;
           console.error(`variant ${i} failed: ${(error as Error).message}`);
           return undefined;
         }
@@ -504,7 +505,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ asset_ids: ids, asset_type: cls.asset_type, count: ids.length, credits_charged: actualCost }), { headers: { ...ch, "Content-Type": "application/json" } });
   } catch (e) {
     console.error(e);
-    if (e instanceof GeminiUnavailableError) {
+    if (e instanceof GeminiUnavailableError || e instanceof ImageProviderUnavailableError) {
       return new Response(JSON.stringify({ error: "ai_provider_unavailable", message: "Rocket is busy right now. Please try again in a moment.", details: e.bodyText.slice(0, 300) }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
     }
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
