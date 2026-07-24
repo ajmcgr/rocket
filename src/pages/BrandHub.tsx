@@ -102,29 +102,23 @@ export default function BrandHub() {
         return result.data || [];
       };
       const loadProjects = async () => {
-        const selects = ["id,name,meta,cover_url,created_at", "id,name,meta,created_at", "id,name,cover_url,created_at", "id,name,created_at"];
-        for (const select of selects) {
-          let q = supabase.from("projects").select(select).eq("user_id", user.id);
-          if (workspaceId) q = q.eq("workspace_id", workspaceId);
-          let result = await q.is("deleted_at", null).order("created_at", { ascending: false }).limit(100);
-          if (!result.error) return result.data || [];
-          if (isMissingColumnError(result.error, "deleted_at")) {
-            let q2 = supabase.from("projects").select(select).eq("user_id", user.id);
-            if (workspaceId) q2 = q2.eq("workspace_id", workspaceId);
-            result = await q2.order("created_at", { ascending: false }).limit(100);
-            if (!result.error) return result.data || [];
-          }
-          if (workspaceId && isMissingColumnError(result.error, "workspace_id")) {
-            result = await supabase
-              .from("projects")
-              .select(select)
-              .eq("user_id", user.id)
-              .order("created_at", { ascending: false })
-              .limit(100);
-            if (!result.error) return result.data || [];
-          }
+        const result = await supabase
+          .from("projects")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (result.error) {
+          console.error("Failed to load brands", result.error);
+          return [];
         }
-        return [];
+
+        return (result.data || []).filter((project: any) => {
+          if (project?.deleted_at) return false;
+          if (!workspaceId || !Object.prototype.hasOwnProperty.call(project, "workspace_id")) return true;
+          return !project.workspace_id || project.workspace_id === workspaceId;
+        });
       };
       const [a, p] = await Promise.all([loadAssets(), loadProjects()]);
       if (cancel) return;

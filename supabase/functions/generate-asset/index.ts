@@ -407,21 +407,18 @@ Deno.serve(async (req) => {
         }).select().single();
         return asset?.id ? { id: asset.id, image_url: pub.publicUrl, variant: i + 1 } : undefined;
       };
-      // Per-variant failures must NOT abort the whole batch — users asked for many
-      // variants and one Gemini hiccup shouldn't throw away the rest. Retry each
-      // failed slot once without extending the request past the Edge time limit.
+      // Per-variant failures must not abort the whole batch. Image requests are
+      // bounded inside geminiImage, so repeating them here risks exceeding the
+      // Edge Function timeout and discarding otherwise successful results.
       let lastUnavailable: GeminiUnavailableError | null = null;
       const safeVariant = async (i: number) => {
-        const MAX_ATTEMPTS = 2;
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-          try { return await createImageVariant(i); }
-          catch (e) {
-            if (e instanceof GeminiUnavailableError) lastUnavailable = e;
-            console.error(`variant ${i} attempt ${attempt} failed: ${(e as Error).message}`);
-            if (attempt < MAX_ATTEMPTS) await new Promise(r => setTimeout(r, 800 * attempt));
-          }
+        try {
+          return await createImageVariant(i);
+        } catch (error) {
+          if (error instanceof GeminiUnavailableError) lastUnavailable = error;
+          console.error(`variant ${i} failed: ${(error as Error).message}`);
+          return undefined;
         }
-        return undefined;
       };
       // Lower concurrency (2) — Gemini image rate-limits aggressively above this,
       // which is why users were getting ~6/10 instead of the full count.

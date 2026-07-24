@@ -156,10 +156,12 @@ export default function Brand() {
     (async () => {
       setLoading(true);
       const loadProject = async () => {
-        let result = await supabase.from("projects").select("id,name,brand_color,user_id").eq("id", projectId).maybeSingle();
-        if (result.error && isMissingColumnError(result.error, "brand_color")) {
-          result = await supabase.from("projects").select("id,name,user_id").eq("id", projectId).maybeSingle();
+        const result = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
+        if (result.error) {
+          console.error("Failed to load brand", result.error);
+          return null;
         }
+        if (user?.id && result.data?.user_id && result.data.user_id !== user.id) return null;
         return result.data || null;
       };
       const loadAssets = async () => {

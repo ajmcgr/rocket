@@ -4,6 +4,12 @@ const GEMINI_IMAGE_MODEL = Deno.env.get("GEMINI_IMAGE_MODEL") || "gemini-2.5-fla
 
 const RETRYABLE_STATUS = [429, 500, 502, 503, 504];
 const RETRY_DELAYS_MS = [800, 2000, 5000];
+const GEMINI_IMAGE_TIMEOUT_MS = 40_000;
+
+type GeminiFetchOptions = {
+  timeoutMs?: number;
+  retryDelaysMs?: readonly number[];
+};
 
 export function hasGeminiKey(): boolean {
   return !!GEMINI_API_KEY;
@@ -29,31 +35,49 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function gFetch(url: string, init: RequestInit): Promise<Response> {
+async function gFetch(
+  url: string,
+  init: RequestInit,
+  { timeoutMs, retryDelaysMs = RETRY_DELAYS_MS }: GeminiFetchOptions = {},
+): Promise<Response> {
   let lastStatus = 0;
   let lastBody = "";
 
-  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+  for (let attempt = 0; attempt <= retryDelaysMs.length; attempt++) {
+    const controller = timeoutMs ? new AbortController() : undefined;
+    const timeout = timeoutMs
+      ? setTimeout(() => controller?.abort(), timeoutMs)
+      : undefined;
+
     try {
-      const response = await fetch(url, init);
+      const response = await fetch(url, {
+        ...init,
+        signal: controller?.signal ?? init.signal,
+      });
       if (response.ok) return response;
 
       lastStatus = response.status;
       lastBody = await response.text();
 
-      if (!isRetryableStatus(response.status) || attempt === RETRY_DELAYS_MS.length) {
+      if (!isRetryableStatus(response.status) || attempt === retryDelaysMs.length) {
         break;
       }
     } catch (error) {
-      lastStatus = 0;
-      lastBody = error instanceof Error ? error.message : String(error);
+      lastStatus = controller?.signal.aborted ? 504 : 0;
+      lastBody = controller?.signal.aborted
+        ? `Gemini request timed out after ${timeoutMs}ms`
+        : error instanceof Error
+          ? error.message
+          : String(error);
 
-      if (attempt === RETRY_DELAYS_MS.length) {
+      if (attempt === retryDelaysMs.length) {
         throw new GeminiUnavailableError(lastStatus, lastBody);
       }
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
 
-    await sleep(RETRY_DELAYS_MS[attempt]);
+    await sleep(retryDelaysMs[attempt]);
   }
 
   if (isRetryableStatus(lastStatus)) {
@@ -227,6 +251,7 @@ export async function geminiImage(
         generationConfig: { responseModalities: ["IMAGE"] },
       }),
     },
+    { timeoutMs: GEMINI_IMAGE_TIMEOUT_MS, retryDelaysMs: [] },
   );
 
   const data = await response.json();
