@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { cors, geminiText, geminiImage, GeminiUnavailableError, hasGeminiKey } from "../_shared/gemini.ts";
+import { cors, geminiText, GeminiUnavailableError, hasGeminiKey } from "../_shared/gemini.ts";
+import { generateImage, ImageProviderUnavailableError } from "../_shared/image-generation.ts";
 import { GENERATORS, ASSET_TITLES, type AssetType } from "../_shared/generators.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -41,7 +42,7 @@ Deno.serve(async (req) => {
     try {
       if (spec.kind === "image") {
         const imgPrompt = await geminiText({ system: spec.system, user: spec.build(ctx, userPrompt), temperature: 0.9 });
-        const png = await geminiImage(imgPrompt);
+        const png = await generateImage(imgPrompt);
         const path = `${user.id}/${Date.now()}-regen.png`;
         await admin.storage.from("rocket-images").upload(path, png, { contentType: "image/png", upsert: false });
         const { data: pub } = admin.storage.from("rocket-images").getPublicUrl(path);
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ content, credits_charged: cost }), { headers: { ...ch, "Content-Type": "application/json" } });
       }
     } catch (e) {
-      if (e instanceof GeminiUnavailableError) {
+      if (e instanceof GeminiUnavailableError || e instanceof ImageProviderUnavailableError) {
         return new Response(JSON.stringify({ error: "ai_provider_unavailable", message: "Rocket is busy right now. Please try again in a moment." }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
       }
       throw e;
