@@ -162,18 +162,40 @@ const Templates = () => {
 
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase.rpc("get_public_designs", { _limit: 240 });
+      const [{ data, error }, { data: auth }] = await Promise.all([
+        supabase.rpc("get_public_designs", { _limit: 240 }),
+        supabase.auth.getUser(),
+      ]);
+      // The RPC filters by share_token, but "Make public" in /saved sets
+      // meta.public and only mints share_token on newer rows. Include the
+      // current user's meta.public assets so they always show up here too.
+      let ownPublic: any[] = [];
+      if (auth?.user) {
+        const { data: ownRows } = await supabase
+          .from("assets")
+          .select("id,user_id,title,asset_type,content,image_url,thumbnail_url,prompt,editor_state,meta,created_at,updated_at,share_token")
+          .eq("user_id", auth.user.id)
+          .is("deleted_at", null)
+          .eq("meta->>public", "true")
+          .order("created_at", { ascending: false })
+          .limit(240);
+        ownPublic = ownRows || [];
+      }
 
       if (!cancelled) {
         if (error) {
           console.error(error);
-          setDesigns([...SEED_TEMPLATES]);
+          setDesigns([...SEED_TEMPLATES, ...ownPublic]);
         } else {
           // Prefer the curated seed catalog over any stale public rows that were
           // generated from older template logic; those rows can render as blank
           // blocks and duplicate the same names.
           const seedTitles = new Set(SEED_TEMPLATES.map((template: any) => String(template.title || "").toLowerCase()));
-          const publicDesigns = (data || []).filter((design: any) => {
+          const merged = [...(data || []), ...ownPublic];
+          const seen = new Set<string>();
+          const publicDesigns = merged.filter((design: any) => {
+            if (design?.id && seen.has(design.id)) return false;
+            if (design?.id) seen.add(design.id);
             const title = String(design?.title || "").toLowerCase();
             const isOldRocketSeed = seedTitles.has(title) || design?.meta?.seed === true;
             return !isOldRocketSeed;
