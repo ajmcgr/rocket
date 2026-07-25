@@ -1038,15 +1038,29 @@ const Generate = () => {
                       className="group relative overflow-hidden rounded-3xl bg-neutral-50 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ring-1 ring-neutral-100 transition hover:shadow-[0_18px_50px_-24px_rgba(15,23,42,0.28)]"
                     >
                       <Link to={assetHref(a)} target="_blank" rel="noopener noreferrer" className="block">
-                        {a.image_url ? (
-                          <div className="flex aspect-[4/3] w-full items-center justify-center">
-                            <img src={a.thumbnail_url || a.image_url} alt={a.title} className="h-full w-full object-contain p-10" />
-                          </div>
-                        ) : (
-                          <div className="aspect-[4/3] w-full">
-                            <AssetCardThumb asset={a} />
-                          </div>
-                        )}
+                        {(() => {
+                          // Prefer live editor_state (logotype / canvas) over image_url so
+                          // wordmarks aren't cropped by a stale/undersized raster preview.
+                          const isLogotype = a?.editor_state?.kind === "logotype";
+                          const isCanvas = isCanvasAsset(a);
+                          const preferState = isLogotype || isCanvas;
+                          if (!preferState && a.image_url) {
+                            return (
+                              <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden p-6">
+                                <img
+                                  src={a.thumbnail_url || a.image_url}
+                                  alt={a.title}
+                                  className="max-h-full max-w-full object-contain"
+                                />
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="aspect-[4/3] w-full overflow-hidden">
+                              <AssetCardThumb asset={a} />
+                            </div>
+                          );
+                        })()}
                       </Link>
                       {/* Hover action bar — Brandmark style */}
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center pb-4 opacity-0 transition group-hover:opacity-100">
