@@ -19,6 +19,20 @@ export type Chat = {
   updated_at: string;
 };
 
+type ChatRow = Pick<Chat, "id" | "title" | "updated_at"> & {
+  pinned?: boolean | null;
+};
+
+let chatSchemaMode: "unknown" | "current" | "legacy" = "unknown";
+
+const normalizeChats = (rows: ChatRow[] | null | undefined): Chat[] =>
+  (rows ?? []).map((chat) => ({
+    id: chat.id,
+    title: chat.title,
+    pinned: Boolean(chat.pinned),
+    updated_at: chat.updated_at,
+  }));
+
 const ChatsSidebar = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -32,19 +46,67 @@ const ChatsSidebar = () => {
   const [tick, setTick] = useState(0);
 
   const load = async () => {
-    if (!user) return;
-    const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
-    const ws = await ensureActiveWorkspaceId();
-    let q = supabase
-      .from("chats")
-      .select("id,title,pinned,updated_at")
-      .eq("user_id", user.id);
-    if (ws) q = q.eq("workspace_id", ws);
-    const { data } = await q
-      .order("pinned", { ascending: false })
-      .order("updated_at", { ascending: false })
-      .limit(200);
-    setChats(data || []);
+    if (!user) {
+      setChats([]);
+      return;
+    }
+
+    const loadLegacyChats = async () => {
+      const { data, error } = await supabase
+        .from("chats")
+        .select("id,title,updated_at")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(200);
+
+      setChats(error ? [] : normalizeChats(data));
+    };
+
+    if (chatSchemaMode === "legacy") {
+      await loadLegacyChats();
+      return;
+    }
+
+    let workspaceId: string | null = null;
+    try {
+      const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
+      workspaceId = await ensureActiveWorkspaceId();
+    } catch {
+      workspaceId = null;
+    }
+
+    const createCurrentQuery = () =>
+      supabase
+        .from("chats")
+        .select("id,title,pinned,updated_at")
+        .eq("user_id", user.id);
+
+    let result = workspaceId
+      ? await createCurrentQuery()
+          .eq("workspace_id", workspaceId)
+          .order("pinned", { ascending: false })
+          .order("updated_at", { ascending: false })
+          .limit(200)
+      : await createCurrentQuery()
+          .order("pinned", { ascending: false })
+          .order("updated_at", { ascending: false })
+          .limit(200);
+
+    if (result.error && workspaceId) {
+      result = await createCurrentQuery()
+        .order("pinned", { ascending: false })
+        .order("updated_at", { ascending: false })
+        .limit(200);
+    }
+
+    if (!result.error) {
+      chatSchemaMode = "current";
+      setChats(normalizeChats(result.data));
+      return;
+    }
+
+    chatSchemaMode = "legacy";
+    await loadLegacyChats();
   };
 
   useEffect(() => { load(); }, [user, tick, location.pathname]);
@@ -60,7 +122,22 @@ const ChatsSidebar = () => {
   }, []);
 
   const togglePin = async (c: Chat) => {
-    await supabase.from("chats").update({ pinned: !c.pinned }).eq("id", c.id);
+    if (chatSchemaMode === "legacy") {
+      toast({
+        title: "Pinning is unavailable for older chats",
+        description: "Your chat is still available in Recent.",
+      });
+      return;
+    }
+
+    const { error } = await supabase.from("chats").update({ pinned: !c.pinned }).eq("id", c.id);
+    if (error) {
+      chatSchemaMode = "legacy";
+      toast({
+        title: "Pinning is unavailable for older chats",
+        description: "Your chat is still available in Recent.",
+      });
+    }
     load();
   };
 
