@@ -1046,20 +1046,20 @@ const Generate = () => {
                     >
                       <Link to={assetHref(a)} target="_blank" rel="noopener noreferrer" className="block">
                         {(() => {
-                          // Prefer live editor_state (logotype / canvas) over image_url so
-                          // wordmarks aren't cropped by a stale/undersized raster preview.
+          // Prefer live canvas state, then generated thumbnails. Thumbnails
+          // are framed for cards and preserve wide logo lockups at preview size.
                           const isLogotype = a?.editor_state?.kind === "logotype";
                           const isCanvas = isCanvasAsset(a);
                           const preferState = isLogotype || isCanvas;
-                          const previewUrl = a.image_url || a.thumbnail_url;
+          const previewUrl = a.thumbnail_url || a.image_url;
                           if (!preferState && previewUrl) {
                             return (
-                              <div className="aspect-[4/3] w-full overflow-hidden bg-white p-6">
-                                <img
-                                  src={previewUrl}
-                                  alt={a.title || "Generated design"}
-                                  className="h-full w-full object-contain object-center"
-                                />
+              <div className="flex aspect-[4/3] w-full items-center justify-center bg-white p-8">
+                <img
+                  src={previewUrl}
+                  alt={a.title || "Generated design"}
+                  className="block max-h-full max-w-full object-contain"
+                />
                               </div>
                             );
                           }
