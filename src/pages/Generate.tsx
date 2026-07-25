@@ -617,6 +617,13 @@ const Generate = () => {
           } catch { /* noop */ }
         }
       }
+      if (chatId && newChatId) {
+        await supabase
+          .from("chats")
+          .update({ updated_at: submittedAt })
+          .eq("id", newChatId)
+          .eq("user_id", user.id);
+      }
       // Best-effort brand context: saved project → URL in prompt → recent design context.
       let persistedProject: any = null;
       if (effectiveProjectId) {

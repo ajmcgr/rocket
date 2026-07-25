@@ -25,13 +25,23 @@ type ChatRow = Pick<Chat, "id" | "title" | "updated_at"> & {
 
 let chatSchemaMode: "unknown" | "current" | "legacy" = "unknown";
 
+const chatTimestamp = (value: string) => {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
 const normalizeChats = (rows: ChatRow[] | null | undefined): Chat[] =>
-  (rows ?? []).map((chat) => ({
-    id: chat.id,
-    title: chat.title,
-    pinned: Boolean(chat.pinned),
-    updated_at: chat.updated_at,
-  }));
+  (rows ?? [])
+    .map((chat) => ({
+      id: chat.id,
+      title: chat.title,
+      pinned: Boolean(chat.pinned),
+      updated_at: chat.updated_at,
+    }))
+    .sort((left, right) => {
+      const pinnedDifference = Number(right.pinned) - Number(left.pinned);
+      return pinnedDifference || chatTimestamp(right.updated_at) - chatTimestamp(left.updated_at);
+    });
 
 const ChatsSidebar = () => {
   const { user } = useAuth();
@@ -67,37 +77,13 @@ const ChatsSidebar = () => {
       return;
     }
 
-    let workspaceId: string | null = null;
-    try {
-      const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
-      workspaceId = await ensureActiveWorkspaceId();
-    } catch {
-      workspaceId = null;
-    }
-
-    const createCurrentQuery = () =>
-      supabase
-        .from("chats")
-        .select("id,title,pinned,updated_at")
-        .eq("user_id", user.id);
-
-    let result = workspaceId
-      ? await createCurrentQuery()
-          .eq("workspace_id", workspaceId)
-          .order("pinned", { ascending: false })
-          .order("updated_at", { ascending: false })
-          .limit(200)
-      : await createCurrentQuery()
-          .order("pinned", { ascending: false })
-          .order("updated_at", { ascending: false })
-          .limit(200);
-
-    if (result.error && workspaceId) {
-      result = await createCurrentQuery()
-        .order("pinned", { ascending: false })
-        .order("updated_at", { ascending: false })
-        .limit(200);
-    }
+    const result = await supabase
+      .from("chats")
+      .select("id,title,pinned,updated_at")
+      .eq("user_id", user.id)
+      .order("pinned", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(200);
 
     if (!result.error) {
       chatSchemaMode = "current";
