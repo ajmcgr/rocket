@@ -1051,13 +1051,14 @@ const Generate = () => {
                           const isLogotype = a?.editor_state?.kind === "logotype";
                           const isCanvas = isCanvasAsset(a);
                           const preferState = isLogotype || isCanvas;
-                          if (!preferState && a.image_url) {
+                          const previewUrl = a.image_url || a.thumbnail_url;
+                          if (!preferState && previewUrl) {
                             return (
-                              <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden p-6">
+                              <div className="aspect-[4/3] w-full overflow-hidden bg-white p-6">
                                 <img
-                                  src={a.thumbnail_url || a.image_url}
-                                  alt={a.title}
-                                  className="max-h-full max-w-full object-contain"
+                                  src={previewUrl}
+                                  alt={a.title || "Generated design"}
+                                  className="h-full w-full object-contain object-center"
                                 />
                               </div>
                             );
