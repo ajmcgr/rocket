@@ -98,7 +98,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
     return <Logotype state={withResolvedLogotypeText(asset)} fit="contain" />;
   }
   if (isCanvasAsset(asset)) {
-    return <CanvasAssetPreview elements={asset.editor_state} className="aspect-square w-full" />;
+    return <CanvasAssetPreview elements={asset.editor_state} className="h-full w-full" />;
   }
   if (at === "color_system") {
     const c = tryJson<ColorSystem>(asset.content || "");
