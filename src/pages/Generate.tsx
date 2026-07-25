@@ -414,15 +414,17 @@ async function createChatRecord({
   userId,
   title,
   prompt,
+  workspaceId,
 }: {
   supabase: any;
   userId: string;
   title: string;
   prompt: string;
+  workspaceId?: string | null;
 }) {
   const { data, error } = await supabase
     .from("chats")
-    .insert({ user_id: userId, title, prompt } as any)
+    .insert({ user_id: userId, title, prompt, workspace_id: workspaceId ?? null } as any)
     .select("id")
     .single();
 
@@ -604,6 +606,7 @@ const Generate = () => {
           userId: user.id,
           title,
           prompt: p,
+          workspaceId: workspace_id,
         });
         // Ensure downstream inserts get project_id too
         if (effectiveProjectId && !projectId) {
