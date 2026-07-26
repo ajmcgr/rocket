@@ -213,14 +213,21 @@ export function extractNameFromUrl(url?: string): string | undefined {
 export function buildLogoLockupEditorState(imageUrl: string, state: LogotypeState): CanvasElement[] {
   const lockupText = applyTransform(state.text, state.transform);
   const textWidth = Math.max(280, Math.min(420, Math.round(lockupText.length * 42)));
+  const fontSize = lockupText.replace(/\s+/g, "").length > 14 ? 72 : lockupText.replace(/\s+/g, "").length > 10 ? 80 : 86;
+  const iconSize = Math.round(fontSize * 1.35);
+  const gap = Math.max(22, Math.round(fontSize * 0.32));
+  const estimatedTextWidth = Math.min(textWidth, Math.max(240, Math.round(lockupText.length * fontSize * 0.54)));
+  const totalWidth = iconSize + gap + estimatedTextWidth;
+  const startX = Math.round((800 - totalWidth) / 2);
+  const centerY = 300;
   return [
     {
       id: uid(),
       kind: "image",
-      x: 110,
-      y: 200,
-      w: 150,
-      h: 150,
+      x: startX,
+      y: Math.round(centerY - iconSize / 2),
+      w: iconSize,
+      h: iconSize,
       visible: true,
       locked: false,
       src: imageUrl,
@@ -228,15 +235,15 @@ export function buildLogoLockupEditorState(imageUrl: string, state: LogotypeStat
     {
       id: uid(),
       kind: "text",
-      x: 305,
-      y: 190,
+      x: startX + iconSize + gap,
+      y: Math.round(centerY - fontSize * 0.58),
       w: textWidth,
-      h: 170,
+      h: Math.round(fontSize * 1.45),
       visible: true,
       locked: false,
       text: lockupText,
       color: state.color,
-      fontSize: 86,
+      fontSize,
       fontWeight: state.weight,
       fontFamily: state.font,
       align: "left",
