@@ -138,19 +138,24 @@ function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { ki
   const weight = Number(el.fontWeight) || 400;
   const family = String(el.fontFamily || "Inter").trim() || "Inter";
   const text = String(el.text || "");
-  ctx.font = `${weight} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
+  const fontStyle = weight >= 600 ? "bold" : "normal";
+  ctx.font = `${fontStyle} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
   ctx.fillStyle = el.color || "#0A0A0A";
-  // Match Konva.Text: the text node's y is the top of the line box, while
-  // glyphs are drawn around a middle baseline inside that line box.
-  ctx.textBaseline = "middle";
+  // Match Konva.Text's modern renderer: y is the top of the line box, then
+  // text is drawn on an alphabetic baseline derived from the font box.
+  ctx.textBaseline = "alphabetic";
   const metrics = ctx.measureText(text);
+  const mMetrics = ctx.measureText("M");
+  const fontBoxAscent = mMetrics.fontBoundingBoxAscent || mMetrics.actualBoundingBoxAscent || fontSize * 0.91;
+  const fontBoxDescent = mMetrics.fontBoundingBoxDescent || mMetrics.actualBoundingBoxDescent || fontSize * 0.21;
+  const baselineY = ((fontBoxAscent - fontBoxDescent) / 2) + (fontSize / 2);
   const align = el.align || "left";
   const x = align === "center"
     ? el.x + el.w / 2 - metrics.width / 2
     : align === "right"
       ? el.x + el.w - metrics.width
       : el.x;
-  ctx.fillText(text, x, el.y + fontSize / 2);
+  ctx.fillText(text, x, el.y + baselineY);
 }
 
 function drawRegularPolygon(ctx: CanvasRenderingContext2D, sides: number, cx: number, cy: number, radius: number, rotation = 0) {

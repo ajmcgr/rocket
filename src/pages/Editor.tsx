@@ -303,10 +303,15 @@ const measureEditorText = async (el: TextEl): Promise<VisualBox> => {
   try { await document.fonts?.load?.(`${fontWeight} ${fontSize}px '${fontFamily}'`); } catch {}
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  ctx && (ctx.font = `${fontWeight} ${fontSize}px '${fontFamily}', ui-sans-serif, system-ui, sans-serif`);
+  const fontStyle = fontWeight >= 600 ? "bold" : "normal";
+  ctx && (ctx.font = `${fontStyle} ${fontSize}px '${fontFamily}', ui-sans-serif, system-ui, sans-serif`);
   const metrics = ctx?.measureText(text);
+  const mMetrics = ctx?.measureText("M");
   const ascent = metrics?.actualBoundingBoxAscent || fontSize * 0.76;
   const descent = metrics?.actualBoundingBoxDescent || fontSize * 0.22;
+  const fontBoxAscent = mMetrics?.fontBoundingBoxAscent || mMetrics?.actualBoundingBoxAscent || fontSize * 0.91;
+  const fontBoxDescent = mMetrics?.fontBoundingBoxDescent || mMetrics?.actualBoundingBoxDescent || fontSize * 0.21;
+  const baselineY = ((fontBoxAscent - fontBoxDescent) / 2) + (fontSize / 2);
   const measuredWidth = Math.max(1, metrics?.width || text.length * fontSize * 0.58);
   const measuredHeight = Math.max(fontSize * 0.82, ascent + descent);
   const x = el.align === "center"
@@ -314,10 +319,10 @@ const measureEditorText = async (el: TextEl): Promise<VisualBox> => {
     : el.align === "right"
       ? el.x + el.w - measuredWidth
       : el.x;
-  // Konva.Text draws with a middle baseline at half the line-height from y.
-  // Measuring the visible glyph box this way lets generated icon+wordmark
-  // lockups open in /editor with the same optical center as their preview.
-  return { x, y: el.y + fontSize / 2 - ascent, w: measuredWidth, h: measuredHeight };
+  // Konva.Text uses an alphabetic baseline offset derived from the font box.
+  // Measuring the visible glyph box this way keeps icon+wordmark lockups
+  // optically identical between generated previews and the /editor canvas.
+  return { x, y: el.y + baselineY - ascent, w: measuredWidth, h: measuredHeight };
 };
 
 const imageVisibleBox = async (el: ImgEl): Promise<VisualBox> => {
