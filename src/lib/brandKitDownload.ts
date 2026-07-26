@@ -29,6 +29,163 @@ export type BrandKitDownloadResult = {
 
 const LOGO_TYPES = new Set(["logo", "logotype", "wordmark", "brandmark", "icon", "app_icon", "favicon", "graphic", "photo", "image"]);
 
+// ---------- Kit palette/font derivation (mirrors PaletteExplorer / FontExplorer) ----------
+
+const normalizeHex = (input: unknown): string | null => {
+  if (typeof input !== "string") return null;
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(input.trim());
+  if (!m) return null;
+  let hex = m[1];
+  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+  if (hex.length === 8) hex = hex.slice(0, 6);
+  return `#${hex.toUpperCase()}`;
+};
+
+const hexToRgb = (hex: string) => {
+  const h = hex.replace("#", "");
+  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+};
+
+const isInkBucket = (c: { r: number; g: number; b: number }) => {
+  const max = Math.max(c.r, c.g, c.b), min = Math.min(c.r, c.g, c.b);
+  const sat = max === 0 ? 0 : (max - min) / max;
+  return (max + min) / 510 < 0.28 && sat < 0.35;
+};
+
+const shouldSamplePixel = (r: number, g: number, b: number) => {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const sat = max === 0 ? 0 : (max - min) / max;
+  const lightness = (max + min) / 510;
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  if (isInkBucket({ r, g, b })) return true;
+  if (lightness > 0.78 || lum > 0.9) return false;
+  if (sat < 0.25) return false;
+  return true;
+};
+
+type PaletteBucket = { r: number; g: number; b: number; count: number };
+
+async function sampleImageBuckets(src: string): Promise<PaletteBucket[]> {
+  const run = (img: HTMLImageElement): PaletteBucket[] => {
+    try {
+      const w = 128, h = 128;
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      const ctx = c.getContext("2d");
+      if (!ctx) return [];
+      ctx.drawImage(img, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      const buckets = new Map<string, PaletteBucket>();
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 200) continue;
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        if (!shouldSamplePixel(r, g, b)) continue;
+        const key = isInkBucket({ r, g, b }) ? "ink" : `${r >> 4}-${g >> 4}-${b >> 4}`;
+        const cur = buckets.get(key);
+        if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
+        else buckets.set(key, { r, g, b, count: 1 });
+      }
+      return Array.from(buckets.values());
+    } catch { return []; }
+  };
+  try {
+    const img = await loadImage(src);
+    return run(img);
+  } catch {
+    try {
+      const r = await fetch(src, { mode: "cors" });
+      if (!r.ok) return [];
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const img = await loadImage(url);
+      return run(img);
+    } catch { return []; }
+  }
+}
+
+function clusterBuckets(buckets: PaletteBucket[], maxColors = 6): string[] {
+  const avg = buckets.map((b) => ({ r: b.r / b.count, g: b.g / b.count, b: b.b / b.count, count: b.count }));
+  avg.sort((a, b) => b.count - a.count);
+  const total = avg.reduce((s, b) => s + b.count, 0) || 1;
+  const clusters: { r: number; g: number; b: number; count: number }[] = [];
+  const d2 = (a: any, b: any) => (a.r - b.r) ** 2 + (a.g - b.g) ** 2 + (a.b - b.b) ** 2;
+  for (const p of avg) {
+    const near = clusters.find((c) => d2(c, p) < 55 * 55);
+    if (near) {
+      const t = near.count + p.count;
+      near.r = (near.r * near.count + p.r * p.count) / t;
+      near.g = (near.g * near.count + p.g * p.count) / t;
+      near.b = (near.b * near.count + p.b * p.count) / t;
+      near.count = t;
+    } else clusters.push({ ...p });
+  }
+  const kept = clusters.filter((c) => isInkBucket(c) ? c.count / total >= 0.0005 : c.count / total >= 0.005);
+  kept.sort((a, b) => b.count - a.count);
+  const to = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
+  const picked = kept.slice(0, maxColors);
+  const ink = kept.find((c) => isInkBucket(c));
+  if (ink && !picked.some((c) => isInkBucket(c))) {
+    if (picked.length >= maxColors) picked[picked.length - 1] = ink;
+    else picked.push(ink);
+  }
+  return picked.map((c) => isInkBucket(c) ? "#0A0A0A" : `#${to(c.r)}${to(c.g)}${to(c.b)}`.toUpperCase());
+}
+
+function collectStateColors(state: any, out: Set<string>) {
+  const push = (v: unknown) => {
+    const hex = normalizeHex(v);
+    if (!hex) return;
+    const rgb = hexToRgb(hex);
+    if (!shouldSamplePixel(rgb.r, rgb.g, rgb.b)) return;
+    out.add(isInkBucket(rgb) ? "#0A0A0A" : hex);
+  };
+  if (!state) return;
+  if (state.kind === "logotype") { push(state.color); return; }
+  if (Array.isArray(state)) for (const el of state) { push(el?.fill); push(el?.color); push(el?.stroke); push(el?.lineColor); }
+}
+
+function collectImageSources(asset: any): string[] {
+  const editor = Array.isArray(asset?.editor_state)
+    ? asset.editor_state.map((el: any) => el?.src).filter((s: unknown): s is string => typeof s === "string" && s.length > 0)
+    : [];
+  const list = [asset?.image_url, asset?.thumbnail_url, asset?.meta?.preview_url, asset?.meta?.source_url, asset?.meta?.original_url, ...editor];
+  return Array.from(new Set(list.filter((s): s is string => typeof s === "string" && s.length > 0)));
+}
+
+async function derivePaletteFromAssets(assets: any[], fallback: string[]): Promise<string[]> {
+  const savedAssets = assets.filter((a: any) => a?.meta?.saved_at);
+  const srcs = savedAssets.flatMap(collectImageSources);
+  const buckets = (await Promise.all(srcs.map((s) => sampleImageBuckets(s).catch(() => [] as PaletteBucket[])))).flat();
+  const stateColors = new Set<string>();
+  savedAssets.forEach((a) => collectStateColors(a?.editor_state, stateColors));
+  const derived = Array.from(new Set([...clusterBuckets(buckets, 6), ...stateColors]));
+  return derived.length ? derived : fallback;
+}
+
+function fontFromState(state: any): string | null {
+  if (!state) return null;
+  if (state.kind === "logotype" && typeof state.font === "string" && state.font.trim()) return state.font.trim();
+  if (Array.isArray(state)) {
+    for (const el of state) {
+      if (el && typeof el === "object" && (el as any).kind === "text") {
+        const fam = (el as any).fontFamily;
+        if (typeof fam === "string" && fam.trim()) return fam.trim();
+      }
+    }
+  }
+  return null;
+}
+
+function deriveFontFromAssets(assets: any[], fallback: string): string {
+  const saved = assets.filter((a: any) => a?.meta?.saved_at);
+  saved.sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
+  for (const a of saved) {
+    const f = fontFromState(a.editor_state);
+    if (f) return f;
+  }
+  return fallback;
+}
+
 type SocialIconShape = "circle" | "rounded" | "square";
 
 type SocialIconVariant = {
