@@ -307,7 +307,7 @@ async function renderSocialIconCanvas(asset: any, variant: SocialIconVariant, br
       outputWidth: 1024,
       outputHeight: 1024,
       paddingRatio: 0.03,
-      normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
+      normalizeLogoLockup: (asset as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
       logoColor: variant.bg === "#0A0A0A" ? variant.fg : undefined,
     });
   } else {
@@ -490,7 +490,7 @@ async function buildBrandBookCanvas(brandName: string, primary: any, palette: st
           outputWidth: 1200,
           outputHeight: 900,
           paddingRatio: 0.14,
-          normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
+          normalizeLogoLockup: (asset as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
           logoColor: isDarkBg(bg) ? pickLogoColor(bg) : undefined,
         });
       } else if (asset?.image_url || asset?.thumbnail_url) {
@@ -679,17 +679,17 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
     }
     if (isCanvasAsset(asset)) {
       try {
-        const isSquare = asset?.meta?.derived_kind === "icon-only";
+        const isSquare = (asset as any)?.meta?.derived_kind === "icon-only";
         const dataUrl = await createCanvasElementsPreview(asset.editor_state, {
           outputWidth: isSquare ? 1200 : 1600,
           outputHeight: isSquare ? 1200 : 900,
           paddingRatio: 0.14,
-          normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
+          normalizeLogoLockup: (asset as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
         });
         const canvas = await urlToCanvas(dataUrl);
         await addAllFormatsFromCanvas(logoFolder, "Logo-Icon Files", base, canvas, add);
       } catch {
-        skipped.push(asset.title || "Logo/Icon file");
+        skipped.push((asset as any).title || "Logo/Icon file");
       }
       continue;
     }
@@ -725,7 +725,7 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
           outputWidth: 1600,
           outputHeight: 900,
           paddingRatio: 0.14,
-          normalizeLogoLockup: primary?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(primary),
+          normalizeLogoLockup: (primary as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(primary),
           logoColor: variant === "inverse" ? "#ffffff" : variant === "black" ? "#000000" : undefined,
         });
         const canvas = await urlToCanvas(dataUrl);
