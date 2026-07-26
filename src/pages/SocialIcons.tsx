@@ -377,7 +377,7 @@ export default function SocialIcons() {
                           {isBrandLogotype ? (
                             <BrandLogotypePreview asset={asset} color={v.fg} fallback={project?.name || "Brand"} />
                           ) : isCanvas ? (
-                            <AssetThumbnail asset={asset} background={v.bg} logoColor={v.fg} className="h-full w-full object-contain" />
+                            <AssetThumbnail asset={asset} background={v.bg} logoColor={v.bg === "#0A0A0A" ? v.fg : undefined} className="h-full w-full object-contain" />
                           ) : previewSrc ? (
                             <img
                               src={previewSrc}
