@@ -20,6 +20,15 @@ export default function AssetThumbnail({
 }: AssetThumbnailProps) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const previewKey = JSON.stringify({
+    id: asset?.id,
+    title: asset?.title,
+    thumbnail_url: asset?.thumbnail_url,
+    image_url: asset?.image_url,
+    preview_url: asset?.preview_url || asset?.meta?.preview_url,
+    background,
+    editor_state: asset?.editor_state,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +69,7 @@ export default function AssetThumbnail({
     return () => {
       cancelled = true;
     };
-  }, [asset, background]);
+  }, [previewKey]);
 
   if (src) {
     return <img src={src} alt={alt || asset?.title || "Design preview"} className={className} loading="lazy" />;
