@@ -19,74 +19,6 @@ function normalizeHex(input: unknown): string | null {
   return `#${hex.toUpperCase()}`;
 }
 
-function collectColorsFromState(state: any, out: Set<string>) {
-  if (!state) return;
-  const push = (v: unknown) => {
-    const h = normalizeHex(v);
-    if (h) out.add(h);
-  };
-  if (state.kind === "logotype") {
-    push(state.color);
-    return;
-  }
-  if (Array.isArray(state)) {
-    for (const el of state) {
-      if (!el || typeof el !== "object") continue;
-      push((el as any).fill);
-      push((el as any).color);
-      push((el as any).stroke);
-      push((el as any).background);
-      push((el as any).backgroundColor);
-    }
-  }
-}
-
-const NAMED_COLORS: Record<string, string> = {
-  blue: "#1676E3",
-  orange: "#F97316",
-  coral: "#FF6B5A",
-  red: "#EF4444",
-  green: "#22C55E",
-  yellow: "#EAB308",
-  pink: "#EC4899",
-  purple: "#8B5CF6",
-  black: "#0A0A0A",
-  white: "#FFFFFF",
-};
-
-function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
-  if (depth > 10 || value == null) return;
-  const direct = normalizeHex(value);
-  if (direct) out.add(direct);
-  if (typeof value === "string") {
-    for (const match of value.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})\b/gi) || []) {
-      const h = normalizeHex(match);
-      if (h) out.add(h);
-    }
-    const lower = value.toLowerCase();
-    Object.entries(NAMED_COLORS).forEach(([name, hex]) => {
-      if (new RegExp(`\\b${name}\\b`, "i").test(lower)) out.add(hex);
-    });
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectColorsDeep(item, out, depth + 1));
-    return;
-  }
-  if (typeof value === "object") {
-    Object.values(value as Record<string, unknown>).forEach((item) => collectColorsDeep(item, out, depth + 1));
-  }
-}
-
-function shade(hex: string, amount: number) {
-  const h = hex.replace("#", "");
-  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  const mix = (c: number) => Math.max(0, Math.min(255, Math.round(c + amount)));
-  const to = (c: number) => c.toString(16).padStart(2, "0");
-  return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`.toUpperCase();
-}
-
 function hexToRgb(hex: string) {
   const h = hex.replace("#", "");
   return {
@@ -105,59 +37,87 @@ function luminance(hex: string) {
   return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
 }
 
-async function sampleImageColors(src: string): Promise<string[]> {
+type Bucket = { r: number; g: number; b: number; count: number };
+
+async function sampleImageBuckets(src: string): Promise<Bucket[]> {
   return new Promise((resolve) => {
-    const finish = (hexes: string[]) => resolve(hexes);
+    const finish = (b: Bucket[]) => resolve(b);
     const run = (img: HTMLImageElement) => {
       try {
-        const w = 96, h = 96;
+        const w = 128, h = 128;
         const c = document.createElement("canvas");
         c.width = w; c.height = h;
         const ctx = c.getContext("2d");
         if (!ctx) return finish([]);
         ctx.drawImage(img, 0, 0, w, h);
         const data = ctx.getImageData(0, 0, w, h).data;
-        const buckets = new Map<string, { r: number; g: number; b: number; count: number }>();
+        const buckets = new Map<string, Bucket>();
         for (let i = 0; i < data.length; i += 4) {
           const a = data[i + 3];
           if (a < 200) continue;
           const r = data[i], g = data[i + 1], b = data[i + 2];
-          // Keep every meaningful chromatic color, including small accent
-          // colors from multicolor logos, while ignoring paper/ink fields that
-          // otherwise dominate the sample.
           const max = Math.max(r, g, b), min = Math.min(r, g, b);
           const sat = max === 0 ? 0 : (max - min) / max;
-          if (sat < 0.25) continue;
-          // Quantize
+          const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+          // Skip near-white paper background
+          if (lum > 0.95 && sat < 0.15) continue;
+          // Keep near-black ink (low sat, low lum) as a real logo color.
+          // Skip mid-grey anti-alias fringe pixels.
+          if (sat < 0.2 && lum > 0.15 && lum < 0.85) continue;
           const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
           const cur = buckets.get(key);
           if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
           else buckets.set(key, { r, g, b, count: 1 });
         }
-        const sorted = Array.from(buckets.values()).sort((a, b) => b.count - a.count).slice(0, 12);
-        const to = (n: number) => n.toString(16).padStart(2, "0");
-        finish(sorted.map((b) => `#${to(Math.round(b.r / b.count))}${to(Math.round(b.g / b.count))}${to(Math.round(b.b / b.count))}`.toUpperCase()));
+        finish(Array.from(buckets.values()));
       } catch { finish([]); }
     };
-    const attempt = (crossOrigin: "anonymous" | null, url: string) => {
-      const img = new Image();
-      if (crossOrigin) img.crossOrigin = crossOrigin;
-      img.onload = () => run(img);
-      img.onerror = () => finish([]);
-      img.src = url;
-    };
-    // Try CORS first for untainted canvas
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => run(img);
     img.onerror = () => {
       fetch(src, { mode: "cors" }).then((r) => r.ok ? r.blob() : Promise.reject()).then((blob) => {
         const url = URL.createObjectURL(blob);
-        attempt(null, url);
+        const i2 = new Image();
+        i2.onload = () => run(i2);
+        i2.onerror = () => finish([]);
+        i2.src = url;
       }).catch(() => finish([]));
     };
     img.src = src;
   });
+}
+
+// Merge similar buckets into distinct final logo colors.
+function clusterBuckets(buckets: Bucket[], maxColors = 6): string[] {
+  const avg = buckets.map((b) => ({
+    r: b.r / b.count,
+    g: b.g / b.count,
+    b: b.b / b.count,
+    count: b.count,
+  }));
+  avg.sort((a, b) => b.count - a.count);
+  const totalCount = avg.reduce((s, b) => s + b.count, 0) || 1;
+  const clusters: { r: number; g: number; b: number; count: number }[] = [];
+  const dist2 = (a: any, b: any) => (a.r - b.r) ** 2 + (a.g - b.g) ** 2 + (a.b - b.b) ** 2;
+  const THRESH = 55 * 55; // merge visually-similar colors
+  for (const p of avg) {
+    const near = clusters.find((c) => dist2(c, p) < THRESH);
+    if (near) {
+      const total = near.count + p.count;
+      near.r = (near.r * near.count + p.r * p.count) / total;
+      near.g = (near.g * near.count + p.g * p.count) / total;
+      near.b = (near.b * near.count + p.b * p.count) / total;
+      near.count = total;
+    } else {
+      clusters.push({ ...p });
+    }
+  }
+  // Drop tiny clusters (< 2% of pixels) that are usually AA fringe.
+  const kept = clusters.filter((c) => c.count / totalCount >= 0.02);
+  kept.sort((a, b) => b.count - a.count);
+  const to = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
+  return kept.slice(0, maxColors).map((c) => `#${to(c.r)}${to(c.g)}${to(c.b)}`.toUpperCase());
 }
 
 function collectImageSources(asset: any): string[] {
@@ -188,58 +148,24 @@ export default function PaletteExplorer() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const loadProject = async () => {
-        let res = await supabase.from("projects").select("brand_color,meta").eq("id", projectId).maybeSingle();
-        if (res.error) res = await supabase.from("projects").select("meta").eq("id", projectId).maybeSingle();
-        if (res.error) res = await supabase.from("projects").select("brand_color").eq("id", projectId).maybeSingle();
-        return res.data || null;
-      };
-      const [{ data: assets }, proj] = await Promise.all([
-        supabase.from("assets").select("id,editor_state,image_url,thumbnail_url,meta,content").eq("project_id", projectId),
-        loadProject(),
-      ]);
+      const { data: assets } = await supabase
+        .from("assets")
+        .select("id,editor_state,image_url,thumbnail_url,meta,content")
+        .eq("project_id", projectId);
       if (cancelled) return;
-      const set = new Set<string>();
-      // Prefer the project's saved brand color; fall back to brandMeta.
-      const meta = loadBrandMeta(projectId);
-      const brandRaw = (proj as any)?.brand_color || (proj as any)?.meta?.brand_color || meta.brand_color;
-      const brand = normalizeHex(brandRaw);
-      if (brand) set.add(brand);
-      collectColorsDeep((proj as any)?.meta, set);
-      for (const c of meta.palette || []) {
-        const h = normalizeHex(c);
-        if (h) set.add(h);
-      }
-      // Include shades derived from the brand color so the palette mirrors
-      // the Brand Book (Deep / Soft / Ink / Paper) whenever we have a brand.
-      if (brand) {
-        [shade(brand, -40), shade(brand, 40), "#0A0A0A", "#F5F5F4"].forEach((h) => {
-          const n = normalizeHex(h);
-          if (n) set.add(n);
-        });
-      }
-      // Only saved-to-brand-kit assets are the source of truth.
-      for (const a of assets || []) {
-        if (!a?.meta?.saved_at) continue;
-        collectColorsDeep(a.meta, set);
-        collectColorsDeep(a.content, set);
-        collectColorsFromState(a.editor_state, set);
-      }
-      setColors(Array.from(set));
-      setLoading(false);
-      // Enrich with dominant colors sampled from raster logo images.
+      // Sample dominant colors from the final saved logo/icon images only —
+      // the palette must reflect what actually appears in the artwork.
       const imageSrcs = (assets || [])
         .filter((a: any) => a?.meta?.saved_at)
         .flatMap((a: any) => collectImageSources(a));
-      const sampled = await Promise.all(imageSrcs.map((s: string) => sampleImageColors(s).catch(() => [])));
+      const bucketLists = await Promise.all(
+        imageSrcs.map((s: string) => sampleImageBuckets(s).catch(() => [] as Bucket[])),
+      );
       if (cancelled) return;
-      for (const list of sampled) {
-        for (const hex of list) {
-          const h = normalizeHex(hex);
-          if (h) set.add(h);
-        }
-      }
-      setColors(Array.from(set));
+      const all: Bucket[] = bucketLists.flat();
+      const final = clusterBuckets(all, 6);
+      setColors(final);
+      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [projectId]);
