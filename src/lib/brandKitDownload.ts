@@ -538,7 +538,13 @@ async function loadAssets(supabase: any, projectId: string) {
       .order("created_at", { ascending: false })
       .limit(300);
   }
-  return (result.data || []).filter(Boolean);
+  // Only include designs the user explicitly saved into the brand kit — this
+  // mirrors the filter used by Brand.tsx / SocialIcons.tsx / BrandGuidelines.tsx
+  // so downloads always match what's on screen. Generated but un-saved chat
+  // outputs share the project_id but should not ship in the ZIP.
+  const rows = (result.data || []).filter(Boolean);
+  const saved = rows.filter((a: any) => Boolean(a?.meta?.saved_at));
+  return saved.length ? saved : rows.filter((a: any) => a?.meta?.pinned || a?.pinned);
 }
 
 export async function downloadCompleteBrandKit({ supabase, projectId, project }: BrandKitDownloadArgs): Promise<BrandKitDownloadResult> {
