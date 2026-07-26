@@ -7,6 +7,7 @@ import { RotateCcw, Trash2, ArrowLeft, Search, LayoutGrid, List, ArrowUpDown, Ch
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import { Logotype } from "@/components/Logotype";
 import CanvasAssetPreview from "@/components/CanvasAssetPreview";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import BrandCover from "@/components/brand/BrandCover";
 import { type CanvasElement } from "@/lib/canvasAsset";
 import { isBrandAsset } from "@/lib/assetExperience";
@@ -199,10 +200,8 @@ const Trash = () => {
     const brand = !isLogotype && !isCanvas && !fallbackLogotype && !isImage && isBrandAsset(a);
     const fallbackText = safePreviewText(a);
 
-    return isLogotype ? (
-      <Logotype state={a.editor_state as any} fit="contain" />
-    ) : isCanvas ? (
-      <CanvasAssetPreview elements={a.editor_state as any} className="h-full w-full" />
+    return isLogotype || isCanvas || isImage ? (
+      <AssetThumbnail asset={a} fallbackText={fallbackText} />
     ) : fallbackLogotype ? (
       <Logotype state={logotypePreviewState(a)} fit="contain" />
     ) : isImage ? (

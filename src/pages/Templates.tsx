@@ -11,10 +11,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import { AssetGridSkeleton } from "@/components/Skeletons";
-import { Logotype } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
-import { isCanvasAsset } from "@/lib/canvasAsset";
 import { CollectionView, DesignSort, sortByOption } from "@/lib/designCollections";
 import { matchesDesignQuery, rankDesignsByRelevance } from "@/lib/searchRelevance";
 import { SEED_TEMPLATES } from "@/lib/seedTemplates";

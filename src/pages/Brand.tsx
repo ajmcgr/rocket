@@ -6,6 +6,7 @@ import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype, logotypeToPng, logotypeToSvg } from "@/components/Logotype";
 import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import BrandLogotypePreview from "@/components/BrandLogotypePreview";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
@@ -476,13 +477,7 @@ export default function Brand() {
                   <div key={a.id} className={`group relative overflow-hidden rounded-xl border bg-white transition hover:shadow-sm ${logoAsset?.id === a.id ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                     <button onClick={() => setLogoAsset(a)} className="block w-full">
                       <div className="flex aspect-square items-center justify-center bg-neutral-50 p-3">
-                        {isBrandKitLogotypeAsset(a) ? (
-                          <BrandLogotypePreview asset={a} color="#0A0A0A" fallback={project?.name || "Brand"} />
-                        ) : isCanvasAsset(a) ? (
-                          <CanvasAssetPreview elements={a.editor_state as any} className="h-full w-full" background="transparent" />
-                        ) : (a.image_url || a.thumbnail_url) ? (
-                          <img src={a.image_url || a.thumbnail_url} alt="" className="max-h-full max-w-full object-contain" loading="lazy" />
-                        ) : null}
+                        <AssetThumbnail asset={a} alt={a.title || project?.name || "Brand"} />
                       </div>
                     </button>
                     <button

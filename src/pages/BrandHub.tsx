@@ -7,12 +7,7 @@ import { assetHref, isBrandAsset, isDesignAsset, normalizeAssetType } from "@/li
 import { ensureActiveWorkspaceId } from "@/lib/workspace";
 import BrandCover from "@/components/brand/BrandCover";
 import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
-import { Logotype } from "@/components/Logotype";
-import BrandLogotypePreview from "@/components/BrandLogotypePreview";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
-import { isBrandKitLogotypeAsset } from "@/lib/brandLogoAsset";
-import { isCanvasAsset } from "@/lib/canvasAsset";
 
 const supabase = _sb as any;
 

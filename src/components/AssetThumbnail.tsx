@@ -29,6 +29,11 @@ export default function AssetThumbnail({
     void (async () => {
       try {
         const opts = { background };
+        const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
+        if (storedPreview) {
+          if (!cancelled) setSrc(storedPreview);
+          return;
+        }
         if (isBrandKitLogotypeAsset(asset)) {
           const state = logotypeStateFromAsset(asset, asset?.title || "Brand");
           const preview = await createLogotypePreview(state, opts);
@@ -62,7 +67,7 @@ export default function AssetThumbnail({
   }
 
   if (failed) {
-    const directUrl = asset?.thumbnail_url || asset?.image_url;
+    const directUrl = asset?.preview_url || asset?.meta?.preview_url || asset?.thumbnail_url || asset?.image_url;
     if (directUrl) {
       return <img src={directUrl} alt={alt || asset?.title || "Design preview"} className={className} loading="lazy" />;
     }
