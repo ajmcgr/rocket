@@ -99,9 +99,14 @@ export default function PaletteExplorer() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: assets }, { data: proj }] = await Promise.all([
+      const loadProject = async () => {
+        let res = await supabase.from("projects").select("brand_color,meta").eq("id", projectId).maybeSingle();
+        if (res.error) res = await supabase.from("projects").select("brand_color").eq("id", projectId).maybeSingle();
+        return res.data || null;
+      };
+      const [{ data: assets }, proj] = await Promise.all([
         supabase.from("assets").select("id,editor_state,meta,content").eq("project_id", projectId),
-        supabase.from("projects").select("brand_color,meta").eq("id", projectId).maybeSingle(),
+        loadProject(),
       ]);
       if (cancelled) return;
       const set = new Set<string>();

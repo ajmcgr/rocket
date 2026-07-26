@@ -119,6 +119,11 @@ Deno.serve(async (req) => {
       delete projectRow.workspace_id;
       insertRes = await admin.from("projects").insert(projectRow).select("id").single();
     }
+    if (insertRes.error && /tagline|brand_color/i.test(insertRes.error.message || "")) {
+      delete projectRow.tagline;
+      delete projectRow.brand_color;
+      insertRes = await admin.from("projects").insert(projectRow).select("id").single();
+    }
     if (insertRes.error || !insertRes.data?.id) {
       return json({ error: insertRes.error?.message || "Failed to clone project" }, 500, headers);
     }
