@@ -112,7 +112,7 @@ async function renderCanvasIconPng(asset: any, v: Variant, size = 1024): Promise
     outputWidth: 1200,
     outputHeight: 1200,
     paddingRatio: 0.16,
-    logoColor: v.fg,
+    logoColor: v.bg === "#0A0A0A" ? v.fg : undefined,
     normalizeLogoLockup: asset?.meta?.kind === "logo_lockup",
   });
   const img = await loadImage(dataUrl);
