@@ -660,7 +660,11 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
 
   const baseLogoAssets = assets.filter((a: any) => LOGO_TYPES.has(String(a?.asset_type || "").toLowerCase()) || isBrandKitLogotypeAsset(a) || isCanvasAsset(a) || a?.image_url || a?.thumbnail_url);
   const logoAssets = expandLogoAssets(baseLogoAssets);
-  const primary = logoAssets.find((a: any) => isBrandKitLogotypeAsset(a)) || logoAssets.find((a: any) => a?.image_url || a?.thumbnail_url) || logoAssets[0];
+  const primary = baseLogoAssets.find((a: any) => isCanvasLogoLockupAsset(a))
+    || baseLogoAssets.find((a: any) => isBrandKitLogotypeAsset(a))
+    || baseLogoAssets.find((a: any) => a?.image_url || a?.thumbnail_url)
+    || baseLogoAssets[0]
+    || logoAssets[0];
   const logoFolder = zip.folder("Logo-Icon Files")!;
 
   for (const asset of logoAssets) {
