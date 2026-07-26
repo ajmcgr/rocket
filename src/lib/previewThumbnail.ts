@@ -6,6 +6,7 @@ type PreviewOptions = {
   outputHeight?: number;
   paddingRatio?: number;
   background?: string | null;
+  normalizeLogoLockup?: boolean;
 };
 
 const STAGE_W = 800;
@@ -138,20 +139,24 @@ function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { ki
   const weight = Number(el.fontWeight) || 400;
   const family = String(el.fontFamily || "Inter").trim() || "Inter";
   const text = String(el.text || "");
-  ctx.font = `${weight} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
+  const fontStyle = weight >= 600 ? "bold" : "normal";
+  ctx.font = `${fontStyle} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
   ctx.fillStyle = el.color || "#0A0A0A";
-  // Match Konva's <Text> rendering in the editor: text is anchored top-left at
-  // (el.x, el.y). If we centered vertically here, the preview thumbnail would
-  // diverge from what the user sees when they open the asset in /editor.
-  ctx.textBaseline = "top";
+  // Match Konva.Text's modern renderer: y is the top of the line box, then
+  // text is drawn on an alphabetic baseline derived from the font box.
+  ctx.textBaseline = "alphabetic";
   const metrics = ctx.measureText(text);
+  const mMetrics = ctx.measureText("M");
+  const fontBoxAscent = mMetrics.fontBoundingBoxAscent || mMetrics.actualBoundingBoxAscent || fontSize * 0.91;
+  const fontBoxDescent = mMetrics.fontBoundingBoxDescent || mMetrics.actualBoundingBoxDescent || fontSize * 0.21;
+  const baselineY = ((fontBoxAscent - fontBoxDescent) / 2) + (fontSize / 2);
   const align = el.align || "left";
   const x = align === "center"
     ? el.x + el.w / 2 - metrics.width / 2
     : align === "right"
       ? el.x + el.w - metrics.width
       : el.x;
-  ctx.fillText(text, x, el.y);
+  ctx.fillText(text, x, el.y + baselineY);
 }
 
 function drawRegularPolygon(ctx: CanvasRenderingContext2D, sides: number, cx: number, cy: number, radius: number, rotation = 0) {
@@ -177,6 +182,115 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, outer: 
     else ctx.lineTo(x, y);
   }
   ctx.closePath();
+}
+
+function measureCanvasText(el: Extract<CanvasElement, { kind: "text" }>) {
+  const fontSize = Math.max(1, Number(el.fontSize) || 48);
+  const weight = Number(el.fontWeight) || 400;
+  const family = String(el.fontFamily || "Inter").trim() || "Inter";
+  const text = String(el.text || "");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { x: el.x, y: el.y, w: Math.max(1, el.w), h: Math.max(1, el.h) };
+  const fontStyle = weight >= 600 ? "bold" : "normal";
+  ctx.font = `${fontStyle} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
+  const metrics = ctx.measureText(text);
+  const mMetrics = ctx.measureText("M");
+  const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.76;
+  const descent = metrics.actualBoundingBoxDescent || fontSize * 0.22;
+  const fontBoxAscent = mMetrics.fontBoundingBoxAscent || mMetrics.actualBoundingBoxAscent || fontSize * 0.91;
+  const fontBoxDescent = mMetrics.fontBoundingBoxDescent || mMetrics.actualBoundingBoxDescent || fontSize * 0.21;
+  const baselineY = ((fontBoxAscent - fontBoxDescent) / 2) + (fontSize / 2);
+  const width = Math.max(1, metrics.width || text.length * fontSize * 0.58);
+  const height = Math.max(fontSize * 0.82, ascent + descent);
+  const align = el.align || "left";
+  const x = align === "center"
+    ? el.x + el.w / 2 - width / 2
+    : align === "right"
+      ? el.x + el.w - width
+      : el.x;
+  return { x, y: el.y + baselineY - ascent, w: width, h: height };
+}
+
+async function imageVisibleBoxForElement(el: Extract<CanvasElement, { kind: "image" }>) {
+  try {
+    const image = await loadImage(el.src);
+    const naturalWidth = image.naturalWidth || image.width;
+    const naturalHeight = image.naturalHeight || image.height;
+    if (!naturalWidth || !naturalHeight) throw new Error("missing image size");
+    const scale = Math.min(1, 512 / Math.max(naturalWidth, naturalHeight));
+    const width = Math.max(1, Math.round(naturalWidth * scale));
+    const height = Math.max(1, Math.round(naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("missing image context");
+    ctx.drawImage(image, 0, 0, width, height);
+    const data = ctx.getImageData(0, 0, width, height).data;
+    const cornerOffsets = [0, (width - 1) * 4, (height - 1) * width * 4, (width * height - 1) * 4];
+    const bg: [number, number, number] = [data[0], data[1], data[2]];
+    const hasSolidBackground = data[3] > 240 && cornerOffsets.every((offset) => data[offset + 3] > 240 && colorDistance(data, offset, bg) < 22);
+    let minX = width, minY = height, maxX = -1, maxY = -1;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const offset = (y * width + x) * 4;
+        if (data[offset + 3] < 20) continue;
+        if (hasSolidBackground && colorDistance(data, offset, bg) < 42) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    if (maxX < minX || maxY < minY) throw new Error("missing visible image pixels");
+    return {
+      x: el.x + (minX / width) * el.w,
+      y: el.y + (minY / height) * el.h,
+      w: ((maxX - minX + 1) / width) * el.w,
+      h: ((maxY - minY + 1) / height) * el.h,
+    };
+  } catch {
+    return { x: el.x, y: el.y, w: el.w, h: el.h };
+  }
+}
+
+async function normalizeLogoLockupElements(elements: CanvasElement[]) {
+  const image = elements.find((el): el is Extract<CanvasElement, { kind: "image" }> => el.kind === "image" && el.visible !== false);
+  const text = elements
+    .filter((el): el is Extract<CanvasElement, { kind: "text" }> => el.kind === "text" && el.visible !== false && String(el.text || "").trim().length > 0)
+    .sort((a, b) => String(b.text || "").length - String(a.text || "").length)[0];
+  if (!image || !text) return elements;
+
+  const [imageBox, textBox] = await Promise.all([imageVisibleBoxForElement(image), Promise.resolve(measureCanvasText(text))]);
+  const targetTextHeight = Math.max(24, textBox.h);
+  const imageScale = imageBox.h > 0 ? Math.min(1.35, Math.max(0.25, (targetTextHeight * 1.08) / imageBox.h)) : 1;
+  const scaledImageW = image.w * imageScale;
+  const scaledImageH = image.h * imageScale;
+  const localImageBox = {
+    x: (imageBox.x - image.x) * imageScale,
+    y: (imageBox.y - image.y) * imageScale,
+    w: imageBox.w * imageScale,
+    h: imageBox.h * imageScale,
+  };
+  const fontSize = Math.max(1, Number(text.fontSize) || 48);
+  const gap = Math.max(18, Math.min(34, fontSize * 0.32));
+  const totalW = localImageBox.w + gap + textBox.w;
+  const centerY = STAGE_H / 2;
+  const imageVisualX = (STAGE_W - totalW) / 2;
+  const imageVisualY = centerY - localImageBox.h / 2;
+  const nextImageX = imageVisualX - localImageBox.x;
+  const nextImageY = imageVisualY - localImageBox.y;
+  const nextTextX = imageVisualX + localImageBox.w + gap;
+  const textVisualOffsetY = textBox.y - text.y;
+  const nextTextY = centerY - textBox.h / 2 - textVisualOffsetY;
+  const textWidth = Math.max(text.w, Math.ceil(textBox.w + fontSize * 0.24));
+
+  return elements.map((el) => {
+    if (el.id === image.id) return { ...el, x: nextImageX, y: nextImageY, w: scaledImageW, h: scaledImageH } as CanvasElement;
+    if (el.id === text.id) return { ...el, x: nextTextX, y: nextTextY, w: textWidth, h: Math.max(text.h, fontSize * 1.35), align: "left" as const } as CanvasElement;
+    return el;
+  });
 }
 
 export async function createLogotypePreview(state: LogotypeState, opts: PreviewOptions = {}): Promise<string> {
@@ -210,6 +324,8 @@ export async function createCanvasElementsPreview(elements: CanvasElement[], opt
     try { await document.fonts?.load?.(`${weight} ${Number(el.fontSize) || 48}px '${family}'`); } catch {}
   }));
 
+  const renderElements = opts.normalizeLogoLockup ? await normalizeLogoLockupElements(elements) : elements;
+
   const source = document.createElement("canvas");
   source.width = STAGE_W;
   source.height = STAGE_H;
@@ -217,7 +333,7 @@ export async function createCanvasElementsPreview(elements: CanvasElement[], opt
   if (!ctx) return source.toDataURL("image/png");
   ctx.clearRect(0, 0, STAGE_W, STAGE_H);
 
-  for (const el of elements) {
+  for (const el of renderElements) {
     if (el.visible === false) continue;
     ctx.save();
     const rotation = ((el.rotation || 0) * Math.PI) / 180;

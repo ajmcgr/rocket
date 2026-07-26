@@ -303,19 +303,26 @@ const measureEditorText = async (el: TextEl): Promise<VisualBox> => {
   try { await document.fonts?.load?.(`${fontWeight} ${fontSize}px '${fontFamily}'`); } catch {}
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  ctx && (ctx.font = `${fontWeight} ${fontSize}px '${fontFamily}', ui-sans-serif, system-ui, sans-serif`);
+  const fontStyle = fontWeight >= 600 ? "bold" : "normal";
+  ctx && (ctx.font = `${fontStyle} ${fontSize}px '${fontFamily}', ui-sans-serif, system-ui, sans-serif`);
   const metrics = ctx?.measureText(text);
+  const mMetrics = ctx?.measureText("M");
+  const ascent = metrics?.actualBoundingBoxAscent || fontSize * 0.76;
+  const descent = metrics?.actualBoundingBoxDescent || fontSize * 0.22;
+  const fontBoxAscent = mMetrics?.fontBoundingBoxAscent || mMetrics?.actualBoundingBoxAscent || fontSize * 0.91;
+  const fontBoxDescent = mMetrics?.fontBoundingBoxDescent || mMetrics?.actualBoundingBoxDescent || fontSize * 0.21;
+  const baselineY = ((fontBoxAscent - fontBoxDescent) / 2) + (fontSize / 2);
   const measuredWidth = Math.max(1, metrics?.width || text.length * fontSize * 0.58);
-  const measuredHeight = Math.max(
-    fontSize * 0.82,
-    (metrics?.actualBoundingBoxAscent || 0) + (metrics?.actualBoundingBoxDescent || 0),
-  );
+  const measuredHeight = Math.max(fontSize * 0.82, ascent + descent);
   const x = el.align === "center"
     ? el.x + el.w / 2 - measuredWidth / 2
     : el.align === "right"
       ? el.x + el.w - measuredWidth
       : el.x;
-  return { x, y: el.y + fontSize * 0.08, w: measuredWidth, h: measuredHeight };
+  // Konva.Text uses an alphabetic baseline offset derived from the font box.
+  // Measuring the visible glyph box this way keeps icon+wordmark lockups
+  // optically identical between generated previews and the /editor canvas.
+  return { x, y: el.y + baselineY - ascent, w: measuredWidth, h: measuredHeight };
 };
 
 const imageVisibleBox = async (el: ImgEl): Promise<VisualBox> => {
@@ -392,7 +399,12 @@ async function normalizeLogoLockupForEditor(elements: El[]): Promise<El[]> {
   const nextImageX = imageVisualX - localImageBox.x;
   const nextImageY = imageVisualY - localImageBox.y;
   const nextTextX = imageVisualX + localImageBox.w + gap;
-  const nextTextY = centerY - fontSize * 0.58;
+  // Align the actual visible text pixels to the icon's visible centerline.
+  // The previous font-size heuristic placed Konva text a few pixels high for
+  // many generated lockups, so opening a generated logo looked different from
+  // the /logos preview even before the user edited anything.
+  const textVisualOffsetY = textBox.y - text.y;
+  const nextTextY = centerY - textBox.h / 2 - textVisualOffsetY;
   const textWidth = Math.max(text.w, Math.ceil(textBox.w + fontSize * 0.24));
 
   return elements.map((el) => {
