@@ -41,6 +41,26 @@ function collectColorsFromState(state: any, out: Set<string>) {
   }
 }
 
+function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
+  if (depth > 5 || value == null) return;
+  const direct = normalizeHex(value);
+  if (direct) out.add(direct);
+  if (typeof value === "string") {
+    for (const match of value.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})\b/gi) || []) {
+      const h = normalizeHex(match);
+      if (h) out.add(h);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectColorsDeep(item, out, depth + 1));
+    return;
+  }
+  if (typeof value === "object") {
+    Object.values(value as Record<string, unknown>).forEach((item) => collectColorsDeep(item, out, depth + 1));
+  }
+}
+
 function shade(hex: string, amount: number) {
   const h = hex.replace("#", "");
   const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
@@ -79,17 +99,23 @@ export default function PaletteExplorer() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: assets }, { data: proj }] = await Promise.all([
-        supabase.from("assets").select("id,editor_state,meta").eq("project_id", projectId),
-        supabase.from("projects").select("brand_color").eq("id", projectId).maybeSingle(),
+      const loadProject = async () => {
+        let res = await supabase.from("projects").select("brand_color,meta").eq("id", projectId).maybeSingle();
+        if (res.error) res = await supabase.from("projects").select("brand_color").eq("id", projectId).maybeSingle();
+        return res.data || null;
+      };
+      const [{ data: assets }, proj] = await Promise.all([
+        supabase.from("assets").select("id,editor_state,meta,content").eq("project_id", projectId),
+        loadProject(),
       ]);
       if (cancelled) return;
       const set = new Set<string>();
       // Prefer the project's saved brand color; fall back to brandMeta.
       const meta = loadBrandMeta(projectId);
-      const brandRaw = (proj as any)?.brand_color || meta.brand_color;
+      const brandRaw = (proj as any)?.brand_color || (proj as any)?.meta?.brand_color || meta.brand_color;
       const brand = normalizeHex(brandRaw);
       if (brand) set.add(brand);
+      collectColorsDeep((proj as any)?.meta, set);
       for (const c of meta.palette || []) {
         const h = normalizeHex(c);
         if (h) set.add(h);
@@ -105,6 +131,8 @@ export default function PaletteExplorer() {
       // Only saved-to-brand-kit assets are the source of truth.
       for (const a of assets || []) {
         if (!a?.meta?.saved_at) continue;
+        collectColorsDeep(a.meta, set);
+        collectColorsDeep(a.content, set);
         collectColorsFromState(a.editor_state, set);
       }
       setColors(Array.from(set));

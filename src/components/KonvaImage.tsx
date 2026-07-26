@@ -1,6 +1,6 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { Image as KImage, Shape } from "react-konva";
-import useImage from "use-image";
+import { transparentLogo } from "@/lib/logoContrast";
 
 type ImageEl = {
   kind: "image";
@@ -13,9 +13,52 @@ type ImageEl = {
   rotation?: number;
 };
 
-const KonvaImage = forwardRef<any, { el: ImageEl; [k: string]: any }>(
-  ({ el, ...rest }, ref) => {
-    const [img] = useImage(el.src, "anonymous");
+async function loadKonvaImage(src: string, keyOutBackground?: boolean): Promise<HTMLImageElement> {
+  let url = src;
+  if (keyOutBackground) {
+    try { url = (await transparentLogo(src)).url; } catch {}
+  }
+
+  const attempt = (crossOrigin: "anonymous" | null, imageUrl: string) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      if (crossOrigin) image.crossOrigin = crossOrigin;
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Unable to load image"));
+      image.src = imageUrl;
+    });
+
+  try { return await attempt("anonymous", url); } catch {}
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try { return await attempt(null, objectUrl); } finally {
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      }
+    }
+  } catch {}
+  return attempt(null, url);
+}
+
+const KonvaImage = forwardRef<any, { el: ImageEl; keyOutBackground?: boolean; [k: string]: any }>(
+  ({ el, keyOutBackground, ...rest }, ref) => {
+    const [img, setImg] = useState<HTMLImageElement | null>(null);
+
+    useEffect(() => {
+      let cancelled = false;
+      setImg(null);
+      void (async () => {
+        try {
+          const loaded = await loadKonvaImage(el.src, keyOutBackground);
+          if (!cancelled) setImg(loaded);
+        } catch {
+          if (!cancelled) setImg(null);
+        }
+      })();
+      return () => { cancelled = true; };
+    }, [el.src, keyOutBackground]);
     if (el.color) {
       return (
         <Shape

@@ -3,8 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { Download, Loader2 } from "lucide-react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype, logotypeToPng } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import BrandLogotypePreview from "@/components/BrandLogotypePreview";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeLabel } from "@/lib/brandLogoAsset";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { pickLogoColor, isDarkBg, silhouetteImage, transparentLogo } from "@/lib/logoContrast";
+import { createCanvasElementsPreview } from "@/lib/previewThumbnail";
 
 const supabase = _sb as any;
 
@@ -76,10 +77,26 @@ async function renderBrandLogotypeIconPng(asset: any, v: Variant, fallback: stri
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej; img.src = src; });
-  return img;
+  const attempt = (crossOrigin: "anonymous" | null, url: string) =>
+    new Promise<HTMLImageElement>((res, rej) => {
+      const img = new Image();
+      if (crossOrigin) img.crossOrigin = crossOrigin;
+      img.onload = () => res(img);
+      img.onerror = rej;
+      img.src = url;
+    });
+  try { return await attempt("anonymous", src); } catch {}
+  try {
+    const res = await fetch(src, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try { return await attempt(null, objectUrl); } finally {
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      }
+    }
+  } catch {}
+  return attempt(null, src);
 }
 
 async function renderImageIconPng(src: string, v: Variant, size = 1024): Promise<Blob> {
@@ -91,27 +108,15 @@ async function renderImageIconPng(src: string, v: Variant, size = 1024): Promise
 }
 
 async function renderCanvasIconPng(asset: any, v: Variant, size = 1024): Promise<Blob> {
-  const node = document.createElement("div");
-  node.style.position = "fixed";
-  node.style.left = "-10000px";
-  node.style.top = "0";
-  node.style.width = "800px";
-  node.style.height = "600px";
-  node.style.background = "transparent";
-  document.body.appendChild(node);
-  try {
-    const { createRoot } = await import("react-dom/client");
-    const { toPng } = await import("html-to-image");
-    const root = createRoot(node);
-    root.render(<CanvasAssetPreview elements={asset.editor_state as any} className="h-full w-full" background="transparent" />);
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: "transparent", cacheBust: true });
-    root.unmount();
-    const img = await loadImage(dataUrl);
-    return await composeIcon(img, v, size);
-  } finally {
-    node.remove();
-  }
+  const dataUrl = await createCanvasElementsPreview(asset.editor_state as any, {
+    outputWidth: 1200,
+    outputHeight: 1200,
+    paddingRatio: 0.16,
+    logoColor: v.fg,
+    normalizeLogoLockup: asset?.meta?.kind === "logo_lockup",
+  });
+  const img = await loadImage(dataUrl);
+  return await composeIcon(img, v, size);
 }
 
 async function composeIcon(img: HTMLImageElement, v: Variant, size: number): Promise<Blob> {
@@ -372,7 +377,7 @@ export default function SocialIcons() {
                           {isBrandLogotype ? (
                             <BrandLogotypePreview asset={asset} color={v.fg} fallback={project?.name || "Brand"} />
                           ) : isCanvas ? (
-                            <CanvasAssetPreview elements={asset.editor_state as any} className="h-full w-full" background="transparent" />
+                            <AssetThumbnail asset={asset} background={v.bg} logoColor={v.fg} className="h-full w-full object-contain" />
                           ) : previewSrc ? (
                             <img
                               src={previewSrc}

@@ -96,21 +96,27 @@ function keyOutBackground(img: HTMLImageElement): { url: string; changed: boolea
     const i = idx(x, y);
     return { r: data[i], g: data[i + 1], b: data[i + 2], a: data[i + 3] };
   });
-  // Require all corners opaque and mutually similar.
+  // Require all corners opaque and mutually similar. Generated logo rasters can
+  // have anti-aliased/off-white corners, so near-white paper gets a wider gate.
   const c0 = samples[0];
   if (c0.a < 240) return { url: img.src, changed: false };
+  const brightness = (c0.r + c0.g + c0.b) / 3;
+  const cornerTolerance = brightness > 210 ? 42 : 18;
   for (let k = 1; k < samples.length; k++) {
     const c = samples[k];
     if (c.a < 240) return { url: img.src, changed: false };
-    if (Math.abs(c.r - c0.r) > 12 || Math.abs(c.g - c0.g) > 12 || Math.abs(c.b - c0.b) > 12) {
+    if (
+      Math.abs(c.r - c0.r) > cornerTolerance
+      || Math.abs(c.g - c0.g) > cornerTolerance
+      || Math.abs(c.b - c0.b) > cornerTolerance
+    ) {
       return { url: img.src, changed: false };
     }
   }
   // Don't key out near-black backgrounds — those are legitimate dark tiles.
-  const brightness = (c0.r + c0.g + c0.b) / 3;
   if (brightness < 40) return { url: img.src, changed: false };
 
-  const tol = 28;
+  const tol = brightness > 210 ? 58 : 34;
   const targetR = c0.r, targetG = c0.g, targetB = c0.b;
   const visited = new Uint8Array(w * h);
   const stack: number[] = [];
