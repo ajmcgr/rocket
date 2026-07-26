@@ -81,7 +81,7 @@ function computeBounds(elements: CanvasElement[]) {
 function RenderEl({ el }: { el: CanvasElement }) {
   if (el.visible === false) return null;
   switch (el.kind) {
-    case "text":
+    case "text": {
       const box = textRenderBox(el);
       return (
         <KText
@@ -99,6 +99,7 @@ function RenderEl({ el }: { el: CanvasElement }) {
           verticalAlign="middle"
         />
       );
+    }
     case "rect":
       return <Rect x={el.x} y={el.y} width={el.w} height={el.h} rotation={el.rotation || 0} fill={el.fill} cornerRadius={el.radius} />;
     case "circle":
