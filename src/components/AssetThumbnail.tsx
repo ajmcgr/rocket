@@ -46,7 +46,7 @@ export default function AssetThumbnail({
 
     void (async () => {
       try {
-        const opts = { background, outputWidth, outputHeight, paddingRatio };
+        const opts = { background, outputWidth, outputHeight, paddingRatio, normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" };
         const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
         const hasEditableSource = isBrandKitLogotypeAsset(asset) || isCanvasAsset(asset);
         if (isBrandKitLogotypeAsset(asset)) {
