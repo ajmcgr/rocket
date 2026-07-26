@@ -102,8 +102,6 @@ Deno.serve(async (req) => {
       user_id: user.id,
       name: srcProject.name || "Brandbear",
       description: srcProject.description || null,
-      tagline: srcProject.tagline || null,
-      brand_color: srcProject.brand_color || srcProject.meta?.brand_color || null,
       cover_url: srcProject.cover_url || null,
       meta: {
         ...(srcProject.meta || {}),
@@ -117,11 +115,6 @@ Deno.serve(async (req) => {
     let insertRes = await admin.from("projects").insert(projectRow).select("id").single();
     if (insertRes.error && /workspace_id/i.test(insertRes.error.message || "")) {
       delete projectRow.workspace_id;
-      insertRes = await admin.from("projects").insert(projectRow).select("id").single();
-    }
-    if (insertRes.error && /tagline|brand_color/i.test(insertRes.error.message || "")) {
-      delete projectRow.tagline;
-      delete projectRow.brand_color;
       insertRes = await admin.from("projects").insert(projectRow).select("id").single();
     }
     if (insertRes.error || !insertRes.data?.id) {
