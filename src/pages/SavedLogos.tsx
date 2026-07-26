@@ -39,6 +39,8 @@ const SavedLogos = () => {
   const [view, setView] = useState<CollectionView>("card");
   const [sort, setSort] = useState<DesignSort>("date");
   const [visibleCount, setVisibleCount] = useState(60);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState<string>("");
 
   useEffect(() => { setVisibleCount(60); }, [query, view, sort]);
 
@@ -170,6 +172,25 @@ const SavedLogos = () => {
     await supabase.from("assets").update({ deleted_at: new Date().toISOString() }).eq("id", a.id);
     setItems((prev) => prev.filter((x) => x.id !== a.id));
     toast({ title: "Moved to Trash" });
+  };
+
+  const startRename = (a: any) => {
+    setRenamingId(a.id);
+    setRenameValue(a.title || "");
+  };
+  const commitRename = async () => {
+    if (!renamingId) return;
+    const id = renamingId;
+    const nextTitle = renameValue.trim() || "Untitled";
+    const current = items.find((x) => x.id === id);
+    setRenamingId(null);
+    if (!current || (current.title || "") === nextTitle) return;
+    updateItem(id, { title: nextTitle });
+    const { error } = await supabase.from("assets").update({ title: nextTitle }).eq("id", id);
+    if (error) {
+      updateItem(id, { title: current.title });
+      toast({ title: "Rename failed", description: error.message, variant: "destructive" });
+    }
   };
 
   const DesignPreview = ({ asset }: { asset: any }) => {
