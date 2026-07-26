@@ -9,6 +9,7 @@ import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { createCanvasElementsPreview } from "@/lib/previewThumbnail";
+import { createArtworkPreviewFromImageUrl } from "@/lib/previewThumbnail";
 import { brandLogotypeToPng, isBrandKitLogotypeAsset, isCanvasLogoLockupAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
 import { useAuth } from "@/contexts/AuthContext";
 import {
