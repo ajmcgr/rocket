@@ -28,20 +28,18 @@ type Variant = {
 };
 
 const buildVariants = (brandColor: string): Variant[] => {
-  // Always pick the ink/paper that yields the strongest contrast on each
-  // background so no variant ever renders white-on-white or black-on-black.
-  const onBrand = pickLogoColor(brandColor);
-  // For light-tinted brand colors, keep the brand-mark readable by pairing
-  // with black ink; for dark brand colors, pair with white paper.
+  // Inverse tiles use a neutral light-grey background so the original brand
+  // artwork always reads clearly regardless of the brand color.
+  const neutral = "#E5E7EB";
   const onLightPaper = isDarkBg(brandColor) ? brandColor : "#0A0A0A";
   return [
-    { key: "circle-brand", label: "Circle · Brand", shape: "circle", bg: brandColor, fg: onBrand },
+    { key: "circle-brand", label: "Circle · Inverse", shape: "circle", bg: neutral, fg: onLightPaper, border: true },
     { key: "circle-white", label: "Circle · Light", shape: "circle", bg: "#FFFFFF", fg: onLightPaper, border: true },
     { key: "circle-black", label: "Circle · Dark", shape: "circle", bg: "#0A0A0A", fg: "#FFFFFF" },
-    { key: "rounded-brand", label: "Rounded · Brand", shape: "rounded", bg: brandColor, fg: onBrand },
+    { key: "rounded-brand", label: "Rounded · Inverse", shape: "rounded", bg: neutral, fg: onLightPaper, border: true },
     { key: "rounded-white", label: "Rounded · Light", shape: "rounded", bg: "#FFFFFF", fg: onLightPaper, border: true },
     { key: "rounded-black", label: "Rounded · Dark", shape: "rounded", bg: "#0A0A0A", fg: "#FFFFFF" },
-    { key: "square-brand", label: "Square · Brand", shape: "square", bg: brandColor, fg: onBrand },
+    { key: "square-brand", label: "Square · Inverse", shape: "square", bg: neutral, fg: onLightPaper, border: true },
     { key: "square-white", label: "Square · Light", shape: "square", bg: "#FFFFFF", fg: onLightPaper, border: true },
   ];
 };
