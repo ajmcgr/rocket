@@ -1,9 +1,11 @@
 import JSZip from "jszip";
 import { jsPDF } from "jspdf";
-import { logotypeToSvg } from "@/components/Logotype";
+import { logotypeToPng, logotypeToSvg } from "@/components/Logotype";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { loadBrandMeta } from "@/lib/brandMeta";
 import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
+import { isCanvasAsset } from "@/lib/canvasAsset";
+import { createArtworkPreviewFromImageUrl, createCanvasElementsPreview } from "@/lib/previewThumbnail";
 import { pickLogoColor, isDarkBg, silhouetteImage, transparentLogo } from "@/lib/logoContrast";
 
 type BrandKitDownloadArgs = {
@@ -19,6 +21,15 @@ export type BrandKitDownloadResult = {
 };
 
 const LOGO_TYPES = new Set(["logo", "logotype", "wordmark", "brandmark", "icon", "app_icon", "favicon", "graphic", "photo", "image"]);
+
+type SocialIconShape = "circle" | "rounded" | "square";
+
+type SocialIconVariant = {
+  key: string;
+  shape: SocialIconShape;
+  bg: string;
+  fg: string;
+};
 
 const isMissingColumnError = (error: any, column: string) => {
   const message = String(error?.message || error?.details || "").toLowerCase();
@@ -159,6 +170,99 @@ async function buildImageVariantBlob(url: string, variant: "regular" | "inverse"
     ctx.globalCompositeOperation = "source-over";
   }
   return canvasToBlob(canvas);
+}
+
+const buildSocialIconVariants = (brandColor: string): SocialIconVariant[] => {
+  const onBrand = pickLogoColor(brandColor);
+  const onLightPaper = isDarkBg(brandColor) ? brandColor : "#0A0A0A";
+  return [
+    { key: "circle-brand", shape: "circle", bg: brandColor, fg: onBrand },
+    { key: "circle-white", shape: "circle", bg: "#FFFFFF", fg: onLightPaper },
+    { key: "circle-black", shape: "circle", bg: "#0A0A0A", fg: "#FFFFFF" },
+    { key: "rounded-brand", shape: "rounded", bg: brandColor, fg: onBrand },
+    { key: "rounded-white", shape: "rounded", bg: "#FFFFFF", fg: onLightPaper },
+    { key: "rounded-black", shape: "rounded", bg: "#0A0A0A", fg: "#FFFFFF" },
+    { key: "square-brand", shape: "square", bg: brandColor, fg: onBrand },
+    { key: "square-white", shape: "square", bg: "#FFFFFF", fg: onLightPaper },
+  ];
+};
+
+function socialShapeRadius(shape: SocialIconShape, size: number) {
+  if (shape === "circle") return size / 2;
+  if (shape === "rounded") return Math.round(size * 0.22);
+  return 0;
+}
+
+async function composeSocialIconCanvas(img: HTMLImageElement, variant: SocialIconVariant, size = 1024) {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  const radius = socialShapeRadius(variant.shape, size);
+
+  ctx.beginPath();
+  if (variant.shape === "circle") {
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  } else if (variant.shape === "rounded") {
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(size - radius, 0);
+    ctx.quadraticCurveTo(size, 0, size, radius);
+    ctx.lineTo(size, size - radius);
+    ctx.quadraticCurveTo(size, size, size - radius, size);
+    ctx.lineTo(radius, size);
+    ctx.quadraticCurveTo(0, size, 0, size - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+  } else {
+    ctx.rect(0, 0, size, size);
+  }
+  ctx.closePath();
+  ctx.fillStyle = variant.bg;
+  ctx.fill();
+
+  const pad = Math.round(size * 0.18);
+  const maxW = size - pad * 2;
+  const maxH = size - pad * 2;
+  const sourceW = img.naturalWidth || img.width || size;
+  const sourceH = img.naturalHeight || img.height || size;
+  const scale = Math.min(maxW / sourceW, maxH / sourceH);
+  const drawW = sourceW * scale;
+  const drawH = sourceH * scale;
+  ctx.drawImage(img, (size - drawW) / 2, (size - drawH) / 2, drawW, drawH);
+  return canvas;
+}
+
+async function imageLogoSourceForSocialIcon(url: string) {
+  const transparent = await transparentLogo(url);
+  try {
+    return await createArtworkPreviewFromImageUrl(transparent.url, {
+      outputWidth: 1024,
+      outputHeight: 1024,
+      paddingRatio: 0.03,
+    });
+  } catch {
+    return transparent.url;
+  }
+}
+
+async function renderSocialIconCanvas(asset: any, variant: SocialIconVariant, brandName: string) {
+  let dataUrl: string;
+  if (isBrandKitLogotypeAsset(asset)) {
+    dataUrl = await brandLogotypeToPng(asset, variant.fg, brandName, 4);
+  } else if (asset?.image_url || asset?.thumbnail_url) {
+    dataUrl = await imageLogoSourceForSocialIcon(asset.image_url || asset.thumbnail_url);
+  } else if (isCanvasAsset(asset)) {
+    dataUrl = await createCanvasElementsPreview(asset.editor_state, {
+      outputWidth: 1024,
+      outputHeight: 1024,
+      paddingRatio: 0.03,
+    });
+  } else {
+    dataUrl = await logotypeToPng({ ...stateFromAsset(asset, brandName), color: variant.fg }, 4);
+  }
+  const img = await loadImage(dataUrl);
+  return composeSocialIconCanvas(img, variant);
 }
 
 const stateFromAsset = (asset: any, brandName: string): LogotypeState => {
@@ -521,6 +625,26 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
     add(logoFolder, "Logo-Icon Files", "README.txt", "No logo/icon files are saved in this brand kit yet.\n");
   }
 
+  const socialFolder = zip.folder("Social Icons") || zip;
+  if (logoAssets.length) {
+    const socialVariants = buildSocialIconVariants(brandColor);
+    for (const asset of logoAssets) {
+      const assetBase = safeFile(asset.title || asset.asset_type || "logo");
+      const assetFolder = socialFolder.folder(assetBase) || socialFolder;
+      const folderPath = `Social Icons/${assetBase}`;
+      for (const variant of socialVariants) {
+        try {
+          const canvas = await renderSocialIconCanvas(asset, variant, brandName);
+          add(assetFolder, folderPath, `${assetBase}-social-${variant.key}.png`, await canvasToBlob(canvas));
+        } catch {
+          skipped.push(`${asset.title || "Logo"} social ${variant.key}`);
+        }
+      }
+    }
+  } else {
+    add(socialFolder, "Social Icons", "README.txt", "No logo/icon files are saved in this brand kit yet, so no social icons could be generated.\n");
+  }
+
   const filesFolder = zip.folder("Files")!;
   for (const asset of assets.filter((a: any) => !logoAssets.some((logo: any) => logo.id === a.id))) {
     const base = safeFile(asset.title || asset.asset_type || "asset");
@@ -563,6 +687,9 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
     "## Fonts",
     `- ${font}`,
     "",
+    "## Social Icons",
+    logoAssets.length ? `${logoAssets.length} source file(s) exported as circle, rounded, and square social profile icons.` : "No social icons generated yet.",
+    "",
     "## Usage",
     "- Maintain clear space around the logo/icon file.",
     "- Use inverse variants on dark or photographic backgrounds.",
@@ -577,6 +704,7 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
     "",
     "Contents:",
     "  /Logo-Icon Files  logo/icon files as PNG, JPG, PSD, and SVG (Figma/Sketch/Canva) + regular/inverse/black variants",
+    "  /Social Icons     profile icon PNGs in circle, rounded, and square shapes with light/dark/brand backgrounds",
     "  /Palette          palette.txt, palette.png, palette.pdf",
     "  /Fonts            fonts.txt, font-specimen.png, font-specimen.pdf",
     "  /Brand Book       brand-book.md, brand-book.png, brand-book.pdf",
