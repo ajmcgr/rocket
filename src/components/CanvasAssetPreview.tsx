@@ -42,7 +42,7 @@ function getTextMetrics(el: Extract<CanvasElement, { kind: "text" }>) {
   return { width: Math.max(1, width), height: Math.max(1, height), fontSize, weight, family };
 }
 
-function textRenderBox(el: Extract<CanvasElement, { kind: "text" }>) {
+function textRenderBox(el: Extract<CanvasElement, { kind: "text" }>, includeBoundsSafety = false) {
   const metrics = getTextMetrics(el);
   const boxW = Math.max(1, Number(el.w) || metrics.width);
   const boxH = Math.max(1, Number(el.h) || metrics.height);
@@ -50,8 +50,8 @@ function textRenderBox(el: Extract<CanvasElement, { kind: "text" }>) {
   // metrics often under-report glyph overhangs / loaded Google-font widths.
   // Give every text run a safety gutter so the shared fit calculation never
   // crops long wordmarks at the right/bottom edge.
-  const textSafetyX = Math.max(metrics.fontSize * 0.45, metrics.width * 0.18);
-  const textSafetyY = Math.max(metrics.fontSize * 0.35, metrics.height * 0.18);
+  const textSafetyX = includeBoundsSafety ? Math.max(metrics.fontSize * 0.45, metrics.width * 0.18) : metrics.fontSize * 0.18;
+  const textSafetyY = includeBoundsSafety ? Math.max(metrics.fontSize * 0.35, metrics.height * 0.18) : metrics.fontSize * 0.12;
   const width = Math.max(boxW, metrics.width + textSafetyX * 2);
   const height = Math.max(boxH, metrics.height + textSafetyY * 2);
   const align = el.align || "left";
@@ -59,7 +59,7 @@ function textRenderBox(el: Extract<CanvasElement, { kind: "text" }>) {
     ? (Number(el.x) || 0) + (boxW - width) / 2
     : align === "right"
       ? (Number(el.x) || 0) + boxW - width
-      : (Number(el.x) || 0) - textSafetyX;
+      : (Number(el.x) || 0) - (includeBoundsSafety ? textSafetyX : 0);
   const y = (Number(el.y) || 0) + (boxH - height) / 2;
   return { x, y, width, height };
 }
@@ -93,7 +93,7 @@ function computeBounds(elements: CanvasElement[]) {
   for (const el of elements) {
     if (el.visible === false) continue;
     const rawBounds = el.kind === "text"
-      ? textRenderBox(el)
+      ? textRenderBox(el, true)
       : { x: Number(el.x) || 0, y: Number(el.y) || 0, width: Number(el.w) || 0, height: Number(el.h) || 0 };
     const bounds = rotatedBounds(rawBounds, el.rotation || 0);
     const x = bounds.x;
