@@ -6,9 +6,10 @@ import KonvaImage from "@/components/KonvaImage";
 
 const STAGE_W = 800;
 const STAGE_H = 600;
-// Safe area: keep ~12% padding on every side so no logo, wordmark or icon
+// Safe area: keep 15% padding on every side so no logo, wordmark or icon
 // ever touches the preview edge, regardless of aspect ratio.
-const PADDING = Math.round(Math.min(STAGE_W, STAGE_H) * 0.12);
+const PADDING_X = Math.round(STAGE_W * 0.15);
+const PADDING_Y = Math.round(STAGE_H * 0.15);
 
 /**
  * Compute an axis-aligned bounding box for the visible artwork. Saved canvas
@@ -156,8 +157,8 @@ export default function CanvasAssetPreview({
   const fit = useMemo(() => {
     const b = computeBounds(elements);
     if (!b) return { scale: 1, offsetX: 0, offsetY: 0 };
-    const availW = STAGE_W - PADDING * 2;
-    const availH = STAGE_H - PADDING * 2;
+    const availW = STAGE_W - PADDING_X * 2;
+    const availH = STAGE_H - PADDING_Y * 2;
     const scale = Math.min(availW / b.w, availH / b.h);
     const offsetX = (STAGE_W - b.w * scale) / 2 - b.x * scale;
     const offsetY = (STAGE_H - b.h * scale) / 2 - b.y * scale;
