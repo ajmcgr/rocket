@@ -126,7 +126,11 @@ async function sampleImageColors(src: string): Promise<string[]> {
           const r = data[i], g = data[i + 1], b = data[i + 2];
           const max = Math.max(r, g, b), min = Math.min(r, g, b);
           const sat = max === 0 ? 0 : (max - min) / max;
-          if (sat < 0.25) continue;
+          // Skip near-white background and mid-grey AA fringe, but keep
+          // near-black ink so black wordmark text shows up in the palette.
+          const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+          if (lum > 0.95 && sat < 0.15) continue;
+          if (sat < 0.2 && lum > 0.35 && lum < 0.85) continue;
           const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
           const cur = buckets.get(key);
           if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
