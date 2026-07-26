@@ -8,7 +8,8 @@ import BrandLogotypePreview from "@/components/BrandLogotypePreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
-import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
+import { createCanvasElementsPreview } from "@/lib/previewThumbnail";
+import { brandLogotypeToPng, isBrandKitLogotypeAsset, isCanvasLogoLockupAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -412,6 +413,32 @@ export default function Brand() {
                         className="h-full w-full object-contain"
                       />
                     </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (requirePro()) return;
+                        try {
+                          const elements = (livePreviewAsset?.editor_state || []) as any[];
+                          const dataUrl = await createCanvasElementsPreview(elements, {
+                            outputWidth: 1600,
+                            outputHeight: 900,
+                            background: v.bg,
+                            normalizeLogoLockup: isCanvasLogoLockupAsset(livePreviewAsset),
+                            logoColor: v.key === "black" || v.key === "white" ? v.fg : undefined,
+                          });
+                          const blob = await (await fetch(dataUrl)).blob();
+                          downloadBlob(blob, `${filenameFor(v)}.png`);
+                        } catch (err: any) {
+                          toast({ title: "Download failed", description: err?.message || String(err), variant: "destructive" });
+                        }
+                      }}
+                      className={`absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm transition ${(v.bg === "#FFFFFF") ? "bg-neutral-900 text-white hover:bg-neutral-800" : "bg-white/95 text-neutral-900 hover:bg-white"}`}
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download
+                      {!subLoading && !isPro && (
+                        <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-foreground">PRO</span>
+                      )}
+                    </button>
                   </div>
                 </div>
               ))}
