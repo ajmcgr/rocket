@@ -234,6 +234,14 @@ export default function Brand() {
     meta: { ...(logoAsset?.meta || {}), preview_url: null },
   });
 
+  const livePreviewAsset = logoAsset
+    ? {
+        ...logoAsset,
+        preview_url: null,
+        meta: { ...(logoAsset.meta || {}), preview_url: null },
+      }
+    : null;
+
   const variants = useMemo<Record<Variant["key"], LogotypeState>>(
     () => ({
       regular: { ...baseState, color: baseState.color || "#0A0A0A" },
@@ -394,7 +402,7 @@ export default function Brand() {
                   >
                     <div className="flex aspect-[16/9] items-center justify-center">
                       <AssetThumbnail
-                        asset={logoAsset}
+                        asset={livePreviewAsset}
                         alt={project?.name || "Logo"}
                         background={v.bg}
                         outputWidth={1600}
