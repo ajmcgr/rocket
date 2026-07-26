@@ -140,7 +140,10 @@ function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { ki
   const text = String(el.text || "");
   ctx.font = `${weight} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
   ctx.fillStyle = el.color || "#0A0A0A";
-  ctx.textBaseline = "middle";
+  // Match Konva's <Text> rendering in the editor: text is anchored top-left at
+  // (el.x, el.y). If we centered vertically here, the preview thumbnail would
+  // diverge from what the user sees when they open the asset in /editor.
+  ctx.textBaseline = "top";
   const metrics = ctx.measureText(text);
   const align = el.align || "left";
   const x = align === "center"
@@ -148,7 +151,7 @@ function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { ki
     : align === "right"
       ? el.x + el.w - metrics.width
       : el.x;
-  ctx.fillText(text, x, el.y + el.h / 2);
+  ctx.fillText(text, x, el.y);
 }
 
 function drawRegularPolygon(ctx: CanvasRenderingContext2D, sides: number, cx: number, cy: number, radius: number, rotation = 0) {
