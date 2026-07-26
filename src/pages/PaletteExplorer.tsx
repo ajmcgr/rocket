@@ -41,6 +41,15 @@ function collectColorsFromState(state: any, out: Set<string>) {
   }
 }
 
+function shade(hex: string, amount: number) {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const mix = (c: number) => Math.max(0, Math.min(255, Math.round(c + amount)));
+  const to = (c: number) => c.toString(16).padStart(2, "0");
+  return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`.toUpperCase();
+}
+
 function hexToRgb(hex: string) {
   const h = hex.replace("#", "");
   return {
@@ -70,19 +79,28 @@ export default function PaletteExplorer() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data: assets } = await supabase
-        .from("assets")
-        .select("id,editor_state,meta")
-        .eq("project_id", projectId);
+      const [{ data: assets }, { data: proj }] = await Promise.all([
+        supabase.from("assets").select("id,editor_state,meta").eq("project_id", projectId),
+        supabase.from("projects").select("brand_color").eq("id", projectId).maybeSingle(),
+      ]);
       if (cancelled) return;
       const set = new Set<string>();
-      // Include brand meta color first if present
+      // Prefer the project's saved brand color; fall back to brandMeta.
       const meta = loadBrandMeta(projectId);
-      const brand = normalizeHex(meta.brand_color);
+      const brandRaw = (proj as any)?.brand_color || meta.brand_color;
+      const brand = normalizeHex(brandRaw);
       if (brand) set.add(brand);
       for (const c of meta.palette || []) {
         const h = normalizeHex(c);
         if (h) set.add(h);
+      }
+      // Include shades derived from the brand color so the palette mirrors
+      // the Brand Book (Deep / Soft / Ink / Paper) whenever we have a brand.
+      if (brand) {
+        [shade(brand, -40), shade(brand, 40), "#0A0A0A", "#F5F5F4"].forEach((h) => {
+          const n = normalizeHex(h);
+          if (n) set.add(n);
+        });
       }
       // Only saved-to-brand-kit assets are the source of truth.
       for (const a of assets || []) {
