@@ -144,6 +144,9 @@ async function sampleImageColors(src: string): Promise<string[]> {
 }
 
 function collectImageSources(asset: any): string[] {
+  const editorSources = Array.isArray(asset?.editor_state)
+    ? asset.editor_state.map((el: any) => el?.src).filter((src: unknown): src is string => typeof src === "string" && src.length > 0)
+    : [];
   const candidates = [
     asset?.image_url,
     asset?.thumbnail_url,
@@ -152,6 +155,7 @@ function collectImageSources(asset: any): string[] {
     asset?.meta?.original_url,
     asset?.meta?.image_url,
     asset?.meta?.thumbnail_url,
+    ...editorSources,
   ];
   return Array.from(new Set(candidates.filter((src): src is string => typeof src === "string" && src.length > 0)));
 }
