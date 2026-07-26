@@ -140,10 +140,9 @@ function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { ki
   const text = String(el.text || "");
   ctx.font = `${weight} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
   ctx.fillStyle = el.color || "#0A0A0A";
-  // Match Konva's <Text> rendering in the editor: text is anchored top-left at
-  // (el.x, el.y). If we centered vertically here, the preview thumbnail would
-  // diverge from what the user sees when they open the asset in /editor.
-  ctx.textBaseline = "top";
+  // Match Konva.Text: the text node's y is the top of the line box, while
+  // glyphs are drawn around a middle baseline inside that line box.
+  ctx.textBaseline = "middle";
   const metrics = ctx.measureText(text);
   const align = el.align || "left";
   const x = align === "center"
@@ -151,7 +150,7 @@ function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { ki
     : align === "right"
       ? el.x + el.w - metrics.width
       : el.x;
-  ctx.fillText(text, x, el.y);
+  ctx.fillText(text, x, el.y + fontSize / 2);
 }
 
 function drawRegularPolygon(ctx: CanvasRenderingContext2D, sides: number, cx: number, cy: number, radius: number, rotation = 0) {

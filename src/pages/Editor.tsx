@@ -305,17 +305,19 @@ const measureEditorText = async (el: TextEl): Promise<VisualBox> => {
   const ctx = canvas.getContext("2d");
   ctx && (ctx.font = `${fontWeight} ${fontSize}px '${fontFamily}', ui-sans-serif, system-ui, sans-serif`);
   const metrics = ctx?.measureText(text);
+  const ascent = metrics?.actualBoundingBoxAscent || fontSize * 0.76;
+  const descent = metrics?.actualBoundingBoxDescent || fontSize * 0.22;
   const measuredWidth = Math.max(1, metrics?.width || text.length * fontSize * 0.58);
-  const measuredHeight = Math.max(
-    fontSize * 0.82,
-    (metrics?.actualBoundingBoxAscent || 0) + (metrics?.actualBoundingBoxDescent || 0),
-  );
+  const measuredHeight = Math.max(fontSize * 0.82, ascent + descent);
   const x = el.align === "center"
     ? el.x + el.w / 2 - measuredWidth / 2
     : el.align === "right"
       ? el.x + el.w - measuredWidth
       : el.x;
-  return { x, y: el.y + fontSize * 0.08, w: measuredWidth, h: measuredHeight };
+  // Konva.Text draws with a middle baseline at half the line-height from y.
+  // Measuring the visible glyph box this way lets generated icon+wordmark
+  // lockups open in /editor with the same optical center as their preview.
+  return { x, y: el.y + fontSize / 2 - ascent, w: measuredWidth, h: measuredHeight };
 };
 
 const imageVisibleBox = async (el: ImgEl): Promise<VisualBox> => {

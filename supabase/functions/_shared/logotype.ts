@@ -236,7 +236,9 @@ export function buildLogoLockupEditorState(imageUrl: string, state: LogotypeStat
       id: uid(),
       kind: "text",
       x: startX + iconSize + gap,
-      y: Math.round(centerY - fontSize * 0.58),
+      // Konva renders text around a middle baseline inside the line box; this
+      // y keeps the visible glyph center aligned with the generated icon center.
+      y: Math.round(centerY - fontSize * 0.22),
       w: textWidth,
       h: Math.round(fontSize * 1.45),
       visible: true,
