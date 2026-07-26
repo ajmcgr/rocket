@@ -93,7 +93,7 @@ async function sampleImageColors(src: string): Promise<string[]> {
     const finish = (hexes: string[]) => resolve(hexes);
     const run = (img: HTMLImageElement) => {
       try {
-        const w = 64, h = 64;
+        const w = 96, h = 96;
         const c = document.createElement("canvas");
         c.width = w; c.height = h;
         const ctx = c.getContext("2d");
@@ -105,17 +105,19 @@ async function sampleImageColors(src: string): Promise<string[]> {
           const a = data[i + 3];
           if (a < 200) continue;
           const r = data[i], g = data[i + 1], b = data[i + 2];
-          // Skip near-white and near-black backgrounds/neutrals.
+          // Keep every meaningful chromatic color, including small accent
+          // colors from multicolor logos, while ignoring paper/ink fields that
+          // otherwise dominate the sample.
           const max = Math.max(r, g, b), min = Math.min(r, g, b);
           const sat = max === 0 ? 0 : (max - min) / max;
           if (sat < 0.25) continue;
           // Quantize
-          const key = `${r >> 5}-${g >> 5}-${b >> 5}`;
+          const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
           const cur = buckets.get(key);
           if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
           else buckets.set(key, { r, g, b, count: 1 });
         }
-        const sorted = Array.from(buckets.values()).sort((a, b) => b.count - a.count).slice(0, 4);
+        const sorted = Array.from(buckets.values()).sort((a, b) => b.count - a.count).slice(0, 12);
         const to = (n: number) => n.toString(16).padStart(2, "0");
         finish(sorted.map((b) => `#${to(Math.round(b.r / b.count))}${to(Math.round(b.g / b.count))}${to(Math.round(b.b / b.count))}`.toUpperCase()));
       } catch { finish([]); }
@@ -141,6 +143,19 @@ async function sampleImageColors(src: string): Promise<string[]> {
   });
 }
 
+function collectImageSources(asset: any): string[] {
+  const candidates = [
+    asset?.image_url,
+    asset?.thumbnail_url,
+    asset?.meta?.preview_url,
+    asset?.meta?.source_url,
+    asset?.meta?.original_url,
+    asset?.meta?.image_url,
+    asset?.meta?.thumbnail_url,
+  ];
+  return Array.from(new Set(candidates.filter((src): src is string => typeof src === "string" && src.length > 0)));
+}
+
 export default function PaletteExplorer() {
   const { id: projectId } = useParams();
   const { toast } = useToast();
@@ -158,7 +173,7 @@ export default function PaletteExplorer() {
         return res.data || null;
       };
       const [{ data: assets }, proj] = await Promise.all([
-        supabase.from("assets").select("id,editor_state,meta,content").eq("project_id", projectId),
+        supabase.from("assets").select("id,editor_state,image_url,thumbnail_url,meta,content").eq("project_id", projectId),
         loadProject(),
       ]);
       if (cancelled) return;
@@ -192,8 +207,8 @@ export default function PaletteExplorer() {
       setLoading(false);
       // Enrich with dominant colors sampled from raster logo images.
       const imageSrcs = (assets || [])
-        .filter((a: any) => a?.meta?.saved_at && (a.image_url || a.thumbnail_url))
-        .map((a: any) => a.image_url || a.thumbnail_url);
+        .filter((a: any) => a?.meta?.saved_at)
+        .flatMap((a: any) => collectImageSources(a));
       const sampled = await Promise.all(imageSrcs.map((s: string) => sampleImageColors(s).catch(() => [])));
       if (cancelled) return;
       for (const list of sampled) {
