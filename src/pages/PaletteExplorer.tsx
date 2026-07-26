@@ -39,6 +39,27 @@ function luminance(hex: string) {
 
 type Bucket = { r: number; g: number; b: number; count: number };
 
+function isInkBucket(color: { r: number; g: number; b: number }) {
+  const max = Math.max(color.r, color.g, color.b);
+  const min = Math.min(color.r, color.g, color.b);
+  const sat = max === 0 ? 0 : (max - min) / max;
+  const lightness = (max + min) / 510;
+  return lightness < 0.28 && sat < 0.35;
+}
+
+function shouldSamplePixel(r: number, g: number, b: number) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const sat = max === 0 ? 0 : (max - min) / max;
+  const lightness = (max + min) / 510;
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  // Palette is for foreground logo colors only: keep vivid brand colors and
+  // dark wordmark ink, but ignore pale tile backgrounds / soft AA washes.
+  if (isInkBucket({ r, g, b })) return true;
+  if (lightness > 0.78 || lum > 0.9) return false;
+  if (sat < 0.25) return false;
+  return true;
+}
+
 async function sampleImageBuckets(src: string): Promise<Bucket[]> {
   return new Promise((resolve) => {
     const finish = (b: Bucket[]) => resolve(b);
@@ -56,16 +77,8 @@ async function sampleImageBuckets(src: string): Promise<Bucket[]> {
           const a = data[i + 3];
           if (a < 200) continue;
           const r = data[i], g = data[i + 1], b = data[i + 2];
-          const max = Math.max(r, g, b), min = Math.min(r, g, b);
-          const sat = max === 0 ? 0 : (max - min) / max;
-          const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-          // Skip near-white paper background
-          if (lum > 0.95 && sat < 0.15) continue;
-          // Keep near-black ink (low sat, low lum) as a real logo color.
-          // Skip only mid-grey anti-alias fringe pixels — dark greys are the
-          // AA edges of black text and should cluster into the black bucket.
-          if (sat < 0.2 && lum > 0.35 && lum < 0.85) continue;
-          const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
+          if (!shouldSamplePixel(r, g, b)) continue;
+          const key = isInkBucket({ r, g, b }) ? "ink" : `${r >> 4}-${g >> 4}-${b >> 4}`;
           const cur = buckets.get(key);
           if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
           else buckets.set(key, { r, g, b, count: 1 });
@@ -116,10 +129,16 @@ function clusterBuckets(buckets: Bucket[], maxColors = 6): string[] {
   }
   // Drop tiny clusters (< 0.5% of pixels) that are usually AA fringe.
   // Wordmark text can be small relative to the icon, so keep a low floor.
-  const kept = clusters.filter((c) => c.count / totalCount >= 0.005);
+  const kept = clusters.filter((c) => isInkBucket(c) ? c.count / totalCount >= 0.0005 : c.count / totalCount >= 0.005);
   kept.sort((a, b) => b.count - a.count);
   const to = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
-  return kept.slice(0, maxColors).map((c) => `#${to(c.r)}${to(c.g)}${to(c.b)}`.toUpperCase());
+  const picked = kept.slice(0, maxColors);
+  const ink = kept.find((c) => isInkBucket(c));
+  if (ink && !picked.some((c) => isInkBucket(c))) {
+    if (picked.length >= maxColors) picked[picked.length - 1] = ink;
+    else picked.push(ink);
+  }
+  return picked.map((c) => isInkBucket(c) ? "#0A0A0A" : `#${to(c.r)}${to(c.g)}${to(c.b)}`.toUpperCase());
 }
 
 function collectImageSources(asset: any): string[] {
