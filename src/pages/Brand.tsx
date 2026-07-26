@@ -374,8 +374,13 @@ export default function Brand() {
                         e.preventDefault();
                         if (requirePro()) return;
                         try {
-                          const res = await fetch(src, { mode: "cors" });
-                          const blob = await res.blob();
+                          const dataUrl = await createArtworkPreviewFromImageUrl(src, {
+                            outputWidth: 1600,
+                            outputHeight: 900,
+                            background: v.bg,
+                            logoColor: v.key === "black" || v.key === "white" ? v.fg : undefined,
+                          });
+                          const blob = await (await fetch(dataUrl)).blob();
                           downloadBlob(blob, `${filenameFor(v)}.png`);
                         } catch (err: any) {
                           toast({ title: "Download failed", description: err?.message || String(err), variant: "destructive" });
