@@ -242,6 +242,44 @@ const SEEDS: IconSpec[] = [
   { name: "Halcyon Modern", style: "Modern", icon: "diamond", font: "Bricolage Grotesque", weight: 700, letterSpacing: -0.02, color: "#F8FAFC", bg: "#0F172A" },
   { name: "MAISON NOIR", style: "Luxury", icon: "diamond", font: "Playfair Display", weight: 500, letterSpacing: 0.1, transform: "uppercase", color: "#F5E6C8", bg: "#0A0A0A" },
   { name: "ATELIER", style: "Luxury", icon: "star", font: "DM Serif Display", weight: 400, letterSpacing: 0.12, transform: "uppercase", color: "#0F172A", bg: "#FAF7F2" },
+
+  // ── 2026 refresh drop — 20 additional templates ─────────────────────────
+  // Startup / SaaS
+  { name: "Zenith", style: "Startup", icon: "triangle", font: "Onest", weight: 700, letterSpacing: -0.02, color: "#F8FAFC", bg: "#0F172A" },
+  { name: "Anvil", style: "Startup", icon: "cube", font: "Space Grotesk", weight: 700, color: "#FDE68A", bg: "#111827" },
+  { name: "Tangent", style: "Startup", icon: "arrow-up", font: "Manrope", weight: 800, color: "#FFFFFF", bg: "#DB2777" },
+  { name: "Lumen", style: "Startup", icon: "sun", font: "Figtree", weight: 700, color: "#0F172A", bg: "#FEF08A" },
+
+  // AI
+  { name: "Neura", style: "AI", icon: "orbit", font: "Sora", weight: 700, letterSpacing: -0.03, color: "#F5F5F5", bg: "#4338CA" },
+  { name: "Sigil", style: "AI", icon: "hexagon", font: "Geist", weight: 700, transform: "uppercase", letterSpacing: 0.06, color: "#0F172A", bg: "#F5F5F5" },
+  { name: "Chorus", style: "AI", icon: "waves", font: "Instrument Serif", weight: 400, color: "#F8FAFC", bg: "#0C4A6E" },
+
+  // Fintech
+  { name: "Ledgerly", style: "Fintech", icon: "square", font: "IBM Plex Sans", weight: 700, color: "#FFFFFF", bg: "#065F46" },
+  { name: "Sable Pay", style: "Fintech", icon: "diamond", font: "Space Grotesk", weight: 700, transform: "uppercase", letterSpacing: 0.06, color: "#F5E6C8", bg: "#0A0A0A" },
+  { name: "Cove", style: "Fintech", icon: "waves", font: "Fraunces", weight: 600, color: "#0C4A6E", bg: "#E0F2FE" },
+
+  // Healthcare
+  { name: "Ember Wellness", style: "Healthcare", icon: "flame", font: "Fraunces", weight: 600, color: "#7C2D12", bg: "#FFEDD5" },
+  { name: "Nest & Nurture", style: "Healthcare", icon: "heart", font: "Spectral", weight: 600, color: "#F8FAFC", bg: "#831843" },
+
+  // Education
+  { name: "Quire", style: "Education", icon: "square", font: "Playfair Display", weight: 700, letterSpacing: -0.02, color: "#0F172A", bg: "#FFF7ED" },
+  { name: "Meridian Prep", style: "Education", icon: "star", font: "DM Serif Display", weight: 400, transform: "uppercase", letterSpacing: 0.06, color: "#FFFFFF", bg: "#1E293B" },
+
+  // Consumer / Lifestyle
+  { name: "Bramble", style: "Consumer", icon: "leaf", font: "Fraunces", weight: 700, color: "#4C1D95", bg: "#EDE9FE" },
+  { name: "Tidepool", style: "Consumer", icon: "waves", font: "Syne", weight: 700, color: "#F0F9FF", bg: "#0369A1" },
+  { name: "Kiln", style: "Consumer", icon: "flame", font: "Bricolage Grotesque", weight: 700, letterSpacing: -0.02, color: "#FEF3C7", bg: "#9A3412" },
+
+  // Technology
+  { name: "Beacon Grid", style: "Technology", icon: "dot-grid", font: "JetBrains Mono", weight: 700, color: "#FDE68A", bg: "#0B0B0B" },
+  { name: "Runway", style: "Technology", icon: "arrow-right", font: "Space Grotesk", weight: 700, letterSpacing: -0.03, color: "#0F172A", bg: "#E0F2FE" },
+
+  // Luxury / Minimal
+  { name: "SOLARA", style: "Luxury", icon: "sun", font: "Playfair Display", weight: 500, letterSpacing: 0.12, transform: "uppercase", color: "#78350F", bg: "#FEF3C7" },
+  { name: "veil", style: "Minimal", icon: "ring", font: "Geist", weight: 500, transform: "lowercase", color: "#0B0B0B", bg: "#F5F5F5" },
 ];
 
 function iconPath(kind: IconKind, color: string): string {
