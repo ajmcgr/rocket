@@ -274,7 +274,7 @@ export default function BrandGuidelines() {
       return <BrandLogotypePreview asset={asset} color={pickLogoColor(bg)} fallback={brandName} />;
     }
     if (isCanvasAsset(asset)) {
-      return <AssetThumbnail asset={asset} background={bg} logoColor={pickLogoColor(bg)} className="h-full w-full object-contain" />;
+      return <AssetThumbnail asset={asset} background={bg} logoColor={bg === "#0A0A0A" ? pickLogoColor(bg) : undefined} className="h-full w-full object-contain" />;
     }
     const url = asset.image_url || asset.thumbnail_url;
     const sil = imageSilhouettes[asset.id];

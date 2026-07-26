@@ -112,7 +112,7 @@ async function renderCanvasIconPng(asset: any, v: Variant, size = 1024): Promise
     outputWidth: 1200,
     outputHeight: 1200,
     paddingRatio: 0.16,
-    logoColor: v.fg,
+    logoColor: v.bg === "#0A0A0A" ? v.fg : undefined,
     normalizeLogoLockup: asset?.meta?.kind === "logo_lockup",
   });
   const img = await loadImage(dataUrl);
@@ -377,7 +377,7 @@ export default function SocialIcons() {
                           {isBrandLogotype ? (
                             <BrandLogotypePreview asset={asset} color={v.fg} fallback={project?.name || "Brand"} />
                           ) : isCanvas ? (
-                            <AssetThumbnail asset={asset} background={v.bg} logoColor={v.fg} className="h-full w-full object-contain" />
+                            <AssetThumbnail asset={asset} background={v.bg} logoColor={v.bg === "#0A0A0A" ? v.fg : undefined} className="h-full w-full object-contain" />
                           ) : previewSrc ? (
                             <img
                               src={previewSrc}
