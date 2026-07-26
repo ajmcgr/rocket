@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
-import { pickLogoColor, isDarkBg, silhouetteImage, transparentLogo } from "@/lib/logoContrast";
+import { isDarkBg, silhouetteImage, transparentLogo } from "@/lib/logoContrast";
 import { createCanvasElementsPreview } from "@/lib/previewThumbnail";
 
 const supabase = _sb as any;
