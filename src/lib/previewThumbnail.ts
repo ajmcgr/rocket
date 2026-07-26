@@ -1,5 +1,6 @@
 import { loadGoogleFont, type LogotypeState } from "@/lib/logotype";
 import type { CanvasElement } from "@/lib/canvasAsset";
+import { silhouetteImage, transparentLogo } from "@/lib/logoContrast";
 
 type PreviewOptions = {
   outputWidth?: number;
@@ -7,6 +8,7 @@ type PreviewOptions = {
   paddingRatio?: number;
   background?: string | null;
   normalizeLogoLockup?: boolean;
+  logoColor?: string;
 };
 
 const STAGE_W = 800;
@@ -76,7 +78,11 @@ function drawContained(
 }
 
 export async function createArtworkPreviewFromImageUrl(src: string, opts: PreviewOptions = {}): Promise<string> {
-  const image = await loadImage(src);
+  let sourceUrl = src;
+  try {
+    sourceUrl = opts.logoColor ? (await silhouetteImage(src, opts.logoColor)).url : (await transparentLogo(src)).url;
+  } catch {}
+  const image = await loadImage(sourceUrl);
   const source = document.createElement("canvas");
   source.width = Math.max(1, image.naturalWidth || image.width || DEFAULT_OUTPUT);
   source.height = Math.max(1, image.naturalHeight || image.height || DEFAULT_OUTPUT);
@@ -147,14 +153,14 @@ function textForState(state: LogotypeState) {
   return state.text;
 }
 
-function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { kind: "text" }>) {
+function drawText(ctx: CanvasRenderingContext2D, el: Extract<CanvasElement, { kind: "text" }>, colorOverride?: string) {
   const fontSize = Math.max(1, Number(el.fontSize) || 48);
   const weight = Number(el.fontWeight) || 400;
   const family = String(el.fontFamily || "Inter").trim() || "Inter";
   const text = String(el.text || "");
   const fontStyle = weight >= 600 ? "bold" : "normal";
   ctx.font = `${fontStyle} ${fontSize}px '${family}', ui-sans-serif, system-ui, sans-serif`;
-  ctx.fillStyle = el.color || "#0A0A0A";
+  ctx.fillStyle = colorOverride || el.color || "#0A0A0A";
   // Match Konva.Text's modern renderer: y is the top of the line box, then
   // text is drawn on an alphabetic baseline derived from the font box.
   ctx.textBaseline = "alphabetic";
@@ -357,7 +363,7 @@ export async function createCanvasElementsPreview(elements: CanvasElement[], opt
     }
     switch (el.kind) {
       case "text":
-        drawText(ctx, el);
+        drawText(ctx, el, opts.logoColor);
         break;
       case "rect":
       case "sticky": {
@@ -366,7 +372,7 @@ export async function createCanvasElementsPreview(elements: CanvasElement[], opt
         ctx.beginPath();
         ctx.roundRect(el.x, el.y, el.w, el.h, radius);
         ctx.fill();
-        if (el.kind === "sticky") drawText(ctx, { ...el, kind: "text", x: el.x + 12, y: el.y + 12, w: el.w - 24, h: el.h - 24, fontSize: 18, fontWeight: 400, fontFamily: "Inter", align: "left" });
+        if (el.kind === "sticky") drawText(ctx, { ...el, kind: "text", x: el.x + 12, y: el.y + 12, w: el.w - 24, h: el.h - 24, fontSize: 18, fontWeight: 400, fontFamily: "Inter", align: "left" }, opts.logoColor);
         break;
       }
       case "circle":
@@ -416,7 +422,11 @@ export async function createCanvasElementsPreview(elements: CanvasElement[], opt
       }
       case "image": {
         try {
-          const image = await loadImage(el.src);
+          let imageSrc = el.src;
+          try {
+            imageSrc = opts.logoColor ? (await silhouetteImage(el.src, opts.logoColor)).url : (await transparentLogo(el.src)).url;
+          } catch {}
+          const image = await loadImage(imageSrc);
           ctx.drawImage(image, el.x, el.y, el.w, el.h);
         } catch {}
         break;

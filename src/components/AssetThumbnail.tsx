@@ -12,6 +12,7 @@ type AssetThumbnailProps = {
   outputWidth?: number;
   outputHeight?: number;
   paddingRatio?: number;
+  logoColor?: string;
 };
 
 export default function AssetThumbnail({
@@ -23,6 +24,7 @@ export default function AssetThumbnail({
   outputWidth,
   outputHeight,
   paddingRatio,
+  logoColor,
 }: AssetThumbnailProps) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -36,6 +38,7 @@ export default function AssetThumbnail({
     outputWidth,
     outputHeight,
     paddingRatio,
+    logoColor,
     editor_state: asset?.editor_state,
   });
 
@@ -46,7 +49,7 @@ export default function AssetThumbnail({
 
     void (async () => {
       try {
-        const opts = { background, outputWidth, outputHeight, paddingRatio, normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" };
+        const opts = { background, outputWidth, outputHeight, paddingRatio, logoColor, normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" };
         const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
         const hasEditableSource = isBrandKitLogotypeAsset(asset) || isCanvasAsset(asset);
         if (isBrandKitLogotypeAsset(asset)) {
