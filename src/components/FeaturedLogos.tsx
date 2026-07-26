@@ -3,23 +3,54 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ICON_SEED_TEMPLATES, getIconOnlyDataUrl } from "@/lib/seedIconTemplates";
+import designduelRegular from "@/assets/featured/designduel-regular.png.asset.json";
+import designduelInverse from "@/assets/featured/designduel-inverse.png.asset.json";
 
-// A hand-picked shortlist of the strongest icon templates — spans styles,
-// colour moods, and typography so the grid reads as a real portfolio.
-// Mix of icon-only marks and full logotypes for variety.
+// Curated portfolio: real user favorites first, then a refreshed mix of
+// icon-only marks and full logotypes spanning styles and colour moods.
 const FEATURED: { name: string; iconOnly?: boolean }[] = [
-  { name: "Nova", iconOnly: true },
-  { name: "Prism AI" },
-  { name: "Aegis", iconOnly: true },
-  { name: "Vault" },
-  { name: "Bloom", iconOnly: true },
-  { name: "MAISON NOIR" },
-  { name: "Kernel", iconOnly: true },
-  { name: "Northwind" },
-  { name: "Lucid", iconOnly: true },
-  { name: "Momentum" },
-  { name: "Coin", iconOnly: true },
-  { name: "Atlas" },
+  { name: "Astra AI" },
+  { name: "Vertex", iconOnly: true },
+  { name: "Grove Bank" },
+  { name: "Cocoon", iconOnly: true },
+  { name: "ATELIER" },
+  { name: "Pulsecraft", iconOnly: true },
+  { name: "Salt & Sage" },
+  { name: "GLYPH", iconOnly: true },
+  { name: "House of Ember" },
+  { name: "Skyline OS", iconOnly: true },
+  { name: "Parable" },
+  { name: "Halcyon Modern", iconOnly: true },
+];
+
+// Real customer-uploaded marks pinned to the front of the carousel.
+const PINNED = [
+  {
+    id: "pinned-designduel-inverse",
+    title: "designduel",
+    asset_type: "logo",
+    image_url: designduelInverse.url,
+    background: "#E5E7EB",
+    prompt: "designduel",
+    creator_username: "Rocket Studio",
+    created_at: new Date().toISOString(),
+    meta: { template_style: "Lockup", seed: true },
+    editor_state: null,
+    _seed: true as const,
+  },
+  {
+    id: "pinned-designduel-regular",
+    title: "designduel mark",
+    asset_type: "logo",
+    image_url: designduelRegular.url,
+    background: "#FFFFFF",
+    prompt: "designduel mark",
+    creator_username: "Rocket Studio",
+    created_at: new Date().toISOString(),
+    meta: { template_style: "Icon", seed: true },
+    editor_state: null,
+    _seed: true as const,
+  },
 ];
 
 // Pure wordmark / logotype examples with no icon mark.
@@ -67,7 +98,7 @@ export default function FeaturedLogos() {
     _seed: true as const,
   }));
 
-  const picks = [...iconPicks, ...logotypePicks] as typeof ICON_SEED_TEMPLATES;
+  const picks = [...PINNED, ...iconPicks, ...logotypePicks] as typeof ICON_SEED_TEMPLATES;
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const scrollBy = (dir: 1 | -1) => {
