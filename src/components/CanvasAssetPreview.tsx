@@ -6,7 +6,9 @@ import KonvaImage from "@/components/KonvaImage";
 
 const STAGE_W = 800;
 const STAGE_H = 600;
-const PADDING = 40;
+// Safe area: keep ~12% padding on every side so no logo, wordmark or icon
+// ever touches the preview edge, regardless of aspect ratio.
+const PADDING = Math.round(Math.min(STAGE_W, STAGE_H) * 0.12);
 
 /**
  * Compute an axis-aligned bounding box for the visible artwork. Saved canvas
