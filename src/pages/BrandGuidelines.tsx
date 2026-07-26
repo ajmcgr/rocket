@@ -49,6 +49,30 @@ function normalizeHex(input: unknown): string | null {
   return `#${hex.toUpperCase()}`;
 }
 
+function isInkColor(color: { r: number; g: number; b: number }) {
+  const max = Math.max(color.r, color.g, color.b);
+  const min = Math.min(color.r, color.g, color.b);
+  const sat = max === 0 ? 0 : (max - min) / max;
+  const lightness = (max + min) / 510;
+  return lightness < 0.28 && sat < 0.35;
+}
+
+function shouldUsePalettePixel(r: number, g: number, b: number) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const sat = max === 0 ? 0 : (max - min) / max;
+  const lightness = (max + min) / 510;
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  if (isInkColor({ r, g, b })) return true;
+  if (lightness > 0.78 || lum > 0.9) return false;
+  if (sat < 0.25) return false;
+  return true;
+}
+
+function shouldUsePaletteHex(hex: string) {
+  const rgb = hexToRgb(hex);
+  return shouldUsePalettePixel(rgb.r, rgb.g, rgb.b);
+}
+
 function collectColorsFromState(state: any, out: Set<string>) {
   if (!state) return;
   const push = (value: unknown) => {
@@ -124,14 +148,8 @@ async function sampleImageColors(src: string): Promise<string[]> {
           const a = data[i + 3];
           if (a < 200) continue;
           const r = data[i], g = data[i + 1], b = data[i + 2];
-          const max = Math.max(r, g, b), min = Math.min(r, g, b);
-          const sat = max === 0 ? 0 : (max - min) / max;
-          // Skip near-white background and mid-grey AA fringe, but keep
-          // near-black ink so black wordmark text shows up in the palette.
-          const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-          if (lum > 0.95 && sat < 0.15) continue;
-          if (sat < 0.2 && lum > 0.35 && lum < 0.85) continue;
-          const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
+          if (!shouldUsePalettePixel(r, g, b)) continue;
+          const key = isInkColor({ r, g, b }) ? "ink" : `${r >> 4}-${g >> 4}-${b >> 4}`;
           const cur = buckets.get(key);
           if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
           else buckets.set(key, { r, g, b, count: 1 });
@@ -140,7 +158,12 @@ async function sampleImageColors(src: string): Promise<string[]> {
         finish(Array.from(buckets.values())
           .sort((a, b) => b.count - a.count)
           .slice(0, 12)
-          .map((bucket) => `#${to(Math.round(bucket.r / bucket.count))}${to(Math.round(bucket.g / bucket.count))}${to(Math.round(bucket.b / bucket.count))}`.toUpperCase()));
+          .map((bucket) => {
+            const color = { r: bucket.r / bucket.count, g: bucket.g / bucket.count, b: bucket.b / bucket.count };
+            return isInkColor(color)
+              ? "#0A0A0A"
+              : `#${to(Math.round(color.r))}${to(Math.round(color.g))}${to(Math.round(color.b))}`.toUpperCase();
+          }));
       } catch { finish([]); }
     };
     const attempt = (crossOrigin: "anonymous" | null, url: string) => {
@@ -394,23 +417,14 @@ export default function BrandGuidelines() {
   // Palette: prefer saved Brand Kit palette, fall back to shades of brand color.
   const palette = useMemo(() => {
     const collected = new Set<string>();
-    collectColorsDeep((project as any)?.meta, collected);
-    collectColorsDeep(meta.palette, collected);
-    collectColorsDeep(meta.brand_color, collected);
-    collectColorsDeep(brandColor, collected);
     collectColorsDeep(sampledColors, collected);
     savedAssets.forEach((asset) => {
-      collectColorsDeep(asset?.meta, collected);
-      collectColorsDeep(asset?.content, collected);
       collectColorsFromState(asset?.editor_state, collected);
     });
-    const saved = Array.from(collected);
-    if (saved.length >= 3) {
+    const saved = Array.from(collected).filter(shouldUsePaletteHex);
+    if (saved.length > 0) {
       const labels = ["Primary", "Secondary", "Accent", "Highlight", "Support"];
       const items = saved.slice(0, 8).map((hex, i) => ({ name: labels[i] || `Color ${i + 1}`, hex }));
-      // Always include ink + paper neutrals for practical usage.
-      if (!items.some((item) => item.hex.toLowerCase() === "#0a0a0a")) items.push({ name: "Ink", hex: "#0A0A0A" });
-      if (items.length < 5) items.push({ name: "Paper", hex: "#F5F5F4" });
       return items.slice(0, 8);
     }
     return [
