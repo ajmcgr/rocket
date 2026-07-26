@@ -242,7 +242,7 @@ const BrandKitHub = () => {
         title: "Brand kit downloaded",
         description: result.skipped.length
           ? `${result.included} files packed. See README.txt for ${result.skipped.length} skipped export${result.skipped.length === 1 ? "" : "s"}.`
-          : `${result.included} files packed across Logo/Icon Files, Palette, Fonts, and Brand Book.`,
+          : `${result.included} files packed across Logo/Icon Files, Social Icons, Palette, Fonts, and Brand Book.`,
       });
     } catch (e: any) {
       toast({ title: "Download failed", description: e?.message || "Could not build ZIP.", variant: "destructive" });

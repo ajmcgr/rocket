@@ -9,6 +9,9 @@ type AssetThumbnailProps = {
   className?: string;
   fallbackText?: string;
   background?: string | null;
+  outputWidth?: number;
+  outputHeight?: number;
+  paddingRatio?: number;
 };
 
 export default function AssetThumbnail({
@@ -17,6 +20,9 @@ export default function AssetThumbnail({
   className = "h-full w-full object-contain",
   fallbackText,
   background = null,
+  outputWidth,
+  outputHeight,
+  paddingRatio,
 }: AssetThumbnailProps) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -27,6 +33,9 @@ export default function AssetThumbnail({
     image_url: asset?.image_url,
     preview_url: asset?.preview_url || asset?.meta?.preview_url,
     background,
+    outputWidth,
+    outputHeight,
+    paddingRatio,
     editor_state: asset?.editor_state,
   });
 
@@ -37,7 +46,7 @@ export default function AssetThumbnail({
 
     void (async () => {
       try {
-        const opts = { background };
+        const opts = { background, outputWidth, outputHeight, paddingRatio };
         const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
         if (storedPreview) {
           if (!cancelled) setSrc(storedPreview);

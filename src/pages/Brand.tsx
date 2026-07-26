@@ -4,7 +4,6 @@ import { Download, Loader2, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype, logotypeToPng, logotypeToSvg } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import BrandLogotypePreview from "@/components/BrandLogotypePreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
@@ -227,6 +226,14 @@ export default function Brand() {
   const logoImageUrl = logoAsset?.image_url || logoAsset?.thumbnail_url;
   const imageVariants = useImageVariants(logoIsImage ? logoImageUrl : undefined);
 
+  const previewAssetForUrl = (src: string) => ({
+    ...logoAsset,
+    image_url: src,
+    thumbnail_url: null,
+    preview_url: null,
+    meta: { ...(logoAsset?.meta || {}), preview_url: null },
+  });
+
   const variants = useMemo<Record<Variant["key"], LogotypeState>>(
     () => ({
       regular: { ...baseState, color: baseState.color || "#0A0A0A" },
@@ -340,11 +347,14 @@ export default function Brand() {
                   <div key={v.key} className="flex flex-col gap-2">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">{v.label}</div>
                     <div className={`relative overflow-hidden rounded-2xl ${v.border ? `border ${v.border}` : ""} shadow-[0_10px_40px_-20px_rgba(15,23,42,0.15)]`} style={{ backgroundColor: v.bg }}>
-                    <div className="flex aspect-[16/9] items-center justify-center px-10">
-                      <img
-                        src={src}
+                    <div className="flex aspect-[16/9] items-center justify-center">
+                      <AssetThumbnail
+                        asset={previewAssetForUrl(src)}
                         alt={project?.name || "Logo"}
-                        className="max-h-full max-w-full object-contain"
+                        background={v.bg}
+                        outputWidth={1600}
+                        outputHeight={900}
+                        className="h-full w-full object-contain"
                       />
                     </div>
                     <button
@@ -382,8 +392,15 @@ export default function Brand() {
                     className={`relative overflow-hidden rounded-2xl ${v.border ? `border ${v.border}` : ""} shadow-[0_10px_40px_-20px_rgba(15,23,42,0.15)]`}
                     style={{ backgroundColor: v.bg }}
                   >
-                    <div className="flex aspect-[16/9] items-center justify-center px-8 py-6">
-                      <CanvasAssetPreview elements={logoAsset.editor_state as any} className="h-full w-full" background="transparent" />
+                    <div className="flex aspect-[16/9] items-center justify-center">
+                      <AssetThumbnail
+                        asset={logoAsset}
+                        alt={project?.name || "Logo"}
+                        background={v.bg}
+                        outputWidth={1600}
+                        outputHeight={900}
+                        className="h-full w-full object-contain"
+                      />
                     </div>
                   </div>
                 </div>
