@@ -49,7 +49,9 @@ export function Logotype({ state, className, fit = "natural", fontSizePx = 64 }:
     // tick is intentionally referenced so the memoized measurement re-runs after font load.
     void tick;
     const height = fontSize * 1.25;
-    const pad = fontSize * 0.25;
+    // Safe area: ~12% padding of the artwork so wide wordmarks and tall
+    // lockups never touch the card edge.
+    const pad = fontSize * 0.6;
     const safeMeasured = Number.isFinite(measuredWidth) && measuredWidth > 0
       ? measuredWidth
       : Math.max(1, displayText.length) * fontSize * 0.62;
