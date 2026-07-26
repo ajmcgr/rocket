@@ -292,6 +292,120 @@ function logotypeStateToCanvasText(state: LogotypeState): TextEl {
   };
 }
 
+type VisualBox = { x: number; y: number; w: number; h: number };
+
+const measureEditorText = async (el: TextEl): Promise<VisualBox> => {
+  const text = String(el.text || "");
+  const fontSize = Math.max(1, Number(el.fontSize) || 48);
+  const fontWeight = Number(el.fontWeight) || 400;
+  const fontFamily = String(el.fontFamily || "Inter").trim() || "Inter";
+  loadGoogleFont(fontFamily, [fontWeight]);
+  try { await document.fonts?.load?.(`${fontWeight} ${fontSize}px '${fontFamily}'`); } catch {}
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx && (ctx.font = `${fontWeight} ${fontSize}px '${fontFamily}', ui-sans-serif, system-ui, sans-serif`);
+  const metrics = ctx?.measureText(text);
+  const measuredWidth = Math.max(1, metrics?.width || text.length * fontSize * 0.58);
+  const measuredHeight = Math.max(
+    fontSize * 0.82,
+    (metrics?.actualBoundingBoxAscent || 0) + (metrics?.actualBoundingBoxDescent || 0),
+  );
+  const x = el.align === "center"
+    ? el.x + el.w / 2 - measuredWidth / 2
+    : el.align === "right"
+      ? el.x + el.w - measuredWidth
+      : el.x;
+  return { x, y: el.y + fontSize * 0.08, w: measuredWidth, h: measuredHeight };
+};
+
+const imageVisibleBox = async (el: ImgEl): Promise<VisualBox> => {
+  try {
+    const image = await loadEditorImage(el.src);
+    const naturalWidth = image.naturalWidth || image.width;
+    const naturalHeight = image.naturalHeight || image.height;
+    if (!naturalWidth || !naturalHeight) throw new Error("missing image size");
+    const scale = Math.min(1, 512 / Math.max(naturalWidth, naturalHeight));
+    const width = Math.max(1, Math.round(naturalWidth * scale));
+    const height = Math.max(1, Math.round(naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("missing image context");
+    ctx.drawImage(image, 0, 0, width, height);
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    const cornerOffsets = [0, (width - 1) * 4, (height - 1) * width * 4, (width * height - 1) * 4];
+    const bg: [number, number, number] = [data[0], data[1], data[2]];
+    const hasSolidBackground = data[3] > 240 && cornerOffsets.every((offset) => data[offset + 3] > 240 && colorDistance(data, offset, bg) < 22);
+    let minX = width, minY = height, maxX = -1, maxY = -1;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const offset = (y * width + x) * 4;
+        if (data[offset + 3] < 20) continue;
+        if (hasSolidBackground && colorDistance(data, offset, bg) < 42) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    if (maxX < minX || maxY < minY) throw new Error("missing visible image pixels");
+    return {
+      x: el.x + (minX / width) * el.w,
+      y: el.y + (minY / height) * el.h,
+      w: ((maxX - minX + 1) / width) * el.w,
+      h: ((maxY - minY + 1) / height) * el.h,
+    };
+  } catch {
+    return { x: el.x, y: el.y, w: el.w, h: el.h };
+  }
+};
+
+async function normalizeLogoLockupForEditor(elements: El[]): Promise<El[]> {
+  const visibleImages = elements.filter((el): el is ImgEl => el.kind === "image" && el.visible !== false);
+  const visibleTexts = elements.filter((el): el is TextEl => el.kind === "text" && el.visible !== false && String(el.text || "").trim().length > 0);
+  const image = visibleImages[0];
+  const text = visibleTexts.reduce<TextEl | null>((best, current) => {
+    if (!best) return current;
+    return String(current.text || "").length > String(best.text || "").length ? current : best;
+  }, null);
+  if (!image || !text) return elements;
+
+  const [imageBox, textBox] = await Promise.all([imageVisibleBox(image), measureEditorText(text)]);
+  const targetTextHeight = Math.max(24, textBox.h);
+  const imageScale = imageBox.h > 0 ? Math.min(1.35, Math.max(0.25, (targetTextHeight * 1.08) / imageBox.h)) : 1;
+  const scaledImageW = image.w * imageScale;
+  const scaledImageH = image.h * imageScale;
+  const localImageBox = {
+    x: (imageBox.x - image.x) * imageScale,
+    y: (imageBox.y - image.y) * imageScale,
+    w: imageBox.w * imageScale,
+    h: imageBox.h * imageScale,
+  };
+  const fontSize = Math.max(1, Number(text.fontSize) || 48);
+  const gap = Math.max(18, Math.min(34, fontSize * 0.32));
+  const totalW = localImageBox.w + gap + textBox.w;
+  const centerY = STAGE_H / 2;
+  const imageVisualX = (STAGE_W - totalW) / 2;
+  const imageVisualY = centerY - localImageBox.h / 2;
+  const nextImageX = imageVisualX - localImageBox.x;
+  const nextImageY = imageVisualY - localImageBox.y;
+  const nextTextX = imageVisualX + localImageBox.w + gap;
+  const nextTextY = centerY - fontSize * 0.58;
+  const textWidth = Math.max(text.w, Math.ceil(textBox.w + fontSize * 0.24));
+
+  return elements.map((el) => {
+    if (el.id === image.id) {
+      return { ...el, x: nextImageX, y: nextImageY, w: scaledImageW, h: scaledImageH } as El;
+    }
+    if (el.id === text.id) {
+      return { ...el, x: nextTextX, y: nextTextY, w: textWidth, h: Math.max(text.h, fontSize * 1.35), align: "left" } as El;
+    }
+    return el;
+  });
+}
+
 function makeLibraryIconDataUrl(name = "Rocket"): string {
   const Comp = (LucideIcons as any)[name] || (LucideIcons as any).Rocket;
   const markup = renderToStaticMarkup(<Comp size={64} strokeWidth={1.75} color="currentColor" />)
@@ -746,7 +860,8 @@ const Editor = () => {
       setAssetMeta({ title: a.title || "Untitled", project_id: a.project_id || null, asset_type: a.asset_type || null, image_url: a.image_url || null, thumbnail_url: a.thumbnail_url || null, meta: a.meta || {} });
       setBg(a.meta?.editor_bg || a.meta?.background || "#ffffff");
       if (a.editor_state && Array.isArray(a.editor_state)) {
-        const next = normalizeCanvasElements(a.editor_state);
+        const loaded = normalizeCanvasElements(a.editor_state);
+        const next = a.meta?.kind === "logo_lockup" ? await normalizeLogoLockupForEditor(loaded) : loaded;
         lastPersistedStateRef.current = JSON.stringify(next);
         _setEls(next); return;
       }
@@ -866,6 +981,7 @@ const Editor = () => {
     // from the source-of-truth preview (e.g. custom fonts not yet loaded), and
     // silently writing it back also modifies /saved and brand kit thumbnails.
     if (assetMeta.meta?.preview_url) return;
+    if (assetMeta.meta?.kind === "logo_lockup") return;
     if (previewBackfillRef.current === assetId) return;
 
     previewBackfillRef.current = assetId;
