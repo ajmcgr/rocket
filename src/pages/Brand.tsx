@@ -360,6 +360,7 @@ export default function Brand() {
                         asset={previewAssetForUrl(src)}
                         alt={project?.name || "Logo"}
                         background={v.bg}
+                        logoColor={v.fg}
                         outputWidth={1600}
                         outputHeight={900}
                         className="h-full w-full object-contain"
@@ -405,6 +406,7 @@ export default function Brand() {
                         asset={livePreviewAsset}
                         alt={project?.name || "Logo"}
                         background={v.bg}
+                        logoColor={v.fg}
                         outputWidth={1600}
                         outputHeight={900}
                         className="h-full w-full object-contain"

@@ -102,6 +102,8 @@ Deno.serve(async (req) => {
       user_id: user.id,
       name: srcProject.name || "Brandbear",
       description: srcProject.description || null,
+      tagline: srcProject.tagline || null,
+      brand_color: srcProject.brand_color || srcProject.meta?.brand_color || null,
       cover_url: srcProject.cover_url || null,
       meta: {
         ...(srcProject.meta || {}),
