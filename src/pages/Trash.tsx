@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { RotateCcw, Trash2, ArrowLeft, Search, LayoutGrid, List, ArrowUpDown, CheckSquare, Square, AlertTriangle } from "lucide-react";
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import { Logotype } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
 import BrandCover from "@/components/brand/BrandCover";
 import { type CanvasElement } from "@/lib/canvasAsset";
@@ -204,8 +203,6 @@ const Trash = () => {
       <AssetThumbnail asset={a} fallbackText={fallbackText} />
     ) : fallbackLogotype ? (
       <Logotype state={logotypePreviewState(a)} fit="contain" />
-    ) : isImage ? (
-      <img src={rasterPreview} alt={a.title || "Design"} className="h-full w-full object-cover" loading="lazy" />
     ) : brand ? (
       <BrandCover asset={a} />
     ) : (
