@@ -42,14 +42,31 @@ export function pickLogoVariant(bg: string): LogoVariantKey {
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("Failed to load logo image"));
-    img.src = src;
-  });
-  return img;
+  const attempt = (crossOrigin: "anonymous" | null, url: string) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      if (crossOrigin) img.crossOrigin = crossOrigin;
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Failed to load logo image"));
+      img.src = url;
+    });
+  // First try a CORS-enabled load so canvas ops (getImageData) work.
+  try { return await attempt("anonymous", src); } catch {}
+  // Fallback: fetch the bytes and load via object URL so images from origins
+  // without CORS headers still render and keep canvas untainted.
+  try {
+    const res = await fetch(src, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try { return await attempt(null, objectUrl); } finally {
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      }
+    }
+  } catch {}
+  // Last resort: load without CORS so at least the display path works
+  // (canvas ops may throw on tainted data, and callers already handle that).
+  return attempt(null, src);
 }
 
 /**

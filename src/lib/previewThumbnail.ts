@@ -14,14 +14,27 @@ const STAGE_H = 600;
 const DEFAULT_OUTPUT = 1200;
 const DEFAULT_PADDING_RATIO = 0.14;
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Unable to load preview image"));
-    image.src = src;
-  });
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  const attempt = (crossOrigin: "anonymous" | null, url: string) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      if (crossOrigin) image.crossOrigin = crossOrigin;
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Unable to load preview image"));
+      image.src = url;
+    });
+  try { return await attempt("anonymous", src); } catch {}
+  try {
+    const res = await fetch(src, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try { return await attempt(null, objectUrl); } finally {
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      }
+    }
+  } catch {}
+  return attempt(null, src);
 }
 
 function colorDistance(data: Uint8ClampedArray, offset: number, rgb: [number, number, number]) {

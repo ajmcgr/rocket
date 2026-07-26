@@ -234,7 +234,6 @@ export default function BrandGuidelines() {
       <img
         src={src}
         alt={brandName}
-        crossOrigin="anonymous"
         className={`max-w-full object-contain ${size === "lg" ? "max-h-full" : "max-h-full"}`}
       />
     );
