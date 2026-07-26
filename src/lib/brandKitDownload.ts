@@ -3,7 +3,14 @@ import { jsPDF } from "jspdf";
 import { logotypeToPng, logotypeToSvg } from "@/components/Logotype";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { loadBrandMeta } from "@/lib/brandMeta";
-import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
+import {
+  brandLogotypeToPng,
+  canvasLogoLockupIconElements,
+  canvasLogoLockupTextElements,
+  isBrandKitLogotypeAsset,
+  isCanvasLogoLockupAsset,
+  logotypeStateFromAsset,
+} from "@/lib/brandLogoAsset";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { createArtworkPreviewFromImageUrl, createCanvasElementsPreview } from "@/lib/previewThumbnail";
 import { pickLogoColor, isDarkBg, silhouetteImage, transparentLogo } from "@/lib/logoContrast";
@@ -173,19 +180,63 @@ async function buildImageVariantBlob(url: string, variant: "regular" | "inverse"
 }
 
 const buildSocialIconVariants = (brandColor: string): SocialIconVariant[] => {
-  const onBrand = pickLogoColor(brandColor);
+  const neutral = "#E5E7EB";
+  const onBrand = pickLogoColor(neutral);
   const onLightPaper = isDarkBg(brandColor) ? brandColor : "#0A0A0A";
   return [
-    { key: "circle-brand", shape: "circle", bg: brandColor, fg: onBrand },
+    { key: "circle-brand", shape: "circle", bg: neutral, fg: onBrand },
     { key: "circle-white", shape: "circle", bg: "#FFFFFF", fg: onLightPaper },
     { key: "circle-black", shape: "circle", bg: "#0A0A0A", fg: "#FFFFFF" },
-    { key: "rounded-brand", shape: "rounded", bg: brandColor, fg: onBrand },
+    { key: "rounded-brand", shape: "rounded", bg: neutral, fg: onBrand },
     { key: "rounded-white", shape: "rounded", bg: "#FFFFFF", fg: onLightPaper },
     { key: "rounded-black", shape: "rounded", bg: "#0A0A0A", fg: "#FFFFFF" },
-    { key: "square-brand", shape: "square", bg: brandColor, fg: onBrand },
+    { key: "square-brand", shape: "square", bg: neutral, fg: onBrand },
     { key: "square-white", shape: "square", bg: "#FFFFFF", fg: onLightPaper },
   ];
 };
+
+function visibleImageRect(img: HTMLImageElement) {
+  const w = img.naturalWidth || img.width || 1;
+  const h = img.naturalHeight || img.height || 1;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return { x: 0, y: 0, w, h };
+  ctx.drawImage(img, 0, 0, w, h);
+  let data: Uint8ClampedArray;
+  try { data = ctx.getImageData(0, 0, w, h).data; } catch { return { x: 0, y: 0, w, h }; }
+  const distance = (offset: number, rgb: [number, number, number]) => Math.max(
+    Math.abs(data[offset] - rgb[0]),
+    Math.abs(data[offset + 1] - rgb[1]),
+    Math.abs(data[offset + 2] - rgb[2]),
+  );
+  const corners = [0, (w - 1) * 4, (h - 1) * w * 4, (w * h - 1) * 4];
+  const rgb: [number, number, number] = [data[0], data[1], data[2]];
+  const hasPaper = data[3] > 235 && corners.every((offset) => data[offset + 3] > 235 && distance(offset, rgb) <= 36);
+  let minX = w;
+  let minY = h;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const offset = (y * w + x) * 4;
+      if (data[offset + 3] <= 18) continue;
+      if (hasPaper && distance(offset, rgb) <= 44) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  if (maxX < minX || maxY < minY) return { x: 0, y: 0, w, h };
+  const pad = Math.ceil(Math.max(maxX - minX + 1, maxY - minY + 1) * 0.015);
+  const x = Math.max(0, minX - pad);
+  const y = Math.max(0, minY - pad);
+  const right = Math.min(w - 1, maxX + pad);
+  const bottom = Math.min(h - 1, maxY + pad);
+  return { x, y, w: Math.max(1, right - x + 1), h: Math.max(1, bottom - y + 1) };
+}
 
 function socialShapeRadius(shape: SocialIconShape, size: number) {
   if (shape === "circle") return size / 2;
@@ -224,12 +275,11 @@ async function composeSocialIconCanvas(img: HTMLImageElement, variant: SocialIco
   const pad = Math.round(size * 0.18);
   const maxW = size - pad * 2;
   const maxH = size - pad * 2;
-  const sourceW = img.naturalWidth || img.width || size;
-  const sourceH = img.naturalHeight || img.height || size;
-  const scale = Math.min(maxW / sourceW, maxH / sourceH);
-  const drawW = sourceW * scale;
-  const drawH = sourceH * scale;
-  ctx.drawImage(img, (size - drawW) / 2, (size - drawH) / 2, drawW, drawH);
+  const sourceRect = visibleImageRect(img);
+  const scale = Math.min(maxW / sourceRect.w, maxH / sourceRect.h);
+  const drawW = sourceRect.w * scale;
+  const drawH = sourceRect.h * scale;
+  ctx.drawImage(img, sourceRect.x, sourceRect.y, sourceRect.w, sourceRect.h, (size - drawW) / 2, (size - drawH) / 2, drawW, drawH);
   return canvas;
 }
 
@@ -257,6 +307,8 @@ async function renderSocialIconCanvas(asset: any, variant: SocialIconVariant, br
       outputWidth: 1024,
       outputHeight: 1024,
       paddingRatio: 0.03,
+      normalizeLogoLockup: (asset as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
+      logoColor: variant.bg === "#0A0A0A" ? variant.fg : undefined,
     });
   } else {
     dataUrl = await logotypeToPng({ ...stateFromAsset(asset, brandName), color: variant.fg }, 4);
@@ -269,6 +321,31 @@ const stateFromAsset = (asset: any, brandName: string): LogotypeState => {
   if (isBrandKitLogotypeAsset(asset)) return logotypeStateFromAsset(asset, brandName);
   return defaultLogotypeState(brandName || asset?.title || "Brand");
 };
+
+function derivedCanvasAsset(asset: any, editorState: any[], suffix: string, assetType: string) {
+  return {
+    ...asset,
+    id: `${asset.id || safeFile(asset.title || assetType)}:${suffix}`,
+    title: `${asset.title || asset.asset_type || "logo"} ${suffix === "icon-only" ? "Icon" : "Logotype"}`,
+    asset_type: assetType,
+    image_url: null,
+    thumbnail_url: null,
+    editor_state: editorState,
+    meta: { ...(asset.meta || {}), derived_from: asset.id, derived_kind: suffix, preview_url: null },
+  };
+}
+
+function expandLogoAssets(assets: any[]) {
+  const expanded: any[] = [];
+  for (const asset of assets) {
+    expanded.push(asset);
+    const iconElements = canvasLogoLockupIconElements(asset);
+    if (iconElements) expanded.push(derivedCanvasAsset(asset, iconElements, "icon-only", "icon"));
+    const textElements = canvasLogoLockupTextElements(asset);
+    if (textElements) expanded.push(derivedCanvasAsset(asset, textElements, "logotype-only", "logotype"));
+  }
+  return expanded;
+}
 
 const addCanvasExports = async (folder: JSZip, base: string, canvas: HTMLCanvasElement) => {
   let count = 0;
@@ -408,6 +485,14 @@ async function buildBrandBookCanvas(brandName: string, primary: any, palette: st
         dataUrl = await brandLogotypeToPng(asset, pickLogoColor(bg) === "#FFFFFF" ? "#ffffff" : (state.color || "#0a0a0a"), brandName, 3);
         // Force contrast color regardless of saved color
         dataUrl = await brandLogotypeToPng(asset, pickLogoColor(bg), brandName, 3);
+      } else if (isCanvasAsset(asset)) {
+        dataUrl = await createCanvasElementsPreview(asset.editor_state, {
+          outputWidth: 1200,
+          outputHeight: 900,
+          paddingRatio: 0.14,
+          normalizeLogoLockup: (asset as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
+          logoColor: isDarkBg(bg) ? pickLogoColor(bg) : undefined,
+        });
       } else if (asset?.image_url || asset?.thumbnail_url) {
         const url = asset.image_url || asset.thumbnail_url;
         try {
@@ -573,8 +658,13 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
     included += 1;
   };
 
-  const logoAssets = assets.filter((a: any) => LOGO_TYPES.has(String(a?.asset_type || "").toLowerCase()) || isBrandKitLogotypeAsset(a) || a?.image_url || a?.thumbnail_url);
-  const primary = logoAssets.find((a: any) => isBrandKitLogotypeAsset(a)) || logoAssets.find((a: any) => a?.image_url || a?.thumbnail_url) || logoAssets[0];
+  const baseLogoAssets = assets.filter((a: any) => LOGO_TYPES.has(String(a?.asset_type || "").toLowerCase()) || isBrandKitLogotypeAsset(a) || isCanvasAsset(a) || a?.image_url || a?.thumbnail_url);
+  const logoAssets = expandLogoAssets(baseLogoAssets);
+  const primary = baseLogoAssets.find((a: any) => isCanvasLogoLockupAsset(a))
+    || baseLogoAssets.find((a: any) => isBrandKitLogotypeAsset(a))
+    || baseLogoAssets.find((a: any) => a?.image_url || a?.thumbnail_url)
+    || baseLogoAssets[0]
+    || logoAssets[0];
   const logoFolder = zip.folder("Logo-Icon Files")!;
 
   for (const asset of logoAssets) {
@@ -588,6 +678,22 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
         await addAllFormatsFromCanvas(logoFolder, "Logo-Icon Files", base, canvas, add, nativeSvg);
       } catch {
         skipped.push(asset.title || "Logotype");
+      }
+      continue;
+    }
+    if (isCanvasAsset(asset)) {
+      try {
+        const isSquare = (asset as any)?.meta?.derived_kind === "icon-only";
+        const dataUrl = await createCanvasElementsPreview(asset.editor_state, {
+          outputWidth: isSquare ? 1200 : 1600,
+          outputHeight: isSquare ? 1200 : 900,
+          paddingRatio: 0.14,
+          normalizeLogoLockup: (asset as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
+        });
+        const canvas = await urlToCanvas(dataUrl);
+        await addAllFormatsFromCanvas(logoFolder, "Logo-Icon Files", base, canvas, add);
+      } catch {
+        skipped.push((asset as any).title || "Logo/Icon file");
       }
       continue;
     }
@@ -612,6 +718,22 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
         const canvas = await urlToCanvas(dataUrl);
         const nativeSvg = primary?.editor_state?.kind === "logotype" ? logotypeToSvg({ ...base, color }) : undefined;
         await addAllFormatsFromCanvas(logoFolder, "Logo-Icon Files", `primary-logo-${variant}`, canvas, add, nativeSvg);
+      } catch {
+        skipped.push(`primary logo ${variant}`);
+      }
+    }
+  } else if (isCanvasAsset(primary)) {
+    for (const variant of ["regular", "inverse", "black"] as const) {
+      try {
+        const dataUrl = await createCanvasElementsPreview(primary.editor_state, {
+          outputWidth: 1600,
+          outputHeight: 900,
+          paddingRatio: 0.14,
+          normalizeLogoLockup: (primary as any)?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(primary),
+          logoColor: variant === "inverse" ? "#ffffff" : variant === "black" ? "#000000" : undefined,
+        });
+        const canvas = await urlToCanvas(dataUrl);
+        await addAllFormatsFromCanvas(logoFolder, "Logo-Icon Files", `primary-logo-${variant}`, canvas, add);
       } catch {
         skipped.push(`primary logo ${variant}`);
       }

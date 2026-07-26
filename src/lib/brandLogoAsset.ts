@@ -22,6 +22,29 @@ export function isCanvasLogotypeAsset(asset: any): boolean {
   return true;
 }
 
+export function isCanvasLogoLockupAsset(asset: any): boolean {
+  if (!isCanvasAsset(asset)) return false;
+  const elements = (asset.editor_state || []) as CanvasElement[];
+  const visible = elements.filter((el) => el.visible !== false);
+  const hasText = visible.some((el) => el.kind === "text" && Boolean(String(el.text || "").trim()));
+  const hasArtwork = visible.some((el) => el.kind !== "text");
+  return hasText && hasArtwork;
+}
+
+export function canvasLogoLockupIconElements(asset: any): CanvasElement[] | null {
+  if (!isCanvasLogoLockupAsset(asset)) return null;
+  const elements = ((asset.editor_state || []) as CanvasElement[]).filter((el) => el.visible !== false && el.kind !== "text");
+  return elements.length ? elements : null;
+}
+
+export function canvasLogoLockupTextElements(asset: any): CanvasElement[] | null {
+  if (!isCanvasLogoLockupAsset(asset)) return null;
+  const elements = ((asset.editor_state || []) as CanvasElement[]).filter(
+    (el) => el.visible !== false && el.kind === "text" && Boolean(String(el.text || "").trim()),
+  );
+  return elements.length ? elements : null;
+}
+
 export function isBrandKitLogotypeAsset(asset: any): boolean {
   return isStoredLogotypeAsset(asset) || isCanvasLogotypeAsset(asset);
 }
