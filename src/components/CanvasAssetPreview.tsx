@@ -177,10 +177,14 @@ export default function CanvasAssetPreview({
   elements,
   className,
   background = "#ffffff",
+  logoColor,
+  keyOutImages = false,
 }: {
   elements: CanvasElement[];
   className?: string;
   background?: string;
+  logoColor?: string;
+  keyOutImages?: boolean;
 }) {
   const [fontRenderTick, setFontRenderTick] = useState(0);
 
@@ -242,7 +246,11 @@ export default function CanvasAssetPreview({
             <Rect x={0} y={0} width={STAGE_W} height={STAGE_H} fill={background} />
           </Layer>
           <Layer x={fit.offsetX} y={fit.offsetY} scaleX={fit.scale} scaleY={fit.scale}>
-            {elements.map((el) => <RenderEl key={el.id} el={el} />)}
+            {elements.map((el) => {
+              const renderEl = logoColor && el.kind === "text" ? { ...el, color: logoColor } as CanvasElement : el;
+              if (renderEl.kind === "image") return <KonvaImage key={renderEl.id} el={renderEl} keyOutBackground={keyOutImages} />;
+              return <RenderEl key={renderEl.id} el={renderEl} />;
+            })}
           </Layer>
         </Stage>
       </div>
