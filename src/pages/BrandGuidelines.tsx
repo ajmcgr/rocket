@@ -70,8 +70,21 @@ function collectColorsFromState(state: any, out: Set<string>) {
   }
 }
 
+const NAMED_COLORS: Record<string, string> = {
+  blue: "#1676E3",
+  orange: "#F97316",
+  coral: "#FF6B5A",
+  red: "#EF4444",
+  green: "#22C55E",
+  yellow: "#EAB308",
+  pink: "#EC4899",
+  purple: "#8B5CF6",
+  black: "#0A0A0A",
+  white: "#FFFFFF",
+};
+
 function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
-  if (depth > 5 || value == null) return;
+  if (depth > 10 || value == null) return;
   const direct = normalizeHex(value);
   if (direct) out.add(direct);
   if (typeof value === "string") {
@@ -79,6 +92,10 @@ function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
       const hex = normalizeHex(match);
       if (hex) out.add(hex);
     }
+    const lower = value.toLowerCase();
+    Object.entries(NAMED_COLORS).forEach(([name, hex]) => {
+      if (new RegExp(`\\b${name}\\b`, "i").test(lower)) out.add(hex);
+    });
     return;
   }
   if (Array.isArray(value)) {
@@ -88,6 +105,75 @@ function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
   if (typeof value === "object") {
     Object.values(value as Record<string, unknown>).forEach((item) => collectColorsDeep(item, out, depth + 1));
   }
+}
+
+async function sampleImageColors(src: string): Promise<string[]> {
+  return new Promise((resolve) => {
+    const finish = (hexes: string[]) => resolve(hexes);
+    const run = (img: HTMLImageElement) => {
+      try {
+        const w = 96, h = 96;
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const ctx = c.getContext("2d");
+        if (!ctx) return finish([]);
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        const buckets = new Map<string, { r: number; g: number; b: number; count: number }>();
+        for (let i = 0; i < data.length; i += 4) {
+          const a = data[i + 3];
+          if (a < 200) continue;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          const sat = max === 0 ? 0 : (max - min) / max;
+          if (sat < 0.25) continue;
+          const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
+          const cur = buckets.get(key);
+          if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
+          else buckets.set(key, { r, g, b, count: 1 });
+        }
+        const to = (n: number) => n.toString(16).padStart(2, "0");
+        finish(Array.from(buckets.values())
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 12)
+          .map((bucket) => `#${to(Math.round(bucket.r / bucket.count))}${to(Math.round(bucket.g / bucket.count))}${to(Math.round(bucket.b / bucket.count))}`.toUpperCase()));
+      } catch { finish([]); }
+    };
+    const attempt = (crossOrigin: "anonymous" | null, url: string) => {
+      const img = new Image();
+      if (crossOrigin) img.crossOrigin = crossOrigin;
+      img.onload = () => run(img);
+      img.onerror = () => finish([]);
+      img.src = url;
+    };
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => run(img);
+    img.onerror = () => {
+      fetch(src, { mode: "cors" }).then((r) => r.ok ? r.blob() : Promise.reject()).then((blob) => {
+        const url = URL.createObjectURL(blob);
+        attempt(null, url);
+      }).catch(() => finish([]));
+    };
+    img.src = src;
+  });
+}
+
+function collectImageSources(asset: any): string[] {
+  const editorSources = Array.isArray(asset?.editor_state)
+    ? asset.editor_state.map((el: any) => el?.src).filter((src: unknown): src is string => typeof src === "string" && src.length > 0)
+    : [];
+  const candidates = [
+    asset?.image_url,
+    asset?.thumbnail_url,
+    asset?.meta?.preview_url,
+    asset?.meta?.source_url,
+    asset?.meta?.original_url,
+    asset?.meta?.image_url,
+    asset?.meta?.thumbnail_url,
+    ...editorSources,
+  ];
+  return Array.from(new Set(candidates.filter((src): src is string => typeof src === "string" && src.length > 0)));
 }
 
 
@@ -102,6 +188,7 @@ export default function BrandGuidelines() {
   const [busy, setBusy] = useState(false);
   const [busyPdf, setBusyPdf] = useState(false);
   const [meta, setMeta] = useState(() => loadBrandMeta(projectId));
+  const [sampledColors, setSampledColors] = useState<string[]>([]);
   const [imageSilhouettes, setImageSilhouettes] = useState<
     Record<string, { hasAlpha: boolean; transparent?: string; black?: string; white?: string }>
   >({});
@@ -129,6 +216,13 @@ export default function BrandGuidelines() {
           .select("id,name,tagline,brand_color,meta")
           .eq("id", projectId)
           .maybeSingle();
+        if (res.error) {
+          res = await supabase
+            .from("projects")
+            .select("id,name,tagline,meta")
+            .eq("id", projectId)
+            .maybeSingle();
+        }
         if (res.error) {
           res = await supabase
             .from("projects")
@@ -162,6 +256,9 @@ export default function BrandGuidelines() {
       setSavedAssets(saved);
       setMeta(loadBrandMeta(projectId));
       setLoading(false);
+      const imageSrcs = saved.flatMap((asset: any) => collectImageSources(asset));
+      const sampled = await Promise.all(imageSrcs.map((src: string) => sampleImageColors(src).catch(() => [])));
+      setSampledColors(Array.from(new Set(sampled.flat().map((hex) => normalizeHex(hex)).filter((hex): hex is string => Boolean(hex)))));
     },
     [projectId],
   );
@@ -297,6 +394,7 @@ export default function BrandGuidelines() {
     collectColorsDeep(meta.palette, collected);
     collectColorsDeep(meta.brand_color, collected);
     collectColorsDeep(brandColor, collected);
+    collectColorsDeep(sampledColors, collected);
     savedAssets.forEach((asset) => {
       collectColorsDeep(asset?.meta, collected);
       collectColorsDeep(asset?.content, collected);
@@ -305,11 +403,11 @@ export default function BrandGuidelines() {
     const saved = Array.from(collected);
     if (saved.length >= 3) {
       const labels = ["Primary", "Secondary", "Accent", "Highlight", "Support"];
-      const items = saved.slice(0, 5).map((hex, i) => ({ name: labels[i] || `Color ${i + 1}`, hex }));
+      const items = saved.slice(0, 8).map((hex, i) => ({ name: labels[i] || `Color ${i + 1}`, hex }));
       // Always include ink + paper neutrals for practical usage.
       if (!items.some((item) => item.hex.toLowerCase() === "#0a0a0a")) items.push({ name: "Ink", hex: "#0A0A0A" });
       if (items.length < 5) items.push({ name: "Paper", hex: "#F5F5F4" });
-      return items.slice(0, 5);
+      return items.slice(0, 8);
     }
     return [
       { name: "Primary", hex: brandColor },
@@ -318,7 +416,7 @@ export default function BrandGuidelines() {
       { name: "Ink", hex: "#0A0A0A" },
       { name: "Paper", hex: "#F5F5F4" },
     ];
-  }, [meta, brandColor, project, savedAssets]);
+  }, [meta, brandColor, project, savedAssets, sampledColors]);
 
   // Fonts: prefer the actual font on the saved primary logotype (kept live
   // in sync with /editor edits). Fall back to Brand Kit meta.font, then Inter.
@@ -482,7 +580,7 @@ export default function BrandGuidelines() {
             {/* Palette */}
             <section className="mt-8">
               <div className="mb-3 text-[10px] uppercase tracking-[0.3em] text-neutral-500">Color palette</div>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 {palette.map((c) => (
                   <div key={c.name} className="overflow-hidden rounded-xl border border-neutral-200">
                     <div className="h-16 w-full" style={{ background: c.hex }} />
