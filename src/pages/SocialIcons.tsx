@@ -378,7 +378,6 @@ export default function SocialIcons() {
                               src={previewSrc}
                               alt=""
                               className="max-h-full max-w-full object-contain"
-                              crossOrigin="anonymous"
                             />
                           ) : (
                             <Logotype state={iconState} fit="contain" />
