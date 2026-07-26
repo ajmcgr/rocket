@@ -798,8 +798,12 @@ export async function downloadCompleteBrandKit({ supabase, projectId, project }:
   const filename = `${safeFile(brandName)}.zip`;
   const meta = loadBrandMeta(projectId);
   const brandColor = cleanHex(meta.brand_color || loadedProject?.brand_color, "#1676e3");
-  const palette = meta.palette?.length ? meta.palette.map((c) => cleanHex(c, brandColor)) : [brandColor, "#0a0a0a", "#ffffff", "#f4f4f5"];
-  const font = meta.font || "Inter";
+  const metaPalette = meta.palette?.length ? meta.palette.map((c) => cleanHex(c, brandColor)) : [brandColor, "#0a0a0a", "#ffffff", "#f4f4f5"];
+  // Derive palette + font from the actual saved brand-kit artwork so the ZIP
+  // matches the on-screen Palette / Fonts pages exactly. Fall back to
+  // brand-meta only when derivation returns nothing.
+  const palette = await derivePaletteFromAssets(assets, metaPalette);
+  const font = deriveFontFromAssets(assets, meta.font || "Inter");
   const zip = new JSZip();
   const skipped: string[] = [];
   let included = 0;
