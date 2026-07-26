@@ -88,6 +88,59 @@ function luminance(hex: string) {
   return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
 }
 
+async function sampleImageColors(src: string): Promise<string[]> {
+  return new Promise((resolve) => {
+    const finish = (hexes: string[]) => resolve(hexes);
+    const run = (img: HTMLImageElement) => {
+      try {
+        const w = 64, h = 64;
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const ctx = c.getContext("2d");
+        if (!ctx) return finish([]);
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        const buckets = new Map<string, { r: number; g: number; b: number; count: number }>();
+        for (let i = 0; i < data.length; i += 4) {
+          const a = data[i + 3];
+          if (a < 200) continue;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          // Skip near-white and near-black backgrounds/neutrals.
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          const sat = max === 0 ? 0 : (max - min) / max;
+          if (sat < 0.25) continue;
+          // Quantize
+          const key = `${r >> 5}-${g >> 5}-${b >> 5}`;
+          const cur = buckets.get(key);
+          if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
+          else buckets.set(key, { r, g, b, count: 1 });
+        }
+        const sorted = Array.from(buckets.values()).sort((a, b) => b.count - a.count).slice(0, 4);
+        const to = (n: number) => n.toString(16).padStart(2, "0");
+        finish(sorted.map((b) => `#${to(Math.round(b.r / b.count))}${to(Math.round(b.g / b.count))}${to(Math.round(b.b / b.count))}`.toUpperCase()));
+      } catch { finish([]); }
+    };
+    const attempt = (crossOrigin: "anonymous" | null, url: string) => {
+      const img = new Image();
+      if (crossOrigin) img.crossOrigin = crossOrigin;
+      img.onload = () => run(img);
+      img.onerror = () => finish([]);
+      img.src = url;
+    };
+    // Try CORS first for untainted canvas
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => run(img);
+    img.onerror = () => {
+      fetch(src, { mode: "cors" }).then((r) => r.ok ? r.blob() : Promise.reject()).then((blob) => {
+        const url = URL.createObjectURL(blob);
+        attempt(null, url);
+      }).catch(() => finish([]));
+    };
+    img.src = src;
+  });
+}
+
 export default function PaletteExplorer() {
   const { id: projectId } = useParams();
   const { toast } = useToast();
@@ -137,6 +190,19 @@ export default function PaletteExplorer() {
       }
       setColors(Array.from(set));
       setLoading(false);
+      // Enrich with dominant colors sampled from raster logo images.
+      const imageSrcs = (assets || [])
+        .filter((a: any) => a?.meta?.saved_at && (a.image_url || a.thumbnail_url))
+        .map((a: any) => a.image_url || a.thumbnail_url);
+      const sampled = await Promise.all(imageSrcs.map((s: string) => sampleImageColors(s).catch(() => [])));
+      if (cancelled) return;
+      for (const list of sampled) {
+        for (const hex of list) {
+          const h = normalizeHex(hex);
+          if (h) set.add(h);
+        }
+      }
+      setColors(Array.from(set));
     })();
     return () => { cancelled = true; };
   }, [projectId]);
