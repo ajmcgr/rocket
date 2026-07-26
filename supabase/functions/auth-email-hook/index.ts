@@ -5,7 +5,7 @@
 // Centered logo, soft outer bg, white card, divider, headline, body, blue CTA, muted footer.
 
 const BRAND = {
-  blue: "#008BC2",
+  blue: "#1676e3",
   ink: "#0A0A0A",
   text: "#1F2937",
   muted: "#9CA3AF",
