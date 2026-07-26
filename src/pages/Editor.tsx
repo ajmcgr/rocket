@@ -861,6 +861,11 @@ const Editor = () => {
 
   useEffect(() => {
     if (!assetId || !assetMeta || assetMeta.image_url || assetMeta.thumbnail_url || !els.length) return;
+    // If the asset already has a generated preview (from /logos, /icons, or a prior
+    // capture), never overwrite it on load — the Konva capture at mount can differ
+    // from the source-of-truth preview (e.g. custom fonts not yet loaded), and
+    // silently writing it back also modifies /saved and brand kit thumbnails.
+    if (assetMeta.meta?.preview_url) return;
     if (previewBackfillRef.current === assetId) return;
 
     previewBackfillRef.current = assetId;
