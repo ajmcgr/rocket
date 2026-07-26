@@ -13,6 +13,7 @@ import AssetThumbnail from "@/components/AssetThumbnail";
 import { tryJson, type ColorSystem, type FontSystem, type BrandVoiceData, type BrandGuidelinesData, type LaunchCopyData, type ProductHuntCopyData, type SocialPostData, type FounderBio, type PresentationData, type TemplateLibraryData } from "@/lib/assetSchemas";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { buildLogotypeVariants, pickLogotypeText } from "@/lib/logotype";
+import { createArtworkPreviewFromImageUrl, createCanvasElementsPreview, createLogotypePreview } from "@/lib/previewThumbnail";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
 import { handleAiError } from "@/lib/aiErrors";
 import { track } from "@/lib/analytics";
@@ -277,6 +278,40 @@ function AssetCardThumb({ asset }: { asset: any }) {
       <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">{at.replace(/_/g, " ")}</span>
     </div>
   );
+}
+
+async function generatePreviewForAsset(asset: any) {
+  const background = asset?.meta?.background || null;
+  if (asset?.editor_state?.kind === "logotype") {
+    return createLogotypePreview(withResolvedLogotypeText(asset), { background });
+  }
+  if (isCanvasAsset(asset)) {
+    return createCanvasElementsPreview(asset.editor_state, { background });
+  }
+  const source = asset?.image_url || asset?.thumbnail_url;
+  if (source) return createArtworkPreviewFromImageUrl(source, { background });
+  return null;
+}
+
+async function createAndPersistPreviews(assetIds: string[]) {
+  if (!assetIds.length) return;
+  const { data } = await supabase
+    .from("assets")
+    .select("id,title,asset_type,image_url,thumbnail_url,content,prompt,editor_state,meta,source_url,created_at")
+    .in("id", assetIds);
+
+  for (const asset of data || []) {
+    try {
+      const previewUrl = await generatePreviewForAsset(asset);
+      if (!previewUrl) continue;
+      const meta = { ...(asset.meta || {}), preview_url: previewUrl };
+      await supabase.from("assets").update({ thumbnail_url: previewUrl, meta }).eq("id", asset.id);
+      asset.thumbnail_url = previewUrl;
+      asset.meta = meta;
+    } catch {
+      // Preview generation is non-destructive; keep the original design if thumbnailing fails.
+    }
+  }
 }
 
 const ASSET_CHIPS: { id: string; label: string; Icon: any; example: string; assetType?: string; promptPrefix?: string }[] = [
@@ -830,6 +865,7 @@ const Generate = () => {
       if (creditsErr) toast({ title: "Partial result", description: "Ran out of credits before finishing the workflow." });
       // Link generated assets to this chat
       await supabase.from("assets").update({ chat_id: newChatId, prompt: p }).in("id", allIds);
+      await createAndPersistPreviews(allIds);
       window.dispatchEvent(new Event("chats:refresh"));
       window.dispatchEvent(new Event("credits:refresh"));
       track("asset_generated", {
