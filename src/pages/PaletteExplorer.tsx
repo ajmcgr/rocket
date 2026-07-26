@@ -41,8 +41,21 @@ function collectColorsFromState(state: any, out: Set<string>) {
   }
 }
 
+const NAMED_COLORS: Record<string, string> = {
+  blue: "#1676E3",
+  orange: "#F97316",
+  coral: "#FF6B5A",
+  red: "#EF4444",
+  green: "#22C55E",
+  yellow: "#EAB308",
+  pink: "#EC4899",
+  purple: "#8B5CF6",
+  black: "#0A0A0A",
+  white: "#FFFFFF",
+};
+
 function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
-  if (depth > 5 || value == null) return;
+  if (depth > 10 || value == null) return;
   const direct = normalizeHex(value);
   if (direct) out.add(direct);
   if (typeof value === "string") {
@@ -50,6 +63,10 @@ function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
       const h = normalizeHex(match);
       if (h) out.add(h);
     }
+    const lower = value.toLowerCase();
+    Object.entries(NAMED_COLORS).forEach(([name, hex]) => {
+      if (new RegExp(`\\b${name}\\b`, "i").test(lower)) out.add(hex);
+    });
     return;
   }
   if (Array.isArray(value)) {
@@ -173,6 +190,7 @@ export default function PaletteExplorer() {
       setLoading(true);
       const loadProject = async () => {
         let res = await supabase.from("projects").select("brand_color,meta").eq("id", projectId).maybeSingle();
+        if (res.error) res = await supabase.from("projects").select("meta").eq("id", projectId).maybeSingle();
         if (res.error) res = await supabase.from("projects").select("brand_color").eq("id", projectId).maybeSingle();
         return res.data || null;
       };
