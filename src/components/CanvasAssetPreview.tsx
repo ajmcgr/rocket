@@ -6,10 +6,11 @@ import KonvaImage from "@/components/KonvaImage";
 
 const STAGE_W = 800;
 const STAGE_H = 600;
-// Safe area: keep 15% padding on every side so no logo, wordmark or icon
-// ever touches the preview edge, regardless of aspect ratio.
-const PADDING_X = Math.round(STAGE_W * 0.15);
-const PADDING_Y = Math.round(STAGE_H * 0.15);
+// Safe area: previews must show the complete mark before filling the card.
+// Keep a generous frame because many AI/editor lockups have inaccurate text
+// boxes or baked-in whitespace that otherwise makes wide wordmarks hit edges.
+const PADDING_X = Math.round(STAGE_W * 0.2);
+const PADDING_Y = Math.round(STAGE_H * 0.2);
 
 /**
  * Compute an axis-aligned bounding box for the visible artwork. Saved canvas
@@ -45,25 +46,56 @@ function textRenderBox(el: Extract<CanvasElement, { kind: "text" }>) {
   const metrics = getTextMetrics(el);
   const boxW = Math.max(1, Number(el.w) || metrics.width);
   const boxH = Math.max(1, Number(el.h) || metrics.height);
-  const width = Math.max(boxW, metrics.width);
-  const height = Math.max(boxH, metrics.height);
+  // Konva text is ultimately rendered to canvas, and browser canvas text
+  // metrics often under-report glyph overhangs / loaded Google-font widths.
+  // Give every text run a safety gutter so the shared fit calculation never
+  // crops long wordmarks at the right/bottom edge.
+  const textSafetyX = Math.max(metrics.fontSize * 0.45, metrics.width * 0.18);
+  const textSafetyY = Math.max(metrics.fontSize * 0.35, metrics.height * 0.18);
+  const width = Math.max(boxW, metrics.width + textSafetyX * 2);
+  const height = Math.max(boxH, metrics.height + textSafetyY * 2);
   const align = el.align || "left";
   const x = align === "center"
     ? (Number(el.x) || 0) + (boxW - width) / 2
     : align === "right"
       ? (Number(el.x) || 0) + boxW - width
-      : (Number(el.x) || 0);
+      : (Number(el.x) || 0) - textSafetyX;
   const y = (Number(el.y) || 0) + (boxH - height) / 2;
   return { x, y, width, height };
+}
+
+function rotatedBounds(bounds: { x: number; y: number; width: number; height: number }, rotation = 0) {
+  const angle = (Number(rotation) || 0) * Math.PI / 180;
+  if (!angle) return bounds;
+  const corners = [
+    { x: bounds.x, y: bounds.y },
+    { x: bounds.x + bounds.width, y: bounds.y },
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+    { x: bounds.x, y: bounds.y + bounds.height },
+  ];
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const rotated = corners.map((p) => ({
+    x: bounds.x + (p.x - bounds.x) * cos - (p.y - bounds.y) * sin,
+    y: bounds.y + (p.x - bounds.x) * sin + (p.y - bounds.y) * cos,
+  }));
+  const xs = rotated.map((p) => p.x);
+  const ys = rotated.map((p) => p.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  const maxX = Math.max(...xs);
+  const maxY = Math.max(...ys);
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
 function computeBounds(elements: CanvasElement[]) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const el of elements) {
     if (el.visible === false) continue;
-    const bounds = el.kind === "text"
+    const rawBounds = el.kind === "text"
       ? textRenderBox(el)
       : { x: Number(el.x) || 0, y: Number(el.y) || 0, width: Number(el.w) || 0, height: Number(el.h) || 0 };
+    const bounds = rotatedBounds(rawBounds, el.rotation || 0);
     const x = bounds.x;
     const y = bounds.y;
     const w = bounds.width;
@@ -76,7 +108,8 @@ function computeBounds(elements: CanvasElement[]) {
   if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) return null;
   const w = Math.max(1, maxX - minX);
   const h = Math.max(1, maxY - minY);
-  return { x: minX, y: minY, w, h };
+  const gutter = Math.max(24, Math.min(96, Math.max(w, h) * 0.08));
+  return { x: minX - gutter, y: minY - gutter, w: w + gutter * 2, h: h + gutter * 2 };
 }
 
 function RenderEl({ el }: { el: CanvasElement }) {
