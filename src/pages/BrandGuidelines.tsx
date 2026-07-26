@@ -4,8 +4,8 @@ import { Download, Loader2 } from "lucide-react";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import { supabase as _sb } from "@/integrations/supabase/client";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import BrandLogotypePreview from "@/components/BrandLogotypePreview";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, LOGOTYPE_FONTS, loadGoogleFont, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { isBrandKitLogotypeAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
@@ -37,6 +37,57 @@ function shade(hex: string, amount: number) {
   const mix = (c: number) => Math.max(0, Math.min(255, Math.round(c + amount)));
   const to = (c: number) => c.toString(16).padStart(2, "0");
   return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`;
+}
+
+function normalizeHex(input: unknown): string | null {
+  if (typeof input !== "string") return null;
+  const m = /^#?([a-f0-9]{3}|[a-f0-9]{6}|[a-f0-9]{8})$/i.exec(input.trim());
+  if (!m) return null;
+  let hex = m[1];
+  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+  if (hex.length === 8) hex = hex.slice(0, 6);
+  return `#${hex.toUpperCase()}`;
+}
+
+function collectColorsFromState(state: any, out: Set<string>) {
+  if (!state) return;
+  const push = (value: unknown) => {
+    const hex = normalizeHex(value);
+    if (hex) out.add(hex);
+  };
+  if (state.kind === "logotype") {
+    push(state.color);
+    return;
+  }
+  if (Array.isArray(state)) {
+    for (const el of state) {
+      push(el?.fill);
+      push(el?.color);
+      push(el?.stroke);
+      push(el?.background);
+      push(el?.backgroundColor);
+    }
+  }
+}
+
+function collectColorsDeep(value: unknown, out: Set<string>, depth = 0) {
+  if (depth > 5 || value == null) return;
+  const direct = normalizeHex(value);
+  if (direct) out.add(direct);
+  if (typeof value === "string") {
+    for (const match of value.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})\b/gi) || []) {
+      const hex = normalizeHex(match);
+      if (hex) out.add(hex);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectColorsDeep(item, out, depth + 1));
+    return;
+  }
+  if (typeof value === "object") {
+    Object.values(value as Record<string, unknown>).forEach((item) => collectColorsDeep(item, out, depth + 1));
+  }
 }
 
 
@@ -75,7 +126,7 @@ export default function BrandGuidelines() {
       const loadProject = async () => {
         let res = await supabase
           .from("projects")
-          .select("id,name,tagline,brand_color")
+          .select("id,name,tagline,brand_color,meta")
           .eq("id", projectId)
           .maybeSingle();
         if (res.error) {
@@ -90,7 +141,7 @@ export default function BrandGuidelines() {
       const loadAssets = async () => {
         let res = await supabase
           .from("assets")
-          .select("id,title,asset_type,editor_state,image_url,thumbnail_url,meta,created_at")
+          .select("id,title,asset_type,editor_state,image_url,thumbnail_url,meta,content,created_at")
           .eq("project_id", projectId)
           .is("deleted_at", null)
           .order("created_at", { ascending: false })
@@ -98,7 +149,7 @@ export default function BrandGuidelines() {
         if (res.error) {
           res = await supabase
             .from("assets")
-            .select("id,title,asset_type,editor_state,image_url,thumbnail_url,meta,created_at")
+            .select("id,title,asset_type,editor_state,image_url,thumbnail_url,meta,content,created_at")
             .eq("project_id", projectId)
             .order("created_at", { ascending: false })
             .limit(100);
@@ -223,7 +274,7 @@ export default function BrandGuidelines() {
       return <BrandLogotypePreview asset={asset} color={pickLogoColor(bg)} fallback={brandName} />;
     }
     if (isCanvasAsset(asset)) {
-      return <CanvasAssetPreview elements={asset.editor_state as any} className="h-full w-full" background="transparent" />;
+      return <AssetThumbnail asset={asset} background={bg} logoColor={pickLogoColor(bg)} className="h-full w-full object-contain" />;
     }
     const url = asset.image_url || asset.thumbnail_url;
     const sil = imageSilhouettes[asset.id];
@@ -241,12 +292,22 @@ export default function BrandGuidelines() {
 
   // Palette: prefer saved Brand Kit palette, fall back to shades of brand color.
   const palette = useMemo(() => {
-    const saved = Array.isArray(meta.palette) ? meta.palette.filter((c) => /^#[0-9a-f]{3,8}$/i.test(c)) : [];
+    const collected = new Set<string>();
+    collectColorsDeep((project as any)?.meta, collected);
+    collectColorsDeep(meta.palette, collected);
+    collectColorsDeep(meta.brand_color, collected);
+    collectColorsDeep(brandColor, collected);
+    savedAssets.forEach((asset) => {
+      collectColorsDeep(asset?.meta, collected);
+      collectColorsDeep(asset?.content, collected);
+      collectColorsFromState(asset?.editor_state, collected);
+    });
+    const saved = Array.from(collected);
     if (saved.length >= 3) {
       const labels = ["Primary", "Secondary", "Accent", "Highlight", "Support"];
-      const items = saved.slice(0, 4).map((hex, i) => ({ name: labels[i] || `Color ${i + 1}`, hex }));
+      const items = saved.slice(0, 5).map((hex, i) => ({ name: labels[i] || `Color ${i + 1}`, hex }));
       // Always include ink + paper neutrals for practical usage.
-      items.push({ name: "Ink", hex: "#0A0A0A" });
+      if (!items.some((item) => item.hex.toLowerCase() === "#0a0a0a")) items.push({ name: "Ink", hex: "#0A0A0A" });
       if (items.length < 5) items.push({ name: "Paper", hex: "#F5F5F4" });
       return items.slice(0, 5);
     }
@@ -257,7 +318,7 @@ export default function BrandGuidelines() {
       { name: "Ink", hex: "#0A0A0A" },
       { name: "Paper", hex: "#F5F5F4" },
     ];
-  }, [meta, brandColor]);
+  }, [meta, brandColor, project, savedAssets]);
 
   // Fonts: prefer the actual font on the saved primary logotype (kept live
   // in sync with /editor edits). Fall back to Brand Kit meta.font, then Inter.
