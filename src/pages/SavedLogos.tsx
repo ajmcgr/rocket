@@ -270,7 +270,30 @@ const SavedLogos = () => {
               <div className="border-t border-neutral-100 p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-neutral-900">{a.title || "Untitled logo"}</p>
+                    {renamingId === a.id ? (
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onBlur={() => void commitRename()}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === "Enter") { e.preventDefault(); void commitRename(); }
+                          if (e.key === "Escape") { e.preventDefault(); setRenamingId(null); }
+                        }}
+                        className="w-full truncate rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-500"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); startRename(a); }}
+                        title="Click to rename"
+                        className="block max-w-full truncate rounded text-left text-sm font-medium text-neutral-900 hover:bg-neutral-100 px-1 -mx-1"
+                      >
+                        {a.title || "Untitled logo"}
+                      </button>
+                    )}
                     <p className="mt-0.5 truncate text-[11px] text-neutral-500">
                       {new Date(a.updated_at || a.created_at).toLocaleDateString()}
                     </p>
@@ -321,7 +344,30 @@ const SavedLogos = () => {
                 <DesignPreview asset={a} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-neutral-900">{a.title || "Untitled logo"}</div>
+                {renamingId === a.id ? (
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onBlur={() => void commitRename()}
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === "Enter") { e.preventDefault(); void commitRename(); }
+                      if (e.key === "Escape") { e.preventDefault(); setRenamingId(null); }
+                    }}
+                    className="w-full truncate rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-500"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); startRename(a); }}
+                    title="Click to rename"
+                    className="block max-w-full truncate rounded text-left text-sm font-medium text-neutral-900 hover:bg-neutral-100 px-1 -mx-1"
+                  >
+                    {a.title || "Untitled logo"}
+                  </button>
+                )}
                 <div className="truncate text-xs text-neutral-500">
                   {(a.asset_type || "Design").replace(/_/g, " ")} · {new Date(a.updated_at || a.created_at).toLocaleDateString()}
                 </div>
