@@ -392,7 +392,12 @@ async function normalizeLogoLockupForEditor(elements: El[]): Promise<El[]> {
   const nextImageX = imageVisualX - localImageBox.x;
   const nextImageY = imageVisualY - localImageBox.y;
   const nextTextX = imageVisualX + localImageBox.w + gap;
-  const nextTextY = centerY - fontSize * 0.58;
+  // Align the actual visible text pixels to the icon's visible centerline.
+  // The previous font-size heuristic placed Konva text a few pixels high for
+  // many generated lockups, so opening a generated logo looked different from
+  // the /logos preview even before the user edited anything.
+  const textVisualOffsetY = textBox.y - text.y;
+  const nextTextY = centerY - textBox.h / 2 - textVisualOffsetY;
   const textWidth = Math.max(text.w, Math.ceil(textBox.w + fontSize * 0.24));
 
   return elements.map((el) => {
