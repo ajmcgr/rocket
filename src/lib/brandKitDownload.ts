@@ -678,10 +678,12 @@ async function buildBrandBookCanvas(brandName: string, primary: any, palette: st
     }
   };
 
+  // Match the on-screen Brand Book / Logo Files: regular + neutral-grey
+  // inverse on row 1, brand-color + black on row 2.
   await drawTile(primary, "#ffffff", M, y);
-  await drawTile(primary, brandColor, M + tileW + 24, y);
+  await drawTile(primary, "#E5E7EB", M + tileW + 24, y);
   y += tileH + 24;
-  await drawTile(primary, "#ffffff", M, y);
+  await drawTile(primary, brandColor, M, y);
   await drawTile(primary, "#0a0a0a", M + tileW + 24, y);
   y += tileH + 48;
 
