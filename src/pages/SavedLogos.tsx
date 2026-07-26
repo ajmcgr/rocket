@@ -2,12 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Logotype, logotypeToPng } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
-import BrandLogotypePreview from "@/components/BrandLogotypePreview";
+import { logotypeToPng } from "@/components/Logotype";
 import AssetThumbnail from "@/components/AssetThumbnail";
-import { isBrandKitLogotypeAsset } from "@/lib/brandLogoAsset";
-import { isCanvasAsset } from "@/lib/canvasAsset";
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import BrandFromAssetMenu from "@/components/BrandFromAssetMenu";
 import {

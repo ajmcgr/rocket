@@ -10,6 +10,7 @@ import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, 
 import { Logotype } from "@/components/Logotype";
 import BrandLogotypePreview from "@/components/BrandLogotypePreview";
 import CanvasAssetPreview from "@/components/CanvasAssetPreview";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { isBrandKitLogotypeAsset } from "@/lib/brandLogoAsset";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 
@@ -375,8 +376,6 @@ export default function BrandHub() {
           <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {projects.filter((p) => (designsByProject.get(p.id) || []).some((d: any) => d?.meta?.saved_at)).map((project) => {
               const logo = projectLogos.get(project.id);
-              const preview = logo?.thumbnail_url || logo?.image_url || project?.cover_url;
-              const logoState = logo?.editor_state?.kind === "logotype" ? logo.editor_state : null;
               const designCount = projectDesignCount(project.id);
               return (
                 <Link
@@ -385,12 +384,10 @@ export default function BrandHub() {
                   className="group block cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:shadow-md"
                 >
                   <div className="flex aspect-square w-full items-center justify-center bg-neutral-50 p-4">
-                    {logo && isBrandKitLogotypeAsset(logo) ? (
-                      <BrandLogotypePreview asset={logo} color="#0A0A0A" fallback={project.name || "Brand"} />
-                    ) : logo && isCanvasAsset(logo) ? (
-                      <CanvasAssetPreview elements={logo.editor_state as any} className="h-full w-full" background="transparent" />
-                    ) : preview ? (
-                      <img src={preview} alt="" className="max-h-full max-w-full object-contain" loading="lazy" />
+                    {logo ? (
+                      <AssetThumbnail asset={logo} alt={project.name || "Brand"} />
+                    ) : project?.cover_url ? (
+                      <AssetThumbnail asset={{ image_url: project.cover_url, title: project.name }} alt={project.name || "Brand"} />
                     ) : (
                       <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-neutral-900 text-lg font-semibold text-white">
                         {String(project.name || "B").trim().slice(0, 2).toUpperCase()}
