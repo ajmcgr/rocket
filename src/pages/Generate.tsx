@@ -1064,8 +1064,10 @@ const Generate = () => {
                             );
                           }
                           return (
-                            <div className="aspect-[4/3] w-full overflow-hidden">
-                              <AssetCardThumb asset={a} />
+                            <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-white p-6">
+                              <div className="h-full w-full">
+                                <AssetCardThumb asset={a} />
+                              </div>
                             </div>
                           );
                         })()}
