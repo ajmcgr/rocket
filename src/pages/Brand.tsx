@@ -8,6 +8,8 @@ import BrandLogotypePreview from "@/components/BrandLogotypePreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
+import { createCanvasElementsPreview } from "@/lib/previewThumbnail";
+import { isCanvasLogoLockupAsset } from "@/lib/brandLogoAsset";
 import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeStateFromAsset } from "@/lib/brandLogoAsset";
 import { useAuth } from "@/contexts/AuthContext";
 import {
