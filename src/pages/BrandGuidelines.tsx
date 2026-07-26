@@ -554,10 +554,10 @@ export default function BrandGuidelines() {
                     {renderAssetOn(primaryAsset, "#FFFFFF")}
                   </div>
                   <div
-                    className="flex h-40 items-center justify-center rounded-xl px-6"
-                    style={{ background: brandColor }}
+                    className="flex h-40 items-center justify-center rounded-xl border border-neutral-200 px-6"
+                    style={{ background: "#E5E7EB" }}
                   >
-                    {renderAssetOn(primaryAsset, brandColor)}
+                    {renderAssetOn(primaryAsset, "#E5E7EB")}
                   </div>
                   {secondaryAsset ? (
                     <>
