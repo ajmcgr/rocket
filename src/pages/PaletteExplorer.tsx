@@ -60,6 +60,31 @@ function shouldSamplePixel(r: number, g: number, b: number) {
   return true;
 }
 
+function shouldSampleHex(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  return shouldSamplePixel(r, g, b);
+}
+
+function collectColorsFromState(state: any, out: Set<string>) {
+  const push = (value: unknown) => {
+    const hex = normalizeHex(value);
+    if (hex && shouldSampleHex(hex)) out.add(isInkBucket(hexToRgb(hex)) ? "#0A0A0A" : hex);
+  };
+  if (!state) return;
+  if (state.kind === "logotype") {
+    push(state.color);
+    return;
+  }
+  if (Array.isArray(state)) {
+    for (const el of state) {
+      push(el?.fill);
+      push(el?.color);
+      push(el?.stroke);
+      push(el?.lineColor);
+    }
+  }
+}
+
 async function sampleImageBuckets(src: string): Promise<Bucket[]> {
   return new Promise((resolve) => {
     const finish = (b: Bucket[]) => resolve(b);
@@ -184,7 +209,11 @@ export default function PaletteExplorer() {
       );
       if (cancelled) return;
       const all: Bucket[] = bucketLists.flat();
-      const final = clusterBuckets(all, 6);
+      const stateColors = new Set<string>();
+      (assets || [])
+        .filter((a: any) => a?.meta?.saved_at)
+        .forEach((a: any) => collectColorsFromState(a?.editor_state, stateColors));
+      const final = Array.from(new Set([...clusterBuckets(all, 6), ...stateColors]));
       setColors(final);
       setLoading(false);
     })();
