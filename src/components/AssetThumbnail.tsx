@@ -48,10 +48,7 @@ export default function AssetThumbnail({
       try {
         const opts = { background, outputWidth, outputHeight, paddingRatio };
         const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
-        if (storedPreview) {
-          if (!cancelled) setSrc(storedPreview);
-          return;
-        }
+        const hasEditableSource = isBrandKitLogotypeAsset(asset) || isCanvasAsset(asset);
         if (isBrandKitLogotypeAsset(asset)) {
           const state = logotypeStateFromAsset(asset, asset?.title || "Brand");
           const preview = await createLogotypePreview(state, opts);
@@ -61,6 +58,10 @@ export default function AssetThumbnail({
         if (isCanvasAsset(asset)) {
           const preview = await createCanvasElementsPreview(asset.editor_state, opts);
           if (!cancelled) setSrc(preview);
+          return;
+        }
+        if (storedPreview && !hasEditableSource) {
+          if (!cancelled) setSrc(storedPreview);
           return;
         }
         const url = asset?.thumbnail_url || asset?.image_url;
