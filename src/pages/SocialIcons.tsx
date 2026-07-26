@@ -7,7 +7,14 @@ import BrandLogotypePreview from "@/components/BrandLogotypePreview";
 import AssetThumbnail from "@/components/AssetThumbnail";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";
 import { isCanvasAsset } from "@/lib/canvasAsset";
-import { brandLogotypeToPng, isBrandKitLogotypeAsset, logotypeLabel } from "@/lib/brandLogoAsset";
+import {
+  brandLogotypeToPng,
+  canvasLogoLockupIconElements,
+  canvasLogoLockupTextElements,
+  isBrandKitLogotypeAsset,
+  isCanvasLogoLockupAsset,
+  logotypeLabel,
+} from "@/lib/brandLogoAsset";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -111,10 +118,53 @@ async function renderCanvasIconPng(asset: any, v: Variant, size = 1024): Promise
     outputHeight: 1200,
     paddingRatio: 0.16,
     logoColor: v.bg === "#0A0A0A" ? v.fg : undefined,
-    normalizeLogoLockup: asset?.meta?.kind === "logo_lockup",
+    normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" || isCanvasLogoLockupAsset(asset),
   });
   const img = await loadImage(dataUrl);
   return await composeIcon(img, v, size);
+}
+
+function visibleImageRect(img: HTMLImageElement) {
+  const w = img.naturalWidth || img.width || 1;
+  const h = img.naturalHeight || img.height || 1;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return { x: 0, y: 0, w, h };
+  ctx.drawImage(img, 0, 0, w, h);
+  let data: Uint8ClampedArray;
+  try { data = ctx.getImageData(0, 0, w, h).data; } catch { return { x: 0, y: 0, w, h }; }
+  const distance = (offset: number, rgb: [number, number, number]) => Math.max(
+    Math.abs(data[offset] - rgb[0]),
+    Math.abs(data[offset + 1] - rgb[1]),
+    Math.abs(data[offset + 2] - rgb[2]),
+  );
+  const corners = [0, (w - 1) * 4, (h - 1) * w * 4, (w * h - 1) * 4];
+  const rgb: [number, number, number] = [data[0], data[1], data[2]];
+  const hasPaper = data[3] > 235 && corners.every((offset) => data[offset + 3] > 235 && distance(offset, rgb) <= 36);
+  let minX = w;
+  let minY = h;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const offset = (y * w + x) * 4;
+      if (data[offset + 3] <= 18) continue;
+      if (hasPaper && distance(offset, rgb) <= 44) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  if (maxX < minX || maxY < minY) return { x: 0, y: 0, w, h };
+  const pad = Math.ceil(Math.max(maxX - minX + 1, maxY - minY + 1) * 0.015);
+  const x = Math.max(0, minX - pad);
+  const y = Math.max(0, minY - pad);
+  const right = Math.min(w - 1, maxX + pad);
+  const bottom = Math.min(h - 1, maxY + pad);
+  return { x, y, w: Math.max(1, right - x + 1), h: Math.max(1, bottom - y + 1) };
 }
 
 async function composeIcon(img: HTMLImageElement, v: Variant, size: number): Promise<Blob> {
@@ -150,12 +200,38 @@ async function composeIcon(img: HTMLImageElement, v: Variant, size: number): Pro
   const pad = Math.round(size * 0.18);
   const maxW = size - pad * 2;
   const maxH = size - pad * 2;
-  const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
-  const w = img.naturalWidth * scale;
-  const h = img.naturalHeight * scale;
-  ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+  const rect = visibleImageRect(img);
+  const scale = Math.min(maxW / rect.w, maxH / rect.h);
+  const w = rect.w * scale;
+  const h = rect.h * scale;
+  ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, (size - w) / 2, (size - h) / 2, w, h);
 
   return await new Promise<Blob>((res) => canvas.toBlob((b) => res(b!), "image/png"));
+}
+
+function derivedCanvasAsset(asset: any, editorState: any[], suffix: string, assetType: string) {
+  return {
+    ...asset,
+    id: `${asset.id || safeName(asset.title || assetType)}:${suffix}`,
+    title: `${asset.title || asset.asset_type || "logo"} ${suffix === "icon-only" ? "Icon" : "Logotype"}`,
+    asset_type: assetType,
+    image_url: null,
+    thumbnail_url: null,
+    editor_state: editorState,
+    meta: { ...(asset.meta || {}), derived_from: asset.id, derived_kind: suffix, preview_url: null },
+  };
+}
+
+function expandSocialAssets(assets: any[]) {
+  const expanded: any[] = [];
+  for (const asset of assets) {
+    expanded.push(asset);
+    const iconElements = canvasLogoLockupIconElements(asset);
+    if (iconElements) expanded.push(derivedCanvasAsset(asset, iconElements, "icon-only", "icon"));
+    const textElements = canvasLogoLockupTextElements(asset);
+    if (textElements) expanded.push(derivedCanvasAsset(asset, textElements, "logotype-only", "logotype"));
+  }
+  return expanded;
 }
 
 export default function SocialIcons() {
@@ -187,7 +263,7 @@ export default function SocialIcons() {
       setProject(proj || null);
       // Mirror the Brand Kit filter: only designs the user explicitly saved.
       const kit = (assets || []).filter((a: any) => Boolean(a?.meta?.saved_at));
-      setLogoAssets(kit);
+      setLogoAssets(expandSocialAssets(kit));
       setLoading(false);
     })();
     return () => { cancelled = true; };
