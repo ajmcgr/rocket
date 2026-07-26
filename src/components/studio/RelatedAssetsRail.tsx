@@ -1,12 +1,8 @@
-import { Logotype } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
-import { isCanvasAsset } from "@/lib/canvasAsset";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { categoryOf, CATEGORY_LABEL, type AssetCategory } from "@/lib/assetFamily";
 
 function Thumb({ asset }: { asset: any }) {
-  if (asset?.editor_state?.kind === "logotype") return <Logotype state={asset.editor_state} fit="contain" />;
-  if (isCanvasAsset(asset)) return <CanvasAssetPreview elements={asset.editor_state} className="h-full w-full" />;
-  if (asset.image_url) return <img src={asset.image_url} alt="" className="h-full w-full object-cover" />;
+  if (asset?.editor_state || asset?.image_url || asset?.thumbnail_url) return <AssetThumbnail asset={asset} />;
   return (
     <div className="flex h-full w-full items-center justify-center bg-neutral-50 text-[10px] uppercase tracking-wider text-neutral-400">
       {asset.asset_type}

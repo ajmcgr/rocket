@@ -30,6 +30,7 @@ import { isBrandAsset } from "@/lib/assetExperience";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as LucideIcons from "lucide-react";
+import { createArtworkPreviewFromCanvas } from "@/lib/previewThumbnail";
 const supabase = _sb as any;
 
 type Base = {
@@ -850,7 +851,8 @@ const Editor = () => {
     if (!stage) return null;
     return withSelectionHidden(async () => {
       try {
-        return stage.toDataURL({ pixelRatio: 0.5, mimeType: "image/png" });
+        const canvas = stage.toCanvas({ pixelRatio: 2 });
+        return createArtworkPreviewFromCanvas(canvas, { background: null });
       } catch {
         return null;
       }
@@ -866,9 +868,10 @@ const Editor = () => {
       void (async () => {
         const thumbnailUrl = await captureThumbnail();
         if (!thumbnailUrl) return;
-        const { error } = await supabase.from("assets").update({ thumbnail_url: thumbnailUrl }).eq("id", assetId);
+        const meta = { ...(assetMeta?.meta || {}), preview_url: thumbnailUrl };
+        const { error } = await supabase.from("assets").update({ thumbnail_url: thumbnailUrl, meta }).eq("id", assetId);
         if (!error) {
-          setAssetMeta((current) => current ? { ...current, thumbnail_url: thumbnailUrl } : current);
+          setAssetMeta((current) => current ? { ...current, thumbnail_url: thumbnailUrl, meta } : current);
         }
       })();
     }, 180);
@@ -904,7 +907,10 @@ const Editor = () => {
         saved_at: prevMeta.saved_at || new Date().toISOString(),
       };
       const updatePayload: Record<string, unknown> = { editor_state: els as any, meta: nextMeta };
-      if (thumbnail_url) updatePayload.thumbnail_url = thumbnail_url;
+      if (thumbnail_url) {
+        nextMeta.preview_url = thumbnail_url;
+        updatePayload.thumbnail_url = thumbnail_url;
+      }
       const { error } = await supabase.from("assets").update(updatePayload).eq("id", assetId);
       if (error) { setSaveStatus("idle"); return; }
       setAssetMeta((current) => current ? { ...current, meta: nextMeta } : current);

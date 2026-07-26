@@ -2,11 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Logotype, logotypeToPng } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
-import BrandLogotypePreview from "@/components/BrandLogotypePreview";
-import { isBrandKitLogotypeAsset } from "@/lib/brandLogoAsset";
-import { isCanvasAsset } from "@/lib/canvasAsset";
+import { logotypeToPng } from "@/components/Logotype";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import BrandFromAssetMenu from "@/components/BrandFromAssetMenu";
 import {
@@ -176,28 +173,9 @@ const SavedLogos = () => {
   };
 
   const DesignPreview = ({ asset }: { asset: any }) => {
-    const isBrandLogotype = isBrandKitLogotypeAsset(asset);
-    const isLogotype = asset?.editor_state?.kind === "logotype";
-    const isCanvas = isCanvasAsset(asset);
-    // Prefer live editor_state over any generated image_url so edits from
-    // /editor propagate to preview cards.
-    const isImage = asset.image_url && !isLogotype && !isCanvas && !isBrandLogotype;
-
     return (
       <div className="h-full w-full" style={{ background: asset?.meta?.background || undefined }}>
-        {isBrandLogotype ? (
-          <div className="flex h-full w-full items-center justify-center p-4">
-            <BrandLogotypePreview asset={asset} color="#0A0A0A" fallback={asset.title || "Logo"} />
-          </div>
-        ) : isImage ? (
-          <img src={asset.thumbnail_url || asset.image_url} alt={asset.title || "Logo"} className="h-full w-full object-contain" loading="lazy" />
-        ) : isCanvas ? (
-          <CanvasAssetPreview elements={(asset.editor_state as any) || []} className="h-full w-full" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center p-4 text-center text-xs text-neutral-500">
-            <span className="line-clamp-6 whitespace-pre-wrap">{(asset.prompt || "").slice(0, 220)}</span>
-          </div>
-        )}
+        <AssetThumbnail asset={asset} fallbackText={(asset.prompt || "").slice(0, 220)} background={asset?.meta?.background || null} />
       </div>
     );
   };

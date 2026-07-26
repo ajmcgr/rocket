@@ -11,9 +11,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import { AssetGridSkeleton } from "@/components/Skeletons";
-import { Logotype } from "@/components/Logotype";
-import CanvasAssetPreview from "@/components/CanvasAssetPreview";
-import { isCanvasAsset } from "@/lib/canvasAsset";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { CollectionView, DesignSort, sortByOption } from "@/lib/designCollections";
 import { matchesDesignQuery, rankDesignsByRelevance } from "@/lib/searchRelevance";
 import { SEED_TEMPLATES } from "@/lib/seedTemplates";
@@ -228,28 +226,14 @@ const Templates = () => {
   const hasMore = filtered.length > visibleItems.length;
 
   const DesignPreview = ({ design }: { design: any }) => {
-    const isLogotype = design?.editor_state?.kind === "logotype";
-    const isCanvas = isCanvasAsset(design);
     const seedImage = design?._seed && (design.thumbnail_url || design.image_url);
-    // Prefer live editor_state over the seed image so edits from /editor
-    // propagate to preview cards, but seed templates should use their finished
-    // SVG previews; rendering their editable canvas state can show only blocks
-    // while nested data-URL images/fonts are loading.
-    const isImage = (seedImage || design.image_url) && !isLogotype && (!isCanvas || seedImage);
 
     return (
       <div className="h-full w-full" style={{ background: design?.background || undefined }}>
-        {isImage ? (
-          <img
-            src={design.thumbnail_url || design.image_url}
-            alt={design.title}
-            className={`h-full w-full ${seedImage ? "object-contain" : "object-cover"}`}
-            loading="lazy"
-          />
-        ) : isLogotype ? (
-          <Logotype state={design.editor_state} fit="contain" />
-        ) : isCanvas ? (
-          <CanvasAssetPreview elements={design.editor_state} className="h-full w-full" />
+        {seedImage ? (
+          <AssetThumbnail asset={{ ...design, editor_state: null }} alt={design.title} background={design?.background || null} />
+        ) : design?.editor_state || design?.image_url || design?.thumbnail_url ? (
+          <AssetThumbnail asset={design} alt={design.title} background={design?.background || null} />
         ) : (
           <div className="flex h-full w-full items-center justify-center p-4 text-center text-xs text-neutral-500">
             <div className="line-clamp-6 whitespace-pre-wrap">{(design.content || design.prompt || "").slice(0, 220)}</div>
