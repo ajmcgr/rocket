@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import { Logotype } from "@/components/Logotype";
 import CanvasAssetPreview from "@/components/CanvasAssetPreview";
+import AssetThumbnail from "@/components/AssetThumbnail";
 import { tryJson, type ColorSystem, type FontSystem, type BrandVoiceData, type BrandGuidelinesData, type LaunchCopyData, type ProductHuntCopyData, type SocialPostData, type FounderBio, type PresentationData, type TemplateLibraryData } from "@/lib/assetSchemas";
 import { isCanvasAsset } from "@/lib/canvasAsset";
 import { buildLogotypeVariants, pickLogotypeText } from "@/lib/logotype";
@@ -94,6 +95,9 @@ function buildProjectBrandContext(project: any, assets: any[]) {
 
 function AssetCardThumb({ asset }: { asset: any }) {
   const at = asset.asset_type as string;
+  if (at === "logo" || at === "logotype" || at === "wordmark" || at === "brandmark" || at === "icon" || at === "app_icon" || at === "favicon") {
+    return <AssetThumbnail asset={asset} background={asset?.meta?.background || null} />;
+  }
   if (asset?.editor_state?.kind === "logotype") {
     return <Logotype state={withResolvedLogotypeText(asset)} fit="contain" />;
   }
@@ -1045,32 +1049,9 @@ const Generate = () => {
                       className="group relative overflow-hidden rounded-3xl bg-neutral-50 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ring-1 ring-neutral-100 transition hover:shadow-[0_18px_50px_-24px_rgba(15,23,42,0.28)]"
                     >
                       <Link to={assetHref(a)} target="_blank" rel="noopener noreferrer" className="block">
-                        {(() => {
-          // Prefer live canvas state, then generated thumbnails. Thumbnails
-          // are framed for cards and preserve wide logo lockups at preview size.
-                          const isLogotype = a?.editor_state?.kind === "logotype";
-                          const isCanvas = isCanvasAsset(a);
-                          const preferState = isLogotype || isCanvas;
-          const previewUrl = a.thumbnail_url || a.image_url;
-                          if (!preferState && previewUrl) {
-                            return (
-              <div className="flex aspect-[4/3] w-full items-center justify-center bg-white p-8">
-                <img
-                  src={previewUrl}
-                  alt={a.title || "Generated design"}
-                  className="block max-h-full max-w-full object-contain"
-                />
-                              </div>
-                            );
-                          }
-                          return (
-                            <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-white p-6">
-                              <div className="h-full w-full">
-                                <AssetCardThumb asset={a} />
-                              </div>
-                            </div>
-                          );
-                        })()}
+                        <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-white">
+                          <AssetCardThumb asset={a} />
+                        </div>
                       </Link>
                       {/* Hover action bar — Brandmark style */}
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center pb-4 opacity-0 transition group-hover:opacity-100">
