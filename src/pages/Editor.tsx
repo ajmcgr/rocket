@@ -860,7 +860,8 @@ const Editor = () => {
       setAssetMeta({ title: a.title || "Untitled", project_id: a.project_id || null, asset_type: a.asset_type || null, image_url: a.image_url || null, thumbnail_url: a.thumbnail_url || null, meta: a.meta || {} });
       setBg(a.meta?.editor_bg || a.meta?.background || "#ffffff");
       if (a.editor_state && Array.isArray(a.editor_state)) {
-        const next = normalizeCanvasElements(a.editor_state);
+        const loaded = normalizeCanvasElements(a.editor_state);
+        const next = a.meta?.kind === "logo_lockup" ? await normalizeLogoLockupForEditor(loaded) : loaded;
         lastPersistedStateRef.current = JSON.stringify(next);
         _setEls(next); return;
       }
@@ -980,6 +981,7 @@ const Editor = () => {
     // from the source-of-truth preview (e.g. custom fonts not yet loaded), and
     // silently writing it back also modifies /saved and brand kit thumbnails.
     if (assetMeta.meta?.preview_url) return;
+    if (assetMeta.meta?.kind === "logo_lockup") return;
     if (previewBackfillRef.current === assetId) return;
 
     previewBackfillRef.current = assetId;
