@@ -62,8 +62,9 @@ async function sampleImageBuckets(src: string): Promise<Bucket[]> {
           // Skip near-white paper background
           if (lum > 0.95 && sat < 0.15) continue;
           // Keep near-black ink (low sat, low lum) as a real logo color.
-          // Skip mid-grey anti-alias fringe pixels.
-          if (sat < 0.2 && lum > 0.15 && lum < 0.85) continue;
+          // Skip only mid-grey anti-alias fringe pixels — dark greys are the
+          // AA edges of black text and should cluster into the black bucket.
+          if (sat < 0.2 && lum > 0.35 && lum < 0.85) continue;
           const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
           const cur = buckets.get(key);
           if (cur) { cur.r += r; cur.g += g; cur.b += b; cur.count++; }
@@ -113,8 +114,9 @@ function clusterBuckets(buckets: Bucket[], maxColors = 6): string[] {
       clusters.push({ ...p });
     }
   }
-  // Drop tiny clusters (< 2% of pixels) that are usually AA fringe.
-  const kept = clusters.filter((c) => c.count / totalCount >= 0.02);
+  // Drop tiny clusters (< 0.5% of pixels) that are usually AA fringe.
+  // Wordmark text can be small relative to the icon, so keep a low floor.
+  const kept = clusters.filter((c) => c.count / totalCount >= 0.005);
   kept.sort((a, b) => b.count - a.count);
   const to = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
   return kept.slice(0, maxColors).map((c) => `#${to(c.r)}${to(c.g)}${to(c.b)}`.toUpperCase());
