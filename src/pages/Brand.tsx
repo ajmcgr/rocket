@@ -463,7 +463,15 @@ export default function Brand() {
                     >
                       <div className="flex aspect-[16/9] items-center justify-center px-10">
                         {logoIsBrandLogotype ? (
-                          <BrandLogotypePreview asset={logoAsset} color={state.color} fallback={project?.name || baseState.text} />
+                          <AssetThumbnail
+                            asset={livePreviewAsset}
+                            alt={project?.name || "Logo"}
+                            background={v.bg}
+                            logoColor={v.key === "black" || v.key === "white" ? v.fg : undefined}
+                            outputWidth={1600}
+                            outputHeight={900}
+                            className="h-full w-full object-contain"
+                          />
                         ) : (
                           <Logotype state={state} fit="contain" />
                         )}
