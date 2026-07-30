@@ -151,7 +151,7 @@ export const coverFor = (article: Article) => {
 
 /* ----------------------------- enriched articles ---------------------------- */
 
-export type BlogPost = Article & {
+export type BlogPost = Omit<Article, "author" | "cover"> & {
   category: Category;
   tags: string[];
   author: Author;
