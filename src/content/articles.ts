@@ -5,6 +5,13 @@ export type Article = {
   readTime: string;
   date: string;
   body: string;
+  /** Optional overrides — everything below is auto-derived when omitted,
+   *  so the daily publishing workflow keeps working unchanged. */
+  category?: string;
+  tags?: string[];
+  author?: string;
+  cover?: string;
+  faq?: { question: string; answer: string }[];
 };
 
 const md = (s: string) => s.replace(/^\s+/gm, "");
