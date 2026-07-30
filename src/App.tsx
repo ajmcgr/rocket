@@ -56,6 +56,8 @@ import AcceptInvite from "./pages/AcceptInvite.tsx";
 import About from "./pages/About.tsx";
 import Blog from "./pages/Blog.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
+import BlogAuthor from "./pages/BlogAuthor.tsx";
+import ResourcesHub, { PillarPage } from "./pages/Resources.tsx";
 import Compare from "./pages/Compare.tsx";
 import ComparisonDetail from "./pages/ComparisonDetail.tsx";
 import MediaKit from "./pages/MediaKit.tsx";
@@ -107,7 +109,10 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/author/:id" element={<BlogAuthor />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/resources" element={<ResourcesHub />} />
+            <Route path="/resources/:slug" element={<PillarPage />} />
             <Route path="/compare" element={<Compare />} />
             <Route path="/compare/:slug" element={<ComparisonDetail />} />
             <Route path="/brand-kit" element={<MediaKit />} />
