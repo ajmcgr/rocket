@@ -58,12 +58,6 @@ const ArticleCover = ({ post, className, size = "sm", priority = false }: Props)
         <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
           {post.category}
         </span>
-        <span
-          className={cn("text-white/95", size === "lg" ? "text-7xl" : "text-4xl")}
-          style={{ fontFamily: "Reckless, ui-serif, Georgia, serif", lineHeight: 1 }}
-        >
-          {initials}
-        </span>
       </div>
     </div>
   );
