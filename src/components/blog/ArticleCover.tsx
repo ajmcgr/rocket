@@ -29,14 +29,6 @@ const ArticleCover = ({ post, className, size = "sm", priority = false }: Props)
     );
   }
 
-  const initials = post.title
-    .replace(/[^a-zA-Z0-9 ]/g, "")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0].toUpperCase())
-    .join("");
-
   return (
     <div
       className={cn("relative overflow-hidden rounded-2xl", className)}
