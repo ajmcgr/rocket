@@ -9,6 +9,7 @@ import Highlight from "@/components/blog/Highlight";
 import NewsletterCta from "@/components/blog/NewsletterCta";
 import { Button } from "@/components/ui/button";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { useEnsureBlogImages } from "@/hooks/useBlogImages";
 import {
   activeCategories,
   formatDate,
@@ -34,6 +35,9 @@ const Blog = () => {
   });
 
   const categories = useMemo(() => activeCategories(), []);
+
+  // Generates missing Gemini artwork for the archive in the background.
+  useEnsureBlogImages(posts);
 
   const filtered = useMemo(() => {
     const scoped = category === "All" ? posts : posts.filter((post) => post.category === category);
