@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.drive-upload]
 verify_jwt = true
+
+[functions.blog-image]
+verify_jwt = false
