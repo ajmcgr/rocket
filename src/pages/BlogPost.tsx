@@ -12,6 +12,7 @@ import NewsletterCta from "@/components/blog/NewsletterCta";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { useBlogImage, useEnsureBlogImages } from "@/hooks/useBlogImages";
 import {
   adjacentPosts,
   formatDate,
@@ -80,9 +81,12 @@ const BlogPost = () => {
 
   const url = `${SITE_URL}/blog/${slug}`;
 
+  useEnsureBlogImages(post ? [post] : []);
+
   useDocumentMeta({
     title: post ? `${post.title} — Rocket Blog` : "Article not found — Rocket Blog",
     description: post?.excerpt,
+    image: useBlogImage(post?.slug || "")?.og_url,
   });
 
   useEffect(() => {
