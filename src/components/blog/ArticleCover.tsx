@@ -1,4 +1,5 @@
 import type { BlogPost } from "@/content/blogMeta";
+import { useBlogImage } from "@/hooks/useBlogImages";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -12,7 +13,9 @@ type Props = {
  *  post provides one, otherwise renders a generated duotone mark — so every
  *  newly published article has artwork with zero manual configuration. */
 const ArticleCover = ({ post, className, size = "sm", priority = false }: Props) => {
-  const { image, from, to, angle, seed } = post.cover;
+  const { from, to, angle, seed } = post.cover;
+  const generated = useBlogImage(post.slug);
+  const image = post.cover.image || (size === "lg" ? generated?.hero_url : generated?.card_url) || null;
 
   if (image) {
     return (
