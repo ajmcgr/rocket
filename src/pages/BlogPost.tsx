@@ -81,6 +81,8 @@ const BlogPost = () => {
 
   const url = `${SITE_URL}/blog/${slug}`;
 
+  useEnsureBlogImages(post ? [post] : []);
+
   useDocumentMeta({
     title: post ? `${post.title} — Rocket Blog` : "Article not found — Rocket Blog",
     description: post?.excerpt,
