@@ -22,7 +22,11 @@ export type BlogImage = {
 
 /** Keep in sync with STYLE_VERSION in supabase/functions/blog-image. */
 const STYLE_VERSION = "v2-flat-brand";
-const isStale = (image?: BlogImage | null) => !image?.prompt?.includes(`[${STYLE_VERSION}]`);
+const isStale = (image?: BlogImage | null) =>
+  !image?.prompt?.includes(`[${STYLE_VERSION}]`) ||
+  // Artwork written before the storage path was versioned still lives behind a
+  // 1-year CDN cache on the old URL, so it must be regenerated too.
+  !image?.card_url?.includes(`/${STYLE_VERSION}/`);
 
 const cache = new Map<string, BlogImage>();
 const listeners = new Set<() => void>();
