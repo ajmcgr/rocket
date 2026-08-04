@@ -17,7 +17,12 @@ export type BlogImage = {
   hero_url: string;
   card_url: string;
   og_url: string;
+  prompt?: string;
 };
+
+/** Keep in sync with STYLE_VERSION in supabase/functions/blog-image. */
+const STYLE_VERSION = "v2-flat-brand";
+const isStale = (image?: BlogImage | null) => !image?.prompt?.includes(`[${STYLE_VERSION}]`);
 
 const cache = new Map<string, BlogImage>();
 const listeners = new Set<() => void>();
@@ -42,7 +47,7 @@ async function loadIndex(): Promise<void> {
   loading = (async () => {
     const { data, error } = await supabase
       .from("blog_images" as never)
-      .select("slug, hero_url, card_url, og_url");
+      .select("slug, hero_url, card_url, og_url, prompt");
     if (!error && data) {
       for (const row of data as unknown as BlogImage[]) cache.set(row.slug, row);
     }
@@ -78,7 +83,7 @@ async function runQueue(candidates: BlogPost[]): Promise<void> {
   queueRunning = true;
   try {
     for (const post of candidates) {
-      if (cache.has(post.slug)) continue;
+      if (cache.has(post.slug) && !isStale(cache.get(post.slug))) continue;
       try {
         await generate(post);
       } catch (error) {
@@ -96,7 +101,9 @@ async function runQueue(candidates: BlogPost[]): Promise<void> {
  */
 export async function ensureBlogImages(scope: BlogPost[] = posts.slice(0, 12)) {
   await loadIndex();
-  const missing = scope.filter((post) => !cache.has(post.slug) && !requested.has(post.slug));
+  const missing = scope.filter(
+    (post) => (!cache.has(post.slug) || isStale(cache.get(post.slug))) && !requested.has(post.slug),
+  );
   if (!missing.length) return;
   missing.forEach((post) => requested.add(post.slug));
   void runQueue(missing);
