@@ -194,7 +194,11 @@ Deno.serve(async (req) => {
     .eq("slug", slug)
     .maybeSingle();
 
-  const stale = !existing?.prompt?.includes(`[${STYLE_VERSION}]`);
+  const stale =
+    !existing?.prompt?.includes(`[${STYLE_VERSION}]`) ||
+    // Pre-versioned storage paths are pinned by a 1-year CDN cache: regenerate
+    // so the artwork lands on a fresh, uncached URL.
+    !existing?.card_url?.includes(`/${STYLE_VERSION}/`);
   if (existing && !payload.force && !stale) return json(req, { cached: true, image: existing });
 
   const article = {
