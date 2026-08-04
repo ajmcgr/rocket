@@ -118,6 +118,26 @@ const OnboardingTour = () => {
 
   const step = STEPS[idx];
 
+  const tipRef = useRef<HTMLDivElement | null>(null);
+  const [tipSize, setTipSize] = useState({ width: 360, height: 220 });
+
+  useLayoutEffect(() => {
+    const el = tipRef.current;
+    if (!el) return;
+    const update = () => {
+      const box = el.getBoundingClientRect();
+      setTipSize((prev) =>
+        Math.abs(prev.height - box.height) < 1 && Math.abs(prev.width - box.width) < 1
+          ? prev
+          : { width: box.width, height: box.height },
+      );
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open, idx]);
+
   const measure = useCallback(() => {
     if (!step?.selector) { setRect(null); return; }
     const el = document.querySelector(step.selector) as HTMLElement | null;
