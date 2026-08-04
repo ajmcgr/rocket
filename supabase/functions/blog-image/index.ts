@@ -5,6 +5,8 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_BLOG_API_KEY") || Deno.env.get("GEMI
 const TEXT_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
 const IMAGE_MODEL = Deno.env.get("GEMINI_BLOG_IMAGE_MODEL") || "gemini-2.5-flash-image";
 const BUCKET = "blog-images";
+/** Bump when the art direction changes so existing artwork regenerates. */
+const STYLE_VERSION = "v2-flat-brand";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -33,13 +35,16 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /* ------------------------------- Gemini calls ------------------------------ */
 
 const STYLE = [
-  "Premium editorial artwork for a modern SaaS brand blog.",
-  "Abstract, conceptual, minimal composition — no literal scenes.",
-  "Soft gradients, high contrast, generous negative space, elegant geometry,",
-  "subtle depth and light, refined colour grading, magazine-quality art direction.",
-  "Wide 16:9 landscape composition, centred subject, edge-to-edge full-bleed.",
-  "Strictly no text, no letters, no numbers, no logos, no watermarks, no UI screenshots,",
-  "no clipart, no stock-photo people, no robots, no glowing brains, no generic AI tropes.",
+  "Flat vector illustration in the style of a modern logo mark.",
+  "Simple bold geometric shapes, clean crisp edges, solid flat fills only.",
+  "Strictly limited palette: Rocket blue #1676E3, warm coral #F2683C, near-black #0A0A0A,",
+  "on a plain light background (#FFFFFF or #F5F7FA). No other colours.",
+  "Absolutely no gradients, no glow, no 3D, no shading, no textures, no photorealism,",
+  "no dark moody backgrounds, no smoke, no light rays, no particles.",
+  "One single centred symbol or minimal shape arrangement with generous negative space.",
+  "Wide 16:9 landscape composition, centred subject, lots of flat empty background.",
+  "Strictly no text, no letters, no numbers, no watermarks, no UI screenshots,",
+  "no clipart, no people, no robots, no generic AI tropes.",
 ].join(" ");
 
 async function geminiFetch(url: string, body: unknown, timeoutMs: number): Promise<Response> {
@@ -90,15 +95,16 @@ async function buildPrompt(article: {
         systemInstruction: {
           parts: [{
             text:
-              "You are an art director for a premium startup branding publication. " +
-              "Read the article and write ONE image prompt (max 60 words) describing an abstract, " +
-              "editorial visual metaphor for the article's core idea. Describe subject, composition, " +
-              "materials, lighting and a specific colour palette. Never describe text, letters, logos, " +
-              "people, robots or screenshots. Output the prompt only.",
+              "You are a logo designer for a premium startup branding publication. " +
+              "Read the article and write ONE image prompt (max 40 words) describing a SIMPLE, " +
+              "flat vector symbol that acts as a visual metaphor for the article's core idea — " +
+              "the kind of minimal geometric mark you'd see in a logo. Describe only the shape and " +
+              "its arrangement. Never mention gradients, lighting, materials, 3D, textures, colours, " +
+              "text, letters, people, robots or screenshots. Output the prompt only.",
           }],
         },
         contents: [{ role: "user", parts: [{ text: source }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } },
       },
       20_000,
     );
@@ -112,7 +118,7 @@ async function buildPrompt(article: {
     console.warn("prompt generation failed, using fallback", error);
   }
 
-  return `An abstract editorial visual metaphor representing "${article.title}" in the field of ${article.category}. ${STYLE}`;
+  return `A simple flat geometric symbol representing "${article.title}" in the field of ${article.category}. ${STYLE}`;
 }
 
 async function geminiImage(prompt: string): Promise<Uint8Array> {
@@ -188,7 +194,8 @@ Deno.serve(async (req) => {
     .eq("slug", slug)
     .maybeSingle();
 
-  if (existing && !payload.force) return json(req, { cached: true, image: existing });
+  const stale = !existing?.prompt?.includes(`[${STYLE_VERSION}]`);
+  if (existing && !payload.force && !stale) return json(req, { cached: true, image: existing });
 
   const article = {
     title: payload.title,
@@ -201,7 +208,7 @@ Deno.serve(async (req) => {
   let prompt = "";
   let raw: Uint8Array;
   try {
-    prompt = await buildPrompt(article);
+    prompt = `[${STYLE_VERSION}] ${await buildPrompt(article)}`;
     raw = await geminiImage(prompt);
   } catch (error) {
     console.error(`blog-image failed for ${slug}:`, error);
