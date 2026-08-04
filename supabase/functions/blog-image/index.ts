@@ -5,6 +5,8 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_BLOG_API_KEY") || Deno.env.get("GEMI
 const TEXT_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
 const IMAGE_MODEL = Deno.env.get("GEMINI_BLOG_IMAGE_MODEL") || "gemini-2.5-flash-image";
 const BUCKET = "blog-images";
+/** Bump when the art direction changes so existing artwork regenerates. */
+const STYLE_VERSION = "v2-flat-brand";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -192,7 +194,8 @@ Deno.serve(async (req) => {
     .eq("slug", slug)
     .maybeSingle();
 
-  if (existing && !payload.force) return json(req, { cached: true, image: existing });
+  const stale = !existing?.prompt?.includes(`[${STYLE_VERSION}]`);
+  if (existing && !payload.force && !stale) return json(req, { cached: true, image: existing });
 
   const article = {
     title: payload.title,
@@ -205,7 +208,7 @@ Deno.serve(async (req) => {
   let prompt = "";
   let raw: Uint8Array;
   try {
-    prompt = await buildPrompt(article);
+    prompt = `[${STYLE_VERSION}] ${await buildPrompt(article)}`;
     raw = await geminiImage(prompt);
   } catch (error) {
     console.error(`blog-image failed for ${slug}:`, error);
