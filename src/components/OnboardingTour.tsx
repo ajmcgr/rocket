@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, ArrowRight, Sparkles } from "lucide-react";
@@ -118,6 +118,26 @@ const OnboardingTour = () => {
 
   const step = STEPS[idx];
 
+  const tipRef = useRef<HTMLDivElement | null>(null);
+  const [tipSize, setTipSize] = useState({ width: 360, height: 220 });
+
+  useLayoutEffect(() => {
+    const el = tipRef.current;
+    if (!el) return;
+    const update = () => {
+      const box = el.getBoundingClientRect();
+      setTipSize((prev) =>
+        Math.abs(prev.height - box.height) < 1 && Math.abs(prev.width - box.width) < 1
+          ? prev
+          : { width: box.width, height: box.height },
+      );
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open, idx]);
+
   const measure = useCallback(() => {
     if (!step?.selector) { setRect(null); return; }
     const el = document.querySelector(step.selector) as HTMLElement | null;
@@ -147,9 +167,20 @@ const OnboardingTour = () => {
     if (!rect || step.placement === "center") {
       return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
     }
-    const top = rect.bottom + PAD;
-    const left = Math.min(window.innerWidth - 360 - 16, Math.max(16, rect.left + rect.width / 2 - 160));
-    return { top, left };
+    const margin = 16;
+    const width = Math.min(360, window.innerWidth - margin * 2);
+    const height = tipSize.height || 220;
+    // Prefer below the target, flip above when it would overflow, then clamp.
+    let top = rect.bottom + PAD;
+    if (top + height + margin > window.innerHeight) {
+      const above = rect.top - PAD - height;
+      top = above >= margin ? above : Math.max(margin, window.innerHeight - height - margin);
+    }
+    const left = Math.min(
+      window.innerWidth - width - margin,
+      Math.max(margin, rect.left + rect.width / 2 - width / 2),
+    );
+    return { top, left, maxHeight: window.innerHeight - margin * 2, overflowY: "auto" };
   })();
 
   const next = () => {
@@ -191,7 +222,8 @@ const OnboardingTour = () => {
 
       {/* Tooltip */}
       <div
-        className="absolute w-[320px] sm:w-[360px] rounded-2xl border border-neutral-200 bg-white p-5 shadow-2xl"
+        ref={tipRef}
+        className="absolute w-[320px] sm:w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-neutral-200 bg-white p-5 shadow-2xl"
         style={tipStyle}
         onClick={(e) => e.stopPropagation()}
       >
