@@ -217,7 +217,9 @@ Deno.serve(async (req) => {
 
   const source = await Image.decode(raw);
   const stamp = new Date(payload.date && !Number.isNaN(+new Date(payload.date)) ? payload.date : Date.now());
-  const folder = `${stamp.getUTCFullYear()}/${String(stamp.getUTCMonth() + 1).padStart(2, "0")}/${slug}`;
+  // Include the style version in the path so regenerated artwork never collides
+  // with the long-lived CDN cache of the previous style.
+  const folder = `${stamp.getUTCFullYear()}/${String(stamp.getUTCMonth() + 1).padStart(2, "0")}/${slug}/${STYLE_VERSION}`;
 
   const variants: { name: string; bytes: Uint8Array }[] = [
     { name: "hero.jpg", bytes: await derive(source, 16 / 9, 1600, 88) },
