@@ -165,7 +165,7 @@ const Index = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
   const [loading, setLoading] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);

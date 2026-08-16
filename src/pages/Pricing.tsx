@@ -71,7 +71,7 @@ const Pricing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
-  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
 
   const priceFor = (base: "starter" | "growth" | "business") => {
     const monthly = base === "starter" ? 12 : base === "growth" ? 20 : 50;
