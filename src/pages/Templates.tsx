@@ -183,22 +183,23 @@ const Templates = () => {
       if (!cancelled) {
         if (error) {
           console.error(error);
-          setDesigns([...SEED_TEMPLATES, ...ownPublic]);
+          setDesigns(
+            sortByOption([...SEED_TEMPLATES, ...ownPublic], "date", (d) => d.title, (d) => d.created_at)
+          );
         } else {
-          // Prefer the curated seed catalog over any stale public rows that were
-          // generated from older template logic; those rows can render as blank
-          // blocks and duplicate the same names.
           const seedTitles = new Set(SEED_TEMPLATES.map((template: any) => String(template.title || "").toLowerCase()));
-          const merged = [...(data || []), ...ownPublic];
+          const merged = [...SEED_TEMPLATES, ...(data || []), ...ownPublic];
           const seen = new Set<string>();
-          const publicDesigns = merged.filter((design: any) => {
+          const uniqueDesigns = merged.filter((design: any) => {
             if (design?.id && seen.has(design.id)) return false;
             if (design?.id) seen.add(design.id);
             const title = String(design?.title || "").toLowerCase();
-            const isOldRocketSeed = seedTitles.has(title) || design?.meta?.seed === true;
+            const isOldRocketSeed = !design?._seed && (seedTitles.has(title) || design?.meta?.seed === true);
             return !isOldRocketSeed;
           });
-          setDesigns([...SEED_TEMPLATES, ...publicDesigns]);
+          setDesigns(
+            sortByOption(uniqueDesigns, "date", (d) => d.title, (d) => d.created_at)
+          );
         }
         setLoading(false);
       }
