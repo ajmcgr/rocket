@@ -288,7 +288,7 @@ const Templates = () => {
               <ArrowUpDown className="h-3.5 w-3.5" /> Name (A–Z)
             </button>
             <button onClick={() => setSort("date")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${sort === "date" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              Date created
+              Newest first
             </button>
           </div>
         </div>
