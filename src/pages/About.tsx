@@ -8,17 +8,17 @@ const About = () => (
     <main className="mx-auto max-w-3xl px-6 py-20">
       <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">About Rocket</h1>
       <p className="mt-8 text-lg leading-relaxed text-neutral-700">
-        Rocket is a platform where founders turn raw ideas into launch-ready brands.
+        Rocket is a logo-first AI brand studio where founders turn raw ideas into memorable, launch-ready brands.
       </p>
       <p className="mt-6 font-semibold text-neutral-900">Hello there!</p>
       <p className="mt-4 text-lg leading-relaxed text-neutral-700">
-        We believe the future of software is being built by founders who use AI to ship at a speed that was impossible just a few years ago. Our mission is to help these builders position, brand, and market their products so they actually get discovered.
+        We believe the future of software is being built by founders who use AI to ship at a speed that was impossible just a few years ago. Our mission is to help these builders create distinctive visual identities so their products look as considered as the software behind them.
       </p>
       <p className="mt-4 text-lg leading-relaxed text-neutral-700">
-        Founders drop in a URL and Rocket generates a complete launch kit — positioning, taglines, founder bio, social copy, Product Hunt assets, directory submissions, and a full launch checklist — in under a minute.
+        Founders drop in a URL or describe an idea and Rocket generates coordinated logo directions, a wordmark, icon, colours and typography. They can refine a favourite direction in the editor and turn it into a complete Brand Kit with practical files, social assets and guidelines.
       </p>
       <p className="mt-4 text-lg leading-relaxed text-neutral-700">
-        Whether you're shipping your first AI tool or your tenth product, Rocket is where you turn shipping into a real launch. Join thousands of founders who are redefining what it means to build software.
+        Whether you're shipping your first AI tool or your tenth product, Rocket helps you move from an unbranded idea to an identity you can use across your website, product and launch channels.
       </p>
 
       <div className="mt-16">
