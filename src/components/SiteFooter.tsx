@@ -86,7 +86,7 @@ const SiteFooter = () => (
         </div>
       </div>
       <div className="mt-12 pt-6 text-center text-xs text-neutral-500">
-        Copyright © 2026 Works App, Inc. Built with 🫶🏻 by <a href="https://works.xyz" target="_blank" rel="noreferrer" className="hover:text-neutral-900">Works</a>.
+        Copyright © 2026 Works App, Inc. Built with 🫶🏻 by <a href="http://x.com/alexmacgregor__/" target="_blank" rel="noreferrer" className="hover:text-neutral-900">Alex</a>.
       </div>
     </div>
   </footer>
