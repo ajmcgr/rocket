@@ -8,6 +8,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const supabase = _sb as any;
 
 const STARTER_FEATURES = [
@@ -73,6 +74,12 @@ const Pricing = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
 
+  useDocumentMeta({
+    title: "Rocket pricing — AI logo and Brand Kit plans",
+    description: "Compare Rocket Starter, Pro and Business plans, monthly credits, Brand Kit features and exports.",
+    canonical: "https://tryrocket.ai/pricing",
+  });
+
   const priceFor = (base: "starter" | "growth" | "business") => {
     const monthly = base === "starter" ? 12 : base === "growth" ? 20 : 50;
     if (billing === "monthly") return { display: `$${monthly}`, suffix: "/month" };
@@ -99,6 +106,14 @@ const Pricing = () => {
   };
 
   const autoTriggered = useRef(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") !== "canceled") return;
+    toast({ title: "Checkout canceled", description: "Nothing was charged. You can choose a plan whenever you're ready." });
+    params.delete("checkout");
+    window.history.replaceState({}, "", `${window.location.pathname}${params.size ? `?${params}` : ""}`);
+  }, [toast]);
+
   useEffect(() => {
     if (autoTriggered.current || !user) return;
     const params = new URLSearchParams(window.location.search);

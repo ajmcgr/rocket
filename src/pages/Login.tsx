@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
+import { safeReturnPath } from "@/lib/navigation";
 
 const AUTH_CALLBACK_URL = `${window.location.origin}/auth/callback`;
 
@@ -15,9 +16,11 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const nav = useNavigate();
-  const loc = useLocation() as { state?: { from?: string } };
-  const next = loc.state?.from || "/logos";
+  const loc = useLocation() as ReturnType<typeof useLocation> & { state?: { from?: string } };
+  const queryNext = new URLSearchParams(loc.search).get("next");
+  const next = safeReturnPath(loc.state?.from || queryNext);
   const isSignup = mode === "signup";
+  const authSwitchHref = `${isSignup ? "/login" : "/signup"}?next=${encodeURIComponent(next)}`;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,11 +43,11 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
         if (error) throw error;
         // With Supabase "Confirm email" OFF (we verify ourselves via Resend), signUp returns a session.
         if (data.session) {
-          await supabase.functions.invoke("send-verification").catch((e) => {
+          await supabase.functions.invoke("send-verification", { body: { next } }).catch((e) => {
             console.warn("send-verification failed", e);
           });
         }
-        nav(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+        nav(`/verify-email?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`, { replace: true });
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -66,8 +69,8 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
           .eq("user_id", data.user!.id)
           .maybeSingle();
         if (!(prof && prof.email_verified)) {
-          await supabase.functions.invoke("send-verification").catch(() => {});
-          nav(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+          await supabase.functions.invoke("send-verification", { body: { next } }).catch(() => {});
+          nav(`/verify-email?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`, { replace: true });
           return;
         }
         nav(next, { replace: true });
@@ -133,7 +136,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
           </form>
 
           <p className="mt-6 text-center text-sm text-neutral-500">
-            {isSignup ? (<>Already have an account? <Link to="/login" className="font-medium text-neutral-900 hover:underline">Log in</Link></>) : (<>No account? <Link to="/signup" className="font-medium text-neutral-900 hover:underline">Sign up</Link></>)}
+            {isSignup ? (<>Already have an account? <Link to={authSwitchHref} className="font-medium text-neutral-900 hover:underline">Log in</Link></>) : (<>No account? <Link to={authSwitchHref} className="font-medium text-neutral-900 hover:underline">Sign up</Link></>)}
           </p>
           </div>
         </div>

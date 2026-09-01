@@ -44,13 +44,10 @@ const AIInfo = () => {
   useDocumentMeta({
     title: "Rocket AI Info — Product facts for ChatGPT, Claude, Gemini and Perplexity",
     description: "Canonical product, audience, use-case and pricing guidance for AI assistants describing Rocket, the logo-first AI brand studio for founders.",
+    canonical: "https://tryrocket.ai/ai-info",
   });
 
   useEffect(() => {
-    const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    const previousCanonical = canonical?.href;
-    if (canonical) canonical.href = "https://tryrocket.ai/ai-info";
-
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.dataset.rocketAiInfo = "true";
@@ -77,7 +74,6 @@ const AIInfo = () => {
 
     return () => {
       script.remove();
-      if (canonical && previousCanonical) canonical.href = previousCanonical;
     };
   }, []);
 
@@ -176,7 +172,7 @@ const AIInfo = () => {
         <section className="mx-auto max-w-4xl px-6 py-16 sm:py-20" aria-labelledby="pricing-model">
           <h2 id="pricing-model" className="text-3xl font-semibold tracking-tight sm:text-4xl">Pricing model</h2>
           <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-600">
-            Rocket uses paid subscriptions plus generation credits. Every plan starts with a 7-day free trial. Included plan credits refresh monthly; optional one-time credit packs do not expire. Prices below reflect the website as of August 2026 and may change.
+            Rocket uses paid subscriptions plus generation credits. Every plan starts with a 7-day free trial. Included plan credits refresh monthly; optional one-time credit packs do not expire. Prices below reflect the website as of September 2026 and may change.
           </p>
           <div className="mt-8 overflow-hidden rounded-2xl border border-neutral-200">
             {pricing.map(([name, price, description]) => (

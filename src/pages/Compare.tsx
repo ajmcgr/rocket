@@ -3,9 +3,16 @@ import { ArrowRight, Scale } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { comparisons } from "@/content/comparisons";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
-const Compare = () => (
-  <div className="min-h-screen bg-white text-neutral-900">
+const Compare = () => {
+  useDocumentMeta({
+    title: "Compare AI logo and branding tools — Rocket",
+    description: "Founder-focused comparisons of Rocket and popular logo makers, icon generators and brand kit tools.",
+    canonical: "https://tryrocket.ai/compare",
+  });
+
+  return <div className="min-h-screen bg-white text-neutral-900">
     <SiteHeader />
     <main className="mx-auto max-w-6xl px-6 py-16">
       <header className="text-center">
@@ -41,7 +48,7 @@ const Compare = () => (
       </div>
     </main>
     <SiteFooter />
-  </div>
-);
+  </div>;
+};
 
 export default Compare;

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Copy, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const ToolDetail = () => {
   const { slug } = useParams();
@@ -17,6 +18,12 @@ const ToolDetail = () => {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useDocumentMeta({
+    title: tool ? `${tool.name} — Free AI branding tool | Rocket` : "Tool not found — Rocket",
+    description: tool?.description,
+    canonical: tool ? `https://tryrocket.ai/tools/${tool.slug}` : undefined,
+  });
 
   if (!tool) {
     return (

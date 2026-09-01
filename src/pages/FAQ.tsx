@@ -2,6 +2,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const FAQS = [
   { q: "What does Rocket generate?", a: "Rocket is a logo-first design tool. Start with logo directions — a logo mark, matching wordmark, icon, colours and typography — then refine your favourite in the editor and roll it into a Brand Kit. Each Brand Kit contains Logo/Icon Files, Social Icons, Palette, Fonts, and Brand Book." },
@@ -17,6 +18,12 @@ const FAQS = [
 ];
 
 const FAQ = () => {
+  useDocumentMeta({
+    title: "Rocket FAQ — AI logo generation, Brand Kits and credits",
+    description: "Answers about Rocket's logo and icon workflows, Brand Kits, credits, editing, exports, sharing and billing.",
+    canonical: "https://tryrocket.ai/faq",
+  });
+
   return (
     <div className="min-h-screen bg-white text-neutral-900">
       <SiteHeader />

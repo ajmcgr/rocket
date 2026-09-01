@@ -3,9 +3,16 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { tools } from "@/content/tools";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
-const Tools = () => (
-  <div className="min-h-screen bg-white text-neutral-900">
+const Tools = () => {
+  useDocumentMeta({
+    title: "Free AI branding tools for founders — Rocket",
+    description: "Generate taglines, value propositions, names, pitches, bios and more with Rocket's free AI tools.",
+    canonical: "https://tryrocket.ai/tools",
+  });
+
+  return <div className="min-h-screen bg-white text-neutral-900">
     <SiteHeader />
     <main className="mx-auto max-w-6xl px-6 py-16">
       <header className="text-center">
@@ -26,7 +33,7 @@ const Tools = () => (
       </div>
     </main>
     <SiteFooter />
-  </div>
-);
+  </div>;
+};
 
 export default Tools;

@@ -24,6 +24,18 @@ function corsHeaders(req: Request): Record<string, string> {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
+function safeReturnPath(value: unknown): string {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/logos";
+  try {
+    const parsed = new URL(value, "https://tryrocket.ai");
+    return parsed.origin === "https://tryrocket.ai"
+      ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+      : "/logos";
+  } catch {
+    return "/logos";
+  }
+}
+
 async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -50,6 +62,13 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    const requestUrl = new URL(req.url);
+    let requestBody: Record<string, unknown> = {};
+    if (req.method === "POST") {
+      try { requestBody = await req.json(); } catch { /* body is optional */ }
+    }
+    const next = safeReturnPath(requestUrl.searchParams.get("next") || requestBody.next);
+
     // Marks the user verified everywhere (profile, usage row, auth metadata) and returns success.
     const finalize = async (user_id: string, confirmedAt?: string | null) => {
       const verifiedAt = confirmedAt || new Date().toISOString();
@@ -69,14 +88,15 @@ Deno.serve(async (req) => {
       } catch (e) { console.warn("[verify-email] auth confirm warn", (e as Error).message); }
 
       // Generate a magic link so the (likely signed-out) browser can establish a session
-      // and land on /create without an extra login step.
+      // and land on the user's original destination without an extra login step.
       let signInUrl: string | null = null;
       try {
         const { data: u } = await admin.auth.admin.getUserById(user_id);
         const email = u?.user?.email;
         if (email) {
-          const origin = req.headers.get("Origin") || "https://tryrocket.ai";
-          const redirectTo = `${origin}/auth/callback?next=/create`;
+          const requestedOrigin = req.headers.get("Origin") || "";
+          const origin = ALLOWED_ORIGINS.includes(requestedOrigin) ? requestedOrigin : "https://tryrocket.ai";
+          const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
           const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
             type: "magiclink",
             email,
@@ -88,7 +108,7 @@ Deno.serve(async (req) => {
       } catch (e) { console.warn("[verify-email] magiclink exception", (e as Error).message); }
 
       step("response_sent");
-      return new Response(JSON.stringify({ success: true, verified: true, redirectTo: "/create", signInUrl, user_id, log }), { status: 200, headers });
+      return new Response(JSON.stringify({ success: true, verified: true, redirectTo: next, signInUrl, user_id, log }), { status: 200, headers });
     };
 
     // Returns email_confirmed_at for a user id, or null.
@@ -109,16 +129,10 @@ Deno.serve(async (req) => {
       } catch { /* anon key or invalid jwt — ignore */ }
     }
 
-    const requestUrl = new URL(req.url);
     let token = (requestUrl.searchParams.get("token") || req.headers.get("x-verification-token") || "").trim();
     let uidParam = (requestUrl.searchParams.get("uid") || "").trim();
-    if ((!token || !uidParam) && req.method === "POST") {
-      try {
-        const body = await req.json();
-        token = token || String(body?.token || body?.verification_token || "").trim();
-        uidParam = uidParam || String(body?.uid || body?.user_id || "").trim();
-      } catch { /* ignore */ }
-    }
+    token = token || String(requestBody.token || requestBody.verification_token || "").trim();
+    uidParam = uidParam || String(requestBody.uid || requestBody.user_id || "").trim();
     if (!token) {
       const referrer = req.headers.get("Referer") || req.headers.get("Referrer") || "";
       try { token = (new URL(referrer).searchParams.get("token") || "").trim(); } catch { /* ignore */ }

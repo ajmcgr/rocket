@@ -87,6 +87,7 @@ const BlogPost = () => {
     title: post ? `${post.title} — Rocket Blog` : "Article not found — Rocket Blog",
     description: post?.excerpt,
     image: useBlogImage(post?.slug || "")?.og_url,
+    canonical: post ? url : undefined,
   });
 
   useEffect(() => {

@@ -5,12 +5,14 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { safeReturnPath } from "@/lib/navigation";
 
 const VerifyEmail = () => {
   const [params] = useSearchParams();
   const rawToken = params.get("token") || "";
   const token = rawToken.trim().replace(/[).,>\s]+$/g, "");
   const email = params.get("email") || "";
+  const next = safeReturnPath(params.get("next"));
 
   const nav = useNavigate();
   const { toast } = useToast();
@@ -41,14 +43,14 @@ const VerifyEmail = () => {
   const resend = async () => {
     setResending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-verification");
+      const { data, error } = await supabase.functions.invoke("send-verification", { body: { next } });
       if (error) throw new Error(error.message);
       if ((data as { error?: string })?.error) throw new Error((data as { message?: string }).message || (data as { error: string }).error);
       if ((data as { throttled?: boolean })?.throttled) {
         toast({ title: "Slow down", description: "Too many requests. Try again in an hour.", variant: "destructive" });
       } else if ((data as { already_verified?: boolean })?.already_verified) {
         toast({ title: "Already verified", description: "You're good to go." });
-        nav("/logos", { replace: true });
+        nav(next, { replace: true });
       } else {
         toast({ title: "Sent", description: "Check your inbox for the new link." });
       }
@@ -64,8 +66,8 @@ const VerifyEmail = () => {
       try {
         // Ensure we have a fresh session so the edge function sees the user as authenticated.
         await supabase.auth.getSession();
-        const { data, error } = await supabase.functions.invoke(`verify-email?token=${encodeURIComponent(token)}`, {
-          body: { token },
+        const { data, error } = await supabase.functions.invoke(`verify-email?token=${encodeURIComponent(token)}&next=${encodeURIComponent(next)}`, {
+          body: { token, next },
           headers: { "x-verification-token": token },
         });
         if (cancelled) return;
@@ -77,7 +79,7 @@ const VerifyEmail = () => {
             if (fresh.user?.email_confirmed_at) {
               if (cancelled) return;
               setState("success");
-              setTimeout(() => nav("/logos", { replace: true }), 600);
+              setTimeout(() => nav(next, { replace: true }), 600);
               return;
             }
           } catch { /* ignore */ }
@@ -98,14 +100,14 @@ const VerifyEmail = () => {
         if (payload?.signInUrl) {
           setTimeout(() => { window.location.href = payload.signInUrl!; }, 400);
         } else {
-          setTimeout(() => nav("/logos", { replace: true }), 600);
+          setTimeout(() => nav(next, { replace: true }), 600);
         }
       } catch (e) {
         if (!cancelled) { setState("error"); setMessage((e as Error).message || "Something went wrong."); }
       }
     })();
     return () => { cancelled = true; };
-  }, [mode, token, nav]);
+  }, [mode, token, next, nav]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-neutral-900">
@@ -124,7 +126,7 @@ const VerifyEmail = () => {
                 {resending ? "Sending…" : "Resend verification email"}
               </Button>
               <p className="mt-6 text-xs text-neutral-500">
-                Wrong address? <Link to="/signup" className="font-medium text-neutral-900 hover:underline">Start over</Link>
+                Wrong address? <Link to={`/signup?next=${encodeURIComponent(next)}`} className="font-medium text-neutral-900 hover:underline">Start over</Link>
               </p>
             </>
           )}
@@ -138,7 +140,7 @@ const VerifyEmail = () => {
             <>
               <h1 className="text-2xl font-semibold tracking-tight">Email verified 🎉</h1>
               <p className="mt-2 text-sm text-neutral-500">You're all set. Time to launch.</p>
-              <Button asChild size="lg" className="mt-6 w-full"><Link to="/logos">Go to Rocket</Link></Button>
+              <Button asChild size="lg" className="mt-6 w-full"><Link to={next}>Go to Rocket</Link></Button>
             </>
           )}
           {mode === "verify" && state === "error" && (

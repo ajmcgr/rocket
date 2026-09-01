@@ -4,10 +4,17 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { comparisons, getComparison } from "@/content/comparisons";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const ComparisonDetail = () => {
   const { slug } = useParams();
   const comparison = slug ? getComparison(slug) : null;
+
+  useDocumentMeta({
+    title: comparison ? `Rocket vs ${comparison.tool} — AI logo and brand tools compared` : "Comparison not found — Rocket",
+    description: comparison ? `Compare Rocket with ${comparison.tool} for logos, icons, Brand Kits, editing and exports.` : undefined,
+    canonical: comparison ? `https://tryrocket.ai/compare/${comparison.slug}` : undefined,
+  });
 
   if (!comparison) {
     return (

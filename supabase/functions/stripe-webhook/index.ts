@@ -1,6 +1,7 @@
 // redeploy: 2026-06-12-v11-inline
 import Stripe from "npm:stripe@16.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { MONTHLY_LIMITS, paidPlanFromProduct, paidPlanFromSubscription, planName } from "../_shared/billingPlans.ts";
 
 // ---- Inlined branded email layout (self-contained, no shared imports) ----
 // Shared email layout — matches the "Launch" reference design.
@@ -89,11 +90,11 @@ function buildEmail(template: Template, data: any): { subject: string; html: str
       };
     case "trial_started":
       return {
-        subject: "Your Rocket Growth trial has started",
+        subject: `Your Rocket ${data?.planName ?? "Pro"} trial has started`,
         html: renderEmail({
-          preheader: "7 days of Growth — on the house.",
-          title: "Your 7-day Growth trial is live.",
-          bodyHtml: `<p>You now have <strong>3,000 credits/month</strong>, priority generation, and exports unlocked.</p><p>If you cancel before day 7, you won't be charged.</p>`,
+          preheader: `7 days of ${data?.planName ?? "Pro"} — on the house.`,
+          title: `Your 7-day ${data?.planName ?? "Pro"} trial is live.`,
+          bodyHtml: `<p>You now have <strong>${Number(data?.monthlyLimit ?? 3000).toLocaleString("en-US")} credits/month</strong> and the features included with ${data?.planName ?? "Pro"}.</p><p>If you cancel before day 7, you won't be charged.</p>`,
           ctaLabel: "Go to projects",
           ctaUrl: "https://tryrocket.ai/projects",
         }),
@@ -279,23 +280,23 @@ Deno.serve(async (req) => {
           }
         }
         if (s.mode === "subscription" && product) {
-          const base = product.replace(/_yearly$/, "");
-          const plan = base === "pro" ? "growth" : base; // "growth" | "starter" | "business"
-          const monthly_limit = plan === "business" ? 15000 : plan === "growth" ? 3000 : 500;
+          const plan = paidPlanFromProduct(product);
+          if (!plan) throw new Error(`Unknown subscription product: ${product}`);
+          const monthly_limit = MONTHLY_LIMITS[plan];
           await admin.from("subscriptions").upsert(
             {
               user_id: userId,
               stripe_customer_id: typeof s.customer === "string" ? s.customer : null,
               stripe_subscription_id: typeof s.subscription === "string" ? s.subscription : null,
               plan,
-              status: "active",
+              status: "trialing",
             },
             { onConflict: "user_id" },
           );
           await admin.from("user_usage").update({ plan, monthly_limit }).eq("user_id", userId);
           if (RESEND_API_KEY) {
             const email = await getEmail(admin, userId);
-            if (email) sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "trial_started", {}).catch(console.error);
+            if (email) sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "trial_started", { planName: planName(plan), monthlyLimit: monthly_limit }).catch(console.error);
           }
         }
         if (s.amount_total && s.amount_total > 0 && RESEND_API_KEY) {
@@ -314,11 +315,12 @@ Deno.serve(async (req) => {
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
         const { data: row } = await admin
           .from("subscriptions")
-          .select("user_id")
+          .select("user_id,plan")
           .eq("stripe_customer_id", customerId)
           .maybeSingle();
         if (!row) break;
-        const plan = sub.status === "active" || sub.status === "trialing" ? "growth" : "free";
+        const selectedPlan = paidPlanFromSubscription(sub) || paidPlanFromProduct(row.plan);
+        const plan = sub.status === "active" || sub.status === "trialing" ? (selectedPlan || "free") : "free";
         await admin
           .from("subscriptions")
           .update({
@@ -335,7 +337,7 @@ Deno.serve(async (req) => {
           .from("user_usage")
           .update({
             plan,
-            monthly_limit: plan === "growth" ? 3000 : 100,
+            monthly_limit: MONTHLY_LIMITS[plan],
           })
           .eq("user_id", row.user_id);
         break;
