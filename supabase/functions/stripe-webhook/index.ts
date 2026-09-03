@@ -247,56 +247,36 @@ Deno.serve(async (req) => {
         const product = s.metadata?.product;
         const credits = parseInt(s.metadata?.credits || "0", 10);
         if (!userId) break;
-        await admin.from("payments").insert({
-          user_id: userId,
-          amount: s.amount_total || 0,
-          currency: s.currency || "usd",
-          payment_type: s.mode === "subscription" ? "subscription" : "credit_pack",
-          credits_added: credits,
-          stripe_session_id: s.id,
-          stripe_payment_intent_id: typeof s.payment_intent === "string" ? s.payment_intent : null,
-          status: "succeeded",
+        const plan = s.mode === "subscription" && product ? paidPlanFromProduct(product) : null;
+        if (s.mode === "subscription" && !plan) throw new Error(`Unknown subscription product: ${product}`);
+        const monthlyLimit = plan ? MONTHLY_LIMITS[plan] : null;
+        const { data: applied, error: fulfillmentError } = await admin.rpc("apply_stripe_checkout_completion", {
+          p_user_id: userId,
+          p_session_id: s.id,
+          p_amount: s.amount_total || 0,
+          p_currency: s.currency || "usd",
+          p_payment_type: s.mode === "subscription" ? "subscription" : "credit_pack",
+          p_credits: credits,
+          p_payment_intent_id: typeof s.payment_intent === "string" ? s.payment_intent : null,
+          p_customer_id: typeof s.customer === "string" ? s.customer : null,
+          p_subscription_id: typeof s.subscription === "string" ? s.subscription : null,
+          p_plan: plan,
+          p_monthly_limit: monthlyLimit,
         });
+        if (fulfillmentError) throw fulfillmentError;
+        if (!applied) break;
+
         if (credits > 0) {
-          const { data: u } = await admin
-            .from("user_usage")
-            .select("credits_extra")
-            .eq("user_id", userId)
-            .maybeSingle();
-          await admin
-            .from("user_usage")
-            .update({ credits_extra: (u?.credits_extra || 0) + credits })
-            .eq("user_id", userId);
-          await admin.from("credit_transactions").insert({
-            user_id: userId,
-            kind: "purchased",
-            credits,
-            meta: { stripe_session_id: s.id, product },
-          });
           if (RESEND_API_KEY) {
             const email = await getEmail(admin, userId);
             if (email)
               sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "credits_purchased", { credits }).catch(console.error);
           }
         }
-        if (s.mode === "subscription" && product) {
-          const plan = paidPlanFromProduct(product);
-          if (!plan) throw new Error(`Unknown subscription product: ${product}`);
-          const monthly_limit = MONTHLY_LIMITS[plan];
-          await admin.from("subscriptions").upsert(
-            {
-              user_id: userId,
-              stripe_customer_id: typeof s.customer === "string" ? s.customer : null,
-              stripe_subscription_id: typeof s.subscription === "string" ? s.subscription : null,
-              plan,
-              status: "trialing",
-            },
-            { onConflict: "user_id" },
-          );
-          await admin.from("user_usage").update({ plan, monthly_limit }).eq("user_id", userId);
+        if (plan) {
           if (RESEND_API_KEY) {
             const email = await getEmail(admin, userId);
-            if (email) sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "trial_started", { planName: planName(plan), monthlyLimit: monthly_limit }).catch(console.error);
+            if (email) sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "trial_started", { planName: planName(plan), monthlyLimit: monthlyLimit }).catch(console.error);
           }
         }
         if (s.amount_total && s.amount_total > 0 && RESEND_API_KEY) {

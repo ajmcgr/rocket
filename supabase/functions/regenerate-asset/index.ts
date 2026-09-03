@@ -10,6 +10,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 Deno.serve(async (req) => {
   const ch = cors(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: ch });
+  let releaseReservation: (() => Promise<void>) | null = null;
   try {
     if (!hasGeminiKey()) return new Response(JSON.stringify({ error: "missing_environment_variable", variable: "GEMINI_API_KEY" }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
     const auth = req.headers.get("Authorization");
@@ -33,11 +34,17 @@ Deno.serve(async (req) => {
     const ctx = (asset.meta?.brand_context) || {};
     const userPrompt = instruction || asset.prompt || `Regenerate this ${ASSET_TITLES[at]}`;
 
-    const { data: usage } = await admin.from("user_usage").select("*").eq("user_id", user.id).maybeSingle();
-    if (!usage) throw new Error("usage row missing");
     const cost = spec.kind === "image" ? 10 : 1;
-    const remaining = (usage.monthly_limit + (usage.credits_extra || 0)) - usage.credits_used;
-    if (remaining < cost) return new Response(JSON.stringify({ error: "no_credits", code: "no_credits", needed: cost, remaining }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
+    const { data: reserved, error: reserveError } = await admin.rpc("reserve_generation_credits", { p_user_id: user.id, p_credits: cost });
+    if (reserveError) throw reserveError;
+    if (!reserved) return new Response(JSON.stringify({ error: "no_credits", code: "no_credits", needed: cost }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
+    let reservationOpen = true;
+    releaseReservation = async () => {
+      if (!reservationOpen) return;
+      reservationOpen = false;
+      const { error } = await admin.rpc("release_generation_credits", { p_user_id: user.id, p_credits: cost });
+      if (error) console.error("credit release failed", error);
+    };
 
     try {
       if (spec.kind === "image") {
@@ -47,21 +54,23 @@ Deno.serve(async (req) => {
         await admin.storage.from("rocket-images").upload(path, png, { contentType: "image/png", upsert: false });
         const { data: pub } = admin.storage.from("rocket-images").getPublicUrl(path);
         await admin.from("assets").update({ image_url: pub.publicUrl, thumbnail_url: pub.publicUrl, meta: { ...(asset.meta || {}), image_prompt: imgPrompt } }).eq("id", asset_id);
-        await admin.from("user_usage").update({ credits_used: usage.credits_used + cost }).eq("user_id", user.id);
+        reservationOpen = false;
         return new Response(JSON.stringify({ image_url: pub.publicUrl, credits_charged: cost }), { headers: { ...ch, "Content-Type": "application/json" } });
       } else {
         const content = await geminiText({ system: spec.system, user: spec.build(ctx, userPrompt), temperature: 0.8, json: !!spec.json });
         await admin.from("assets").update({ content }).eq("id", asset_id);
-        await admin.from("user_usage").update({ credits_used: usage.credits_used + cost }).eq("user_id", user.id);
+        reservationOpen = false;
         return new Response(JSON.stringify({ content, credits_charged: cost }), { headers: { ...ch, "Content-Type": "application/json" } });
       }
     } catch (e) {
       if (e instanceof GeminiUnavailableError || e instanceof ImageProviderUnavailableError) {
+        await releaseReservation();
         return new Response(JSON.stringify({ error: "ai_provider_unavailable", message: "Rocket is busy right now. Please try again in a moment." }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
       }
       throw e;
     }
   } catch (e) {
+    await releaseReservation?.();
     console.error(e);
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
   }

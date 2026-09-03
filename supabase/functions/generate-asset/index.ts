@@ -175,6 +175,7 @@ async function scrapeUrl(url: string, supabaseUrl: string, anonKey: string, jwt:
 Deno.serve(async (req) => {
   const ch = cors(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: ch });
+  let releaseReservation: (() => Promise<void>) | null = null;
   try {
     if (!hasGeminiKey()) {
       return new Response(JSON.stringify({ error: "missing_environment_variable", variable: "GEMINI_API_KEY" }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
@@ -203,13 +204,36 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Resolve workspace_id: prefer project's, then caller-provided, then the user's personal workspace.
+    // Resolve workspace_id only after establishing the caller owns the project
+    // or belongs to its workspace. These writes use service role, so this check
+    // is the authorization boundary for client-provided IDs.
     let workspace_id: string | null = null;
     if (project_id) {
-      const { data: p } = await admin.from("projects").select("workspace_id").eq("id", project_id).maybeSingle();
+      const { data: p } = await admin.from("projects").select("workspace_id,user_id").eq("id", project_id).maybeSingle();
+      if (!p) return new Response(JSON.stringify({ error: "project_not_found" }), { status: 404, headers: { ...ch, "Content-Type": "application/json" } });
+      let allowed = p.user_id === user.id;
+      if (!allowed && p.workspace_id) {
+        const { data: membership } = await admin
+          .from("workspace_members")
+          .select("workspace_id")
+          .eq("workspace_id", p.workspace_id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        allowed = !!membership;
+      }
+      if (!allowed) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...ch, "Content-Type": "application/json" } });
       workspace_id = (p as any)?.workspace_id || null;
     }
     if (!workspace_id && client_workspace_id) workspace_id = client_workspace_id;
+    if (workspace_id) {
+      const { data: membership } = await admin
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("workspace_id", workspace_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!membership) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...ch, "Content-Type": "application/json" } });
+    }
     if (!workspace_id) {
       const { data: ws } = await admin.from("workspaces").select("id").eq("owner_id", user.id).eq("is_personal", true).maybeSingle();
       workspace_id = (ws as any)?.id || null;
@@ -255,18 +279,12 @@ Deno.serve(async (req) => {
       if (proj?.name) ctx = { productName: proj.name };
     }
 
-    // Credits check (text=1 each, image=10 each)
+    // Cost calculation. Reservation happens atomically after the free logotype
+    // path, before any external AI work is started.
     const spec = GENERATORS[cls.asset_type];
     const count = cls.count;
     const costPer = spec.kind === "image" ? 10 : 1;
     const totalCost = costPer * count;
-    const { data: usage } = await admin.from("user_usage").select("*").eq("user_id", user.id).maybeSingle();
-    if (!usage) throw new Error("usage row missing");
-    const remaining = (usage.monthly_limit + (usage.credits_extra || 0)) - usage.credits_used;
-    if (remaining < totalCost) {
-      return new Response(JSON.stringify({ error: "no_credits", code: "no_credits", needed: totalCost, remaining }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
-    }
-
     const title = cls.asset_type === "graphic" && /component|ui kit|buttons|cards|inputs/i.test(prompt) ? "Component" : ASSET_TITLES[cls.asset_type];
     const ids: string[] = [];
 
@@ -305,6 +323,23 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ asset_ids: ids, asset_type: "logo", count: ids.length, credits_charged: 0 }), { headers: { ...ch, "Content-Type": "application/json" } });
     }
     // ──────────────────────────────────────────────────────────────────────
+
+    const { data: reserved, error: reserveError } = await admin.rpc("reserve_generation_credits", {
+      p_user_id: user.id,
+      p_credits: totalCost,
+    });
+    if (reserveError) throw reserveError;
+    if (!reserved) {
+      return new Response(JSON.stringify({ error: "no_credits", code: "no_credits", needed: totalCost }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
+    }
+    let reservedCredits = totalCost;
+    releaseReservation = async () => {
+      if (reservedCredits <= 0) return;
+      const credits = reservedCredits;
+      reservedCredits = 0;
+      const { error } = await admin.rpc("release_generation_credits", { p_user_id: user.id, p_credits: credits });
+      if (error) console.error("credit release failed", error);
+    };
 
     // Fetch visual references from the scraped brand. Gemini only accepts raster
     // formats (jpg/png/webp), so SVG/ICO/AVIF get rasterized through wsrv.nl,
@@ -428,7 +463,7 @@ Deno.serve(async (req) => {
       for (const result of createdImages) ids.push(result.id);
       // If literally every variant failed AND it was a provider outage, surface that.
       if (ids.length === 0 && lastUnavailable) {
-        return new Response(JSON.stringify({ error: "ai_provider_unavailable", message: "Rocket is busy right now. Please try again in a moment." }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
+        throw lastUnavailable;
       }
 
       // When generating logos, also generate matching logotype (text wordmark) variants.
@@ -488,22 +523,31 @@ Deno.serve(async (req) => {
       for (const id of results) if (id) ids.push(id);
     }
 
-    // Charge credits — only for what actually generated (excludes free logotypes
-    // and any variants that failed mid-batch).
+    // The reservation covered the requested batch. Return any unused portion
+    // when variants fail, then record only the final charge.
     const billableCount = spec.kind === "image"
       ? Math.min(count, ids.length) // only the image variants, not free rows appended after
       : ids.length;
     const actualCost = costPer * billableCount;
+    if (actualCost < totalCost) {
+      const unused = totalCost - actualCost;
+      const { error } = await admin.rpc("release_generation_credits", { p_user_id: user.id, p_credits: unused });
+      if (error) throw error;
+      reservedCredits -= unused;
+    }
     if (actualCost > 0) {
-      await admin.from("user_usage").update({ credits_used: usage.credits_used + actualCost }).eq("user_id", user.id);
-      await admin.from("credit_transactions").insert({
+      const { error } = await admin.from("credit_transactions").insert({
         user_id: user.id, asset_type: cls.asset_type,
         kind: "spent", credits: actualCost, meta: { count: billableCount, requested: count, asset_ids: ids },
       });
+      if (error) console.error("credit transaction log failed", error);
     }
+    // Credits are settled; do not release them in the outer error handler.
+    reservedCredits = 0;
 
     return new Response(JSON.stringify({ asset_ids: ids, asset_type: cls.asset_type, count: ids.length, credits_charged: actualCost }), { headers: { ...ch, "Content-Type": "application/json" } });
   } catch (e) {
+    await releaseReservation?.();
     console.error(e);
     if (e instanceof GeminiUnavailableError || e instanceof ImageProviderUnavailableError) {
       return new Response(JSON.stringify({ error: "ai_provider_unavailable", message: "Rocket is busy right now. Please try again in a moment.", details: e.bodyText.slice(0, 300) }), { status: 200, headers: { ...ch, "Content-Type": "application/json" } });
