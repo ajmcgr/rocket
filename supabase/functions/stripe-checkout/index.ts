@@ -153,9 +153,14 @@ Deno.serve(async (req) => {
             },
       ],
       allow_promotion_codes: true,
-      ...(p.mode === "subscription" && p.trial_days ? { subscription_data: { trial_period_days: p.trial_days } } : {}),
-      success_url: `${APP_URL}/projects?checkout=success`,
-      cancel_url: `${APP_URL}/projects?checkout=canceled`,
+      ...(p.mode === "subscription" ? {
+        subscription_data: {
+          ...(p.trial_days ? { trial_period_days: p.trial_days } : {}),
+          metadata: { user_id: user.id, product },
+        },
+      } : {}),
+      success_url: `${APP_URL}/settings/billing?checkout=success`,
+      cancel_url: `${APP_URL}/pricing?checkout=canceled`,
       metadata: { user_id: user.id, product, credits: String(p.credits || 0) },
     });
 

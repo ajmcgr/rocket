@@ -1,9 +1,16 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import alexAvatar from "@/assets/alex-macgregor.png.asset.json";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
-const About = () => (
-  <div className="min-h-screen bg-white text-neutral-900">
+const About = () => {
+  useDocumentMeta({
+    title: "About Rocket — AI brand studio for founders",
+    description: "Learn why Rocket helps founders turn raw ideas into coordinated logos, icons and complete Brand Kits.",
+    canonical: "https://tryrocket.ai/about",
+  });
+
+  return <div className="min-h-screen bg-white text-neutral-900">
     <SiteHeader />
     <main className="mx-auto max-w-3xl px-6 py-20">
       <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">About Rocket</h1>
@@ -45,7 +52,7 @@ const About = () => (
       </div>
     </main>
     <SiteFooter />
-  </div>
-);
+  </div>;
+};
 
 export default About;

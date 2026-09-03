@@ -13,6 +13,7 @@ const BlogAuthor = () => {
   useDocumentMeta({
     title: `${author.name} — Rocket Blog`,
     description: author.bio,
+    canonical: `https://tryrocket.ai/blog/author/${author.id}`,
   });
 
   return (

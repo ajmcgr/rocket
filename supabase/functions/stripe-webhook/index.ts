@@ -1,6 +1,7 @@
 // redeploy: 2026-06-12-v11-inline
 import Stripe from "npm:stripe@16.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { MONTHLY_LIMITS, paidPlanFromProduct, paidPlanFromSubscription, planName } from "../_shared/billingPlans.ts";
 
 // ---- Inlined branded email layout (self-contained, no shared imports) ----
 // Shared email layout — matches the "Launch" reference design.
@@ -89,11 +90,11 @@ function buildEmail(template: Template, data: any): { subject: string; html: str
       };
     case "trial_started":
       return {
-        subject: "Your Rocket Growth trial has started",
+        subject: `Your Rocket ${data?.planName ?? "Pro"} trial has started`,
         html: renderEmail({
-          preheader: "7 days of Growth — on the house.",
-          title: "Your 7-day Growth trial is live.",
-          bodyHtml: `<p>You now have <strong>3,000 credits/month</strong>, priority generation, and exports unlocked.</p><p>If you cancel before day 7, you won't be charged.</p>`,
+          preheader: `7 days of ${data?.planName ?? "Pro"} — on the house.`,
+          title: `Your 7-day ${data?.planName ?? "Pro"} trial is live.`,
+          bodyHtml: `<p>You now have <strong>${Number(data?.monthlyLimit ?? 3000).toLocaleString("en-US")} credits/month</strong> and the features included with ${data?.planName ?? "Pro"}.</p><p>If you cancel before day 7, you won't be charged.</p>`,
           ctaLabel: "Go to projects",
           ctaUrl: "https://tryrocket.ai/projects",
         }),
@@ -246,56 +247,36 @@ Deno.serve(async (req) => {
         const product = s.metadata?.product;
         const credits = parseInt(s.metadata?.credits || "0", 10);
         if (!userId) break;
-        await admin.from("payments").insert({
-          user_id: userId,
-          amount: s.amount_total || 0,
-          currency: s.currency || "usd",
-          payment_type: s.mode === "subscription" ? "subscription" : "credit_pack",
-          credits_added: credits,
-          stripe_session_id: s.id,
-          stripe_payment_intent_id: typeof s.payment_intent === "string" ? s.payment_intent : null,
-          status: "succeeded",
+        const plan = s.mode === "subscription" && product ? paidPlanFromProduct(product) : null;
+        if (s.mode === "subscription" && !plan) throw new Error(`Unknown subscription product: ${product}`);
+        const monthlyLimit = plan ? MONTHLY_LIMITS[plan] : null;
+        const { data: applied, error: fulfillmentError } = await admin.rpc("apply_stripe_checkout_completion", {
+          p_user_id: userId,
+          p_session_id: s.id,
+          p_amount: s.amount_total || 0,
+          p_currency: s.currency || "usd",
+          p_payment_type: s.mode === "subscription" ? "subscription" : "credit_pack",
+          p_credits: credits,
+          p_payment_intent_id: typeof s.payment_intent === "string" ? s.payment_intent : null,
+          p_customer_id: typeof s.customer === "string" ? s.customer : null,
+          p_subscription_id: typeof s.subscription === "string" ? s.subscription : null,
+          p_plan: plan,
+          p_monthly_limit: monthlyLimit,
         });
+        if (fulfillmentError) throw fulfillmentError;
+        if (!applied) break;
+
         if (credits > 0) {
-          const { data: u } = await admin
-            .from("user_usage")
-            .select("credits_extra")
-            .eq("user_id", userId)
-            .maybeSingle();
-          await admin
-            .from("user_usage")
-            .update({ credits_extra: (u?.credits_extra || 0) + credits })
-            .eq("user_id", userId);
-          await admin.from("credit_transactions").insert({
-            user_id: userId,
-            kind: "purchased",
-            credits,
-            meta: { stripe_session_id: s.id, product },
-          });
           if (RESEND_API_KEY) {
             const email = await getEmail(admin, userId);
             if (email)
               sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "credits_purchased", { credits }).catch(console.error);
           }
         }
-        if (s.mode === "subscription" && product) {
-          const base = product.replace(/_yearly$/, "");
-          const plan = base === "pro" ? "growth" : base; // "growth" | "starter" | "business"
-          const monthly_limit = plan === "business" ? 15000 : plan === "growth" ? 3000 : 500;
-          await admin.from("subscriptions").upsert(
-            {
-              user_id: userId,
-              stripe_customer_id: typeof s.customer === "string" ? s.customer : null,
-              stripe_subscription_id: typeof s.subscription === "string" ? s.subscription : null,
-              plan,
-              status: "active",
-            },
-            { onConflict: "user_id" },
-          );
-          await admin.from("user_usage").update({ plan, monthly_limit }).eq("user_id", userId);
+        if (plan) {
           if (RESEND_API_KEY) {
             const email = await getEmail(admin, userId);
-            if (email) sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "trial_started", {}).catch(console.error);
+            if (email) sendBranded(RESEND_API_KEY, FROM_EMAIL, email, "trial_started", { planName: planName(plan), monthlyLimit: monthlyLimit }).catch(console.error);
           }
         }
         if (s.amount_total && s.amount_total > 0 && RESEND_API_KEY) {
@@ -314,11 +295,12 @@ Deno.serve(async (req) => {
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
         const { data: row } = await admin
           .from("subscriptions")
-          .select("user_id")
+          .select("user_id,plan")
           .eq("stripe_customer_id", customerId)
           .maybeSingle();
         if (!row) break;
-        const plan = sub.status === "active" || sub.status === "trialing" ? "growth" : "free";
+        const selectedPlan = paidPlanFromSubscription(sub) || paidPlanFromProduct(row.plan);
+        const plan = sub.status === "active" || sub.status === "trialing" ? (selectedPlan || "free") : "free";
         await admin
           .from("subscriptions")
           .update({
@@ -335,7 +317,7 @@ Deno.serve(async (req) => {
           .from("user_usage")
           .update({
             plan,
-            monthly_limit: plan === "growth" ? 3000 : 100,
+            monthly_limit: MONTHLY_LIMITS[plan],
           })
           .eq("user_id", row.user_id);
         break;

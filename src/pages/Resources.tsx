@@ -11,6 +11,7 @@ export const ResourcesHub = () => {
     title: "Branding Resources for Founders — Rocket",
     description:
       "Evergreen guides on startup branding, logo design, brand kits, typography, colour psychology, and icon design.",
+    canonical: `${SITE_URL}/resources`,
   });
 
   return (
@@ -66,6 +67,7 @@ export const PillarPage = () => {
   useDocumentMeta({
     title: pillar ? `${pillar.title} — Rocket` : "Guide not found — Rocket",
     description: pillar?.summary,
+    canonical: pillar ? `${SITE_URL}/resources/${pillar.slug}` : undefined,
   });
 
   if (!pillar) {

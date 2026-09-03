@@ -24,6 +24,18 @@ function corsHeaders(req: Request): Record<string, string> {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
+function safeReturnPath(value: unknown): string {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/logos";
+  try {
+    const parsed = new URL(value, "https://tryrocket.ai");
+    return parsed.origin === "https://tryrocket.ai"
+      ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+      : "/logos";
+  } catch {
+    return "/logos";
+  }
+}
+
 async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -50,6 +62,13 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    const requestUrl = new URL(req.url);
+    let requestBody: Record<string, unknown> = {};
+    if (req.method === "POST") {
+      try { requestBody = await req.json(); } catch { /* body is optional */ }
+    }
+    const next = safeReturnPath(requestUrl.searchParams.get("next") || requestBody.next);
+
     // Marks the user verified everywhere (profile, usage row, auth metadata) and returns success.
     const finalize = async (user_id: string, confirmedAt?: string | null) => {
       const verifiedAt = confirmedAt || new Date().toISOString();
@@ -69,14 +88,15 @@ Deno.serve(async (req) => {
       } catch (e) { console.warn("[verify-email] auth confirm warn", (e as Error).message); }
 
       // Generate a magic link so the (likely signed-out) browser can establish a session
-      // and land on /create without an extra login step.
+      // and land on the user's original destination without an extra login step.
       let signInUrl: string | null = null;
       try {
         const { data: u } = await admin.auth.admin.getUserById(user_id);
         const email = u?.user?.email;
         if (email) {
-          const origin = req.headers.get("Origin") || "https://tryrocket.ai";
-          const redirectTo = `${origin}/auth/callback?next=/create`;
+          const requestedOrigin = req.headers.get("Origin") || "";
+          const origin = ALLOWED_ORIGINS.includes(requestedOrigin) ? requestedOrigin : "https://tryrocket.ai";
+          const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
           const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
             type: "magiclink",
             email,
@@ -88,7 +108,7 @@ Deno.serve(async (req) => {
       } catch (e) { console.warn("[verify-email] magiclink exception", (e as Error).message); }
 
       step("response_sent");
-      return new Response(JSON.stringify({ success: true, verified: true, redirectTo: "/create", signInUrl, user_id, log }), { status: 200, headers });
+      return new Response(JSON.stringify({ success: true, verified: true, redirectTo: next, signInUrl, user_id, log }), { status: 200, headers });
     };
 
     // Returns email_confirmed_at for a user id, or null.
@@ -109,16 +129,8 @@ Deno.serve(async (req) => {
       } catch { /* anon key or invalid jwt — ignore */ }
     }
 
-    const requestUrl = new URL(req.url);
     let token = (requestUrl.searchParams.get("token") || req.headers.get("x-verification-token") || "").trim();
-    let uidParam = (requestUrl.searchParams.get("uid") || "").trim();
-    if ((!token || !uidParam) && req.method === "POST") {
-      try {
-        const body = await req.json();
-        token = token || String(body?.token || body?.verification_token || "").trim();
-        uidParam = uidParam || String(body?.uid || body?.user_id || "").trim();
-      } catch { /* ignore */ }
-    }
+    token = token || String(requestBody.token || requestBody.verification_token || "").trim();
     if (!token) {
       const referrer = req.headers.get("Referer") || req.headers.get("Referrer") || "";
       try { token = (new URL(referrer).searchParams.get("token") || "").trim(); } catch { /* ignore */ }
@@ -139,42 +151,24 @@ Deno.serve(async (req) => {
     const token_hash = await sha256Hex(token);
     console.log("[verify-email] 6_computed_hash", "len", token_hash.length, "prefix", token_hash.slice(0, 8));
 
-    // Primary lookup: exact token_hash match.
-    let { data: rows, error: selErr } = await admin
+    // Only an exact token match may verify an account. User IDs are not proof of
+    // inbox ownership and must never be used as a recovery fallback.
+    const { data: rows, error: selErr } = await admin
       .from("email_verifications")
       .select("id, user_id, email, expires_at, used_at")
       .eq("token_hash", token_hash)
       .order("created_at", { ascending: false })
       .limit(1);
-    // Secondary lookup: most recent row for this uid (handles email-client URL mangling).
-    if (!selErr && !(rows && rows.length) && uidParam) {
-      const r = await admin
-        .from("email_verifications")
-        .select("id, user_id, email, expires_at, used_at")
-        .eq("user_id", uidParam)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (!r.error && r.data && r.data.length) {
-        rows = r.data;
-        console.log("[verify-email] 7b_uid_fallback_match", "uid", uidParam);
-      }
-    }
     if (selErr) return fail(500, "db_select_failed", "Lookup failed", selErr.message, "token_looked_up");
     const row = rows?.[0];
     console.log("[verify-email] 7_db_lookup", "found", !!row, "lookup_hash_prefix", token_hash.slice(0, 8));
     if (!row) {
-      // FALLBACK A: signed-in caller → trust the JWT.
-      if (caller) {
+      // A caller already confirmed by Supabase may sync their own profile, but
+      // an unconfirmed caller must present a valid token.
+      if (caller?.email_confirmed_at) {
         const confirmedAt = caller.email_confirmed_at || await authConfirmedAt(caller.id);
-        step(confirmedAt ? "auth_confirmed_fallback_no_row" : "signed_in_fallback_no_row");
+        step("auth_confirmed_fallback_no_row");
         return await finalize(caller.id, confirmedAt);
-      }
-      // FALLBACK B: signed-out but link carries uid → confirm that user.
-      // Same trust model as a standard email confirmation link.
-      if (uidParam) {
-        const confirmedAt = await authConfirmedAt(uidParam);
-        step(confirmedAt ? "auth_confirmed_fallback_uid" : "uid_fallback_no_row");
-        return await finalize(uidParam, confirmedAt);
       }
       return fail(400, "invalid_token", "This verification link is invalid.", token_hash.slice(0, 12), "token_looked_up");
     }
@@ -206,8 +200,14 @@ Deno.serve(async (req) => {
       }
       return fail(400, "used_token", "This link has already been used or replaced by a newer email. Please request a new one.", row.used_at, "token_validated");
     }
-    const { error: updTokErr } = await admin.from("email_verifications").update({ used_at: new Date().toISOString() }).eq("id", row.id);
+    const { data: consumed, error: updTokErr } = await admin
+      .from("email_verifications")
+      .update({ used_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .is("used_at", null)
+      .select("id");
     if (updTokErr) return fail(500, "db_update_failed", "Could not mark token used", updTokErr.message, "token_consumed");
+    if (!consumed?.length) return fail(400, "used_token", "This link has already been used.", "token consumed concurrently", "token_consumed");
     step("token_consumed");
 
     // Mark profile verified, ensure usage row, confirm in Supabase Auth, respond.

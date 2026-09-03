@@ -32,6 +32,7 @@ const Blog = () => {
     title: "Rocket Blog — Branding playbooks for founders",
     description:
       "Guides, teardowns, and playbooks on logos, icons, brand kits, typography, and colour — written for founders building brands people remember.",
+    canonical: `${SITE_URL}/blog`,
   });
 
   const categories = useMemo(() => activeCategories(), []);

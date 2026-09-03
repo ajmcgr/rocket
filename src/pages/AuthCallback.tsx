@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeReturnPath } from "@/lib/navigation";
 
 const AuthCallback = () => {
   const nav = useNavigate();
@@ -13,7 +14,7 @@ const AuthCallback = () => {
     (async () => {
       try {
         const url = new URL(window.location.href);
-        const next = url.searchParams.get("next") || "/logos";
+        const next = safeReturnPath(url.searchParams.get("next"));
         const code = url.searchParams.get("code");
         const errDesc = url.searchParams.get("error_description") || url.searchParams.get("error");
         if (errDesc) throw new Error(errDesc);

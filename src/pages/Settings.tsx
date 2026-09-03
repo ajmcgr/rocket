@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -353,6 +353,24 @@ export const BillingSettings = () => {
   const [sub, setSub] = useState<any>(null);
   const [usage, setUsage] = useState<any>(null);
   const [loading, setLoading] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const plan = usage?.plan || sub?.plan || "free";
+  const planLabel = plan === "growth" || plan === "pro"
+    ? "Pro"
+    : plan === "business"
+      ? "Business"
+      : plan === "starter"
+        ? "Starter"
+        : "Free";
+  const hasPaidSubscription = ["active", "trialing", "past_due"].includes(sub?.status) && plan !== "free";
+  const canManageBilling = Boolean(sub?.stripe_customer_id);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") !== "success") return;
+    toast({ title: "Checkout complete", description: "Your subscription or credits are being added now." });
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, toast]);
 
   useEffect(() => {
     if (!user) return;
@@ -391,11 +409,11 @@ export const BillingSettings = () => {
           <div>
             <h2 className="text-base font-semibold">Billing</h2>
             <p className="mt-1 text-sm text-neutral-600">
-              Plan: <span className="font-medium">{usage?.plan === "growth" ? "Pro" : "Starter"}</span> · {remaining.toLocaleString()} Rocket Credits remaining
+              Plan: <span className="font-medium">{planLabel}</span> · {remaining.toLocaleString()} Rocket Credits remaining
             </p>
             {sub?.status && <p className="mt-0.5 text-xs text-neutral-500">Status: {sub.status}{sub.cancel_at_period_end ? " (canceling)" : ""}</p>}
           </div>
-          {usage?.plan === "growth" ? (
+          {canManageBilling ? (
             <button onClick={portal} disabled={loading === "portal"} className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50">
               {loading === "portal" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Manage billing"}
             </button>
@@ -406,7 +424,7 @@ export const BillingSettings = () => {
           )}
         </div>
 
-        {usage?.plan !== "growth" && (
+        {!hasPaidSubscription && (
           <ul className="mt-5 space-y-1.5 text-sm text-neutral-700">
             {["Everything serious founders need to build and grow their brand.", "Generous monthly Rocket Credits", "Unlimited saved logos & brand kits", "Multiple high-res file types (PNG, EPS, SVG, PDF)", "Multiple color variations (including transparent backgrounds)", "Unlimited post-purchase changes", "Full ownership", "Priority generation", "Team workspaces (multi-seat)", "Early access to new generators"].map((f) => (
               <li key={f} className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-neutral-900" /> {f}</li>
