@@ -1,7 +1,42 @@
 // redeploy: 2026-06-12-v11-inline
 import Stripe from "npm:stripe@16.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { MONTHLY_LIMITS, paidPlanFromProduct, paidPlanFromSubscription, planName } from "../_shared/billingPlans.ts";
+
+// Keep billing rules in this entrypoint. The Supabase dashboard deploys a
+// single function source file and does not include sibling _shared modules.
+type PaidPlan = "starter" | "growth" | "business";
+
+const MONTHLY_LIMITS: Record<PaidPlan | "free", number> = {
+  free: 100,
+  starter: 500,
+  growth: 3000,
+  business: 15000,
+};
+
+function paidPlanFromProduct(product?: string | null): PaidPlan | null {
+  const base = product?.replace(/_yearly$/, "");
+  if (base === "pro" || base === "growth") return "growth";
+  if (base === "starter" || base === "business") return base;
+  return null;
+}
+
+function paidPlanFromSubscription(sub: {
+  metadata?: Record<string, string> | null;
+  items: { data: Array<{ price?: { unit_amount?: number | null } | null }> };
+}): PaidPlan | null {
+  const fromMetadata = paidPlanFromProduct(sub.metadata?.product);
+  if (fromMetadata) return fromMetadata;
+
+  const amount = sub.items.data[0]?.price?.unit_amount;
+  if (amount === 1200 || amount === 9900) return "starter";
+  if (amount === 2000 || amount === 16600) return "growth";
+  if (amount === 5000 || amount === 41500) return "business";
+  return null;
+}
+
+function planName(plan: PaidPlan): string {
+  return plan === "growth" ? "Pro" : plan[0].toUpperCase() + plan.slice(1);
+}
 
 // ---- Inlined branded email layout (self-contained, no shared imports) ----
 // Shared email layout — matches the "Launch" reference design.
