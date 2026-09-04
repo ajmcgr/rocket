@@ -24,9 +24,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CollectionView, DesignSort, sortByOption } from "@/lib/designCollections";
 import { matchesDesignQuery, rankDesignsByRelevance } from "@/lib/searchRelevance";
+import { getActiveWorkspaceIdSync } from "@/lib/workspace";
 
 const supabase = _sb as any;
 const LOGO_TYPES = ["logo", "logotype", "wordmark", "brandmark"] as const;
+const PAGE_SIZE = 36;
 
 
 const SavedLogos = () => {
@@ -38,39 +40,52 @@ const SavedLogos = () => {
   const [query, setQuery] = useState("");
   const [view, setView] = useState<CollectionView>("card");
   const [sort, setSort] = useState<DesignSort>("date");
-  const [visibleCount, setVisibleCount] = useState(60);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState<string>("");
 
-  useEffect(() => { setVisibleCount(60); }, [query, view, sort]);
-
-  useEffect(() => {
+  const loadPage = async (offset: number, append = false) => {
     if (!user) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
-      const ws = await ensureActiveWorkspaceId();
+    const startedAt = performance.now();
+    if (append) setLoadingMore(true); else setLoading(true);
+    try {
+      // Never gate the library on workspace discovery: an unavailable
+      // workspace request must not make account-owned saved work disappear.
+      const ws = getActiveWorkspaceIdSync();
       let q = supabase
         .from("assets")
         .select("id,title,asset_type,image_url,thumbnail_url,editor_state,meta,prompt,created_at,updated_at,workspace_id")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .not("meta->>saved_at", "is", null);
       // Include assets in the active workspace AND legacy assets with no workspace assigned,
       // so items saved from older chats still surface on /saved.
       if (ws) q = q.or(`workspace_id.eq.${ws},workspace_id.is.null`);
-      const { data, error } = await q.is("deleted_at", null).order("created_at", { ascending: false }).limit(400);
+      const { data, error } = await q
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + PAGE_SIZE);
       if (error) {
         console.error("Failed to load saved designs", error);
         toast({ title: "Saved designs could not load", description: error.message, variant: "destructive" });
+        return;
       }
-      if (!cancelled) {
-        // Only items the user has explicitly saved (via Save button or by opening/editing in /editor).
-        setItems((data || []).filter((asset: any) => Boolean(asset?.meta?.saved_at)));
-        setLoading(false);
+      const page = data || [];
+      const next = page.slice(0, PAGE_SIZE);
+      setItems((current) => append ? [...current, ...next] : next);
+      setHasMore(page.length > PAGE_SIZE);
+      if (import.meta.env.DEV) {
+        console.info(`[SAVED] database: ${Math.round(performance.now() - startedAt)}ms; records: ${next.length}; total: ${Math.round(performance.now() - startedAt)}ms`);
       }
-    })();
-    return () => { cancelled = true; };
-  }, [user]);
+    } catch (error) {
+      console.error("Failed to load saved designs", error);
+      toast({ title: "Saved designs could not load", description: "Please refresh and try again.", variant: "destructive" });
+    } finally {
+      if (append) setLoadingMore(false); else setLoading(false);
+    }
+  };
+
+  useEffect(() => { void loadPage(0); }, [user?.id]);
 
   const filtered = useMemo(() => {
     const q = query.trim();
@@ -80,8 +95,7 @@ const SavedLogos = () => {
       : sortByOption(visible, sort, (asset) => asset.title, (asset) => asset.created_at);
   }, [items, query, sort]);
 
-  const visibleItems = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
-  const hasMore = filtered.length > visibleItems.length;
+  const visibleItems = filtered;
 
   const updateItem = (id: string, patch: any) => {
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
@@ -200,7 +214,7 @@ const SavedLogos = () => {
   const DesignPreview = ({ asset }: { asset: any }) => {
     return (
       <div className="h-full w-full" style={{ background: asset?.meta?.background || undefined }}>
-        <AssetThumbnail asset={asset} fallbackText={(asset.prompt || "").slice(0, 220)} background={asset?.meta?.background || null} />
+        <AssetThumbnail asset={asset} fast fallbackText={(asset.prompt || "").slice(0, 220)} background={asset?.meta?.background || null} />
       </div>
     );
   };
@@ -411,10 +425,11 @@ const SavedLogos = () => {
         <div className="mt-6 flex justify-center">
           <button
             type="button"
-            onClick={() => setVisibleCount((n) => n + 60)}
+            disabled={loadingMore}
+            onClick={() => void loadPage(items.length, true)}
             className="rounded-full border border-neutral-200 bg-white px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
           >
-            Load more ({filtered.length - visibleItems.length} remaining)
+            {loadingMore ? "Loading…" : "Load more"}
           </button>
         </div>
       )}
