@@ -72,12 +72,10 @@ const Team = () => {
         workspace_id: workspaceId, email, role: inviteRole, token, invited_by: user!.id,
       }).select("*").single();
       if (error) throw error;
-      const acceptUrl = `${window.location.origin}/invite/${token}`;
       try {
         await supabase.functions.invoke("send-email", {
           body: {
-            template: "workspace_invite", to: email,
-            data: { workspace_name: workspaceName, inviter: user?.email, role: inviteRole, confirmation_url: acceptUrl },
+            template: "workspace_invite", invite_id: data.id,
           },
         });
       } catch (e) { console.warn("invite email failed", e); }

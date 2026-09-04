@@ -10,6 +10,7 @@ const STYLE_VERSION = "v2-flat-brand";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const BLOG_IMAGE_SECRET = Deno.env.get("BLOG_IMAGE_SECRET");
 
 function cors(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin") || "";
@@ -165,6 +166,10 @@ async function derive(source: Image, ratio: number, width: number, quality: numb
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
   if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
+  if (!BLOG_IMAGE_SECRET) return json(req, { error: "blog image generation is not configured" }, 503);
+  if (req.headers.get("x-blog-image-secret") !== BLOG_IMAGE_SECRET) {
+    return json(req, { error: "Unauthorized" }, 401);
+  }
   if (!GEMINI_API_KEY) return json(req, { error: "GEMINI_API_KEY not configured" }, 500);
 
   let payload: {
