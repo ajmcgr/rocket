@@ -122,6 +122,23 @@ Deno.serve(async (req) => {
       });
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: attempt, error: attemptError } = await admin.rpc("get_active_stripe_checkout_attempt", {
+      p_user_id: user.id,
+      p_product: product,
+    });
+    if (attemptError) throw attemptError;
+    const checkoutAttempt = Array.isArray(attempt) ? attempt[0] : attempt;
+    if (!checkoutAttempt?.idempotency_key) throw new Error("Could not start checkout");
+
+    if (checkoutAttempt.stripe_session_id) {
+      const existingSession = await stripe.checkout.sessions.retrieve(checkoutAttempt.stripe_session_id);
+      if (existingSession.url) {
+        return new Response(JSON.stringify({ url: existingSession.url }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const { data: sub } = await admin
       .from("subscriptions")
       .select("stripe_customer_id")
@@ -129,7 +146,10 @@ Deno.serve(async (req) => {
       .maybeSingle();
     let customerId = sub?.stripe_customer_id;
     if (!customerId) {
-      const c = await stripe.customers.create({ email: user.email!, metadata: { user_id: user.id } });
+      const c = await stripe.customers.create(
+        { email: user.email!, metadata: { user_id: user.id } },
+        { idempotencyKey: `rocket-customer-${user.id}` },
+      );
       customerId = c.id;
       await admin
         .from("subscriptions")
@@ -162,7 +182,14 @@ Deno.serve(async (req) => {
       success_url: `${APP_URL}/settings/billing?checkout=success`,
       cancel_url: `${APP_URL}/pricing?checkout=canceled`,
       metadata: { user_id: user.id, product, credits: String(p.credits || 0) },
-    });
+    }, { idempotencyKey: checkoutAttempt.idempotency_key });
+
+    const { error: storeAttemptError } = await admin
+      .from("stripe_checkout_attempts")
+      .update({ stripe_session_id: session.id })
+      .eq("id", checkoutAttempt.id)
+      .is("stripe_session_id", null);
+    if (storeAttemptError) throw storeAttemptError;
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

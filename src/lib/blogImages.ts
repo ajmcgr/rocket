@@ -5,11 +5,9 @@ import { posts, type BlogPost } from "@/content/blogMeta";
  * Client-side store for Gemini-generated blog artwork.
  *
  * Images live in Supabase Storage and are indexed in `public.blog_images`.
- * The store loads the index once, then quietly asks the `blog-image` edge
- * function to generate artwork for any published post that doesn't have any
- * yet — so newly published articles (and the existing backlog) get covers with
- * zero manual work. Rendering never depends on it: `ArticleCover` falls back to
- * the deterministic branded gradient while artwork is missing or generating.
+ * The store loads the published image index once. Artwork generation is a
+ * server-admin action; rendering falls back to the deterministic branded
+ * gradient while an article has no published cover.
  */
 
 export type BlogImage = {
@@ -105,12 +103,6 @@ async function runQueue(candidates: BlogPost[]): Promise<void> {
  */
 export async function ensureBlogImages(scope: BlogPost[] = posts.slice(0, 12)) {
   await loadIndex();
-  const missing = scope.filter(
-    (post) => (!cache.has(post.slug) || isStale(cache.get(post.slug))) && !requested.has(post.slug),
-  );
-  if (!missing.length) return;
-  missing.forEach((post) => requested.add(post.slug));
-  void runQueue(missing);
 }
 
 /** One-time backfill for the entire archive. */

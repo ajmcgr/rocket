@@ -84,6 +84,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = (Deno.env.get("EMAIL_FROM") || "Rocket <hello@tryrocket.ai>").replace(/^["']+|["']+$/g, "");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   const corsHeaders = cors(req);
@@ -97,10 +98,43 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user?.email) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { template, data, to } = await req.json() as { template: Template; data?: any; to?: string };
-    // Allow arbitrary recipient only for the workspace_invite template; all others must go to the caller's email.
-    const recipient = template === "workspace_invite" && to ? to : user.email;
-    const result = await sendBranded(RESEND_API_KEY, FROM_EMAIL, recipient, template, data || {});
+    const { template, data, invite_id } = await req.json() as { template: Template; data?: any; invite_id?: string };
+    let recipient = user.email;
+    let emailData = data || {};
+
+    if (template === "workspace_invite") {
+      if (!invite_id) {
+        return new Response(JSON.stringify({ error: "invite_id is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: invite, error: inviteError } = await admin
+        .from("workspace_invites")
+        .select("id,workspace_id,email,role,token,invited_by,accepted_at")
+        .eq("id", invite_id)
+        .maybeSingle();
+      if (inviteError || !invite || invite.accepted_at || invite.invited_by !== user.id) {
+        return new Response(JSON.stringify({ error: "invite_not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: membership } = await admin
+        .from("workspace_members")
+        .select("role")
+        .eq("workspace_id", invite.workspace_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!membership || !["owner", "admin"].includes(membership.role)) {
+        return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: workspace } = await admin.from("workspaces").select("name").eq("id", invite.workspace_id).maybeSingle();
+      recipient = invite.email;
+      emailData = {
+        workspace_name: workspace?.name || "a Rocket workspace",
+        inviter: user.email,
+        role: invite.role,
+        confirmation_url: `https://tryrocket.ai/invite/${invite.token}`,
+      };
+    }
+
+    const result = await sendBranded(RESEND_API_KEY, FROM_EMAIL, recipient, template, emailData);
     if (!result.ok) throw new Error(result.error);
     return new Response(JSON.stringify({ ok: true, id: result.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
