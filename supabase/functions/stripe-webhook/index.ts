@@ -22,7 +22,7 @@ function paidPlanFromProduct(product?: string | null): PaidPlan | null {
 
 function paidPlanFromSubscription(sub: {
   metadata?: Record<string, string> | null;
-  items: { data: Array<{ price?: { unit_amount?: number | null } | null }> };
+  items: { data: Array<{ price?: { id?: string; unit_amount?: number | null } | null }> };
 }): PaidPlan | null {
   const fromMetadata = paidPlanFromProduct(sub.metadata?.product);
   if (fromMetadata) return fromMetadata;
@@ -336,25 +336,23 @@ Deno.serve(async (req) => {
         if (!row) break;
         const selectedPlan = paidPlanFromSubscription(sub) || paidPlanFromProduct(row.plan);
         const plan = sub.status === "active" || sub.status === "trialing" ? (selectedPlan || "free") : "free";
-        await admin
-          .from("subscriptions")
-          .update({
-            stripe_subscription_id: sub.id,
-            status: sub.status,
-            plan,
-            current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-            trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
-            cancel_at_period_end: sub.cancel_at_period_end,
-          })
-          .eq("user_id", row.user_id);
-        await admin
-          .from("user_usage")
-          .update({
-            plan,
-            monthly_limit: MONTHLY_LIMITS[plan],
-          })
-          .eq("user_id", row.user_id);
+        const { error } = await admin.rpc("apply_stripe_subscription_event", {
+          p_event_id: event.id,
+          p_event_type: event.type,
+          p_user_id: row.user_id,
+          p_customer_id: customerId,
+          p_subscription_id: sub.id,
+          p_price_id: sub.items.data[0]?.price?.id ?? null,
+          p_plan: plan,
+          p_status: sub.status,
+          p_current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+          p_current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          p_trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+          p_cancel_at_period_end: sub.cancel_at_period_end,
+          p_event_created_at: new Date(event.created * 1000).toISOString(),
+          p_monthly_limit: MONTHLY_LIMITS[plan],
+        });
+        if (error) throw error;
         break;
       }
       case "customer.subscription.deleted": {
@@ -366,8 +364,23 @@ Deno.serve(async (req) => {
           .eq("stripe_customer_id", customerId)
           .maybeSingle();
         if (!row) break;
-        await admin.from("subscriptions").update({ status: "canceled", plan: "free" }).eq("user_id", row.user_id);
-        await admin.from("user_usage").update({ plan: "free", monthly_limit: 100 }).eq("user_id", row.user_id);
+        const { error } = await admin.rpc("apply_stripe_subscription_event", {
+          p_event_id: event.id,
+          p_event_type: event.type,
+          p_user_id: row.user_id,
+          p_customer_id: customerId,
+          p_subscription_id: sub.id,
+          p_price_id: sub.items.data[0]?.price?.id ?? null,
+          p_plan: "free",
+          p_status: "canceled",
+          p_current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+          p_current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          p_trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+          p_cancel_at_period_end: sub.cancel_at_period_end,
+          p_event_created_at: new Date(event.created * 1000).toISOString(),
+          p_monthly_limit: MONTHLY_LIMITS.free,
+        });
+        if (error) throw error;
         break;
       }
       case "invoice.payment_succeeded":
