@@ -85,7 +85,9 @@ export default function BrandHub() {
           .from("assets")
           .select("id,title,asset_type,project_id,content,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
           .eq("user_id", user.id);
-        if (workspaceId) q = q.eq("workspace_id", workspaceId);
+        // The workspace migration did not assign old account-owned designs.
+        // Keep them visible to their owner in every workspace until explicitly moved.
+        if (workspaceId) q = q.or(`workspace_id.eq.${workspaceId},workspace_id.is.null`);
         let result = await q.order("created_at", { ascending: false }).limit(400);
         if (result.error && workspaceId && isMissingColumnError(result.error, "workspace_id")) {
           result = await supabase
@@ -94,6 +96,11 @@ export default function BrandHub() {
             .eq("user_id", user.id)
             .order("created_at", { ascending: false })
             .limit(400);
+        }
+        if (result.error) {
+          console.error("Failed to load brand-kit designs", result.error);
+          toast({ title: "Brand kit designs could not load", description: result.error.message, variant: "destructive" });
+          return [];
         }
         return result.data || [];
       };

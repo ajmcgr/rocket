@@ -58,7 +58,11 @@ const SavedLogos = () => {
       // Include assets in the active workspace AND legacy assets with no workspace assigned,
       // so items saved from older chats still surface on /saved.
       if (ws) q = q.or(`workspace_id.eq.${ws},workspace_id.is.null`);
-      const { data } = await q.is("deleted_at", null).order("created_at", { ascending: false }).limit(400);
+      const { data, error } = await q.is("deleted_at", null).order("created_at", { ascending: false }).limit(400);
+      if (error) {
+        console.error("Failed to load saved designs", error);
+        toast({ title: "Saved designs could not load", description: error.message, variant: "destructive" });
+      }
       if (!cancelled) {
         // Only items the user has explicitly saved (via Save button or by opening/editing in /editor).
         setItems((data || []).filter((asset: any) => Boolean(asset?.meta?.saved_at)));

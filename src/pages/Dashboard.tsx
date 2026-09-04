@@ -88,7 +88,8 @@ const Projects = () => {
     try {
       const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
       const ws = await ensureActiveWorkspaceId();
-      const scope = <T extends { eq: (col: string, v: any) => T }>(q: T): T => ws ? q.eq("workspace_id", ws) : q;
+      // Include account-owned records created before workspace_id existed.
+      const scope = (q: any) => ws ? q.or(`workspace_id.eq.${ws},workspace_id.is.null`) : q;
       const [projectsResult, foldersResult, assetsResult] = await Promise.all([
         scope(supabase.from("projects").select("*").eq("user_id", user.id)).order("created_at", { ascending: false }),
         scope(supabase.from("folders").select("*").eq("user_id", user.id)).order("created_at", { ascending: false }),
