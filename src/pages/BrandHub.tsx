@@ -12,15 +12,27 @@ import AssetThumbnail from "@/components/AssetThumbnail";
 const supabase = _sb as any;
 
 const MARK_TYPES = new Set(["logo", "logotype", "wordmark", "brandmark", "icon", "app_icon", "favicon", "graphic", "photo", "image"]);
+const ASSET_PAGE_SIZE = 500;
 
-const isMissingColumnError = (error: any, column: string) => {
-  const message = String(error?.message || error?.details || "").toLowerCase();
-  return message.includes(column.toLowerCase()) && (
-    message.includes("column")
-    || message.includes("schema cache")
-    || message.includes("could not find")
-  );
-};
+async function loadAssets(userId: string, workspaceId: string | null) {
+  const all: any[] = [];
+  for (let offset = 0; ; offset += ASSET_PAGE_SIZE) {
+    let query = supabase
+      .from("assets")
+      .select("id,title,asset_type,project_id,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+    // Legacy assets have no workspace and remain visible to their owner.
+    if (workspaceId) query = query.or(`workspace_id.eq.${workspaceId},workspace_id.is.null`);
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
+      .range(offset, offset + ASSET_PAGE_SIZE - 1);
+    if (error) throw error;
+    const page = data || [];
+    all.push(...page);
+    if (page.length < ASSET_PAGE_SIZE) return all;
+  }
+}
 
 type Category = { key: string; label: string; types: string[] };
 
@@ -62,14 +74,7 @@ export default function BrandHub() {
 
   const refreshAssets = useCallback(async () => {
     if (!user) return;
-    let q = supabase
-      .from("assets")
-      .select("id,title,asset_type,project_id,content,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(400);
-    const { data } = await q;
-    const all = data || [];
+    const all = await loadAssets(user.id, getActiveWorkspaceIdSync());
     setAllDesigns(all);
     setAssets(all.filter(isBrandAsset));
   }, [user]);
@@ -83,30 +88,6 @@ export default function BrandHub() {
         const startedAt = performance.now();
       // Brand cards do not depend on asynchronous workspace creation/listing.
       const workspaceId = getActiveWorkspaceIdSync();
-      const loadAssets = async () => {
-        let q = supabase
-          .from("assets")
-          .select("id,title,asset_type,project_id,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
-          .eq("user_id", user.id);
-        // The workspace migration did not assign old account-owned designs.
-        // Keep them visible to their owner in every workspace until explicitly moved.
-        if (workspaceId) q = q.or(`workspace_id.eq.${workspaceId},workspace_id.is.null`);
-        let result = await q.order("created_at", { ascending: false }).limit(400);
-        if (result.error && workspaceId && isMissingColumnError(result.error, "workspace_id")) {
-          result = await supabase
-            .from("assets")
-            .select("id,title,asset_type,project_id,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(400);
-        }
-        if (result.error) {
-          console.error("Failed to load brand-kit designs", result.error);
-          toast({ title: "Brand kit designs could not load", description: result.error.message, variant: "destructive" });
-          return [];
-        }
-        return result.data || [];
-      };
       const loadProjects = async () => {
         const result = await supabase
           .from("projects")
@@ -126,10 +107,13 @@ export default function BrandHub() {
           return !project.workspace_id || project.workspace_id === workspaceId;
         });
       };
-        const [a, p] = await Promise.all([loadAssets(), loadProjects()]);
+        const p = await loadProjects();
         if (cancel) return;
         const loadedProjects = (p || []).filter(Boolean);
-        const all = (a || []).filter(Boolean);
+        // Fetch every eligible asset in pages. Applying a fixed limit before
+        // the UI can classify types previously hid older Brand Kit components.
+        const all = await loadAssets(user.id, workspaceId);
+        if (cancel) return;
         setAllDesigns(all);
         setAssets(all.filter(isBrandAsset));
         setProjects(loadedProjects);
