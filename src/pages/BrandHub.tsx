@@ -7,7 +7,6 @@ import { assetHref, isBrandAsset, isDesignAsset, normalizeAssetType } from "@/li
 import { getActiveWorkspaceIdSync } from "@/lib/workspace";
 import BrandCover from "@/components/brand/BrandCover";
 import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
-import AssetThumbnail from "@/components/AssetThumbnail";
 
 const supabase = _sb as any;
 
@@ -34,26 +33,53 @@ async function loadAssets(userId: string, workspaceId: string | null) {
   }
 }
 
-// The Brand Kit index only needs to know which projects have assets. Fetching
-// full image/data-URL payloads for every asset can make the initial request
-// hundreds of megabytes and prevent the list from rendering at all.
-async function loadBrandIndexAssets(userId: string, workspaceId: string | null) {
-  const all: any[] = [];
-  for (let offset = 0; ; offset += ASSET_PAGE_SIZE) {
-    let query = supabase
-      .from("assets")
-      .select("id,project_id,asset_type,created_at")
-      .eq("user_id", userId)
-      .is("deleted_at", null);
-    if (workspaceId) query = query.or(`workspace_id.eq.${workspaceId},workspace_id.is.null`);
-    const { data, error } = await query
-      .order("created_at", { ascending: false })
-      .range(offset, offset + ASSET_PAGE_SIZE - 1);
-    if (error) throw error;
-    const page = data || [];
-    all.push(...page);
-    if (page.length < ASSET_PAGE_SIZE) return all;
+type BrandPreview = { project_id: string; asset_count: number; preview_url: string | null };
+
+async function loadBrandIndexPreviews(projectIds: string[]) {
+  if (!projectIds.length) return new Map<string, BrandPreview>();
+  const { data, error } = await supabase.rpc("get_brand_index_previews", { project_ids: projectIds });
+  if (error) throw error;
+  return new Map((data || []).map((preview: BrandPreview) => [preview.project_id, preview]));
+}
+
+function resolveBrandPreview(brand: any): string | null {
+  return brand?.cover_url || brand?.preview_url || null;
+}
+
+function BrandKitPreview({ brand }: { brand: any }) {
+  const source = resolveBrandPreview(brand);
+  const [state, setState] = useState<"resolving" | "loaded" | "missing" | "error">(source ? "resolving" : "missing");
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    setAttempt(0);
+    setState(source ? "resolving" : "missing");
+  }, [source]);
+
+  if (!source || state === "missing" || state === "error") {
+    return (
+      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-neutral-900 text-lg font-semibold text-white">
+        {String(brand?.name || "B").trim().slice(0, 2).toUpperCase()}
+      </div>
+    );
   }
+
+  return (
+    <>
+      {state !== "loaded" && <div className="absolute inset-0 animate-pulse bg-neutral-100" aria-label="Loading brand preview" />}
+      <img
+        key={`${source}-${attempt}`}
+        src={source}
+        alt={`${brand?.name || "Brand"} logo`}
+        className={`max-h-full max-w-full object-contain transition-opacity ${state === "loaded" ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setState("loaded")}
+        onError={() => {
+          if (attempt === 0) setAttempt(1);
+          else setState("error");
+        }}
+      />
+    </>
+  );
 }
 
 type Category = { key: string; label: string; types: string[] };
@@ -137,13 +163,17 @@ export default function BrandHub() {
         const isIndex = !activeProject && !params.get("direction");
         // Keep the index lightweight. Full assets are only needed after a
         // specific kit is opened or being configured.
-        const all = isIndex
-          ? await loadBrandIndexAssets(user.id, workspaceId)
-          : await loadAssets(user.id, workspaceId);
+        const all = isIndex ? [] : await loadAssets(user.id, workspaceId);
+        if (cancel) return;
+        const previews = isIndex
+          ? await loadBrandIndexPreviews(loadedProjects.map((project: any) => project.id))
+          : new Map<string, BrandPreview>();
         if (cancel) return;
         setAllDesigns(all);
         setAssets(isIndex ? [] : all.filter(isBrandAsset));
-        setProjects(loadedProjects);
+        setProjects(isIndex
+          ? loadedProjects.map((project: any) => ({ ...project, ...previews.get(project.id) }))
+          : loadedProjects);
         if (import.meta.env.DEV) {
           console.info(`[BRANDS] database: ${Math.round(performance.now() - startedAt)}ms; projects: ${loadedProjects.length}; assets: ${all.length}; total: ${Math.round(performance.now() - startedAt)}ms`);
         }
@@ -302,8 +332,12 @@ export default function BrandHub() {
   ];
 
 
-  const projectDesignCount = (projectId: string) =>
-    allDesigns.filter((design) => design.project_id === projectId).length;
+  const projectDesignCount = (projectId: string) => {
+    const indexed = projects.find((project) => project.id === projectId)?.asset_count;
+    return typeof indexed === "number"
+      ? indexed
+      : allDesigns.filter((design) => design.project_id === projectId).length;
+  };
 
   // Pre-index designs by project once, so card rendering is O(P) not O(P*A).
   const designsByProject = useMemo(() => {
@@ -316,22 +350,6 @@ export default function BrandHub() {
     }
     return map;
   }, [allDesigns]);
-  const projectLogos = useMemo(() => {
-    const map = new Map<string, any>();
-    for (const [pid, list] of designsByProject.entries()) {
-      // Match Brand.tsx: only consider assets explicitly saved into the brand kit.
-      const saved = list.filter((d: any) => d?.meta?.saved_at);
-      const isMark = (d: any) => MARK_TYPES.has(normalizeAssetType(d.asset_type)) || d?.editor_state?.kind === "logotype";
-      const hit =
-        saved.find((d: any) => d?.editor_state?.kind === "logotype") ||
-        saved.find(isMark) ||
-        saved.find((d: any) => d?.image_url || d?.editor_state) ||
-        saved[0];
-      if (hit) map.set(pid, hit);
-    }
-    return map;
-  }, [designsByProject]);
-
   const projectKitProgress = (projectId: string) => {
     const types = new Set(allDesigns
       .filter((design) => design.project_id === projectId)
@@ -405,10 +423,9 @@ export default function BrandHub() {
             <h2 className="text-lg font-semibold text-neutral-900">Brand kits could not load</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-neutral-600">{loadError}</p>
           </section>
-        ) : (projects.filter((p) => (designsByProject.get(p.id) || []).length > 0).length > 0) ? (
+        ) : (projects.filter((p) => (p.asset_count || (designsByProject.get(p.id) || []).length) > 0).length > 0) ? (
           <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {projects.filter((p) => (designsByProject.get(p.id) || []).length > 0).map((project) => {
-              const logo = projectLogos.get(project.id);
+            {projects.filter((p) => (p.asset_count || (designsByProject.get(p.id) || []).length) > 0).map((project) => {
               const designCount = projectDesignCount(project.id);
               return (
                 <Link
@@ -417,15 +434,7 @@ export default function BrandHub() {
                   className="group block cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:shadow-md"
                 >
                   <div className="flex aspect-square w-full items-center justify-center bg-neutral-50 p-4">
-                    {logo ? (
-                      <AssetThumbnail asset={logo} fast alt={project.name || "Brand"} />
-                    ) : project?.cover_url ? (
-                      <AssetThumbnail asset={{ image_url: project.cover_url, title: project.name }} fast alt={project.name || "Brand"} />
-                    ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-neutral-900 text-lg font-semibold text-white">
-                        {String(project.name || "B").trim().slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                    <BrandKitPreview brand={project} />
                   </div>
                   <div className="border-t border-neutral-100 p-3">
                     <div className="min-w-0">
