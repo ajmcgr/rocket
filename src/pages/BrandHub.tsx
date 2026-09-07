@@ -34,6 +34,28 @@ async function loadAssets(userId: string, workspaceId: string | null) {
   }
 }
 
+// The Brand Kit index only needs to know which projects have assets. Fetching
+// full image/data-URL payloads for every asset can make the initial request
+// hundreds of megabytes and prevent the list from rendering at all.
+async function loadBrandIndexAssets(userId: string, workspaceId: string | null) {
+  const all: any[] = [];
+  for (let offset = 0; ; offset += ASSET_PAGE_SIZE) {
+    let query = supabase
+      .from("assets")
+      .select("id,project_id,asset_type,created_at")
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+    if (workspaceId) query = query.or(`workspace_id.eq.${workspaceId},workspace_id.is.null`);
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
+      .range(offset, offset + ASSET_PAGE_SIZE - 1);
+    if (error) throw error;
+    const page = data || [];
+    all.push(...page);
+    if (page.length < ASSET_PAGE_SIZE) return all;
+  }
+}
+
 type Category = { key: string; label: string; types: string[] };
 
 const CATEGORIES: Category[] = [
@@ -70,6 +92,7 @@ export default function BrandHub() {
   const [assets, setAssets] = useState<any[]>([]);
   const [allDesigns, setAllDesigns] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeProject, setActiveProject] = useState<string>(params.get("project") || "");
 
   const refreshAssets = useCallback(async () => {
@@ -84,6 +107,7 @@ export default function BrandHub() {
     let cancel = false;
     (async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const startedAt = performance.now();
       // Brand cards do not depend on asynchronous workspace creation/listing.
@@ -110,25 +134,32 @@ export default function BrandHub() {
         const p = await loadProjects();
         if (cancel) return;
         const loadedProjects = (p || []).filter(Boolean);
-        // Fetch every eligible asset in pages. Applying a fixed limit before
-        // the UI can classify types previously hid older Brand Kit components.
-        const all = await loadAssets(user.id, workspaceId);
+        const isIndex = !activeProject && !params.get("direction");
+        // Keep the index lightweight. Full assets are only needed after a
+        // specific kit is opened or being configured.
+        const all = isIndex
+          ? await loadBrandIndexAssets(user.id, workspaceId)
+          : await loadAssets(user.id, workspaceId);
         if (cancel) return;
         setAllDesigns(all);
-        setAssets(all.filter(isBrandAsset));
+        setAssets(isIndex ? [] : all.filter(isBrandAsset));
         setProjects(loadedProjects);
         if (import.meta.env.DEV) {
           console.info(`[BRANDS] database: ${Math.round(performance.now() - startedAt)}ms; projects: ${loadedProjects.length}; assets: ${all.length}; total: ${Math.round(performance.now() - startedAt)}ms`);
         }
       } catch (error) {
         console.error("Failed to load brand kits", error);
-        if (!cancel) toast({ title: "Brand kits could not load", description: "Please refresh and try again.", variant: "destructive" });
+        const message = error instanceof Error ? error.message : String(error);
+        if (!cancel) {
+          setLoadError(message);
+          toast({ title: "Brand kits could not load", description: message, variant: "destructive" });
+        }
       } finally {
         if (!cancel) setLoading(false);
       }
     })();
     return () => { cancel = true; };
-  }, [user]);
+  }, [user, activeProject, params]);
 
   useEffect(() => {
     setActiveProject(params.get("project") || "");
@@ -272,7 +303,7 @@ export default function BrandHub() {
 
 
   const projectDesignCount = (projectId: string) =>
-    allDesigns.filter((design) => design.project_id === projectId && Boolean(design?.meta?.saved_at)).length;
+    allDesigns.filter((design) => design.project_id === projectId).length;
 
   // Pre-index designs by project once, so card rendering is O(P) not O(P*A).
   const designsByProject = useMemo(() => {
@@ -369,9 +400,14 @@ export default function BrandHub() {
               </div>
             ))}
           </section>
-        ) : projects.filter((p) => (designsByProject.get(p.id) || []).some((d: any) => d?.meta?.saved_at)).length ? (
+        ) : loadError ? (
+          <section className="mt-8 rounded-2xl border border-red-200 bg-red-50 px-6 py-14 text-center">
+            <h2 className="text-lg font-semibold text-neutral-900">Brand kits could not load</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-neutral-600">{loadError}</p>
+          </section>
+        ) : (projects.filter((p) => (designsByProject.get(p.id) || []).length > 0).length > 0) ? (
           <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {projects.filter((p) => (designsByProject.get(p.id) || []).some((d: any) => d?.meta?.saved_at)).map((project) => {
+            {projects.filter((p) => (designsByProject.get(p.id) || []).length > 0).map((project) => {
               const logo = projectLogos.get(project.id);
               const designCount = projectDesignCount(project.id);
               return (
