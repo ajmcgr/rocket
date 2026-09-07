@@ -4,7 +4,7 @@ import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { assetHref, isBrandAsset, isDesignAsset, normalizeAssetType } from "@/lib/assetExperience";
-import { ensureActiveWorkspaceId } from "@/lib/workspace";
+import { getActiveWorkspaceIdSync } from "@/lib/workspace";
 import BrandCover from "@/components/brand/BrandCover";
 import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import AssetThumbnail from "@/components/AssetThumbnail";
@@ -12,15 +12,27 @@ import AssetThumbnail from "@/components/AssetThumbnail";
 const supabase = _sb as any;
 
 const MARK_TYPES = new Set(["logo", "logotype", "wordmark", "brandmark", "icon", "app_icon", "favicon", "graphic", "photo", "image"]);
+const ASSET_PAGE_SIZE = 500;
 
-const isMissingColumnError = (error: any, column: string) => {
-  const message = String(error?.message || error?.details || "").toLowerCase();
-  return message.includes(column.toLowerCase()) && (
-    message.includes("column")
-    || message.includes("schema cache")
-    || message.includes("could not find")
-  );
-};
+async function loadAssets(userId: string, workspaceId: string | null) {
+  const all: any[] = [];
+  for (let offset = 0; ; offset += ASSET_PAGE_SIZE) {
+    let query = supabase
+      .from("assets")
+      .select("id,title,asset_type,project_id,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+    // Legacy assets have no workspace and remain visible to their owner.
+    if (workspaceId) query = query.or(`workspace_id.eq.${workspaceId},workspace_id.is.null`);
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
+      .range(offset, offset + ASSET_PAGE_SIZE - 1);
+    if (error) throw error;
+    const page = data || [];
+    all.push(...page);
+    if (page.length < ASSET_PAGE_SIZE) return all;
+  }
+}
 
 type Category = { key: string; label: string; types: string[] };
 
@@ -62,14 +74,7 @@ export default function BrandHub() {
 
   const refreshAssets = useCallback(async () => {
     if (!user) return;
-    let q = supabase
-      .from("assets")
-      .select("id,title,asset_type,project_id,content,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(400);
-    const { data } = await q;
-    const all = data || [];
+    const all = await loadAssets(user.id, getActiveWorkspaceIdSync());
     setAllDesigns(all);
     setAssets(all.filter(isBrandAsset));
   }, [user]);
@@ -79,28 +84,14 @@ export default function BrandHub() {
     let cancel = false;
     (async () => {
       setLoading(true);
-      const workspaceId = await ensureActiveWorkspaceId();
-      const loadAssets = async () => {
-        let q = supabase
-          .from("assets")
-          .select("id,title,asset_type,project_id,content,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
-          .eq("user_id", user.id);
-        if (workspaceId) q = q.eq("workspace_id", workspaceId);
-        let result = await q.order("created_at", { ascending: false }).limit(400);
-        if (result.error && workspaceId && isMissingColumnError(result.error, "workspace_id")) {
-          result = await supabase
-            .from("assets")
-            .select("id,title,asset_type,project_id,content,image_url,thumbnail_url,editor_state,prompt,created_at,meta")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(400);
-        }
-        return result.data || [];
-      };
+      try {
+        const startedAt = performance.now();
+      // Brand cards do not depend on asynchronous workspace creation/listing.
+      const workspaceId = getActiveWorkspaceIdSync();
       const loadProjects = async () => {
         const result = await supabase
           .from("projects")
-          .select("*")
+          .select("id,name,cover_url,workspace_id,deleted_at")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(100);
@@ -116,14 +107,25 @@ export default function BrandHub() {
           return !project.workspace_id || project.workspace_id === workspaceId;
         });
       };
-      const [a, p] = await Promise.all([loadAssets(), loadProjects()]);
-      if (cancel) return;
-      const loadedProjects = (p || []).filter(Boolean);
-      const all = (a || []).filter(Boolean);
-      setAllDesigns(all);
-      setAssets(all.filter(isBrandAsset));
-      setProjects(loadedProjects);
-      setLoading(false);
+        const p = await loadProjects();
+        if (cancel) return;
+        const loadedProjects = (p || []).filter(Boolean);
+        // Fetch every eligible asset in pages. Applying a fixed limit before
+        // the UI can classify types previously hid older Brand Kit components.
+        const all = await loadAssets(user.id, workspaceId);
+        if (cancel) return;
+        setAllDesigns(all);
+        setAssets(all.filter(isBrandAsset));
+        setProjects(loadedProjects);
+        if (import.meta.env.DEV) {
+          console.info(`[BRANDS] database: ${Math.round(performance.now() - startedAt)}ms; projects: ${loadedProjects.length}; assets: ${all.length}; total: ${Math.round(performance.now() - startedAt)}ms`);
+        }
+      } catch (error) {
+        console.error("Failed to load brand kits", error);
+        if (!cancel) toast({ title: "Brand kits could not load", description: "Please refresh and try again.", variant: "destructive" });
+      } finally {
+        if (!cancel) setLoading(false);
+      }
     })();
     return () => { cancel = true; };
   }, [user]);
@@ -380,9 +382,9 @@ export default function BrandHub() {
                 >
                   <div className="flex aspect-square w-full items-center justify-center bg-neutral-50 p-4">
                     {logo ? (
-                      <AssetThumbnail asset={logo} alt={project.name || "Brand"} />
+                      <AssetThumbnail asset={logo} fast alt={project.name || "Brand"} />
                     ) : project?.cover_url ? (
-                      <AssetThumbnail asset={{ image_url: project.cover_url, title: project.name }} alt={project.name || "Brand"} />
+                      <AssetThumbnail asset={{ image_url: project.cover_url, title: project.name }} fast alt={project.name || "Brand"} />
                     ) : (
                       <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-neutral-900 text-lg font-semibold text-white">
                         {String(project.name || "B").trim().slice(0, 2).toUpperCase()}

@@ -13,6 +13,8 @@ type AssetThumbnailProps = {
   outputHeight?: number;
   paddingRatio?: number;
   logoColor?: string;
+  /** Use the stored thumbnail directly in dense library grids. */
+  fast?: boolean;
 };
 
 export default function AssetThumbnail({
@@ -25,6 +27,7 @@ export default function AssetThumbnail({
   outputHeight,
   paddingRatio,
   logoColor,
+  fast = false,
 }: AssetThumbnailProps) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -49,6 +52,14 @@ export default function AssetThumbnail({
 
     void (async () => {
       try {
+        // Grid cards must not download and scan full-resolution source images
+        // just to make a preview. The browser can load the stored thumbnail
+        // lazily and independently of the page's database request.
+        const directUrl = asset?.preview_url || asset?.meta?.preview_url || asset?.thumbnail_url || asset?.image_url;
+        if (fast && directUrl) {
+          if (!cancelled) setSrc(directUrl);
+          return;
+        }
         const opts = { background, outputWidth, outputHeight, paddingRatio, logoColor, normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" };
         const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
         const hasEditableSource = isBrandKitLogotypeAsset(asset) || isCanvasAsset(asset);

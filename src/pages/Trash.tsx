@@ -119,7 +119,8 @@ const Trash = () => {
     setLoading(true);
     const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
     const ws = await ensureActiveWorkspaceId();
-    const scope = (q: any) => (ws ? q.eq("workspace_id", ws) : q);
+    // Legacy account-owned rows have no workspace_id and must remain restorable.
+    const scope = (q: any) => (ws ? q.or(`workspace_id.eq.${ws},workspace_id.is.null`) : q);
     const a = await scope(supabase.from("assets").select("*").eq("user_id", user.id)).not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(500);
     // Client-side purge of items older than 30 days (best-effort).
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
