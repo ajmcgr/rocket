@@ -57,7 +57,9 @@ const SavedLogos = () => {
         .from("assets")
         .select("id,title,asset_type,image_url,thumbnail_url,editor_state,meta,prompt,created_at,updated_at,workspace_id")
         .eq("user_id", user.id)
-        .not("meta->>saved_at", "is", null);
+        // `saved_from_chat` was the original saved marker. Keep it alongside
+        // `saved_at` so historical saved designs remain visible.
+        .or("meta->>saved_at.not.is.null,meta->>saved_from_chat.eq.true");
       // Include assets in the active workspace AND legacy assets with no workspace assigned,
       // so items saved from older chats still surface on /saved.
       if (ws) q = q.or(`workspace_id.eq.${ws},workspace_id.is.null`);
@@ -108,6 +110,7 @@ const SavedLogos = () => {
   const unfavourite = async (a: any) => {
     const meta = { ...(a.meta || {}) };
     delete meta.saved_at;
+    delete meta.saved_from_chat;
     await supabase.from("assets").update({ meta }).eq("id", a.id);
     setItems((prev) => prev.filter((x) => x.id !== a.id));
     toast({ title: "Removed from Saved" });
