@@ -42,10 +42,22 @@ Deno.serve(async req => {
       if (!isData(value)) continue;
       try {
         const migratedUrl = await store(admin,value,user.id,project.id,id,field);
-        const { error: backupError } = await admin.from("legacy_brand_preview_backups").upsert(
-          { user_id:user.id, project_id:project.id, asset_id:field === "cover_url" ? null : id, field_name:field, original_value:value, migrated_url:migratedUrl, migrated_at:new Date().toISOString() },
-          { onConflict:field === "cover_url" ? "project_id,field_name" : "asset_id,field_name" },
-        );
+        const backup = { user_id:user.id, project_id:project.id, asset_id:field === "cover_url" ? null : id, field_name:field, original_value:value, migrated_url:migratedUrl, migrated_at:new Date().toISOString() };
+        // Asset backups are unique per asset+field. Cover backups are unique
+        // per project only when asset_id is null; keep the two paths explicit
+        // so an older asset backup can never block the canonical saved asset.
+        const backupRequest = field === "cover_url"
+          ? admin.from("legacy_brand_preview_backups").select("id").eq("project_id", project.id).eq("field_name", field).is("asset_id", null).maybeSingle()
+          : admin.from("legacy_brand_preview_backups").upsert(backup, { onConflict:"asset_id,field_name" });
+        const { data: existingCover, error: lookupError } = field === "cover_url"
+          ? await backupRequest
+          : { data: null, error: null };
+        if (lookupError) throw lookupError;
+        const { error: backupError } = field === "cover_url"
+          ? existingCover
+            ? await admin.from("legacy_brand_preview_backups").update(backup).eq("id", existingCover.id)
+            : await admin.from("legacy_brand_preview_backups").insert(backup)
+          : await backupRequest;
         if (backupError) throw backupError;
         const { error: updateError } = await admin.from(field === "cover_url" ? "projects" : "assets").update({[field]:migratedUrl}).eq("id",id);
         if (updateError) throw updateError;
