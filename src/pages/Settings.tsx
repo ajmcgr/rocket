@@ -426,7 +426,7 @@ export const BillingSettings = () => {
 
         {!hasPaidSubscription && (
           <ul className="mt-5 space-y-1.5 text-sm text-neutral-700">
-            {["Everything serious founders need to build and grow their brand.", "Generous monthly Rocket Credits", "Unlimited saved logos & brand kits", "Multiple high-res file types (PNG, EPS, SVG, PDF)", "Multiple color variations (including transparent backgrounds)", "Unlimited post-purchase changes", "Full ownership", "Priority generation", "Team workspaces (multi-seat)", "Early access to new generators"].map((f) => (
+            {["Everything serious founders need to build and grow their brand.", "3,000 Rocket Credits each month", "Unlimited saved logos & brand kits", "Multiple high-res file types (PNG, EPS, SVG, PDF)", "Multiple color variations (including transparent backgrounds)", "Unlimited post-purchase changes", "Full ownership", "Priority generation", "Team workspace access", "Early access to new generators"].map((f) => (
               <li key={f} className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-neutral-900" /> {f}</li>
             ))}
           </ul>

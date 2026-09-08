@@ -7,7 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 type PaidPlan = "starter" | "growth" | "business";
 
 const MONTHLY_LIMITS: Record<PaidPlan | "free", number> = {
-  free: 100,
+  free: 500,
   starter: 500,
   growth: 3000,
   business: 15000,

@@ -21,14 +21,14 @@ const FAQS = [
   { q: "Can I edit designs like Canva?", a: "Yes. Multi-select (Shift-click + marquee), drag-resize, colour overlays for logos and images, image uploads with resize, layers on the right, Quick Edit for title/slogan/icon/layout/background, and export to PNG/SVG/PDF/ZIP." },
   { q: "How long does a generation take?", a: "Most logo batches land in 30–60 seconds. Chat history persists per project so you can scroll back and iterate." },
   { q: "Can I regenerate individual pieces?", a: "Yes. Every result has Edit, Save, Variants and Remix. Regenerating one design costs 1 credit, and you can steer it with feedback like 'more minimal' or 'brighter'." },
-  { q: "What's a credit?", a: "Credits power every generation. Starter includes 500/month, Pro includes 3,000. Every plan starts with a 7-day free trial. Top up anytime — packs never expire." },
+  { q: "What's a credit?", a: "Credits power every generation. Free includes 500 credits, Starter includes 500 credits/month, Pro includes 3,000/month, and Business includes 15,000/month. Top up anytime — packs never expire." },
   { q: "How does sharing and export work?", a: "Every design opens in the editor via a shareable link (new tab). Export PNG, SVG, PDF, or a full ZIP of your Brand Kit. Pro adds password-protected share links and PDF/Markdown brand guidelines." },
-  { q: "What's included in Pro?", a: "3,000 credits/month, workspaces & multi-seat, password-protected share links, brand guideline exports, and priority AI capacity. 7 days free, cancel anytime." },
+  { q: "What's included in Pro?", a: "3,000 credits/month, team workspace access, password-protected share links, brand guideline exports, and priority AI capacity. Paid plans include a 7-day trial; cancel anytime." },
   { q: "Can I cancel anytime?", a: "Yes, from Settings → Manage Billing. You keep access until the end of the period." },
 ];
 
 const STARTER_FEATURES = [
-  "Monthly Rocket Credits to design your first logo",
+  "500 Rocket Credits each month",
   "Logo & Icon Designer",
   "Brand Kit essentials (view & share)",
   "Full template library",
@@ -36,7 +36,7 @@ const STARTER_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  "Generous monthly Rocket Credits",
+  "3,000 Rocket Credits each month",
   "Unlimited saved logos & brand kits",
   "Multiple high-res file types (PNG, EPS, SVG, PDF)",
   "Multiple color variations (including transparent backgrounds)",
@@ -44,16 +44,16 @@ const PRO_FEATURES = [
   "Full ownership",
   "Brand Kit ZIP downloads",
   "Priority generation",
-  "Team workspaces (multi-seat)",
+  "Team workspace access",
   "Brand Book & guideline export",
   "Early access to new generators",
 ];
 
 const BUSINESS_FEATURES = [
   "Everything in Pro",
-  "5× the monthly Rocket Credits",
+  "15,000 Rocket Credits each month",
   "Highest priority generation queue",
-  "Larger team workspaces",
+  "Team workspace access",
   "Dedicated onboarding & support",
 ];
 
@@ -274,7 +274,7 @@ const Index = () => {
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <Button asChild variant="brand" size="lg" className="h-12 px-8">
               <Link to="/signup">
-                Start Free Trial
+                Start free
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -283,7 +283,7 @@ const Index = () => {
             </div>
           </div>
           <div className="mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-neutral-600">
-            {["7-day free trial", "Secure payment", "Cancel any-time"].map((item) => (
+            {["500 free credits", "No card required", "Upgrade when you're ready"].map((item) => (
               <span key={item} className="inline-flex items-center gap-2">
                 <Check className="h-4 w-4 text-brand" strokeWidth={2.5} />
                 {item}
@@ -430,7 +430,7 @@ const Index = () => {
                 onClick={() => setBilling("yearly")}
                 className={`rounded-full px-4 py-1.5 font-medium transition ${billing === "yearly" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:text-neutral-900"}`}
               >
-                Yearly <span className={billing === "yearly" ? "text-white/70" : "text-brand"}>Save ~17%</span>
+                Yearly <span className={billing === "yearly" ? "text-white/70" : "text-brand"}>Save ~31%</span>
               </button>
             </div>
           </div>

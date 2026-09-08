@@ -1,7 +1,7 @@
 export type PaidPlan = "starter" | "growth" | "business";
 
 export const MONTHLY_LIMITS: Record<PaidPlan | "free", number> = {
-  free: 100,
+  free: 500,
   starter: 500,
   growth: 3000,
   business: 15000,

@@ -29,6 +29,6 @@ describe("Stripe subscription plan mapping", () => {
   });
 
   it("keeps each plan's correct monthly entitlement", () => {
-    expect(MONTHLY_LIMITS).toEqual({ free: 100, starter: 500, growth: 3000, business: 15000 });
+    expect(MONTHLY_LIMITS).toEqual({ free: 500, starter: 500, growth: 3000, business: 15000 });
   });
 });

@@ -12,7 +12,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const supabase = _sb as any;
 
 const STARTER_FEATURES = [
-  "Monthly Rocket Credits to design your first logo",
+  "500 Rocket Credits each month",
   "Logo & Icon Designer",
   "Brand Kit essentials (view & share)",
   "Full template library",
@@ -20,7 +20,7 @@ const STARTER_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  "Generous monthly Rocket Credits",
+  "3,000 Rocket Credits each month",
   "Unlimited saved logos & brand kits",
   "Multiple high-res file types (PNG, EPS, SVG, PDF)",
   "Multiple color variations (including transparent backgrounds)",
@@ -28,21 +28,21 @@ const PRO_FEATURES = [
   "Full ownership",
   "Brand Kit ZIP downloads",
   "Priority generation",
-  "Team workspaces (multi-seat)",
+  "Team workspace access",
   "Brand Book & guideline export",
   "Early access to new generators",
 ];
 
 const BUSINESS_FEATURES = [
   "Everything in Pro",
-  "5× the monthly Rocket Credits",
+  "15,000 Rocket Credits each month",
   "Highest priority generation queue",
   "Larger team workspaces",
   "Dedicated onboarding & support",
 ];
 
 const COMPARE = [
-  { label: "Rocket Credits", starter: "Monthly starter allowance", pro: "Generous monthly allowance" },
+  { label: "Rocket Credits", starter: "500 / month", pro: "3,000 / month" },
   { label: "Logo Designer", starter: true, pro: true },
   { label: "Icon Designer", starter: true, pro: true },
   { label: "Templates library", starter: true, pro: true },
@@ -55,14 +55,14 @@ const COMPARE = [
   { label: "Exports", starter: "PNG & SVG", pro: "PNG, SVG, PDF, ZIP" },
   { label: "Saved designs", starter: "Limited", pro: "Unlimited" },
   { label: "Priority generation", starter: false, pro: true },
-  { label: "Team workspaces", starter: false, pro: true },
+  { label: "Team workspace access", starter: false, pro: true },
   { label: "Early access to new generators", starter: false, pro: true },
 ];
 
 const FAQS = [
-  { q: "What is a Rocket Credit?", a: "Credits power everything you generate in Rocket — logos, icons, brand kits and exports. Every plan comes with a monthly allowance, and you can top up any time with credit packs." },
-  { q: "Is there a free trial?", a: "Yes. Every plan starts with a 7-day free trial — no charge until it ends, cancel anytime." },
-  { q: "What do I get when I upgrade to Pro?", a: "Pro unlocks a much larger monthly credit allowance, unlimited saved designs, multiple high-res file types (PNG, EPS, SVG, PDF), multiple color variations including transparent backgrounds, unlimited post-purchase changes, full ownership, team workspaces, and early access to new generators." },
+  { q: "What is a Rocket Credit?", a: "Credits power everything you generate. Free includes 500 credits; Starter includes 500/month, Pro 3,000/month, and Business 15,000/month. One-time credit packs never expire." },
+  { q: "How does free access work?", a: "Create a free account with 500 credits and no card required. When you want a paid plan, start its 7-day trial in secure Stripe Checkout and review the terms there before confirming." },
+  { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, team workspace access, and priority generation." },
   { q: "Can I cancel at any time?", a: "Yes. You can cancel or downgrade from Settings → Billing any time. Your Pro features stay active until the end of your billing period." },
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
 ];
@@ -133,7 +133,7 @@ const Pricing = () => {
       <section className="border-b border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 pt-24 pb-16 text-center">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Pricing built for founders</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Start free and design your first brand today. Upgrade to Pro when you're ready to grow.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Start free with 500 credits and no card. Choose a paid plan only when you need more generation, exports, or collaboration.</p>
           <div className="mt-8 inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 text-sm">
             <button
               type="button"
@@ -147,7 +147,7 @@ const Pricing = () => {
               onClick={() => setBilling("yearly")}
               className={`rounded-full px-4 py-1.5 font-medium transition ${billing === "yearly" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:text-neutral-900"}`}
             >
-              Yearly <span className={billing === "yearly" ? "text-white/70" : "text-brand"}>Save ~17%</span>
+              Yearly <span className={billing === "yearly" ? "text-white/70" : "text-brand"}>Save ~31%</span>
             </button>
           </div>
         </div>
@@ -164,7 +164,7 @@ const Pricing = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("starter").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("starter").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">Everything you need to create your first startup brand.</p>
+              <p className="mt-2 text-sm text-neutral-600">For a founder creating and exporting one brand.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {STARTER_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -193,7 +193,7 @@ const Pricing = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("growth").display}</span>
                 <span className="text-neutral-500">{priceFor("growth").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">Everything serious founders need to build and grow their brand.</p>
+              <p className="mt-2 text-sm text-neutral-600">For founders actively refining a brand and shipping launch assets.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {PRO_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -219,7 +219,7 @@ const Pricing = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("business").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("business").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">For teams and agencies building multiple brands at scale.</p>
+              <p className="mt-2 text-sm text-neutral-600">For teams and agencies generating across multiple brands.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {BUSINESS_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -330,10 +330,10 @@ const Pricing = () => {
       <section className="border-t border-neutral-200/60">
         <div className="mx-auto max-w-4xl px-6 py-24 text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Design your startup brand today</h2>
-          <p className="mx-auto mt-4 max-w-xl text-neutral-600">Start with a 7-day free trial on any plan. Cancel anytime.</p>
+          <p className="mx-auto mt-4 max-w-xl text-neutral-600">Start free with 500 credits and no card. Upgrade to a paid plan when you need more.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="bg-brand text-white hover:bg-brand/90">
-              <Link to={user ? "/logos" : "/signup"}>Start with Starter</Link>
+              <Link to={user ? "/logos" : "/signup"}>Start free</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to={user ? "/settings/billing" : "/signup?next=%2Fpricing%3Fbuy%3Dgrowth"}>Upgrade to Pro</Link>
