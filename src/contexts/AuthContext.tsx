@@ -21,13 +21,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setTimeout(() => { seedDemoBrandOnce(s.user!.id); }, 0);
       }
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-      if (data.session?.user?.id) {
-        setTimeout(() => { seedDemoBrandOnce(data.session!.user.id); }, 0);
-      }
-    });
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        setSession(data.session);
+        if (data.session?.user?.id) {
+          setTimeout(() => { seedDemoBrandOnce(data.session!.user.id); }, 0);
+        }
+      })
+      .catch((error) => {
+        // A transient auth/bootstrap failure must not leave every protected route
+        // behind its loading screen forever. The auth listener can still restore
+        // a later session after a reconnect.
+        console.warn("Unable to restore session", error);
+        setSession(null);
+      })
+      .finally(() => setLoading(false));
     return () => sub.subscription.unsubscribe();
   }, []);
 

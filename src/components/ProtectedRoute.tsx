@@ -33,9 +33,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return () => { cancelled = true; };
   }, [user, authConfirmed]);
 
-  if (loading) return <div className="min-h-screen bg-white" />;
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center bg-white text-sm text-neutral-500" aria-busy="true">
+      Loading your account…
+    </div>
+  );
   if (!user) return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
-  if (verified === null) return <div className="min-h-screen bg-white" />;
+  if (verified === null) return (
+    <div className="flex min-h-screen items-center justify-center bg-white text-sm text-neutral-500" aria-busy="true">
+      Checking your account…
+    </div>
+  );
   if (!verified) return <Navigate to={`/verify-email?email=${encodeURIComponent(user.email || "")}`} replace />;
   return <>{children}</>;
 };

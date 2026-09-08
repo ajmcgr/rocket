@@ -57,6 +57,7 @@ const ASSET_TYPE_LABELS: Record<string, string> = {
 };
 
 const ALL_TYPES = Object.keys(ASSET_TYPE_LABELS);
+const PAGE_SIZE = 100;
 
 const GENERIC_LOGOTYPE_TITLE = /^logotype(?:\s+\d+)?$/i;
 
@@ -157,6 +158,8 @@ const Assets = () => {
   const folderParam = params.get("folder") || "";
 
   const [assets, setAssets] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [folders, setFolders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,30 +172,38 @@ const Assets = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [zipping, setZipping] = useState(false);
 
-  const load = async () => {
+  const load = async (offset = 0, append = false) => {
     if (!user) return;
-    setLoading(true);
-    const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
-    const ws = await ensureActiveWorkspaceId();
-    // Rows created before workspaces were introduced have no workspace_id.
-    // They remain account-owned (and RLS-enforced), so include them alongside
-    // the active workspace rather than making a user's existing library vanish.
-    const scope = (q: any) => ws ? q.or(`workspace_id.eq.${ws},workspace_id.is.null`) : q;
-    const [a, p, f] = await Promise.all([
-      scope(supabase.from("assets").select("*").eq("user_id", user.id)).is("deleted_at", null).order("created_at", { ascending: false }).limit(200),
-      scope(supabase.from("projects").select("id,name").eq("user_id", user.id)).is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
-      scope(supabase.from("folders").select("id,name").eq("user_id", user.id)).order("created_at", { ascending: false }).limit(100),
-    ]);
-    const { data, error } = a;
-    const firstError = error || p.error || f.error;
-    if (firstError) {
-      console.error("Failed to load design library", firstError);
-      toast({ title: "Failed to load designs", description: firstError.message, variant: "destructive" });
+    if (append) setLoadingMore(true); else setLoading(true);
+    try {
+      const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
+      const ws = await ensureActiveWorkspaceId();
+      // Rows created before workspaces were introduced have no workspace_id.
+      // They remain account-owned (and RLS-enforced), so include them alongside
+      // the active workspace rather than making a user's existing library vanish.
+      const scope = (q: any) => ws ? q.or(`workspace_id.eq.${ws},workspace_id.is.null`) : q;
+      const [a, p, f] = await Promise.all([
+        scope(supabase.from("assets").select("*").eq("user_id", user.id)).is("deleted_at", null).order("created_at", { ascending: false }).range(offset, offset + PAGE_SIZE),
+        scope(supabase.from("projects").select("id,name").eq("user_id", user.id)).is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
+        scope(supabase.from("folders").select("id,name").eq("user_id", user.id)).order("created_at", { ascending: false }).limit(100),
+      ]);
+      const { data, error } = a;
+      const firstError = error || p.error || f.error;
+      if (firstError) {
+        console.error("Failed to load design library", firstError);
+        toast({ title: "Failed to load designs", description: firstError.message, variant: "destructive" });
+      }
+      const page = (data || []).slice(0, PAGE_SIZE);
+      setAssets((current) => append ? [...current, ...page.filter((asset) => !current.some((existing) => existing.id === asset.id))] : page);
+      setHasMore((data || []).length > PAGE_SIZE);
+      setProjects(p.data || []);
+      setFolders(f.data || []);
+    } catch (error) {
+      console.error("Failed to load design library", error);
+      toast({ title: "Failed to load designs", description: "Please refresh and try again.", variant: "destructive" });
+    } finally {
+      if (append) setLoadingMore(false); else setLoading(false);
     }
-    setAssets(data || []);
-    setProjects(p.data || []);
-    setFolders(f.data || []);
-    setLoading(false);
   };
 
   useEffect(() => { load(); }, [user]);
@@ -457,7 +468,7 @@ const Assets = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Designs</h1>
-          <p className="mt-1 text-sm text-neutral-500">{assets.length} total · every generated design is saved here.</p>
+          <p className="mt-1 text-sm text-neutral-500">{assets.length}{hasMore ? "+" : ""} designs · every generated design is saved here.</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -780,6 +791,17 @@ const Assets = () => {
               </div>
             );
           })}
+        </div>
+      )}
+      {hasMore && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => void load(assets.length, true)}
+            disabled={loadingMore}
+            className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+          >
+            {loadingMore ? "Loading…" : "Load more designs"}
+          </button>
         </div>
       )}
     </div>
