@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { tools } from "@/content/tools";
 import { articles } from "@/content/articles";
 import { comparisons } from "@/content/comparisons";
-import { Instagram } from "lucide-react";
+
 
 const HEADER = "text-base font-semibold text-neutral-900";
 
@@ -75,9 +75,6 @@ const SiteFooter = () => (
           <div className="mt-4 flex items-center gap-3">
             <a href="https://x.com/tryrocketai" target="_blank" rel="noreferrer" aria-label="X" className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900">
               <XIcon className="h-4 w-4" />
-            </a>
-            <a href="https://www.instagram.com/tryrocketai/" target="_blank" rel="noreferrer" aria-label="Instagram" className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900">
-              <Instagram className="h-4 w-4" />
             </a>
             <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noreferrer" aria-label="Discord" className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900">
               <DiscordIcon className="h-4 w-4" />
