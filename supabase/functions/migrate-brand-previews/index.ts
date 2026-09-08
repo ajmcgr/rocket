@@ -16,13 +16,21 @@ async function store(admin: any, value: string, userId: string, projectId: strin
 }
 Deno.serve(async req => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const body = await req.json().catch(() => ({}));
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
   const client = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } });
   const { data: { user } } = await client.auth.getUser(token);
   if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
   const admin = createClient(url, service);
-  const { data: projects } = await admin.from("projects").select("id,cover_url").eq("user_id", user.id).is("deleted_at", null);
+  const requestedIds = Array.isArray(body?.project_ids)
+    ? [...new Set(body.project_ids.filter((id: unknown): id is string => typeof id === "string"))]
+    : [];
+  let projectsQuery = admin.from("projects").select("id,cover_url").eq("user_id", user.id).is("deleted_at", null);
+  if (requestedIds.length) projectsQuery = projectsQuery.in("id", requestedIds);
+  const { data: projects, error: projectsError } = await projectsQuery;
+  if (projectsError) return new Response(JSON.stringify({ error: projectsError.message }), { status: 500, headers: cors });
   let migrated = 0, failed = 0;
+  const failures: { project_id: string; asset_id: string | null; field: string; reason: string }[] = [];
   for (const project of projects || []) {
     const { data: assets } = await admin.from("assets").select("id,thumbnail_url,image_url,meta").eq("project_id", project.id).eq("user_id", user.id).is("deleted_at", null);
     // The first deployment inspected one arbitrary asset per project. A Brand
@@ -32,11 +40,21 @@ Deno.serve(async req => {
     const savedAssets = (assets || []).filter((asset: any) => Boolean(asset?.meta?.saved_at));
     for (const [field, value, id] of [["cover_url", project.cover_url, project.id], ...(savedAssets.flatMap((a: any) => [["thumbnail_url",a.thumbnail_url,a.id],["image_url",a.image_url,a.id]]))] as any[]) {
       if (!isData(value)) continue;
-      try { const migratedUrl = await store(admin,value,user.id,project.id,id,field);
-        await admin.from("legacy_brand_preview_backups").upsert({user_id:user.id,project_id:project.id,asset_id:field === "cover_url" ? null : id,field_name:field,original_value:value,migrated_url:migratedUrl,migrated_at:new Date().toISOString()},{onConflict:field === "cover_url" ? "project_id,field_name" : "asset_id,field_name"});
-        await admin.from(field === "cover_url" ? "projects" : "assets").update({[field]:migratedUrl}).eq("id",id); migrated++;
-      } catch { failed++; }
+      try {
+        const migratedUrl = await store(admin,value,user.id,project.id,id,field);
+        const { error: backupError } = await admin.from("legacy_brand_preview_backups").upsert(
+          { user_id:user.id, project_id:project.id, asset_id:field === "cover_url" ? null : id, field_name:field, original_value:value, migrated_url:migratedUrl, migrated_at:new Date().toISOString() },
+          { onConflict:field === "cover_url" ? "project_id,field_name" : "asset_id,field_name" },
+        );
+        if (backupError) throw backupError;
+        const { error: updateError } = await admin.from(field === "cover_url" ? "projects" : "assets").update({[field]:migratedUrl}).eq("id",id);
+        if (updateError) throw updateError;
+        migrated++;
+      } catch (error) {
+        failed++;
+        failures.push({ project_id: project.id, asset_id: field === "cover_url" ? null : id, field, reason: error instanceof Error ? error.message : String(error) });
+      }
     }
   }
-  return new Response(JSON.stringify({ migrated, failed }), { headers: { ...cors, "Content-Type":"application/json" } });
+  return new Response(JSON.stringify({ requested_projects: requestedIds.length || null, migrated, failed, failures }), { headers: { ...cors, "Content-Type":"application/json" } });
 });
