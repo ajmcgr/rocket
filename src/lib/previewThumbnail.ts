@@ -93,9 +93,9 @@ export async function createArtworkPreviewFromImageUrl(src: string, opts: Previe
   return createArtworkPreviewFromCanvas(source, opts);
 }
 
-export function createArtworkPreviewFromCanvas(source: HTMLCanvasElement, opts: PreviewOptions = {}): string {
+export function createArtworkPreviewCanvasFromCanvas(source: HTMLCanvasElement, opts: PreviewOptions = {}): HTMLCanvasElement {
   const sourceCtx = source.getContext("2d", { willReadFrequently: true });
-  if (!sourceCtx) return source.toDataURL("image/png");
+  if (!sourceCtx) return source;
 
   const imageData = sourceCtx.getImageData(0, 0, source.width, source.height);
   const data = imageData.data;
@@ -125,7 +125,7 @@ export function createArtworkPreviewFromCanvas(source: HTMLCanvasElement, opts: 
   out.width = outW;
   out.height = outH;
   const outCtx = out.getContext("2d");
-  if (!outCtx) return source.toDataURL("image/png");
+  if (!outCtx) return source;
   outCtx.clearRect(0, 0, outW, outH);
   if (opts.background) {
     outCtx.fillStyle = opts.background;
@@ -134,7 +134,7 @@ export function createArtworkPreviewFromCanvas(source: HTMLCanvasElement, opts: 
 
   if (maxX < minX || maxY < minY) {
     drawContained(outCtx, source, { x: 0, y: 0, w: source.width, h: source.height }, outW, outH, paddingRatio);
-    return out.toDataURL("image/png");
+    return out;
   }
 
   const cropPad = Math.ceil(Math.max(maxX - minX + 1, maxY - minY + 1) * 0.015);
@@ -143,7 +143,11 @@ export function createArtworkPreviewFromCanvas(source: HTMLCanvasElement, opts: 
   const right = Math.min(source.width - 1, maxX + cropPad);
   const bottom = Math.min(source.height - 1, maxY + cropPad);
   drawContained(outCtx, source, { x, y, w: Math.max(1, right - x + 1), h: Math.max(1, bottom - y + 1) }, outW, outH, paddingRatio);
-  return out.toDataURL("image/png");
+  return out;
+}
+
+export function createArtworkPreviewFromCanvas(source: HTMLCanvasElement, opts: PreviewOptions = {}): string {
+  return createArtworkPreviewCanvasFromCanvas(source, opts).toDataURL("image/png");
 }
 
 function textForState(state: LogotypeState) {

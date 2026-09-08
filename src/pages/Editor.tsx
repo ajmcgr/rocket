@@ -30,7 +30,7 @@ import { isBrandAsset } from "@/lib/assetExperience";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as LucideIcons from "lucide-react";
-import { createArtworkPreviewFromCanvas } from "@/lib/previewThumbnail";
+import { createArtworkPreviewCanvasFromCanvas } from "@/lib/previewThumbnail";
 const supabase = _sb as any;
 
 type Base = {
@@ -84,6 +84,26 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 const STORAGE_KEY = "rocket.editor.v2";
 const STAGE_W = 800;
 const STAGE_H = 600;
+const PERSISTENT_PREVIEW_MIME = "image/png";
+
+const isInlineImage = (value: unknown): value is string =>
+  typeof value === "string" && value.startsWith("data:image/");
+
+const canvasToBlob = (canvas: HTMLCanvasElement, type = PERSISTENT_PREVIEW_MIME) =>
+  new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type));
+
+const safePreviewMeta = (meta: Record<string, unknown> | null | undefined, previewUrl?: string) => {
+  const next = { ...(meta || {}) } as Record<string, unknown>;
+  if (isInlineImage(next.preview_url)) {
+    console.warn("Refusing to persist an inline editor preview URL");
+    delete next.preview_url;
+  }
+  if (previewUrl) {
+    if (isInlineImage(previewUrl)) throw new Error("Inline preview URLs cannot be persisted");
+    next.preview_url = previewUrl;
+  }
+  return next;
+};
 
 function normalizeCanvasElements(value: unknown): El[] {
   if (!Array.isArray(value)) return [];
@@ -120,7 +140,10 @@ const colorDistance = (data: Uint8ClampedArray, offset: number, color: [number, 
     Math.abs(data[offset + 2] - color[2]),
   );
 
-const splitImageIntoPieces = async (element: ImgEl): Promise<ImgEl[]> => {
+const splitImageIntoPieces = async (
+  element: ImgEl,
+  persistPiece: (pieceId: string, blob: Blob) => Promise<string>,
+): Promise<ImgEl[]> => {
   const image = await loadEditorImage(element.src);
   const naturalWidth = image.naturalWidth || image.width;
   const naturalHeight = image.naturalHeight || image.height;
@@ -218,7 +241,7 @@ const splitImageIntoPieces = async (element: ImgEl): Promise<ImgEl[]> => {
 
   const rotation = ((element.rotation || 0) * Math.PI) / 180;
 
-  return pieces.map((piece) => {
+  return Promise.all(pieces.map(async (piece) => {
     const padding = 2;
     const cropX = Math.max(0, piece.minX - padding);
     const cropY = Math.max(0, piece.minY - padding);
@@ -248,8 +271,13 @@ const splitImageIntoPieces = async (element: ImgEl): Promise<ImgEl[]> => {
     const localX = (cropX / width) * element.w;
     const localY = (cropY / height) * element.h;
 
+    const id = uid();
+    const blob = await canvasToBlob(cropCanvas);
+    if (!blob) throw new Error("Your browser couldn't prepare this image.");
+    const src = await persistPiece(id, blob);
+    if (isInlineImage(src)) throw new Error("Image piece upload returned an inline URL.");
     return {
-      id: uid(),
+      id,
       kind: "image",
       x: element.x + localX * Math.cos(rotation) - localY * Math.sin(rotation),
       y: element.y + localX * Math.sin(rotation) + localY * Math.cos(rotation),
@@ -258,9 +286,9 @@ const splitImageIntoPieces = async (element: ImgEl): Promise<ImgEl[]> => {
       rotation: element.rotation,
       visible: element.visible,
       locked: false,
-      src: cropCanvas.toDataURL("image/png"),
+      src,
     } as ImgEl;
-  });
+  }));
 };
 
 function applyTextTransform(text: string, transform?: LogotypeState["transform"]): string {
@@ -655,6 +683,7 @@ const Editor = () => {
   const editorShellRef = useRef<HTMLDivElement>(null);
   const copiedElementRef = useRef<El | null>(null);
   const copiedStyleRef = useRef<Partial<El> | null>(null);
+  const previewWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
   const [clipboardTick, setClipboardTick] = useState(0);
 
   useEffect(() => {
@@ -979,12 +1008,63 @@ const Editor = () => {
     return withSelectionHidden(async () => {
       try {
         const canvas = stage.toCanvas({ pixelRatio: 2 });
-        return createArtworkPreviewFromCanvas(canvas, { background: null });
+        return canvasToBlob(createArtworkPreviewCanvasFromCanvas(canvas, { background: null }));
       } catch {
         return null;
       }
     });
   }, [withSelectionHidden]);
+
+  const uploadPreview = useCallback(async (ownerId: string, targetAssetId: string, projectId: string | null, preview: Blob) => {
+    const path = `${ownerId}/editor-previews/${projectId || "unassigned"}/${targetAssetId}.png`;
+    const { error } = await supabase.storage.from("rocket-images").upload(path, preview, {
+      contentType: PERSISTENT_PREVIEW_MIME,
+      cacheControl: "3600",
+      upsert: true,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("rocket-images").getPublicUrl(path);
+    if (!data?.publicUrl || isInlineImage(data.publicUrl)) throw new Error("Preview upload did not return a Storage URL");
+    return data.publicUrl;
+  }, []);
+
+  const uploadEditorElement = useCallback(async (elementId: string, image: Blob) => {
+    const { data: userData } = await supabase.auth.getUser();
+    const ownerId = userData?.user?.id;
+    if (!ownerId) throw new Error("Sign in to save image edits");
+    const path = `${ownerId}/editor-elements/${assetId || "unassigned"}/${elementId}.png`;
+    const { error } = await supabase.storage.from("rocket-images").upload(path, image, {
+      contentType: PERSISTENT_PREVIEW_MIME,
+      cacheControl: "3600",
+      upsert: true,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("rocket-images").getPublicUrl(path);
+    if (!data?.publicUrl || isInlineImage(data.publicUrl)) throw new Error("Image upload did not return a Storage URL");
+    return data.publicUrl;
+  }, [assetId]);
+
+  const persistPreviewUpdate = useCallback(async (
+    targetAssetId: string,
+    projectId: string | null,
+    preview: Blob,
+    update: Record<string, unknown>,
+    meta: Record<string, unknown> | null | undefined,
+  ) => {
+    const { data: userData } = await supabase.auth.getUser();
+    const ownerId = userData?.user?.id;
+    if (!ownerId) throw new Error("Sign in to save a preview");
+    const write = async () => {
+      const previewUrl = await uploadPreview(ownerId, targetAssetId, projectId, preview);
+      const nextMeta = safePreviewMeta(meta, previewUrl);
+      const { error } = await supabase.from("assets").update({ ...update, thumbnail_url: previewUrl, meta: nextMeta }).eq("id", targetAssetId);
+      if (error) throw error;
+      return { previewUrl, meta: nextMeta };
+    };
+    const queued = previewWriteQueueRef.current.then(write, write);
+    previewWriteQueueRef.current = queued.then(() => undefined, () => undefined);
+    return queued;
+  }, [uploadPreview]);
 
   useEffect(() => {
     if (!assetId || !assetMeta || assetMeta.image_url || assetMeta.thumbnail_url || !els.length) return;
@@ -999,22 +1079,23 @@ const Editor = () => {
     previewBackfillRef.current = assetId;
     const timer = window.setTimeout(() => {
       void (async () => {
-        const thumbnailUrl = await captureThumbnail();
-        if (!thumbnailUrl) return;
-        const meta = { ...(assetMeta?.meta || {}), preview_url: thumbnailUrl };
-        const { error } = await supabase.from("assets").update({ thumbnail_url: thumbnailUrl, meta }).eq("id", assetId);
-        if (!error) {
-          setAssetMeta((current) => current ? { ...current, thumbnail_url: thumbnailUrl, meta } : current);
+        const preview = await captureThumbnail();
+        if (!preview) return;
+        try {
+          const result = await persistPreviewUpdate(assetId, assetMeta.project_id, preview, {}, assetMeta.meta);
+          setAssetMeta((current) => current ? { ...current, thumbnail_url: result.previewUrl, meta: result.meta } : current);
+        } catch (error) {
+          console.warn("Could not backfill editor preview", error);
         }
       })();
     }, 180);
 
     return () => window.clearTimeout(timer);
-  }, [assetId, assetMeta, captureThumbnail, els.length]);
+  }, [assetId, assetMeta, captureThumbnail, els.length, persistPreviewUpdate]);
 
   const updateLifecycleMeta = useCallback(async (updates: Record<string, string>) => {
     if (!assetId) return;
-    const meta = { ...(assetMeta?.meta || {}), ...updates };
+    const meta = { ...safePreviewMeta(assetMeta?.meta), ...updates };
     setAssetMeta((current) => current ? { ...current, meta } : current);
     const { error } = await supabase.from("assets").update({ meta }).eq("id", assetId);
     if (error) console.error("Could not update design lifecycle", error);
@@ -1031,28 +1112,32 @@ const Editor = () => {
     if (serializedState === lastPersistedStateRef.current) return;
     setSaveStatus("saving");
     const t = setTimeout(async () => {
-      const thumbnail_url = await captureThumbnail();
-      const prevMeta = (assetMeta?.meta || {}) as any;
-      const nextMeta = {
-        ...prevMeta,
+      const preview = await captureThumbnail();
+      const nextMeta = safePreviewMeta(assetMeta?.meta, undefined) as any;
+      Object.assign(nextMeta, {
         edited_at: new Date().toISOString(),
         editor_bg: bg,
-        saved_at: prevMeta.saved_at || new Date().toISOString(),
-      };
+        saved_at: nextMeta.saved_at || new Date().toISOString(),
+      });
       const updatePayload: Record<string, unknown> = { editor_state: els as any, meta: nextMeta };
-      if (thumbnail_url) {
-        nextMeta.preview_url = thumbnail_url;
-        updatePayload.thumbnail_url = thumbnail_url;
+      try {
+        const result = preview
+          ? await persistPreviewUpdate(assetId, assetMeta?.project_id || null, preview, updatePayload, nextMeta)
+          : (() => { throw new Error("Could not create preview"); })();
+        setAssetMeta((current) => current ? { ...current, thumbnail_url: result.previewUrl, meta: result.meta } : current);
+      } catch (error) {
+        // Keep the existing working preview if thumbnail generation or upload fails.
+        const { error: saveError } = await supabase.from("assets").update(updatePayload).eq("id", assetId);
+        if (saveError) { setSaveStatus("idle"); return; }
+        console.warn("Editor preview was not updated", error);
+        setAssetMeta((current) => current ? { ...current, meta: nextMeta } : current);
       }
-      const { error } = await supabase.from("assets").update(updatePayload).eq("id", assetId);
-      if (error) { setSaveStatus("idle"); return; }
-      setAssetMeta((current) => current ? { ...current, meta: nextMeta } : current);
       lastPersistedStateRef.current = serializedState;
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus((s) => s === "saved" ? "idle" : s), 1500);
     }, 800);
     return () => clearTimeout(t);
-  }, [assetId, assetMeta?.meta, autosaveTick, bg, captureThumbnail, els]);
+  }, [assetId, assetMeta?.meta, assetMeta?.project_id, autosaveTick, bg, captureThumbnail, els, persistPreviewUpdate]);
 
   useEffect(() => {
     if (!isRenamingTitle) setTitleDraft(displayTitle);
@@ -1362,7 +1447,7 @@ const Editor = () => {
 
     setIsSeparating(true);
     try {
-      const pieces = await splitImageIntoPieces(selected);
+      const pieces = await splitImageIntoPieces(selected, uploadEditorElement);
       setEls((current) => {
         const index = current.findIndex((element) => element.id === selected.id);
         if (index === -1) return current;
@@ -1399,44 +1484,65 @@ const Editor = () => {
   const addStar = () => add({ id: uid(), kind: "star", x: 320, y: 240, w: 160, h: 160, visible: true, locked: false, fill: "#f59e0b" } as StarEl);
   const addTable = () => add({ id: uid(), kind: "table", x: 260, y: 220, w: 320, h: 180, visible: true, locked: false, rows: 3, cols: 4, color: "#ffffff", lineColor: "#111827" } as TableEl);
 
-  const onUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const src = reader.result as string;
-      const img = new Image();
-      img.onload = () => {
-        const ratio = img.width / img.height;
-        const w = Math.min(400, img.width); const h = w / ratio;
-        add({ id: uid(), kind: "image", x: 300, y: 200, w, h, visible: true, locked: false, src } as ImgEl);
-      };
-      img.src = src;
-      // Mirror into Uploads on /projects so users can reuse it
-      try {
-        const { data: userData } = await supabase.auth.getUser();
-        const uid2 = userData?.user?.id;
-        if (!uid2) return;
-        const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
-        const workspace_id = await ensureActiveWorkspaceId();
-        const { data: uploadRow } = await supabase.from("assets").insert({
-          user_id: uid2,
-          workspace_id,
-          asset_type: "photo",
-          title: file.name || "Uploaded image",
-          image_url: src,
-          thumbnail_url: src,
-          meta: { uploaded: true, source: "upload", size: file.size, mime: file.type } as any,
-        } as any).select("id").maybeSingle();
-        window.dispatchEvent(new CustomEvent("rocket:notify", { detail: {
-          kind: "asset",
-          title: "Image uploaded",
-          body: `"${file.name || "Uploaded image"}" is now in your Uploads.`,
-          href: uploadRow?.id ? `/editor?id=${uploadRow.id}` : "/projects",
-        }}));
-      } catch (e) {
-        console.warn("upload mirror failed", e);
-      }
-    };
-    reader.readAsDataURL(file);
+  const onUpload = async (file: File) => {
+    const localUrl = URL.createObjectURL(file);
+    const elementId = uid();
+    let dimensions: { width: number; height: number };
+    try {
+      dimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = () => reject(new Error("The selected image could not be opened."));
+        img.src = localUrl;
+      });
+    } catch (error) {
+      URL.revokeObjectURL(localUrl);
+      toast({ title: "Image upload failed", description: error instanceof Error ? error.message : "The selected image could not be opened.", variant: "destructive" });
+      return;
+    }
+    URL.revokeObjectURL(localUrl);
+
+    // Mirror uploads into Storage first so no inline image is ever persisted.
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid2 = userData?.user?.id;
+      if (!uid2) return;
+      const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
+      const workspace_id = await ensureActiveWorkspaceId();
+      const extension = file.type === "image/webp" ? "webp" : file.type === "image/jpeg" ? "jpg" : "png";
+      const path = `${uid2}/uploads/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("rocket-images").upload(path, file, {
+        contentType: file.type || "image/png",
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (uploadError) throw uploadError;
+      const { data: publicUrl } = supabase.storage.from("rocket-images").getPublicUrl(path);
+      const storedUrl = publicUrl?.publicUrl;
+      if (!storedUrl || isInlineImage(storedUrl)) throw new Error("Upload did not return a Storage URL");
+      const ratio = dimensions.width / dimensions.height;
+      const w = Math.min(400, dimensions.width); const h = w / ratio;
+      add({ id: elementId, kind: "image", x: 300, y: 200, w, h, visible: true, locked: false, src: storedUrl } as ImgEl);
+      const { data: uploadRow, error: insertError } = await supabase.from("assets").insert({
+        user_id: uid2,
+        workspace_id,
+        asset_type: "photo",
+        title: file.name || "Uploaded image",
+        image_url: storedUrl,
+        thumbnail_url: storedUrl,
+        meta: { uploaded: true, source: "upload", size: file.size, mime: file.type, preview_url: storedUrl } as any,
+      } as any).select("id").maybeSingle();
+      if (insertError) throw insertError;
+      window.dispatchEvent(new CustomEvent("rocket:notify", { detail: {
+        kind: "asset",
+        title: "Image uploaded",
+        body: `"${file.name || "Uploaded image"}" is now in your Uploads.`,
+        href: uploadRow?.id ? `/editor?id=${uploadRow.id}` : "/projects",
+      }}));
+    } catch (e) {
+      console.warn("upload mirror failed", e);
+      toast({ title: "Image is only available in this edit", description: "The image upload could not be saved.", variant: "destructive" });
+    }
   };
 
   /* save / export */
@@ -1445,13 +1551,21 @@ const Editor = () => {
     setSaveStatus("saving");
     if (assetId) {
       const serializedState = JSON.stringify(els);
-      const thumbnail_url = await captureThumbnail();
-      const nextMeta = { ...(assetMeta?.meta || {}), edited_at: new Date().toISOString(), editor_bg: bg };
+      const preview = await captureThumbnail();
+      const nextMeta = safePreviewMeta(assetMeta?.meta, undefined);
+      Object.assign(nextMeta, { edited_at: new Date().toISOString(), editor_bg: bg });
       const updatePayload: Record<string, unknown> = { editor_state: els as any, meta: nextMeta };
-      if (thumbnail_url) updatePayload.thumbnail_url = thumbnail_url;
-      const { error } = await supabase.from("assets").update(updatePayload).eq("id", assetId);
-      if (error) { setSaveStatus("idle"); toast({ title: "Save failed", description: error.message, variant: "destructive" }); return; }
-      setAssetMeta((current) => current ? { ...current, meta: nextMeta } : current);
+      try {
+        if (!preview) throw new Error("Could not create preview");
+        const result = await persistPreviewUpdate(assetId, assetMeta?.project_id || null, preview, updatePayload, nextMeta);
+        setAssetMeta((current) => current ? { ...current, thumbnail_url: result.previewUrl, meta: result.meta } : current);
+      } catch (error) {
+        const { error: saveError } = await supabase.from("assets").update(updatePayload).eq("id", assetId);
+        if (saveError) { setSaveStatus("idle"); toast({ title: "Save failed", description: saveError.message, variant: "destructive" }); return; }
+        console.warn("Editor preview was not updated", error);
+        setAssetMeta((current) => current ? { ...current, meta: nextMeta } : current);
+        toast({ title: "Saved without a new preview", description: "Your existing preview was kept.", variant: "destructive" });
+      }
       lastPersistedStateRef.current = serializedState;
     }
     setSaveStatus("saved");
@@ -1477,17 +1591,28 @@ const Editor = () => {
     const uid2 = userData?.user?.id;
     if (!uid2) { toast({ title: "Sign in to save designs", variant: "destructive" }); return; }
     const title = prompt("Name for the new design:", assetMeta?.title ? `${assetMeta.title} (copy)` : "Untitled design") || "Untitled design";
-    const thumb = await captureThumbnail();
+    const preview = await captureThumbnail();
     const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
     const workspace_id = await ensureActiveWorkspaceId();
+    const newAssetId = crypto.randomUUID();
+    let previewUrl: string | null = null;
+    if (preview) {
+      try {
+        previewUrl = await uploadPreview(uid2, newAssetId, assetMeta?.project_id || null, preview);
+      } catch (error) {
+        console.warn("Could not upload preview for new design", error);
+      }
+    }
     const { data, error } = await supabase.from("assets").insert({
+      id: newAssetId,
       user_id: uid2,
       workspace_id,
       project_id: assetMeta?.project_id || null,
       asset_type: "other",
       title,
       editor_state: els as any,
-      thumbnail_url: thumb,
+      thumbnail_url: previewUrl,
+      meta: previewUrl ? safePreviewMeta({}, previewUrl) : {},
     } as any).select().single();
     if (error || !data) { toast({ title: "Failed", description: error?.message, variant: "destructive" }); return; }
     toast({ title: "Saved as new design" });
@@ -1597,13 +1722,13 @@ const Editor = () => {
       .filter((design: any) => design.id !== assetId && design.meta?.selected_as_direction)
       .map((design: any) => supabase.from("assets").update({
         meta: {
-          ...(design.meta || {}),
+          ...safePreviewMeta(design.meta || {}),
           selected_as_direction: false,
           ...(design.meta?.brand_role === "primary_logo" ? { brand_role: null } : {}),
         },
       }).eq("id", design.id)));
     const nextMeta = {
-      ...(current.meta || {}),
+      ...safePreviewMeta(current.meta || {}),
       selected_as_direction: true,
       selected_as_direction_at: new Date().toISOString(),
       direction_feedback: "kept",
