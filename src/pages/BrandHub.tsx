@@ -41,18 +41,20 @@ type BrandKitMembership = { project_id: string; asset_count: number };
 // saved into a kit. This is intentionally separate from preview resolution:
 // projects with arbitrary generated assets must not appear on the Brand Kits
 // index just because they have something that could be used as a preview.
-async function loadBrandKitMembership(projectIds: string[]) {
+async function loadBrandKitMembership(projectIds: string[]): Promise<Map<string, BrandKitMembership>> {
   if (!projectIds.length) return new Map<string, BrandKitMembership>();
   const { data, error } = await supabase.rpc("get_brand_kit_membership", { project_ids: projectIds });
   if (error) throw error;
-  return new Map((data || []).map((membership: BrandKitMembership) => [membership.project_id, membership]));
+  const rows = (data || []) as BrandKitMembership[];
+  return new Map<string, BrandKitMembership>(rows.map((membership) => [membership.project_id, membership]));
 }
 
-async function loadBrandIndexPreviews(projectIds: string[]) {
+async function loadBrandIndexPreviews(projectIds: string[]): Promise<Map<string, BrandPreview>> {
   if (!projectIds.length) return new Map<string, BrandPreview>();
   const { data, error } = await supabase.rpc("get_brand_index_previews", { project_ids: projectIds });
   if (error) throw error;
-  return new Map((data || []).map((preview: BrandPreview) => [preview.project_id, preview]));
+  const rows = (data || []) as BrandPreview[];
+  return new Map<string, BrandPreview>(rows.map((preview) => [preview.project_id, preview]));
 }
 
 function resolveBrandPreview(brand: any): string | null {
