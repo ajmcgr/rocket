@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { supabase as _sb } from "@/integrations/supabase/client";
+import { setBrandKitCover } from "@/lib/brandFromAsset";
 import JSZip from "jszip";
 import {
   Stage, Layer, Rect, Circle as KCircle, Text as KText,
@@ -1738,6 +1739,17 @@ const Editor = () => {
     if (error) {
       toast({ title: "Could not set brand style", description: error.message, variant: "destructive" });
       return;
+    }
+    if (isLogoDesign) {
+      try {
+        await setBrandKitCover(projectId, { ...current, meta: nextMeta });
+      } catch (coverError: any) {
+        toast({
+          title: "Logo kept, but cover was not updated",
+          description: coverError?.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
     }
     setAssetMeta((prev) => (prev ? { ...prev, project_id: projectId, meta: nextMeta } : prev));
     toast({

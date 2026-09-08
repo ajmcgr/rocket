@@ -17,6 +17,22 @@ type AssetThumbnailProps = {
   fast?: boolean;
 };
 
+const usableImageUrl = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0 && !value.startsWith("data:image/");
+
+// The asset fields are the canonical saved-design media. `meta.preview_url`
+// is a legacy render cache and can contain an older inline preview, so it
+// must never override the current persisted thumbnail or source image.
+export const savedDesignPreviewUrl = (asset: any): string | null => {
+  const candidates = [
+    asset?.thumbnail_url,
+    asset?.image_url,
+    asset?.preview_url,
+    asset?.meta?.preview_url,
+  ];
+  return candidates.find(usableImageUrl) || null;
+};
+
 export default function AssetThumbnail({
   asset,
   alt,
@@ -55,13 +71,13 @@ export default function AssetThumbnail({
         // Grid cards must not download and scan full-resolution source images
         // just to make a preview. The browser can load the stored thumbnail
         // lazily and independently of the page's database request.
-        const directUrl = asset?.preview_url || asset?.meta?.preview_url || asset?.thumbnail_url || asset?.image_url;
+        const directUrl = savedDesignPreviewUrl(asset);
         if (fast && directUrl) {
           if (!cancelled) setSrc(directUrl);
           return;
         }
         const opts = { background, outputWidth, outputHeight, paddingRatio, logoColor, normalizeLogoLockup: asset?.meta?.kind === "logo_lockup" };
-        const storedPreview = asset?.preview_url || asset?.meta?.preview_url;
+        const storedPreview = savedDesignPreviewUrl(asset);
         const hasEditableSource = isBrandKitLogotypeAsset(asset) || isCanvasAsset(asset);
         if (isBrandKitLogotypeAsset(asset)) {
           const state = logotypeStateFromAsset(asset, asset?.title || "Brand");
@@ -78,7 +94,7 @@ export default function AssetThumbnail({
           if (!cancelled) setSrc(storedPreview);
           return;
         }
-        const url = asset?.thumbnail_url || asset?.image_url;
+        const url = savedDesignPreviewUrl(asset);
         if (url) {
           const preview = await createArtworkPreviewFromImageUrl(url, opts);
           if (!cancelled) setSrc(preview);
@@ -100,7 +116,7 @@ export default function AssetThumbnail({
   }
 
   if (failed) {
-    const directUrl = asset?.preview_url || asset?.meta?.preview_url || asset?.thumbnail_url || asset?.image_url;
+    const directUrl = savedDesignPreviewUrl(asset);
     if (directUrl) {
       return <img src={directUrl} alt={alt || asset?.title || "Design preview"} className={className} loading="lazy" />;
     }

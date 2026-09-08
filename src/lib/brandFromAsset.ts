@@ -14,10 +14,20 @@ export type BrandableAsset = {
   meta?: any;
 };
 
-const assetCoverUrl = (asset: BrandableAsset) => {
+export const assetCoverUrl = (asset: BrandableAsset) => {
   const meta = asset?.meta || {};
-  return asset.image_url || asset.thumbnail_url || meta.image_url || meta.thumbnail_url || meta.cover_url || null;
+  const candidates = [asset.image_url, asset.thumbnail_url, meta.image_url, meta.thumbnail_url, meta.cover_url];
+  return candidates.find((value) => typeof value === "string" && value.trim() && !value.startsWith("data:image/")) || null;
 };
+
+/** Persist the asset that represents a kit at the same time its brand direction is chosen. */
+export async function setBrandKitCover(projectId: string, asset: BrandableAsset): Promise<string | null> {
+  const cover_url = assetCoverUrl(asset);
+  if (!cover_url) return null;
+  const { error } = await supabase.from("projects").update({ cover_url }).eq("id", projectId);
+  if (error) throw error;
+  return cover_url;
+}
 
 const isMissingColumnError = (error: any, column: string) => {
   const message = String(error?.message || error?.details || "").toLowerCase();
@@ -90,11 +100,8 @@ export async function createBrandFromAsset(
     error = retry.error;
   }
   if (error || !data) throw error || new Error("Failed to create brand");
-  const cover_url = assetCoverUrl(asset);
-  if (cover_url) {
-    await supabase.from("projects").update({ cover_url }).eq("id", data.id);
-  }
   await addAssetToBrand(asset.id, data.id);
+  await setBrandKitCover(data.id, asset);
   void sendBrandKitEmail("brand_kit_created", {
     brand_name: name,
     brand_url: `https://tryrocket.ai/brands/${data.id}`,
