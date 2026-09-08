@@ -1017,11 +1017,14 @@ const Editor = () => {
   }, [withSelectionHidden]);
 
   const uploadPreview = useCallback(async (ownerId: string, targetAssetId: string, projectId: string | null, preview: Blob) => {
-    const path = `${ownerId}/editor-previews/${projectId || "unassigned"}/${targetAssetId}.png`;
+    // A preview is a rendered snapshot of one exact editor state. Never
+    // overwrite a stable Storage key here: CDN/browser caches can otherwise
+    // keep showing a previous design after its editor state has been saved.
+    const path = `${ownerId}/editor-previews/${projectId || "unassigned"}/${targetAssetId}-${crypto.randomUUID()}.png`;
     const { error } = await supabase.storage.from("rocket-images").upload(path, preview, {
       contentType: PERSISTENT_PREVIEW_MIME,
-      cacheControl: "3600",
-      upsert: true,
+      cacheControl: "31536000",
+      upsert: false,
     });
     if (error) throw error;
     const { data } = supabase.storage.from("rocket-images").getPublicUrl(path);
