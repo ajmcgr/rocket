@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { assetHref, isBrandAsset, isDesignAsset, normalizeAssetType } from "@/lib/assetExperience";
 import { getActiveWorkspaceIdSync } from "@/lib/workspace";
 import BrandCover from "@/components/brand/BrandCover";
+import { Logotype } from "@/components/Logotype";
 import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 
 const supabase = _sb as any;
@@ -33,7 +34,19 @@ async function loadAssets(userId: string, workspaceId: string | null) {
   }
 }
 
-type BrandPreview = { project_id: string; asset_count: number; preview_url: string | null };
+type BrandPreview = { project_id: string; asset_count: number; preview_url: string | null; logotype_state: unknown | null };
+type BrandKitMembership = { project_id: string; asset_count: number };
+
+// A Brand Kit is a project containing at least one asset the user explicitly
+// saved into a kit. This is intentionally separate from preview resolution:
+// projects with arbitrary generated assets must not appear on the Brand Kits
+// index just because they have something that could be used as a preview.
+async function loadBrandKitMembership(projectIds: string[]) {
+  if (!projectIds.length) return new Map<string, BrandKitMembership>();
+  const { data, error } = await supabase.rpc("get_brand_kit_membership", { project_ids: projectIds });
+  if (error) throw error;
+  return new Map((data || []).map((membership: BrandKitMembership) => [membership.project_id, membership]));
+}
 
 async function loadBrandIndexPreviews(projectIds: string[]) {
   if (!projectIds.length) return new Map<string, BrandPreview>();
@@ -48,6 +61,7 @@ function resolveBrandPreview(brand: any): string | null {
 
 function BrandKitPreview({ brand }: { brand: any }) {
   const source = resolveBrandPreview(brand);
+  const logotype = brand?.logotype_state;
   const [state, setState] = useState<"resolving" | "loaded" | "missing" | "error">(source ? "resolving" : "missing");
   const [attempt, setAttempt] = useState(0);
 
@@ -57,6 +71,9 @@ function BrandKitPreview({ brand }: { brand: any }) {
   }, [source]);
 
   if (!source || state === "missing" || state === "error") {
+    if (logotype) {
+      return <Logotype state={logotype as any} fit="contain" className="max-h-full max-w-full" />;
+    }
     return (
       <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-neutral-900 text-lg font-semibold text-white">
         {String(brand?.name || "B").trim().slice(0, 2).toUpperCase()}
@@ -161,21 +178,32 @@ export default function BrandHub() {
         if (cancel) return;
         const loadedProjects = (p || []).filter(Boolean);
         const isIndex = !activeProject && !params.get("direction");
+        const memberships = isIndex
+          ? await loadBrandKitMembership(loadedProjects.map((project: any) => project.id))
+          : new Map<string, BrandKitMembership>();
+        if (cancel) return;
+        const brandProjects = isIndex
+          ? loadedProjects.filter((project: any) => memberships.has(project.id))
+          : loadedProjects;
         // Keep the index lightweight. Full assets are only needed after a
         // specific kit is opened or being configured.
         const all = isIndex ? [] : await loadAssets(user.id, workspaceId);
         if (cancel) return;
         const previews = isIndex
-          ? await loadBrandIndexPreviews(loadedProjects.map((project: any) => project.id))
+          ? await loadBrandIndexPreviews(brandProjects.map((project: any) => project.id))
           : new Map<string, BrandPreview>();
         if (cancel) return;
         setAllDesigns(all);
         setAssets(isIndex ? [] : all.filter(isBrandAsset));
         setProjects(isIndex
-          ? loadedProjects.map((project: any) => ({ ...project, ...previews.get(project.id) }))
-          : loadedProjects);
+          ? brandProjects.map((project: any) => ({
+              ...project,
+              ...previews.get(project.id),
+              asset_count: memberships.get(project.id)?.asset_count || 0,
+            }))
+          : brandProjects);
         if (import.meta.env.DEV) {
-          console.info(`[BRANDS] database: ${Math.round(performance.now() - startedAt)}ms; projects: ${loadedProjects.length}; assets: ${all.length}; total: ${Math.round(performance.now() - startedAt)}ms`);
+          console.info(`[BRANDS] database: ${Math.round(performance.now() - startedAt)}ms; kits: ${brandProjects.length}; assets: ${all.length}; total: ${Math.round(performance.now() - startedAt)}ms`);
         }
       } catch (error) {
         console.error("Failed to load brand kits", error);

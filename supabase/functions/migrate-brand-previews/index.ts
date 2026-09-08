@@ -24,8 +24,13 @@ Deno.serve(async req => {
   const { data: projects } = await admin.from("projects").select("id,cover_url").eq("user_id", user.id).is("deleted_at", null);
   let migrated = 0, failed = 0;
   for (const project of projects || []) {
-    const { data: assets } = await admin.from("assets").select("id,thumbnail_url,image_url,project_id").eq("project_id", project.id).eq("user_id", user.id).is("deleted_at", null).limit(1);
-    for (const [field, value, id] of [["cover_url", project.cover_url, project.id], ...((assets || []).flatMap((a: any) => [["thumbnail_url",a.thumbnail_url,a.id],["image_url",a.image_url,a.id]]))] as any[]) {
+    const { data: assets } = await admin.from("assets").select("id,thumbnail_url,image_url,meta").eq("project_id", project.id).eq("user_id", user.id).is("deleted_at", null);
+    // The first deployment inspected one arbitrary asset per project. A Brand
+    // Kit's canonical artwork is the asset explicitly saved into that kit, so
+    // process every such asset on a re-run. Existing backup rows make this
+    // idempotent: already-migrated URLs are skipped.
+    const savedAssets = (assets || []).filter((asset: any) => Boolean(asset?.meta?.saved_at));
+    for (const [field, value, id] of [["cover_url", project.cover_url, project.id], ...(savedAssets.flatMap((a: any) => [["thumbnail_url",a.thumbnail_url,a.id],["image_url",a.image_url,a.id]]))] as any[]) {
       if (!isData(value)) continue;
       try { const migratedUrl = await store(admin,value,user.id,project.id,id,field);
         await admin.from("legacy_brand_preview_backups").upsert({user_id:user.id,project_id:project.id,asset_id:field === "cover_url" ? null : id,field_name:field,original_value:value,migrated_url:migratedUrl,migrated_at:new Date().toISOString()},{onConflict:field === "cover_url" ? "project_id,field_name" : "asset_id,field_name"});
