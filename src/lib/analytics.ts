@@ -35,7 +35,7 @@ export function track(event: AnalyticsEvent, props: Record<string, any> = {}) {
     if (typeof w.gtag === "function") {
       w.gtag("event", event, props);
     } else if (Array.isArray(w.dataLayer)) {
-      w.dataLayer.push((function () { return arguments; })("event", event, props));
+      w.dataLayer.push(["event", event, props]);
     }
     const q: any[] = (w[QUEUE_KEY] ||= []);
     q.push({ event, props, at: new Date().toISOString() });
