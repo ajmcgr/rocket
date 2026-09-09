@@ -9,6 +9,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { track } from "@/lib/analytics";
 const supabase = _sb as any;
 
 const STARTER_FEATURES = [
@@ -61,7 +62,7 @@ const COMPARE = [
 
 const FAQS = [
   { q: "What is a Rocket Credit?", a: "Credits power everything you generate. Free includes 500 credits; Starter includes 500/month, Pro 3,000/month, and Business 15,000/month. One-time credit packs never expire." },
-  { q: "How does free access work?", a: "Create a free account with 500 credits and no card required. When you want a paid plan, start its 7-day trial in secure Stripe Checkout and review the terms there before confirming." },
+  { q: "How is Free different from Starter?", a: "Free includes 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG and SVG downloads. Choose Starter when you need ongoing generation or files to use outside Rocket." },
   { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, team workspace access, and priority generation." },
   { q: "Can I cancel at any time?", a: "Yes. You can cancel or downgrade from Settings → Billing any time. Your Pro features stay active until the end of your billing period." },
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
@@ -96,6 +97,7 @@ const Pricing = () => {
     }
     setLoading(product);
     try {
+      track("checkout_started", { product, source: "pricing" });
       const { data, error } = await supabase.functions.invoke("stripe-checkout", { body: { product } });
       if (error) throw error;
       if ((data as any)?.url) window.location.href = (data as any).url;
@@ -106,6 +108,10 @@ const Pricing = () => {
   };
 
   const autoTriggered = useRef(false);
+  useEffect(() => {
+    track("pricing_viewed", { source: "pricing_page" });
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") !== "canceled") return;
@@ -133,7 +139,7 @@ const Pricing = () => {
       <section className="border-b border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 pt-24 pb-16 text-center">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Pricing built for founders</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Start free with 500 credits and no card. Choose a paid plan only when you need more generation, exports, or collaboration.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Free gives you 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG &amp; SVG downloads.</p>
           <div className="mt-8 inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 text-sm">
             <button
               type="button"
@@ -164,7 +170,7 @@ const Pricing = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("starter").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("starter").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">For a founder creating and exporting one brand.</p>
+              <p className="mt-2 text-sm text-neutral-600">For ongoing creation: 500 fresh credits every month, plus PNG &amp; SVG downloads.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {STARTER_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -330,7 +336,7 @@ const Pricing = () => {
       <section className="border-t border-neutral-200/60">
         <div className="mx-auto max-w-4xl px-6 py-24 text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Design your startup brand today</h2>
-          <p className="mx-auto mt-4 max-w-xl text-neutral-600">Start free with 500 credits and no card. Upgrade to a paid plan when you need more.</p>
+          <p className="mx-auto mt-4 max-w-xl text-neutral-600">Try 500 credits free, once, with no card. Upgrade for monthly credits and export rights when you need them.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="bg-brand text-white hover:bg-brand/90">
               <Link to={user ? "/logos" : "/signup"}>Start free</Link>

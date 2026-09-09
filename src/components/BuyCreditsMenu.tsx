@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CREDIT_PACKS } from "@/lib/credits";
+import { track } from "@/lib/analytics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +52,7 @@ export default function BuyCreditsMenu({ collapsed }: Props) {
   const checkout = async (product: string) => {
     setLoading(product);
     try {
+      track("checkout_started", { product, source: "buy_credits_menu" });
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {
         body: { product },
       });

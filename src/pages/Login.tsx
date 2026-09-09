@@ -6,6 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { safeReturnPath } from "@/lib/navigation";
+import { track } from "@/lib/analytics";
 
 const AUTH_CALLBACK_URL = `${window.location.origin}/auth/callback`;
 
@@ -35,12 +36,14 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
     try {
       if (isSignup) {
         const ref = (() => { try { return new URLSearchParams(window.location.search).get("ref") || localStorage.getItem("rocket:ref") || undefined; } catch { return undefined; } })();
+        track("signup_started", { method: "email" });
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { username: username.trim().replace(/^@/, ""), ref } },
         });
         if (error) throw error;
+        track("signup_completed", { method: "email" });
         // With Supabase "Confirm email" OFF (we verify ourselves via Resend), signUp returns a session.
         if (data.session) {
           await supabase.functions.invoke("send-verification", { body: { next } }).catch((e) => {
@@ -81,6 +84,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
   };
 
   const google = async () => {
+    if (isSignup) track("signup_started", { method: "google" });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },

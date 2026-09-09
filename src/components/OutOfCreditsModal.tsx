@@ -3,6 +3,7 @@ import { Zap, Loader2, ArrowRight, X } from "lucide-react";
 import { useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { track } from "@/lib/analytics";
 const supabase = _sb as any;
 
 type Props = {
@@ -27,6 +28,7 @@ export default function OutOfCreditsModal({ open, onClose, needed, remaining }: 
   const checkout = async (product: string) => {
     setLoading(product);
     try {
+      track("checkout_started", { product, source: "out_of_credits" });
       const { data, error } = await supabase.functions.invoke("stripe-checkout", { body: { product } });
       if (error) throw error;
       if ((data as any)?.url) window.location.href = (data as any).url;
