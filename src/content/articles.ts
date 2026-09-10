@@ -18,6 +18,94 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "startup-brand-kit-before-launch",
+    title: "The Startup Brand Kit You Need Before You Launch",
+    excerpt: "A practical checklist for turning one good logo direction into the assets your product actually needs on day one.",
+    readTime: "6 min",
+    date: "2026-09-10",
+    category: "Startup Branding",
+    tags: ["startup branding", "brand kit", "logo", "launch"],
+    body: md(`# The Startup Brand Kit You Need Before You Launch
+
+Most founders do not need a 60-page brand strategy before they launch. They do need more than a logo file.
+
+The awkward middle ground is where launches get stuck: a founder has a mark they like, but no app icon, no dark-background version, no agreed colours, and no folder that makes those decisions easy to reuse. The result is a homepage, Product Hunt gallery, social profile, and pitch deck that all look like different companies.
+
+The goal before launch is not to make every surface perfect. It is to create a small, coherent system that lets you ship without re-deciding the brand every time you open a design tool.
+
+## Start with one visual direction
+
+Choose one logo direction before making more assets. A direction is more than a symbol: it includes the wordmark, a primary colour, a supporting neutral, and a type style that feels right for the product.
+
+Do not combine your favourite parts of six concepts just because they were all generated in the same session. That usually creates a mark with no clear personality. Pick the direction that is easiest to recognise at a small size and still feels like the product you are building.
+
+For a software product, test it in three places before committing:
+
+- A browser tab or favicon-sized square.
+- The top-left corner of a landing page.
+- A social-profile avatar.
+
+If it only works as a large hero image, it is not ready for the surfaces people will see most often.
+
+## The minimum viable brand kit
+
+Before launch, collect these six things in one place:
+
+1. **A logo mark and wordmark.** Keep a full lockup for headers and a compact mark for icons.
+2. **Light and dark variants.** A logo that disappears on a dark social card is not a finished logo.
+3. **An app icon or favicon.** This is often the most frequently seen version of a new product.
+4. **A small colour palette.** One primary, one supporting colour, two neutrals, and an accessible text colour are enough to begin.
+5. **A type pairing.** Pick a display face and a readable body face, then stop. Consistency matters more than endless choice.
+6. **Export-ready files.** At minimum, keep transparent PNGs and SVGs; add PDF or print formats when you actually need them.
+
+This is intentionally small. Launch assets should be easy to find and hard to misuse.
+
+## Match the kit to the launch surfaces
+
+Think about where a stranger will first meet the product. For most early-stage software, that is not a business card. It is a landing page, an app icon, a social post, a demo, or a launch directory.
+
+Use the same decisions across each surface:
+
+- Put the compact mark in the favicon and social avatar.
+- Use the wordmark or lockup in page headers and launch graphics.
+- Reserve the primary colour for calls to action and recognisable accents.
+- Use the same background treatment in social cards, screenshots, and slides.
+
+You do not need to turn every launch asset into a branded poster. Repetition of a few choices—mark, colour, type, spacing—is what makes a young company feel intentional.
+
+## Save the rules, not just the files
+
+Files alone do not solve the handoff problem. Write down the decisions that someone else would otherwise have to guess:
+
+- Which logo version goes on a light or dark background?
+- What is the primary colour hex code?
+- Which typeface is for headings?
+- What is the minimum clear space around the logo?
+- Which asset is the current approved version?
+
+A short Brand Book can answer all five. It does not need to be a formal agency deliverable. Its job is to stop your own future self, a contractor, or a teammate from downloading an old image and improvising.
+
+## What to postpone
+
+Avoid spending launch week on things that will not help someone understand or trust the product:
+
+- A huge illustration library.
+- Ten logo variations for hypothetical future campaigns.
+- Branded merchandise.
+- A complex motion system.
+- A rebrand before you have customer feedback.
+
+Those can be useful later. They are not prerequisites for a coherent first impression.
+
+## Build a kit you can extend
+
+Your first identity should give you momentum, not a permanent contract. Once the product has customers, you will learn whether the name, visual tone, and audience assumptions are right. A practical kit makes that learning cheaper because the core assets are organized and editable.
+
+That is the useful standard for an early startup brand: not "finished forever," but clear enough to launch, consistent enough to remember, and structured enough to evolve.
+
+Rocket is built for that sequence. Start with a logo direction, create the matching icon, colours, and typography, then keep the approved assets together in a Brand Kit so your launch does not begin with a scramble for files.`),
+  },
+  {
     slug: "make-your-product-a-brand",
     title: "Make Your Product a Brand: Why Positioning Beats Features",
     excerpt: "Founders ship features. Brands ship meaning. Here's how to make the jump.",
