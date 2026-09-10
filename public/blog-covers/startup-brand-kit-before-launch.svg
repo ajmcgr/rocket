@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title description">
+  <title id="title">A starter brand kit</title>
+  <desc id="description">A flat geometric arrangement of brand assets in Rocket blue, coral and black.</desc>
+  <rect width="1200" height="800" fill="#f5f7fa"/>
+  <rect x="290" y="214" width="476" height="372" rx="30" fill="#1676e3"/>
+  <rect x="330" y="254" width="396" height="292" rx="18" fill="#ffffff"/>
+  <rect x="386" y="306" width="150" height="150" rx="24" fill="#0a0a0a"/>
+  <circle cx="461" cy="381" r="42" fill="#f2683c"/>
+  <rect x="576" y="316" width="110" height="22" rx="11" fill="#0a0a0a"/>
+  <rect x="576" y="359" width="76" height="16" rx="8" fill="#b6bfca"/>
+  <rect x="576" y="407" width="110" height="16" rx="8" fill="#d8dee6"/>
+  <rect x="576" y="441" width="86" height="16" rx="8" fill="#d8dee6"/>
+  <rect x="576" y="475" width="96" height="16" rx="8" fill="#d8dee6"/>
+  <path d="M755 268h109c17 0 30 13 30 30v109c0 17-13 30-30 30H755c-17 0-30-13-30-30V298c0-17 13-30 30-30Z" fill="#f2683c"/>
+  <path d="M755 437h109c17 0 30 13 30 30v109c0 17-13 30-30 30H755c-17 0-30-13-30-30V467c0-17 13-30 30-30Z" fill="#0a0a0a"/>
+  <circle cx="809" cy="322" r="23" fill="#ffffff" opacity=".9"/>
+  <path d="M780 521h59" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+</svg>

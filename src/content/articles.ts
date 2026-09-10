@@ -25,6 +25,7 @@ export const articles: Article[] = [
     date: "2026-09-10",
     category: "Startup Branding",
     tags: ["startup branding", "brand kit", "logo", "launch"],
+    cover: "/blog-covers/startup-brand-kit-before-launch.svg",
     body: md(`# The Startup Brand Kit You Need Before You Launch
 
 Most founders do not need a 60-page brand strategy before they launch. They do need more than a logo file.
