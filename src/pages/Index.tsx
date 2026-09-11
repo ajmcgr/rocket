@@ -268,7 +268,7 @@ const Index = () => {
         />
         <div className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center sm:pt-28 sm:pb-20">
           <h1 className="mx-auto max-w-4xl text-4xl font-medium tracking-tight text-neutral-900 sm:text-6xl md:text-7xl">
-            Create a Logo People Remember
+            Create a logo people remember.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg font-normal leading-relaxed text-neutral-500 sm:text-xl">
             From a URL or a few words, Rocket generates logo directions, a wordmark, icon, colours and typography. Pick one, refine it, and build your brand kit.
