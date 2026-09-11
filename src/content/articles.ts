@@ -18,6 +18,73 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "ai-brand-kit-generator-for-founders",
+    title: "AI Brand Kit Generators: What Founders Should Look For Before Paying",
+    excerpt: "A practical way to judge whether an AI brand tool will leave you with usable launch assets—or just more concepts to sort through.",
+    readTime: "6 min",
+    date: "2026-09-11",
+    category: "Startup Branding",
+    tags: ["AI branding", "brand kit", "startup branding", "logo"],
+    cover: "/blog-covers/ai-brand-kit-generator-for-founders.svg",
+    body: md(`# AI Brand Kit Generators: What Founders Should Look For Before Paying
+
+AI can make it much faster to explore a brand direction. It cannot make the decision for you—and it does not help much if the result is a folder of attractive images that do not work in the places your company actually appears.
+
+For a founder, the useful question is not “Can this tool make a logo?” Most can. The question is whether it helps you leave with a small, usable visual system: a direction you can recognise, variants you can put into production, and a clear place to return when the next launch asset is needed.
+
+## Look for a system, not a gallery
+
+The quickest way to lose a day in an AI design tool is to keep generating alternatives after a good direction is already on the screen. A strong workflow makes it easy to select one concept, refine it, and turn it into the pieces around it.
+
+Before paying, check that you can move from a chosen logo to a coherent kit without starting over. That means the mark, palette, type choices, and supporting graphics should feel related—not like independent outputs from separate prompts.
+
+Generation is the beginning of the workflow. The value is in getting to an approved direction.
+
+## The first kit should cover real launch surfaces
+
+An early-stage product usually needs a handful of assets more than it needs a giant identity manual. The practical minimum is:
+
+- A logo lockup for headers and a compact mark for small spaces.
+- Light and dark versions that remain legible on a landing page, social post, and app shell.
+- A square app icon or favicon.
+- A restrained palette with readable text colours.
+- Typography choices that can be repeated in product and marketing work.
+- Export-ready versions of the approved assets.
+
+Ask whether the tool supports the formats you will actually use. A beautiful raster preview is not enough if you later need a transparent PNG, an SVG, or an icon that survives a 16-pixel browser tab.
+
+## Check the editing loop before the output
+
+Founders rarely approve the first image exactly as generated. The useful work happens when you adjust the spacing, simplify a mark, test a different background, or make the icon feel stronger at a small size.
+
+Try a normal revision before committing: make one meaningful change, save it, leave the page, and return to it. The final version should still be the version you chose. If an AI tool makes refinement feel like a new generation every time, it will create more uncertainty instead of reducing it.
+
+This matters even more when a freelancer or teammate joins later. They need an approved source and clear assets, not a prompt history they have to interpret.
+
+## Test a direction in context
+
+Do not judge a logo only at the large scale used in a generation gallery. Place it where customers will encounter it:
+
+1. In a browser-tab-sized square.
+2. In the corner of a landing page.
+3. On a dark social profile or launch card.
+4. Alongside a short product headline.
+
+The right direction tends to be the one that remains distinct when it gets small and still feels like the product when it is surrounded by ordinary interface elements. Complex detail and tiny lettering often disappear precisely where a new company needs to be noticed.
+
+## Make ownership and organization part of the decision
+
+The brand is not useful when its parts are hard to find. Look for a place to keep the current logo, icon, colours, fonts, and guidelines together, with an obvious approved version. That simple organization prevents a common launch problem: the website, pitch deck, and social posts all use slightly different files.
+
+It also makes a future refresh less risky. When the source assets and decisions live together, you can evolve the system without guessing which export was final.
+
+## Avoid paying for endless novelty
+
+More variations are not always more value. Be skeptical of a workflow that rewards you with dozens of similar logos but gives you no path to a coherent kit. The best outcome for an early product is not a huge asset library. It is one direction you can ship consistently this week.
+
+Rocket is designed around that practical loop: explore a direction, refine the chosen assets, create the variations you need, and keep them together in a Brand Kit. That lets a founder turn a promising idea into a visual system that is ready for a real launch.`),
+  },
+  {
     slug: "startup-brand-kit-before-launch",
     title: "The Startup Brand Kit You Need Before You Launch",
     excerpt: "A practical checklist for turning one good logo direction into the assets your product actually needs on day one.",
