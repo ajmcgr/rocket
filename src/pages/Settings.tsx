@@ -4,6 +4,7 @@ import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { CREDIT_PACKS } from "@/lib/credits";
+import { track } from "@/lib/analytics";
 import { Check, Loader2, Plug, Cloud, Unplug } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -368,6 +369,12 @@ export const BillingSettings = () => {
 
   useEffect(() => {
     if (searchParams.get("checkout") !== "success") return;
+    let source = "unknown";
+    try {
+      source = window.sessionStorage.getItem("rocket:checkout_source") || source;
+      window.sessionStorage.removeItem("rocket:checkout_source");
+    } catch { /* completion telemetry must never affect billing */ }
+    track("checkout_completed", { source });
     toast({ title: "Checkout complete", description: "Your subscription or credits are being added now." });
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams, toast]);

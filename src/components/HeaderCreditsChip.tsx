@@ -4,6 +4,8 @@ import { Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { track } from "@/lib/analytics";
 import OutOfCreditsModal from "./OutOfCreditsModal";
 const supabase = _sb as any;
 
@@ -16,6 +18,11 @@ export default function HeaderCreditsChip() {
   const [buyOpen, setBuyOpen] = useState(false);
   const warnedRef = useRef(false);
 
+  const openTopUp = (source: "low_credit_toast" | "low_credit_header") => {
+    track("credit_topup_interacted", { source, remaining: credits });
+    setBuyOpen(true);
+  };
+
   useEffect(() => {
     if (!user) { setCredits(null); return; }
     let alive = true;
@@ -27,9 +34,19 @@ export default function HeaderCreditsChip() {
       // Fire a one-time warning per session when the balance dips under 20.
       if (!warnedRef.current && remaining > 0 && remaining < 20) {
         warnedRef.current = true;
+        track("credit_topup_eligible", { remaining });
+        track("credit_topup_surface", { source: "low_credit_toast", remaining });
         toast({
           title: "Running low on credits",
           description: `${remaining} left — top up to keep generating without interruption.`,
+          action: (
+            <ToastAction altText="Top up credits" onClick={() => {
+              track("credit_topup_interacted", { source: "low_credit_toast", remaining });
+              setBuyOpen(true);
+            }}>
+              Top up
+            </ToastAction>
+          ),
         });
       }
     };
@@ -46,7 +63,7 @@ export default function HeaderCreditsChip() {
       {low ? (
         <button
           type="button"
-          onClick={() => setBuyOpen(true)}
+          onClick={() => openTopUp("low_credit_header")}
           title={`${credits} credits remaining — click to top up`}
           className="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 sm:inline-flex"
         >
@@ -63,7 +80,7 @@ export default function HeaderCreditsChip() {
           {credits.toLocaleString()}
         </Link>
       )}
-      <OutOfCreditsModal open={buyOpen} onClose={() => setBuyOpen(false)} remaining={credits} />
+      <OutOfCreditsModal open={buyOpen} onClose={() => setBuyOpen(false)} remaining={credits} source="low_credit" />
     </>
   );
 }

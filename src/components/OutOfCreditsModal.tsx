@@ -11,6 +11,8 @@ type Props = {
   onClose: () => void;
   needed?: number;
   remaining?: number;
+  /** Describes the entry point in checkout and completion analytics. */
+  source?: string;
 };
 
 const PACKS = [
@@ -19,7 +21,7 @@ const PACKS = [
   { id: "pack_5000", label: "5,000 credits", price: "$25" },
 ];
 
-export default function OutOfCreditsModal({ open, onClose, needed, remaining }: Props) {
+export default function OutOfCreditsModal({ open, onClose, needed, remaining, source = "out_of_credits" }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -28,7 +30,11 @@ export default function OutOfCreditsModal({ open, onClose, needed, remaining }: 
   const checkout = async (product: string) => {
     setLoading(product);
     try {
-      track("checkout_started", { product, source: "out_of_credits" });
+      track("checkout_started", { product, source });
+      // Stripe returns to Settings after payment. Keep the originating moment
+      // for the completion event without putting untrusted client data in a
+      // billing mutation.
+      try { window.sessionStorage.setItem("rocket:checkout_source", source); } catch { /* non-essential */ }
       const { data, error } = await supabase.functions.invoke("stripe-checkout", { body: { product } });
       if (error) throw error;
       if ((data as any)?.url) window.location.href = (data as any).url;
@@ -50,10 +56,14 @@ export default function OutOfCreditsModal({ open, onClose, needed, remaining }: 
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
           <Zap className="h-5 w-5 text-brand" />
         </div>
-        <h2 className="mt-4 text-lg font-semibold tracking-tight">You're out of credits</h2>
+        <h2 className="mt-4 text-lg font-semibold tracking-tight">
+          {typeof remaining === "number" && remaining > 0 ? "Keep generating without interruption" : "You're out of credits"}
+        </h2>
         <p className="mt-1 text-sm text-neutral-600">
           {typeof needed === "number" && typeof remaining === "number"
             ? `This generation needs ${needed} credits — you have ${remaining}.`
+            : typeof remaining === "number" && remaining > 0
+              ? `${remaining} credits left. Top up now so your next generation is ready.`
             : "Top up or upgrade to keep generating."}
         </p>
 
