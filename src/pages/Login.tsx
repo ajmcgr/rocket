@@ -36,14 +36,14 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
     try {
       if (isSignup) {
         const ref = (() => { try { return new URLSearchParams(window.location.search).get("ref") || localStorage.getItem("rocket:ref") || undefined; } catch { return undefined; } })();
-        track("signup_started", { method: "email" });
+        track("signup_started", { method: "email", ref });
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { username: username.trim().replace(/^@/, ""), ref } },
         });
         if (error) throw error;
-        track("signup_completed", { method: "email" });
+        track("signup_completed", { method: "email", ref });
         // With Supabase "Confirm email" OFF (we verify ourselves via Resend), signUp returns a session.
         if (data.session) {
           await supabase.functions.invoke("send-verification", { body: { next } }).catch((e) => {
@@ -84,7 +84,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
   };
 
   const google = async () => {
-    if (isSignup) track("signup_started", { method: "google" });
+    if (isSignup) track("signup_started", { method: "google", ref: new URLSearchParams(window.location.search).get("ref") || undefined });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },

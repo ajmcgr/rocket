@@ -10,7 +10,7 @@ function upsertMeta(selector: string, attrs: Record<string, string>) {
   if (attrs.content) el.setAttribute("content", attrs.content);
 }
 
-export function useDocumentMeta(opts: { title?: string; description?: string; image?: string | null; canonical?: string }) {
+export function useDocumentMeta(opts: { title?: string; description?: string; image?: string | null; canonical?: string; robots?: string }) {
   useEffect(() => {
     const prevTitle = document.title;
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
@@ -39,6 +39,7 @@ export function useDocumentMeta(opts: { title?: string; description?: string; im
       upsertMeta('meta[name="twitter:image"]', { name: "twitter:image", content: opts.image });
       upsertMeta('meta[name="twitter:card"]', { name: "twitter:card", content: "summary_large_image" });
     }
+    if (opts.robots) upsertMeta('meta[name="robots"]', { name: "robots", content: opts.robots });
     return () => {
       document.title = prevTitle;
       if (canonical && createdCanonical) canonical.remove();

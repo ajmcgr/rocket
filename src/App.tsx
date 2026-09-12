@@ -66,6 +66,7 @@ import ToolDetail from "./pages/ToolDetail.tsx";
 import Pricing from "./pages/Pricing.tsx";
 import FAQ from "./pages/FAQ.tsx";
 import AIInfo from "./pages/AIInfo.tsx";
+import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
 import AppShell from "./components/AppShell.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { ScrollToTop } from "./components/ScrollToTop.tsx";
@@ -123,6 +124,8 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/ai-info" element={<AIInfo />} />
+            <Route path="/brand-templates" element={<BrandTemplates />} />
+            <Route path="/brand-templates/:id" element={<BrandTemplateDetail />} />
             <Route path="/share/asset/:token" element={<SharedAsset />} />
             <Route path="/share/project/:token" element={<SharedProject />} />
             <Route path="/gallery" element={<Gallery />} />

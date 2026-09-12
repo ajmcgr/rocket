@@ -1,5 +1,7 @@
 export type Template = {
   id: string;
+  /** Only complete, reusable starter identities are eligible for public SEO pages. */
+  indexable: boolean;
   name: string;
   category: string;
   tagline: string;
@@ -15,6 +17,7 @@ export type Template = {
 export const TEMPLATES: Template[] = [
   {
     id: "saas-modern",
+    indexable: true,
     name: "Modern SaaS",
     category: "Software",
     tagline: "Crisp, technical, conversion-focused.",
@@ -28,6 +31,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "ecom-warm",
+    indexable: true,
     name: "Warm E-commerce",
     category: "E-commerce",
     tagline: "Inviting, tactile, premium-friendly.",
@@ -41,6 +45,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "agency-bold",
+    indexable: true,
     name: "Bold Agency",
     category: "Agency",
     tagline: "Editorial, confident, portfolio-led.",
@@ -54,6 +59,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "creator-personal",
+    indexable: true,
     name: "Creator / Personal",
     category: "Personal brand",
     tagline: "Approachable, playful, builds in public.",
@@ -67,6 +73,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "fintech-trust",
+    indexable: true,
     name: "Trustworthy Fintech",
     category: "Fintech",
     tagline: "Calm, precise, security-forward.",
@@ -80,6 +87,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "wellness-editorial",
+    indexable: true,
     name: "Editorial Wellness",
     category: "Lifestyle",
     tagline: "Quiet, considered, magazine-style.",
@@ -94,3 +102,11 @@ export const TEMPLATES: Template[] = [
 ];
 
 export const getTemplate = (id: string) => TEMPLATES.find(t => t.id === id);
+
+export const publicTemplates = () => TEMPLATES.filter((template) =>
+  template.indexable &&
+  Boolean(template.name && template.category && template.tagline && template.description && template.audience && template.tone) &&
+  template.colors.length >= 3 &&
+  template.fonts.length >= 2 &&
+  Boolean(template.voiceNotes && template.sampleName),
+);

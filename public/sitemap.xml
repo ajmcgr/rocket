@@ -9,6 +9,15 @@
   <url><loc>https://tryrocket.ai/resources</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/tools</loc><priority>0.7</priority></url>
   <url><loc>https://tryrocket.ai/compare</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/brand-templates</loc><priority>0.8</priority></url>
+  <!-- BRAND_TEMPLATE_URLS_START -->
+  <url><loc>https://tryrocket.ai/brand-templates/saas-modern</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/brand-templates/ecom-warm</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/brand-templates/agency-bold</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/brand-templates/creator-personal</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/brand-templates/fintech-trust</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/brand-templates/wellness-editorial</loc><priority>0.7</priority></url>
+  <!-- BRAND_TEMPLATE_URLS_END -->
   <url><loc>https://tryrocket.ai/blog/make-your-product-a-brand</loc><priority>0.7</priority></url>
   <url><loc>https://tryrocket.ai/blog/the-perfect-product-hunt-launch</loc><priority>0.7</priority></url>
   <url><loc>https://tryrocket.ai/blog/10-launch-channels-for-vibe-coders</loc><priority>0.7</priority></url>

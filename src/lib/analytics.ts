@@ -19,7 +19,9 @@ export type AnalyticsEvent =
   | "gallery_liked"
   | "gallery_remixed"
   | "tour_started"
-  | "tour_completed";
+  | "tour_completed"
+  | "organic_template_view"
+  | "organic_template_cta";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;
