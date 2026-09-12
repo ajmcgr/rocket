@@ -18,6 +18,74 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "startup-brand-guidelines-for-freelancers",
+    title: "Startup Brand Guidelines: How to Hand Off Your Brand to a Freelancer",
+    excerpt: "Five practical rules that let a founder bring in a designer, marketer, or developer without turning a young brand into a collection of mismatched assets.",
+    readTime: "6 min",
+    date: "2026-09-12",
+    category: "Brand Kits",
+    tags: ["brand guidelines", "startup branding", "brand kit", "freelancers"],
+    cover: "/blog-covers/startup-brand-guidelines-for-freelancers.svg",
+    body: md(`# Startup Brand Guidelines: How to Hand Off Your Brand to a Freelancer
+
+The first time a founder hires a designer, marketer, or developer is often when a brand starts to drift.
+
+Until then, one person has been making every visual decision. They know which logo is current, which blue is the real blue, and why the product screenshots use a quiet background. The moment those choices live only in someone’s head—or across a few scattered folders—every new collaborator has to guess.
+
+You do not need a large agency-style brand manual to avoid that. You need a short, usable source of truth that answers the decisions another person needs to make this week.
+
+## Start with the approved assets
+
+Give a collaborator one obvious place to find the current logo, wordmark, icon, and supporting files. Do not send three old attachments and ask them to choose the closest one.
+
+For each core asset, label the version that should be used and where it works:
+
+- The primary logo for light backgrounds.
+- A reverse or light version for dark backgrounds.
+- The compact mark for favicons, app icons, and social avatars.
+- Transparent PNGs for quick use and SVGs for scalable product work.
+
+This is less about file format than confidence. A freelancer should be able to open the kit and start, without asking whether a version from six weeks ago is still approved.
+
+## Write down five rules
+
+At an early stage, a useful Brand Book can be remarkably short. Include these five rules before you add anything more elaborate:
+
+1. **Logo use:** which version belongs on light and dark surfaces.
+2. **Colour roles:** the primary accent, background neutrals, and text colours.
+3. **Typography:** one display treatment and one body treatment, plus where each is used.
+4. **Image tone:** whether the brand feels technical, playful, restrained, editorial, or bold.
+5. **What not to do:** no stretching the logo, no unapproved colours, and no new typefaces without a reason.
+
+That final section matters. People make fewer accidental changes when the guardrails are explicit.
+
+## Share context, not just files
+
+A logo does not explain what a company is trying to communicate. Alongside the assets, give collaborators a two- or three-sentence description of the product, audience, and intended feeling.
+
+For example: “We help independent SaaS founders turn an idea into a launch-ready identity. The brand should feel clear, capable, and calm—not corporate or playful for its own sake.”
+
+That context helps a contractor make good small decisions when there is no time to ask. It also prevents a familiar problem: each new landing page looks polished in isolation but feels unrelated to the rest of the product.
+
+## Use the kit during a real handoff
+
+Before sending it broadly, test the kit with one ordinary task. Ask a freelancer to make a social card, update a landing-page section, or prepare a small launch graphic using only the assets and rules you provided.
+
+Then check three things:
+
+- Did they choose the intended logo version?
+- Did the work use the correct colours and type treatment?
+- Did they need to ask questions the kit should have answered?
+
+Every repeated question is a useful addition to the Brand Book. The point is not to document everything upfront; it is to remove the decisions that keep recurring.
+
+## Keep one current source of truth
+
+When a logo or palette changes, update the original kit rather than sending a “final-final-v2” folder by email. An organized Brand Kit becomes more valuable as more people work from it, because it reduces the chance that old exports become the default.
+
+Rocket supports that practical handoff: keep the approved logo, icon, colours, typography, and guidelines together; share the current kit; and export the files a collaborator actually needs. That makes a young brand easier to extend without turning every new task into a rebrand.`),
+  },
+  {
     slug: "ai-brand-kit-generator-for-founders",
     title: "AI Brand Kit Generators: What Founders Should Look For Before Paying",
     excerpt: "A practical way to judge whether an AI brand tool will leave you with usable launch assets—or just more concepts to sort through.",
