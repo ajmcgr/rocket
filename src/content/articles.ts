@@ -18,6 +18,71 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "product-hunt-gallery-brand-consistency",
+    title: "How to Make a Product Hunt Gallery Look Like One Brand",
+    excerpt: "A practical way to turn one approved logo direction into a coherent Product Hunt gallery without making every screenshot look like an ad.",
+    readTime: "5 min",
+    date: "2026-09-13",
+    category: "Launch",
+    tags: ["Product Hunt", "launch design", "brand consistency", "startup branding"],
+    cover: "/blog-covers/product-hunt-gallery-brand-consistency.svg",
+    body: md(`# How to Make a Product Hunt Gallery Look Like One Brand
+
+A Product Hunt gallery is often assembled in a hurry: one founder screenshot, one product mock-up, a logo file from an old folder, and a social graphic made at midnight. Each piece can be decent on its own. Together, they can make a new product look less considered than it is.
+
+You do not need to turn every gallery image into a glossy campaign. You need a few repeated choices so a visitor understands, at a glance, that the product, the logo, and the launch story belong together.
+
+## Choose one job for each image
+
+Start by listing the few questions a first-time visitor needs answered. A useful gallery usually includes images that cover different jobs:
+
+- The product’s main outcome or promise.
+- The interface or workflow that makes that outcome believable.
+- A moment that shows who the product is for.
+- A simple proof point, feature, or before-and-after view.
+
+Do not make five versions of the same hero statement. The gallery should move the story forward. If an image does not explain something new, it is probably decoration rather than a launch asset.
+
+## Repeat a small visual system
+
+Pick three elements to carry through the set: your approved logo treatment, one primary colour, and one typography style for short headings. Repeating those choices gives the gallery a family resemblance without forcing every image into the same template.
+
+Keep the product interface as the focal point whenever a screenshot is doing real explanatory work. Use colour as a frame, label, or small accent—not as a background so loud that it competes with the thing someone is evaluating.
+
+For each image, ask:
+
+1. Could a visitor recognise the product from this alone?
+2. Does the logo stay legible at the displayed size?
+3. Is the headline saying something the screenshot actually proves?
+
+That last question prevents a common launch mistake: adding broad claims to an image that only shows a generic dashboard.
+
+## Use the first image to set expectations
+
+The first gallery image should make the product and its benefit clear before a visitor reads the full description. It does not need a paragraph of copy. A product name, a short outcome-led phrase, and a real visual of the product are usually enough.
+
+Avoid treating the first card as a poster. If the logo is huge and the product is tiny, it may look branded but it does not help a visitor decide whether to keep looking. Give the product the space to be understood.
+
+## Make screenshots feel intentional
+
+Raw screenshots can be valuable because they make the product feel real. They just need a little editorial discipline:
+
+- Crop out browser clutter that does not help the story.
+- Show a realistic state rather than an empty screen.
+- Keep labels and callouts short enough to read quickly.
+- Use the same corner radius, frame treatment, and spacing across the set.
+
+You do not need a different background colour for every screenshot. A quiet repeated surface makes the product changes easier to notice.
+
+## Check the gallery as a sequence
+
+Before launch, put the images next to each other in their final order. Look for obvious drift: a different logo version, a surprise typeface, a competing accent colour, or a screenshot that suddenly uses a different visual language.
+
+Then test the sequence at a smaller size. If the headings, product details, and logo treatment only work when enlarged, simplify them. Launch galleries are scanned quickly.
+
+Rocket can help turn an approved direction into the supporting launch designs: keep the logo, palette, typography, and product graphics together in one Brand Kit, then create Product Hunt and launch assets from the same source. The aim is not a louder gallery. It is a clearer one that makes a new product feel ready to trust.`),
+  },
+  {
     slug: "startup-brand-guidelines-for-freelancers",
     title: "Startup Brand Guidelines: How to Hand Off Your Brand to a Freelancer",
     excerpt: "Five practical rules that let a founder bring in a designer, marketer, or developer without turning a young brand into a collection of mismatched assets.",
