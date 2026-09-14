@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A startup logo and app icon pair</title>
+  <desc id="desc">A blue app icon and matching wordmark are arranged on a light editorial background.</desc>
+  <rect width="1600" height="900" fill="#F5F5F3"/>
+  <rect x="388" y="218" width="824" height="464" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
+  <rect x="490" y="318" width="250" height="250" rx="55" fill="#1676E3"/>
+  <path d="M557 504l56-122 56 122h-36l-20-46-20 46z" fill="#F2683C"/>
+  <circle cx="613" cy="388" r="15" fill="#0A0A0A"/>
+  <path d="M796 371h88c38 0 67 24 67 58 0 23-14 42-35 51l48 74h-66l-39-63h-12v63h-51zm51 39v43h34c12 0 20-8 20-22 0-13-8-21-20-21z" fill="#0A0A0A"/>
+  <rect x="796" y="572" width="304" height="15" rx="7.5" fill="#B8B8B5"/>
+  <rect x="796" y="610" width="213" height="15" rx="7.5" fill="#E1E1DE"/>
+  <circle cx="406" cy="176" r="24" fill="#F2683C"/>
+  <circle cx="1198" cy="710" r="27" fill="#1676E3"/>
+  <path d="M1202 188h66v66" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
