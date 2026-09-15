@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A startup colour palette in use</title>
+  <desc id="desc">A centred arrangement of blue, coral, black and grey colour swatches on a light editorial background.</desc>
+  <rect width="1600" height="900" fill="#F5F5F3"/>
+  <rect x="405" y="182" width="790" height="536" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
+  <rect x="478" y="270" width="644" height="104" rx="25" fill="#0A0A0A"/>
+  <rect x="518" y="310" width="210" height="18" rx="9" fill="#F5F5F3"/>
+  <rect x="824" y="299" width="236" height="42" rx="21" fill="#1676E3"/>
+  <rect x="478" y="418" width="200" height="200" rx="28" fill="#1676E3"/>
+  <rect x="700" y="418" width="200" height="200" rx="28" fill="#F2683C"/>
+  <rect x="922" y="418" width="200" height="200" rx="28" fill="#E1E1DE"/>
+  <circle cx="578" cy="518" r="47" fill="#F2683C"/>
+  <path d="M775 562l25-84 25 84h-16l-9-34-9 34z" fill="#0A0A0A"/>
+  <rect x="970" y="477" width="104" height="22" rx="11" fill="#0A0A0A"/>
+  <rect x="970" y="522" width="78" height="16" rx="8" fill="#777774"/>
+  <circle cx="370" cy="220" r="25" fill="#F2683C"/>
+  <circle cx="1232" cy="681" r="30" fill="#1676E3"/>
+  <path d="M1197 165h65v65" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

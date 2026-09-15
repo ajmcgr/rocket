@@ -18,6 +18,63 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "startup-color-palette-for-product-and-marketing",
+    title: "How to Choose a Startup Color Palette for Product and Marketing",
+    excerpt: "A compact method for choosing brand colours that work across a product UI, landing page, launch assets, and everyday social graphics.",
+    readTime: "5 min",
+    date: "2026-09-15",
+    category: "Startup Branding",
+    tags: ["startup color palette", "brand colors", "product design", "landing page design"],
+    cover: "/blog-covers/startup-color-palette-for-product-and-marketing.svg",
+    body: md(`# How to Choose a Startup Color Palette for Product and Marketing
+
+Choosing brand colours can feel like a decision about taste. For an early product, it is more useful to treat it as a system for making repeated decisions quickly.
+
+The palette has to do more than make a logo look good. It has to support readable product screens, a landing-page call to action, screenshots, social graphics, and the small moments where a customer learns to recognise the company. A short palette that has clear jobs will take you further than a long list of attractive swatches.
+
+## Start with roles, not colours
+
+Before deciding on exact hex values, define the jobs the palette needs to cover:
+
+- **Primary:** the colour that identifies the product and earns the strongest calls to action.
+- **Accent:** a supporting colour for emphasis, highlights, or a secondary visual note.
+- **Neutrals:** light surfaces, borders, body text, and dark backgrounds.
+- **Feedback colours:** calm, functional success, warning, and error treatments for the product UI.
+
+This keeps the primary colour from being used for everything. When one bright colour is responsible for buttons, headlines, backgrounds, charts, badges, and illustrations, the interface loses hierarchy quickly.
+
+## Make the primary colour earn its place
+
+The primary colour should work in at least three real places: a button, a compact app icon, and a simple launch graphic. If it only works as a large background, it may not be flexible enough for the product.
+
+Check it beside both a light neutral and a dark neutral. The same blue, coral, green, or violet can feel confident in a logo and weak when it is used for small text or a thin outline. Use the primary colour to direct attention, not to carry paragraphs of content.
+
+## Build around useful neutrals
+
+Most of what users see in a product is not the accent colour. It is text, surfaces, dividers, empty states, and screenshots. Give those elements a restrained set of neutrals first.
+
+A practical starting point is a soft background, a white or near-white surface, a border grey, a muted text grey, and a near-black text colour. These give marketing graphics and product screens room to breathe, and make the branded colour feel deliberate when it appears.
+
+## Test the palette in four contexts
+
+Do not approve a palette from swatches alone. Apply it to four quick views:
+
+1. A landing-page hero with a button and a short headline.
+2. A product card or settings screen with ordinary text and borders.
+3. A social or launch card where the brand needs to be recognised quickly.
+4. A small icon or favicon-sized square.
+
+Look for two problems: not enough contrast for important information, and too much colour competing for attention. In both cases, simplify before adding another shade.
+
+## Save the rules with the colours
+
+Once the palette works, record the role of each colour alongside its value. “Primary action,” “dark background,” and “muted text” are more useful labels than “blue 2” or “grey 4.” That makes the system easier for a teammate or freelancer to use consistently.
+
+You do not need to lock every future design decision today. You need enough clarity that the next screen, launch card, or page section starts from the same visual logic.
+
+Rocket helps keep those decisions together: create a colour system, pair it with the approved logo and typography, and store it with the rest of the Brand Kit. The result is less time choosing colours from scratch and more consistency across the places customers actually meet your product.`),
+  },
+  {
     slug: "startup-logo-and-app-icon-pair",
     title: "How to Make a Startup Logo and App Icon Work Together",
     excerpt: "A practical guide to creating a logo and app icon that feel like the same product—from a browser tab to a launch page—without shrinking a wordmark into a square.",
