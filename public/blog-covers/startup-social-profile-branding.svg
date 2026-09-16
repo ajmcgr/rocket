@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A startup social profile</title>
+  <desc id="desc">A blue profile card with a coral avatar and coordinated black, blue, and grey social posts on a light background.</desc>
+  <rect width="1600" height="900" fill="#F5F5F3"/>
+  <rect x="395" y="178" width="810" height="544" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
+  <rect x="467" y="252" width="666" height="142" rx="24" fill="#1676E3"/>
+  <circle cx="570" cy="401" r="66" fill="#F2683C" stroke="#FFFFFF" stroke-width="10"/>
+  <path d="M545 429l25-64 25 64h-17l-8-23-8 23z" fill="#0A0A0A"/>
+  <rect x="663" y="431" width="210" height="20" rx="10" fill="#0A0A0A"/>
+  <rect x="663" y="470" width="306" height="14" rx="7" fill="#777774"/>
+  <rect x="467" y="535" width="196" height="116" rx="18" fill="#0A0A0A"/>
+  <rect x="691" y="535" width="196" height="116" rx="18" fill="#E1E1DE"/>
+  <rect x="915" y="535" width="218" height="116" rx="18" fill="#1676E3"/>
+  <rect x="497" y="567" width="108" height="15" rx="7.5" fill="#F5F5F3"/>
+  <circle cx="789" cy="593" r="29" fill="#F2683C"/>
+  <rect x="947" y="567" width="130" height="15" rx="7.5" fill="#FFFFFF"/>
+  <rect x="947" y="600" width="93" height="12" rx="6" fill="#FFFFFF" opacity=".7"/>
+  <circle cx="365" cy="203" r="24" fill="#1676E3"/>
+  <circle cx="1237" cy="700" r="30" fill="#F2683C"/>
+  <path d="M1207 170h65v65" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
