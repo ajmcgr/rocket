@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A startup typography system</title>
+  <desc id="desc">Large black letterforms and organised blue, coral, black, and grey text lines on a light background.</desc>
+  <rect width="1600" height="900" fill="#F5F5F3"/>
+  <rect x="404" y="174" width="792" height="552" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
+  <text x="493" y="405" fill="#0A0A0A" font-family="Arial, sans-serif" font-size="202" font-weight="700">Aa</text>
+  <rect x="788" y="276" width="302" height="26" rx="13" fill="#1676E3"/>
+  <rect x="788" y="326" width="240" height="18" rx="9" fill="#0A0A0A"/>
+  <rect x="788" y="367" width="276" height="14" rx="7" fill="#777774"/>
+  <rect x="493" y="490" width="596" height="20" rx="10" fill="#0A0A0A"/>
+  <rect x="493" y="540" width="515" height="14" rx="7" fill="#B8B8B5"/>
+  <rect x="493" y="575" width="443" height="14" rx="7" fill="#B8B8B5"/>
+  <rect x="493" y="633" width="118" height="36" rx="18" fill="#F2683C"/>
+  <rect x="639" y="644" width="190" height="14" rx="7" fill="#1676E3"/>
+  <circle cx="372" cy="204" r="24" fill="#F2683C"/>
+  <circle cx="1230" cy="704" r="30" fill="#1676E3"/>
+  <path d="M1201 165h65v65" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
