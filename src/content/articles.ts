@@ -18,6 +18,61 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "startup-press-kit-for-launch",
+    title: "The Lean Startup Press Kit You Need Before a Launch",
+    excerpt: "A concise checklist for assembling the logo files, screenshots, founder context, and product description that make it easier for others to write about a new startup.",
+    readTime: "5 min",
+    date: "2026-09-18",
+    category: "Launch",
+    tags: ["startup press kit", "launch assets", "founder bio", "brand kit"],
+    cover: "/blog-covers/startup-press-kit-for-launch.svg",
+    body: md(`# The Lean Startup Press Kit You Need Before a Launch
+
+Most early startups do not need a glossy media centre before they launch. They do need a clear set of files and facts that someone else can use without asking ten follow-up questions.
+
+That someone might be a newsletter writer, a launch-directory editor, a potential partner, or a friend helping with outreach. A small press kit makes every one of those conversations easier because the product description, founder context, and visual assets are already in one place.
+
+## Include the essentials, not everything
+
+A practical first press kit can fit into a single shared page or folder. Include:
+
+- A one-sentence description of the product and who it helps.
+- A short founder bio with a relevant personal detail or point of view.
+- The approved logo, wordmark, and compact icon in useful formats.
+- A few current product screenshots or launch graphics.
+- A link to the product and a clear contact route.
+
+This is enough for someone to introduce the company accurately. Do not add every historical logo variation, every roadmap idea, or an essay about the market. A kit is useful when it makes the next action easy.
+
+## Write a description people can reuse
+
+Start with the customer outcome, not the internal technology. A good short description usually names the audience, the problem, and the product's role in solving it.
+
+For example: “Rocket helps early-stage founders turn an idea into a launch-ready brand system.” It is short enough to quote, but specific enough to set expectations.
+
+Then write a slightly longer version for people who need more context. Keep the two versions consistent. If the short version says one thing and the product page says another, a launch will create confusion before it creates interest.
+
+## Choose visual assets someone can actually publish
+
+Make the logo files obvious: a primary version, a light or reverse version, a compact icon, and transparent versions where appropriate. Add a few screenshots that show a real product state rather than a loading screen or an unfinished empty state.
+
+For launch graphics, choose images that make the product understandable without a long caption. A clean product view, a brand-led announcement, and one image illustrating the outcome are more useful than a large collection of decorative concepts.
+
+Label the files according to their use. “Dark logo,” “app icon,” and “product screenshot” help a writer or collaborator choose correctly without a design review.
+
+## Give the founder bio a point of view
+
+The founder bio does not need to be a life story. Include the role, a sentence about why the problem matters, and a credible piece of context: a relevant prior experience, the customer problem you keep seeing, or the reason the product exists.
+
+Avoid language that sounds written for an investor deck. A press-kit bio should help a real person explain why this team is worth paying attention to.
+
+## Keep the kit current after launch
+
+The most valuable press kit is the one that still reflects the product. When the logo, positioning, or key screenshots change, update the source kit rather than circulating a new folder with an ambiguous name.
+
+Rocket helps organise the pieces a lean press kit needs: keep the approved brand system, Founder Bio, screenshots, and press-ready graphics together in the Brand Kit. That lets a founder respond to an opportunity with current material instead of rebuilding it under deadline.`),
+  },
+  {
     slug: "startup-typography-for-launch",
     title: "How to Choose Startup Typography That Works Beyond the Logo",
     excerpt: "A practical way to choose a small type system that keeps a new product readable and recognisable across its website, product UI, and launch assets.",
