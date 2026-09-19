@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A focused startup brand refresh</title>
+  <desc id="desc">A before and after arrangement of simplified blue, coral, black and grey brand marks on a light background.</desc>
+  <rect width="1600" height="900" fill="#F5F5F3"/>
+  <rect x="396" y="183" width="808" height="534" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
+  <rect x="479" y="270" width="252" height="305" rx="26" fill="#E1E1DE"/>
+  <circle cx="605" cy="394" r="68" fill="none" stroke="#777774" stroke-width="15"/>
+  <path d="M560 434l45-82 45 82" fill="none" stroke="#777774" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="520" y="507" width="169" height="14" rx="7" fill="#777774"/>
+  <path d="M766 415h78" stroke="#0A0A0A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M815 365l50 50-50 50" fill="none" stroke="#F2683C" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="874" y="270" width="252" height="305" rx="26" fill="#1676E3"/>
+  <circle cx="1000" cy="394" r="66" fill="#F2683C"/>
+  <path d="M962 429l38-70 38 70h-24l-14-31-14 31z" fill="#0A0A0A"/>
+  <rect x="917" y="507" width="166" height="14" rx="7" fill="#FFFFFF" opacity=".9"/>
+  <rect x="479" y="620" width="647" height="22" rx="11" fill="#0A0A0A"/>
+  <circle cx="368" cy="207" r="24" fill="#F2683C"/>
+  <circle cx="1232" cy="698" r="30" fill="#1676E3"/>
+  <path d="M1204 169h65v65" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -18,6 +18,63 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "startup-brand-refresh-without-rebrand",
+    title: "How to Refresh a Startup Brand Without Starting a Rebrand",
+    excerpt: "A practical way to improve a young startup’s visual identity after early feedback while keeping the recognition it has already earned.",
+    readTime: "5 min",
+    date: "2026-09-19",
+    category: "Startup Branding",
+    tags: ["startup rebrand", "brand refresh", "logo design", "brand consistency"],
+    cover: "/blog-covers/startup-brand-refresh-without-rebrand.svg",
+    body: md(`# How to Refresh a Startup Brand Without Starting a Rebrand
+
+Early feedback can make a founder want to throw away every visual decision. A logo feels slightly too busy. The landing page looks less confident than the product. The launch assets were made quickly and no longer fit the direction the company is taking.
+
+Sometimes a full rebrand is right. More often, a young company needs a controlled refresh: improve the parts that are getting in the way while preserving the cues people have already begun to recognise.
+
+## Separate a real problem from ordinary restlessness
+
+Start by naming the problem in concrete terms. “The brand feels wrong” is too broad to act on. A useful diagnosis sounds more like:
+
+- The icon is hard to recognise at a small size.
+- The primary colour is too strong for product UI.
+- The landing-page headline uses a tone that no longer matches the customer.
+- Different launch assets use different logo versions.
+
+These problems have different solutions. A difficult app icon does not require new positioning. An inconsistent social profile does not require a new logo. Fixing the smallest real issue keeps a refresh from becoming an expensive detour.
+
+## Keep one or two recognisable anchors
+
+Choose what should stay stable before you explore changes. That might be the product name, the strongest part of the logo mark, the primary colour family, or the typography tone. These anchors give existing users something familiar while the system becomes clearer.
+
+For an early startup, keeping the core silhouette of a mark and simplifying its details is often more effective than replacing it completely. The goal is recognition plus improvement, not novelty for its own sake.
+
+## Refresh the system in order
+
+Work from the parts that affect the most surfaces:
+
+1. **Logo and icon:** simplify or correct the approved versions first.
+2. **Colour roles:** make sure the primary, accent, and neutrals have clear jobs.
+3. **Typography:** set a repeatable headline and body treatment.
+4. **Core templates:** update the landing hero, product screenshot frame, and social card treatment.
+
+Do not start with a large collection of secondary illustrations or new merchandise. A brand refresh becomes useful when the high-frequency assets become more consistent.
+
+## Test the new direction in real contexts
+
+Before updating every page, place the refreshed system in the places customers actually use: a browser-tab-sized icon, a product header, a landing-page hero, and a launch or social graphic.
+
+Ask whether the change improves clarity at each size. Does the product feel easier to identify? Is the text more readable? Do the new assets feel like one company? If the answer is not clear, keep refining the system rather than expanding the scope.
+
+## Retire old files deliberately
+
+The most common failure in a partial rebrand is not the new design. It is leaving every old version available. A freelancer, teammate, or future founder will use whichever file is easiest to find.
+
+Put the current approved logo, icon, colours, typography, and supporting assets in one source of truth. Archive or clearly label what is no longer current. Then update the most visible touchpoints first: the product, website, social profiles, and launch materials.
+
+Rocket can support a focused refresh without forcing a restart: refine the assets that matter, create related variations, and keep the current Brand Kit organised as the approved source. That helps a young company evolve its look while preserving the recognition it has already built.`),
+  },
+  {
     slug: "startup-press-kit-for-launch",
     title: "The Lean Startup Press Kit You Need Before a Launch",
     excerpt: "A concise checklist for assembling the logo files, screenshots, founder context, and product description that make it easier for others to write about a new startup.",
