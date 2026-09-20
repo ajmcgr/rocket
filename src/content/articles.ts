@@ -18,6 +18,66 @@ const md = (s: string) => s.replace(/^\s+/gm, "");
 
 export const articles: Article[] = [
   {
+    slug: "startup-product-screenshots-for-landing-page",
+    title: "How to Use Product Screenshots on a Startup Landing Page",
+    excerpt: "A practical guide to choosing, framing, and sequencing product screenshots so a landing page explains the product instead of decorating around it.",
+    readTime: "5 min",
+    date: "2026-09-20",
+    category: "Launch",
+    tags: ["product screenshots", "startup landing page", "SaaS marketing", "launch design"],
+    cover: "/blog-covers/startup-product-screenshots-for-landing-page.svg",
+    body: md(`# How to Use Product Screenshots on a Startup Landing Page
+
+Product screenshots are one of the fastest ways to make a startup feel real. They can also make a landing page harder to understand when they show the wrong screen, include too much interface detail, or appear without any explanation of why the view matters.
+
+The goal is not to cover a page with UI. It is to use a few selected views to answer the questions a visitor has after reading the headline.
+
+## Start with the promise, then choose the screen
+
+Pick a screenshot only after you know what it needs to prove. A product promise such as “keep your launch assets in one place” calls for a clear view of the organised kit—not a settings screen, even if that screen happens to look attractive.
+
+For each image, write a short sentence in this form: “This shows how the product helps a customer ___.” If you cannot complete it clearly, choose a different view or remove the screenshot.
+
+This keeps the visual tied to an outcome rather than a generic claim about features.
+
+## Show a believable product state
+
+Empty states, placeholders, and test data make a startup look less ready than it may be. Use a view that has enough content to communicate the workflow without becoming visually noisy.
+
+Good candidates often include:
+
+- A completed result a customer would want to reach.
+- A focused step in the main workflow.
+- A before-and-after comparison when the transformation is easy to understand.
+- A dashboard or library view that makes organisation tangible.
+
+Avoid showing every panel at once. A visitor does not need a guided tour of the entire application before they understand the core value.
+
+## Frame the screenshot for the page, not the desktop
+
+Raw captures often include browser controls, irrelevant navigation, or large empty margins. Crop those parts when they do not support the story. Keep enough context that the product still looks credible and recognisable.
+
+Use a consistent frame across the page: similar corner radius, background treatment, and spacing. The frame should support the screenshot, not compete with it. A decorative glow or gradient is useful only when it makes the screen easier to see.
+
+## Add labels that explain, not repeat
+
+A short label can point visitors toward the important part of a screen. It should add context that the image cannot carry alone:
+
+- “Keep approved assets together.”
+- “Refine the direction before exporting.”
+- “Create launch graphics from the same brand system.”
+
+Do not use labels to restate a broad headline. The copy beside a screenshot should tell the visitor why this particular view matters.
+
+## Sequence screens like a short story
+
+On a landing page, screenshots work best when each one advances the explanation. A simple sequence could be: choose a direction, refine the approved asset, then use the output in a launch or marketing context.
+
+Review the page at a smaller screen size before publishing. If the screenshot details disappear or the labels become detached from their images, simplify the layout rather than adding more UI.
+
+Rocket makes it easier to create the supporting product and launch visuals from the same Brand Kit. Use the approved logo, colour system, and typography to frame real product screenshots, then keep the final assets together so every landing page update starts from a clear source.`),
+  },
+  {
     slug: "startup-brand-refresh-without-rebrand",
     title: "How to Refresh a Startup Brand Without Starting a Rebrand",
     excerpt: "A practical way to improve a young startup’s visual identity after early feedback while keeping the recognition it has already earned.",
