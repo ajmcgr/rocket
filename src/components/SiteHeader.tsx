@@ -22,15 +22,6 @@ const LANGUAGES = [
 
 const SiteHeader = () => {
   const [lang, setLang] = useState(LANGUAGES[0]);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 4);
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   useEffect(() => {
     const m = document.cookie.match(/googtrans=\/[a-z-]+\/([a-z-]+)/i);
     const code = m?.[1];
@@ -62,7 +53,7 @@ const SiteHeader = () => {
   const initial = (user?.email?.[0] || "U").toUpperCase();
   return (
     <header
-      className={`sticky z-50 bg-white transition-[top] duration-200 ${scrolled ? "top-0" : "top-2"}`}
+      className="sticky top-0 z-50 bg-white"
       style={user ? { borderBottom: "1px solid #e5e7eb" } : undefined}
     >
       <div className="relative mx-auto flex h-16 max-w-4xl items-center px-6">
