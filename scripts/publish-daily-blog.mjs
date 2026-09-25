@@ -83,7 +83,7 @@ const cleanText = (value, field, max) => {
 const parseArticle = (value, source) => {
   const title = cleanText(value.title, "title", 100);
   const slug = cleanText(value.slug, "slug", 100).toLowerCase();
-  const excerpt = cleanText(value.excerpt, "excerpt", 240);
+  const excerpt = cleanText(value.excerpt, "excerpt", 320);
   const body = cleanText(value.body, "body", 12_000);
   const category = cleanText(value.category, "category", 40);
   const tags = Array.isArray(value.tags)
@@ -116,7 +116,7 @@ Topic: ${topic.title}
 Publication date: ${publishDate}
 Allowed categories: ${[...categories].join(", ")}.
 
-The article must be 650–1,500 words, useful and specific, and written in a clear editorial voice. Rocket is a product that helps founders create logos, icons, and Brand Kits. Mention it only where it is naturally relevant and never claim features, customers, outcomes, integrations, pricing, or statistics that are not supplied here. Do not use invented quotes, citations, case studies, or unverifiable facts. Do not use a title heading in the body. Include 3–5 practical sections with Markdown ## headings and one short useful list. Avoid generic AI-content filler, repeated points, and competitor comparisons.`;
+The article must be 650–1,500 words, useful and specific, and written in a clear editorial voice. Keep the excerpt to one sentence of 220 characters or fewer. Rocket is a product that helps founders create logos, icons, and Brand Kits. Mention it only where it is naturally relevant and never claim features, customers, outcomes, integrations, pricing, or statistics that are not supplied here. Do not use invented quotes, citations, case studies, or unverifiable facts. Do not use a title heading in the body. Include 3–5 practical sections with Markdown ## headings and one short useful list. Avoid generic AI-content filler, repeated points, and competitor comparisons.`;
 
 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
   method: "POST",
