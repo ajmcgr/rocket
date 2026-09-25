@@ -1,6 +1,7 @@
 name: Publish daily Rocket blog post
 
 on:
+  # Workflow-only changes run one verification publish; article commits never do.
   push:
     branches: [main]
     paths:
