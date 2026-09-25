@@ -30,6 +30,10 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_BLOG_MODEL: gemini-2.5-flash
         run: node scripts/publish-daily-blog.mjs
+      - name: Verify the production build
+        run: |
+          npm ci
+          npm run build
       - name: Commit and publish the post
         run: |
           if git diff --quiet; then
