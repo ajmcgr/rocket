@@ -1,6 +1,10 @@
 name: Publish daily Rocket blog post
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-daily-blog.yml"
   schedule:
     # 09:15 Asia/Bangkok, after the top-of-hour Actions load spike.
     - cron: "15 2 * * *"
