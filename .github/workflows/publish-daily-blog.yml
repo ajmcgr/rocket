@@ -32,7 +32,7 @@ jobs:
         run: node scripts/publish-daily-blog.mjs
       - name: Verify the production build
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           npm run build
       - name: Commit and publish the post
         run: |
