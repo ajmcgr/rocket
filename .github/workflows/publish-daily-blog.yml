@@ -1,0 +1,43 @@
+name: Publish daily Rocket blog post
+
+on:
+  schedule:
+    # 09:15 Asia/Bangkok, after the top-of-hour Actions load spike.
+    - cron: "15 2 * * *"
+      timezone: "Asia/Bangkok"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-daily-blog
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Write the next post
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_BLOG_MODEL: gemini-2.5-flash
+        run: node scripts/publish-daily-blog.mjs
+      - name: Commit and publish the post
+        run: |
+          if git diff --quiet; then
+            echo "No post was created."
+            exit 0
+          fi
+          git config user.name "rocket-blog-bot"
+          git config user.email "rocket-blog-bot@users.noreply.github.com"
+          git add src/content/articles.ts public/blog-covers
+          git commit -m "Publish daily Rocket blog post"
+          git push origin main
