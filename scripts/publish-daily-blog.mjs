@@ -80,20 +80,32 @@ const cleanText = (value, field, max) => {
   return result;
 };
 
+const shorten = (value, max) => {
+  if (value.length <= max) return value;
+  const cutoff = value.slice(0, max - 1).lastIndexOf(" ");
+  return `${value.slice(0, cutoff > 0 ? cutoff : max - 1).trim()}…`;
+};
+
+const slugify = (value) => value
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-+|-+$/g, "")
+  .slice(0, 100);
+
 const parseArticle = (value, source) => {
   const title = cleanText(value.title, "title", 100);
-  const slug = cleanText(value.slug, "slug", 100).toLowerCase();
-  const excerpt = cleanText(value.excerpt, "excerpt", 320);
-  const body = cleanText(value.body, "body", 12_000);
-  const category = cleanText(value.category, "category", 40);
+  const slug = slugify(typeof value.slug === "string" ? value.slug : title);
+  const excerptSource = value.excerpt ?? value.summary ?? value.description;
+  const excerpt = shorten(cleanText(excerptSource, "excerpt", 1_000), 320);
+  const body = cleanText(value.body, "body", 16_000);
+  const category = categories.has(value.category) ? value.category : "Startup Branding";
   const tags = Array.isArray(value.tags)
     ? [...new Set(value.tags.map((tag) => cleanText(tag, "tag", 48).toLowerCase()))].slice(0, 4)
-    : [];
+    : ["startup branding", "founders"];
   const words = body.split(/\s+/).filter(Boolean).length;
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Gemini returned an invalid slug.");
   if (source.includes(`slug: "${slug}"`)) throw new Error(`A post with slug ${slug} already exists.`);
-  if (!categories.has(category)) throw new Error("Gemini returned an unsupported category.");
   if (tags.length < 2 || words < 650 || words > 1_500) throw new Error("Gemini returned an article outside the required quality bounds.");
   return { title, slug, excerpt, body, category, tags, readTime: `${Math.max(3, Math.round(words / 220))} min` };
 };
