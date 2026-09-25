@@ -349,6 +349,10 @@ function toDataUrl(svg: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+// These are a static catalogue, not newly published templates. Keeping their
+// release date stable lets the "Newest first" sort prioritize real templates.
+const CATALOG_TEMPLATE_RELEASED_AT = Date.UTC(2025, 0, 1);
+
 export function buildIconSeedTemplates() {
   return SEEDS.map((spec, i) => {
     const stack = renderSvg({ ...spec, layout: "stack" });
@@ -361,7 +365,7 @@ export function buildIconSeedTemplates() {
       background: spec.bg,
       prompt: `${spec.name}${spec.tagline ? " — " + spec.tagline : ""}`,
       creator_username: "Rocket Studio",
-      created_at: new Date(Date.now() - i * 3600_000).toISOString(),
+      created_at: new Date(CATALOG_TEMPLATE_RELEASED_AT - i * 3600_000).toISOString(),
       meta: { template_style: spec.style, seed: true, tagline: spec.tagline, icon: spec.icon },
       editor_state,
       _seed: true as const,
