@@ -66,8 +66,10 @@ const SiteHeader = () => {
       style={user ? { borderBottom: "1px solid #e5e7eb" } : undefined}
     >
       <div className="relative mx-auto flex h-16 max-w-4xl items-center px-6">
-        <Logo size="md" />
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 text-sm font-medium text-neutral-600 md:flex">
+        <div className="flex h-full items-center">
+          <Logo size="md" />
+        </div>
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-7 text-sm font-medium leading-none text-neutral-600 md:flex">
           {user ? (
             <>
               <Link to="/logos" className="hover:text-neutral-900">Create</Link>
