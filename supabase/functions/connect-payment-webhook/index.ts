@@ -79,6 +79,17 @@ Deno.serve(async (req) => {
             transaction = mapped;
           }
         }
+        if (!transaction) {
+          // Some current API charge events expose neither invoice nor metadata.
+          // Checkout's payment-intent index is still authoritative and lets us
+          // bind the event to the exact recorded Checkout Session.
+          const sessions = await stripe.checkout.sessions.list({ payment_intent: object.payment_intent, limit: 1 }, { stripeAccount: accountId });
+          const checkoutSessionId = sessions.data[0]?.id;
+          if (checkoutSessionId) {
+            const { data: mapped } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_checkout_session_id", checkoutSessionId).maybeSingle();
+            transaction = mapped;
+          }
+        }
       }
     }
     if (!transaction) {
