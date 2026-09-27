@@ -5,10 +5,10 @@ const stripeKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const stripe = stripeKey?.startsWith("sk_test_") ? new Stripe(stripeKey, { apiVersion: "2024-06-20" }) : null;
 const scopes = ["openid", "profile", "email", "entitlements:read"];
 const publicClientId = () => `rocket-dev-${base64url(crypto.getRandomValues(new Uint8Array(18)))}`;
-const inviteToken = () => base64url(crypto.getRandomValues(new Uint8Array(32)));
 
 function normaliseEmail(value: unknown) { return typeof value === "string" ? value.trim().toLowerCase() : ""; }
 function string(value: unknown, max = 240) { return typeof value === "string" && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null; }
+function validInviteToken(value: unknown) { return typeof value === "string" && /^[A-Za-z0-9_-]{43}$/.test(value); }
 function validIcon(url: string | null) {
   if (!url) return true;
   try { const parsed = new URL(url); return parsed.protocol === "https:" && !parsed.username && !parsed.password; } catch { return false; }
@@ -73,8 +73,8 @@ Deno.serve(async (req) => {
     if (action === "invite") {
       if (!ctx.operator) return json({ error: "forbidden" }, 403);
       const email = normaliseEmail(body.email);
-      if (!/^\S+@\S+\.\S+$/.test(email)) return json({ error: "invalid_email" }, 400);
-      const token = inviteToken();
+      const token = body.token;
+      if (!/^\S+@\S+\.\S+$/.test(email) || !validInviteToken(token)) return json({ error: "invalid_invitation_request" }, 400);
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60_000).toISOString();
       const { data: existing } = await ctx.admin.from("connect_developer_invitations").select("id").eq("email", email).is("accepted_at", null).maybeSingle();
       const invitation = { email, token_hash: await sha256(token), invited_by: ctx.user.id, expires_at: expiresAt };

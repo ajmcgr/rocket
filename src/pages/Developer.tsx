@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Check, ChevronLeft, Copy, ExternalLink, KeyRound, Loader2, Plus, ShieldCheck } from "lucide-react";
 import { supabase as _supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,12 @@ type Product = { id: string; product_key: string; name: string; amount_cents: nu
 
 function copy(value: string) { navigator.clipboard?.writeText(value); }
 function FunctionError({ error }: { error: any }) { return <p className="mt-3 text-sm text-red-600">{error}</p>; }
+function invitationToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  let raw = "";
+  bytes.forEach((byte) => { raw += String.fromCharCode(byte); });
+  return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
 
 async function call(action: string, body?: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke("rocket-connect-developer", { body: { action, ...body } });
@@ -44,11 +50,11 @@ function IntegrationKit({ app, product }: { app: App; product?: Product }) {
 
 export default function Developer() {
   const { user, loading: authLoading } = useAuth(); const { toast } = useToast();
-  const [data, setData] = useState<{ developer: boolean; operator: boolean; apps: App[] } | null>(null); const [error, setError] = useState(""); const [appName, setAppName] = useState(""); const [redirectUri, setRedirectUri] = useState("http://127.0.0.1:3002/callback"); const [returnUri, setReturnUri] = useState("http://127.0.0.1:3002/"); const [iconUrl, setIconUrl] = useState(""); const [inviteEmail, setInviteEmail] = useState(""); const [inviteUrl, setInviteUrl] = useState(""); const [busy, setBusy] = useState("");
+  const [data, setData] = useState<{ developer: boolean; operator: boolean; apps: App[] } | null>(null); const [error, setError] = useState(""); const [appName, setAppName] = useState(""); const [redirectUri, setRedirectUri] = useState("http://127.0.0.1:3002/callback"); const [returnUri, setReturnUri] = useState("http://127.0.0.1:3002/"); const [iconUrl, setIconUrl] = useState(""); const [inviteEmail, setInviteEmail] = useState(""); const [inviteUrl, setInviteUrl] = useState(""); const [busy, setBusy] = useState(""); const inviteTokenRef = useRef<string | null>(null);
   const load = async () => { try { setError(""); const next = await supabase.functions.invoke("rocket-connect-developer", { method: "GET", body: undefined }); if (next.error) throw next.error; setData(next.data); } catch (err: any) { setError(err.message || "Developer portal unavailable"); } };
   useEffect(() => { if (user) load(); }, [user]);
   const createApp = async (event: FormEvent) => { event.preventDefault(); setBusy("app"); try { const result = await call("create_app", { name: appName, icon_url: iconUrl, redirect_uri: redirectUri, checkout_return_uri: returnUri }); toast({ title: "Test app registered" }); setAppName(""); setIconUrl(""); setData((current) => current ? { ...current, apps: [result.app, ...current.apps] } : current); } catch (err: any) { toast({ title: "Couldn’t create app", description: err.message, variant: "destructive" }); } finally { setBusy(""); } };
-  const invite = async (event: FormEvent) => { event.preventDefault(); setBusy("invite"); try { const result = await call("invite", { email: inviteEmail }); setInviteUrl(result.invitation_url); toast({ title: "Developer invitation created" }); } catch (err: any) { toast({ title: "Couldn’t create invitation", description: err.message, variant: "destructive" }); } finally { setBusy(""); } };
+  const invite = async (event: FormEvent) => { event.preventDefault(); if (inviteTokenRef.current) return; const token = invitationToken(); inviteTokenRef.current = token; setBusy("invite"); try { const result = await call("invite", { email: inviteEmail, token }); setInviteUrl(result.invitation_url); toast({ title: "Developer invitation created" }); } catch (err: any) { toast({ title: "Couldn’t create invitation", description: err.message, variant: "destructive" }); } finally { inviteTokenRef.current = null; setBusy(""); } };
   if (authLoading || !data) return <main className="grid min-h-[50vh] place-items-center"><Loader2 className="h-6 w-6 animate-spin text-neutral-400" /></main>;
   if (!data.developer && !data.operator) return <main className="mx-auto max-w-xl px-4 py-16"><section className="rounded-2xl border border-neutral-200 bg-white p-8"><KeyRound className="h-7 w-7 text-neutral-700" /><h1 className="mt-4 text-2xl font-semibold">Rocket Developer access is invitation-only</h1><p className="mt-2 text-sm leading-6 text-neutral-600">This test program is for invited developers only. Sign in with the Rocket account that received your invitation, then open its unique activation link.</p></section></main>;
   return <main className="mx-auto max-w-5xl px-4 py-10"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-medium text-sky-600">Rocket Connect · Test mode</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">Developer</h1><p className="mt-2 text-sm text-neutral-600">Register a single-purpose test app, connect a Stripe test account, and integrate Continue with Rocket.</p></div>{data.developer && <a href="#create-app" className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white"><Plus className="h-4 w-4" /> Create app</a>}</div>{error && <FunctionError error={error} />}
