@@ -28,12 +28,19 @@ Deno.serve(async (req) => {
   const admin = getAdmin();
   const { data: account } = await admin.from("connect_developer_accounts").select("id,client_id,stripe_account_id,status").eq("stripe_account_id", accountId).maybeSingle();
   if (!account) { console.error(`connect-webhook: unregistered connected account ${accountId}`); return reply({ error: "unknown_connected_account" }, 400); }
-  const { error: received } = await admin.from("connect_webhook_events").insert({ event_id: event.id, stripe_account_id: accountId, event_type: event.type, event_created_at: new Date(event.created * 1000).toISOString(), processing_result: "applied", detail: {} });
-  if (received?.code === "23505") return reply({ received: true, duplicate: true });
-  if (received) return reply({ error: "event_record_failed" }, 500);
+  const { error: received } = await admin.from("connect_webhook_events").insert({ event_id: event.id, stripe_account_id: accountId, event_type: event.type, event_created_at: new Date(event.created * 1000).toISOString(), processing_result: "stale", detail: {} });
+  const isDuplicate = received?.code === "23505";
+  if (isDuplicate && event.type !== "invoice.paid") return reply({ received: true, duplicate: true });
+  if (received && !isDuplicate) return reply({ error: "event_record_failed" }, 500);
   try {
     const object: any = event.data.object;
     let transaction: any = null;
+    if (isDuplicate) {
+      const subscriptionId = subscriptionIdFrom(object);
+      if (!subscriptionId) return reply({ received: true, duplicate: true });
+      const { data: existing } = await admin.from("connect_transactions").select("status").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle();
+      if (!existing || existing.status === "active") return reply({ received: true, duplicate: true });
+    }
     if (event.type === "checkout.session.completed") {
       const { data: attempt } = await admin.from("connect_checkout_attempts").select("*").eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).maybeSingle();
       if (!attempt || object.mode !== "subscription" || object.payment_status !== "paid") throw new Error("Unmapped or unpaid checkout");
@@ -47,7 +54,10 @@ Deno.serve(async (req) => {
     } else if (object.payment_intent) {
       const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_payment_intent_id", object.payment_intent).maybeSingle(); transaction = data;
     }
-    if (!transaction) return reply({ received: true, ignored: true });
+    if (!transaction) {
+      await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "unmapped event" } }).eq("event_id", event.id);
+      return reply({ received: true, ignored: true });
+    }
     let status: string | null = null; let validUntil: string | null = null;
     if (event.type === "invoice.paid") { status = "active"; validUntil = object.lines?.data?.[0]?.period?.end ? new Date(object.lines.data[0].period.end * 1000).toISOString() : null; }
     if (event.type === "invoice.payment_failed") status = "past_due";
@@ -56,12 +66,16 @@ Deno.serve(async (req) => {
     if (event.type === "charge.refunded" && object.refunded) status = "refunded";
     if (event.type === "charge.dispute.created") status = "disputed";
     if (event.type === "charge.dispute.closed" && object.status === "won") status = "active";
-    if (!status) return reply({ received: true, ignored: true });
+    if (!status) {
+      await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status: "pending" } }).eq("event_id", event.id);
+      return reply({ received: true, ignored: true });
+    }
     await admin.from("connect_transactions").update({ status, stripe_invoice_id: object.object === "invoice" ? object.id : transaction.stripe_invoice_id, stripe_payment_intent_id: object.payment_intent || transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() }).eq("id", transaction.id);
     const entitlement = { user_id: transaction.user_id, client_id: transaction.client_id, product_id: transaction.product_id, transaction_id: transaction.id, status, valid_from: status === "active" ? new Date().toISOString() : null, valid_until: validUntil, revoked_at: ["refunded", "expired", "disputed"].includes(status) ? new Date().toISOString() : null, updated_at: new Date().toISOString() };
     const { data: saved, error } = await admin.from("connect_entitlements").upsert(entitlement, { onConflict: "user_id,client_id,product_id" }).select("id").single();
     if (error) throw error;
     await admin.from("connect_entitlement_events").insert({ entitlement_id: saved.id, event_type: event.type, detail: { status, stripe_event_id: event.id } });
+    await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status } }).eq("event_id", event.id);
     return reply({ received: true });
   } catch (error) {
     console.error("connect-payment-webhook", error);
