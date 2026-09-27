@@ -67,6 +67,7 @@ import Pricing from "./pages/Pricing.tsx";
 import FAQ from "./pages/FAQ.tsx";
 import AIInfo from "./pages/AIInfo.tsx";
 import RocketConnectAuthorize from "./pages/RocketConnectAuthorize.tsx";
+import Developer, { DeveloperActivate, DeveloperAppDetail } from "./pages/Developer.tsx";
 import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
 import AppShell from "./components/AppShell.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
@@ -125,7 +126,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/ai-info" element={<AIInfo />} />
-            <Route path="/connect/authorize" element={<RocketConnectAuthorize />} />
+              <Route path="/connect/authorize" element={<RocketConnectAuthorize />} />
             <Route path="/brand-templates" element={<BrandTemplates />} />
             <Route path="/brand-templates/:id" element={<BrandTemplateDetail />} />
             <Route path="/share/asset/:token" element={<SharedAsset />} />
@@ -187,6 +188,9 @@ const App = () => (
                 <Route path="billing" element={<BillingSettings />} />
               </Route>
               <Route path="/account" element={<Navigate to="/settings/profile" replace />} />
+              <Route path="/developer" element={<Developer />} />
+              <Route path="/developer/activate" element={<DeveloperActivate />} />
+              <Route path="/developer/apps/:clientId" element={<DeveloperAppDetail />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

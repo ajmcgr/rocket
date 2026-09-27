@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.rocket-connect-jwks]
 verify_jwt = false
+
+[functions.rocket-connect-developer]
+verify_jwt = false
