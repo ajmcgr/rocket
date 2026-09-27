@@ -81,7 +81,19 @@ Deno.serve(async (req) => {
     const entitlement = { user_id: transaction.user_id, client_id: transaction.client_id, product_id: transaction.product_id, transaction_id: transaction.id, status, valid_from: status === "active" ? new Date().toISOString() : null, valid_until: validUntil, revoked_at: ["refunded", "expired", "disputed"].includes(status) ? new Date().toISOString() : null, updated_at: new Date().toISOString() };
     const { data: saved, error } = await admin.from("connect_entitlements").upsert(entitlement, { onConflict: "user_id,client_id,product_id" }).select("id").single();
     if (error) throw error;
-    await admin.from("connect_entitlement_events").insert({ entitlement_id: saved.id, event_type: event.type, detail: { status, stripe_event_id: event.id } });
+    const { data: existingEntitlementEvent, error: entitlementEventLookupError } = await admin
+      .from("connect_entitlement_events")
+      .select("id")
+      .eq("entitlement_id", saved.id)
+      .contains("detail", { stripe_event_id: event.id })
+      .maybeSingle();
+    if (entitlementEventLookupError) throw entitlementEventLookupError;
+    if (!existingEntitlementEvent) {
+      const { error: entitlementEventError } = await admin
+        .from("connect_entitlement_events")
+        .insert({ entitlement_id: saved.id, event_type: event.type, detail: { status, stripe_event_id: event.id } });
+      if (entitlementEventError) throw entitlementEventError;
+    }
     await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status } }).eq("event_id", event.id);
     return reply({ received: true });
   } catch (error) {
