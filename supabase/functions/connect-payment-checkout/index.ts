@@ -20,6 +20,11 @@ Deno.serve(async (req) => {
     const developer = (product as any)?.connect_developer_accounts;
     if (!product || !developer || developer.client_id !== token.client_id || developer.status !== "active" || !developer.charges_enabled || !developer.payouts_enabled) return json({ error: "product_unavailable" }, 403);
     if (!product.checkout_return_uris.includes(body.return_uri)) return json({ error: "invalid_return_uri" }, 400);
+    // Verify the real test-mode account and immutable registered price before
+    // creating a customer or session. Browser-provided amounts are never read.
+    const account = await stripe.accounts.retrieve(developer.stripe_account_id);
+    const price = await stripe.prices.retrieve(product.stripe_price_id, { stripeAccount: developer.stripe_account_id });
+    if (!account.charges_enabled || !account.payouts_enabled || !price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "stripe_configuration_invalid" }, 503);
     const now = Date.now();
     const { data: existing } = await admin.from("connect_checkout_attempts").select("stripe_checkout_session_id,expires_at")
       .eq("user_id", token.user_id).eq("client_id", token.client_id).eq("product_id", product.id).gt("expires_at", new Date(now).toISOString()).not("stripe_checkout_session_id", "is", null).maybeSingle();
