@@ -36,13 +36,13 @@ createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   if (url.pathname === "/") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
-    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
+    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
     return;
   }
   if (url.pathname === "/login") {
     const state = b64url(randomBytes(24)); const verifier = b64url(randomBytes(48)); const nonce = b64url(randomBytes(24));
     const challenge = createHash("sha256").update(verifier).digest("base64url");
-    pending.set(state, { verifier, nonce, createdAt: Date.now() });
+    pending.set(state, { verifier, nonce, createdAt: Date.now(), testBadPkce: url.searchParams.get("test_bad_pkce") === "1" });
     const authorize = new URL(`${rocketUrl}/connect/authorize`);
     Object.entries({ response_type: "code", client_id: clientId, redirect_uri: redirectUri, scope: "openid profile email", state, nonce, code_challenge: challenge, code_challenge_method: "S256" }).forEach(([key, value]) => authorize.searchParams.set(key, value));
     res.writeHead(302, { Location: authorize, "Set-Cookie": `rocket_test_state=${state}; HttpOnly; SameSite=Lax; Path=/; Max-Age=600` }); res.end(); return;
@@ -51,6 +51,12 @@ createServer(async (req, res) => {
     const state = url.searchParams.get("state"); const code = url.searchParams.get("code"); const request = state && pending.get(state);
     pending.delete(state);
     if (!state || state !== cookie(req, "rocket_test_state") || !code || !request || Date.now() - request.createdAt > 600000) { res.statusCode = 400; res.end(html("<h1>Invalid OAuth response</h1><p>State validation failed.</p>")); return; }
+    let invalidPkceRejected = false;
+    if (request.testBadPkce) {
+      const invalidPkceResponse = await fetch(`${supabaseUrl}/functions/v1/rocket-connect-token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", client_id: clientId, code, redirect_uri: redirectUri, code_verifier: b64url(randomBytes(48)) }) });
+      invalidPkceRejected = invalidPkceResponse.status === 400;
+      if (!invalidPkceRejected) { res.statusCode = 502; res.end(html("<h1>Invalid PKCE verifier was accepted</h1>")); return; }
+    }
     const tokenResponse = await fetch(`${supabaseUrl}/functions/v1/rocket-connect-token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", client_id: clientId, code, redirect_uri: redirectUri, code_verifier: request.verifier }) });
     const tokens = await tokenResponse.json();
     if (!tokenResponse.ok) { res.statusCode = 502; res.end(html(`<h1>Token exchange failed</h1><pre>${JSON.stringify(tokens, null, 2)}</pre>`)); return; }
@@ -60,7 +66,7 @@ createServer(async (req, res) => {
     const profile = await profileResponse.json();
     if (!profileResponse.ok) { res.statusCode = 502; res.end(html(`<h1>Userinfo failed</h1><pre>${JSON.stringify(profile, null, 2)}</pre>`)); return; }
     if (profile.sub !== claims.sub) { res.statusCode = 502; res.end(html("<h1>Identity mismatch</h1><p>Rocket ID token and UserInfo subject did not match.</p>")); return; }
-    const id = b64url(randomBytes(32)); sessions.set(id, { ...profile, access_token: tokens.access_token, consumed_code: code, verifier: request.verifier, connected_at: new Date().toISOString(), rocket_access: "active" });
+    const id = b64url(randomBytes(32)); sessions.set(id, { ...profile, access_token: tokens.access_token, consumed_code: code, verifier: request.verifier, connected_at: new Date().toISOString(), rocket_access: "active", invalid_pkce_verifier: request.testBadPkce ? (invalidPkceRejected ? "rejected" : "unexpectedly accepted") : "not checked" });
     res.writeHead(302, { Location: "/", "Set-Cookie": `rocket_test_session=${id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600` }); res.end(); return;
   }
   if (url.pathname === "/verify-access") {
