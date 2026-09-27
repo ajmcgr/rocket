@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
-export const PROVIDER_SCOPES = new Set(["openid", "profile", "email"]);
+export const PROVIDER_SCOPES = new Set(["openid", "profile", "email", "entitlements:read"]);
 export const APP_URL = (Deno.env.get("APP_URL") || "https://tryrocket.ai").replace(/\/$/, "");
 export const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 export const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -45,6 +45,17 @@ export function validPkceChallenge(value: unknown) {
 }
 
 export function getAdmin() { return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY); }
+
+export async function getConnectToken(req: Request) {
+  const header = req.headers.get("Authorization") || "";
+  if (!header.startsWith("Bearer ")) return null;
+  const { data } = await getAdmin().from("rocket_oauth_access_tokens").select("*")
+    .eq("token_hash", await sha256(header.slice(7))).is("revoked_at", null).maybeSingle();
+  if (!data || new Date(data.expires_at).getTime() <= Date.now()) return null;
+  const { data: authorization } = await getAdmin().from("rocket_oauth_authorizations")
+    .select("id,revoked_at").eq("id", data.authorization_id).maybeSingle();
+  return authorization && !authorization.revoked_at ? data as any : null;
+}
 
 export async function getRocketUser(req: Request) {
   const authorization = req.headers.get("Authorization");

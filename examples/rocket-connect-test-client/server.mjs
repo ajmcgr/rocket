@@ -9,6 +9,8 @@ const redirectUri = process.env.ROCKET_REDIRECT_URI || `http://localhost:${port}
 const issuer = `${rocketUrl}/connect`;
 const jwksUrl = `${supabaseUrl}/functions/v1/rocket-connect-jwks`;
 const userinfoUrl = `${supabaseUrl}/functions/v1/rocket-connect-userinfo`;
+const entitlementUrl = `${supabaseUrl}/functions/v1/connect-entitlements`;
+const checkoutUrl = `${supabaseUrl}/functions/v1/connect-payment-checkout`;
 const pending = new Map();
 const sessions = new Map();
 const b64url = (value) => Buffer.from(value).toString("base64url");
@@ -36,7 +38,7 @@ createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   if (url.pathname === "/") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
-    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
+    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", entitlement: session.entitlement || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/buy">Buy $10/month test product</a> <a href="/verify-entitlement">Verify access entitlement</a> <a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
     return;
   }
   if (url.pathname === "/login") {
@@ -44,7 +46,7 @@ createServer(async (req, res) => {
     const challenge = createHash("sha256").update(verifier).digest("base64url");
     pending.set(state, { verifier, nonce, createdAt: Date.now(), testBadPkce: url.searchParams.get("test_bad_pkce") === "1" });
     const authorize = new URL(`${rocketUrl}/connect/authorize`);
-    Object.entries({ response_type: "code", client_id: clientId, redirect_uri: redirectUri, scope: "openid profile email", state, nonce, code_challenge: challenge, code_challenge_method: "S256" }).forEach(([key, value]) => authorize.searchParams.set(key, value));
+    Object.entries({ response_type: "code", client_id: clientId, redirect_uri: redirectUri, scope: "openid profile email entitlements:read", state, nonce, code_challenge: challenge, code_challenge_method: "S256" }).forEach(([key, value]) => authorize.searchParams.set(key, value));
     res.writeHead(302, { Location: authorize, "Set-Cookie": `rocket_test_state=${state}; HttpOnly; SameSite=Lax; Path=/; Max-Age=600` }); res.end(); return;
   }
   if (url.pathname === "/callback") {
@@ -75,6 +77,22 @@ createServer(async (req, res) => {
     const response = await fetch(userinfoUrl, { headers: { Authorization: `Bearer ${session.access_token}` } });
     session.rocket_access = response.ok ? "active" : "revoked or expired";
     res.writeHead(302, { Location: "/" }); res.end(); return;
+  }
+  if (url.pathname === "/verify-entitlement") {
+    const session = sessions.get(cookie(req, "rocket_test_session"));
+    if (!session) { res.writeHead(302, { Location: "/" }); res.end(); return; }
+    const response = await fetch(`${entitlementUrl}?product_key=rocket-connect-test-monthly`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+    const result = await response.json();
+    session.entitlement = response.ok ? result.entitlements?.[0]?.active ? "Access Granted" : "No active access yet — webhook pending" : `Unable to check: ${result.error || response.status}`;
+    res.writeHead(302, { Location: "/" }); res.end(); return;
+  }
+  if (url.pathname === "/buy") {
+    const session = sessions.get(cookie(req, "rocket_test_session"));
+    if (!session) { res.writeHead(302, { Location: "/" }); res.end(); return; }
+    const response = await fetch(checkoutUrl, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ product_key: "rocket-connect-test-monthly", return_uri: redirectUri.replace("/callback", "/") }) });
+    const result = await response.json();
+    if (!response.ok || !result.checkout_url) { session.entitlement = `Checkout unavailable: ${result.error || response.status}`; res.writeHead(302, { Location: "/" }); res.end(); return; }
+    res.writeHead(303, { Location: result.checkout_url }); res.end(); return;
   }
   if (url.pathname === "/verify-code-reuse") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
