@@ -5,7 +5,7 @@ const port = Number(process.env.PORT || 3001);
 const clientId = process.env.ROCKET_CLIENT_ID || "rocket-connect-test-web";
 const rocketUrl = (process.env.ROCKET_URL || "https://tryrocket.ai").replace(/\/$/, "");
 const supabaseUrl = (process.env.ROCKET_SUPABASE_URL || "https://lcujmvdgczkjxdstzhnr.supabase.co").replace(/\/$/, "");
-const redirectUri = process.env.ROCKET_REDIRECT_URI || `http://localhost:${port}/callback`;
+const redirectUri = process.env.ROCKET_REDIRECT_URI || `http://127.0.0.1:${port}/callback`;
 const issuer = `${rocketUrl}/connect`;
 const jwksUrl = `${supabaseUrl}/functions/v1/rocket-connect-jwks`;
 const userinfoUrl = `${supabaseUrl}/functions/v1/rocket-connect-userinfo`;
@@ -103,4 +103,4 @@ createServer(async (req, res) => {
   }
   if (url.pathname === "/logout") { const id = cookie(req, "rocket_test_session"); sessions.delete(id); res.writeHead(302, { Location: "/", "Set-Cookie": "rocket_test_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0" }); res.end(); return; }
   res.statusCode = 404; res.end("Not found");
-}).listen(port, () => console.log(`Rocket Connect test client: http://localhost:${port}`));
+}).listen(port, "127.0.0.1", () => console.log(`Rocket Connect test client: http://127.0.0.1:${port}`));
