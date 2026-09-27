@@ -7,9 +7,9 @@ const stripe = stripeKey?.startsWith("sk_test_") ? new Stripe(stripeKey, { apiVe
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
   const token = await getConnectToken(req);
   if (!token) return json({ error: "invalid_token" }, 401, { "WWW-Authenticate": "Bearer" });
+  if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
   try {
     const body = await req.json();
     if (typeof body.product_key !== "string" || typeof body.return_uri !== "string") return json({ error: "invalid_request" }, 400);
