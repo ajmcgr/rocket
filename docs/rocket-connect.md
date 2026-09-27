@@ -41,7 +41,7 @@ Assign a stable `kid` before setting the secret. Keep the private JWK only in Su
 
 ## Registering another app
 
-Phase 1 intentionally has no public self-service registration UI. Add a `rocket_oauth_clients` record through a reviewed migration or restricted server-side admin workflow. Do not let browser clients write this table. Register each exact redirect URI and only the scopes the app requires. Confidential clients must store a slow-hash client secret in `client_secret_hash`; public clients must require PKCE.
+Phase 1 intentionally has no public self-service registration UI. Add a `rocket_oauth_clients` record through a reviewed migration or restricted server-side admin workflow. Do not let browser clients write this table. Register each exact redirect URI and only the scopes the app requires. This proof accepts **public PKCE clients only**. The schema reserves `confidential` clients for a later phase, but both authorization and token endpoints reject them until server-side client authentication is implemented.
 
 ## Revocation and rollback
 

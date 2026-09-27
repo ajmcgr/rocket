@@ -7,7 +7,9 @@ Deno.serve(async (req) => {
     const request = parseAuthorizationRequest(body);
     if (!request) return json({ error: "invalid_request", error_description: "Invalid OAuth authorization request." }, 400);
     const client = await getActiveClient(request.clientId);
-    if (!client || !client.redirect_uris.includes(request.redirectUri)) return json({ error: "invalid_request", error_description: "Unknown client or redirect URI." }, 400);
+    // Phase 1 deliberately supports public PKCE clients only. A confidential client
+    // must not become usable until client authentication is implemented at /token.
+    if (!client || client.client_type !== "public" || !client.redirect_uris.includes(request.redirectUri)) return json({ error: "invalid_request", error_description: "Unknown client or redirect URI." }, 400);
     if (!request.scope.every((scope) => client.allowed_scopes.includes(scope))) return json({ error: "invalid_scope" }, 400);
     if (body.action === "inspect") return json({ client: { name: client.name, icon_url: client.icon_url }, scopes: request.scope });
 
@@ -35,4 +37,3 @@ Deno.serve(async (req) => {
     return json({ error: "server_error" }, 500);
   }
 });
-

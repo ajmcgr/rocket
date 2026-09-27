@@ -12,7 +12,9 @@ Deno.serve(async (req) => {
     const body = await parseBody(req);
     if (body.grant_type !== "authorization_code" || typeof body.client_id !== "string" || typeof body.code !== "string" || typeof body.redirect_uri !== "string" || typeof body.code_verifier !== "string") return json({ error: "invalid_request" }, 400);
     const client = await getActiveClient(body.client_id);
-    if (!client || !client.redirect_uris.includes(body.redirect_uri)) return json({ error: "invalid_client" }, 401);
+    // Do not accept a registered confidential client without authenticating it.
+    // Phase 1 has only public clients protected by mandatory S256 PKCE.
+    if (!client || client.client_type !== "public" || !client.redirect_uris.includes(body.redirect_uri)) return json({ error: "invalid_client" }, 401);
     const admin = getAdmin();
     const { data: code } = await admin.from("rocket_oauth_codes").select("*").eq("code_hash", await sha256(body.code)).maybeSingle();
     if (!code || code.client_id !== client.client_id || code.redirect_uri !== body.redirect_uri || code.consumed_at || new Date(code.expires_at).getTime() <= Date.now()) return json({ error: "invalid_grant" }, 400);
