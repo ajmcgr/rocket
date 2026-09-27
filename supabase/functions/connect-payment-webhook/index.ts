@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       const subscriptionId = subscriptionIdFrom(object);
       if (!subscriptionId) return reply({ received: true, duplicate: true });
       const { data: existing } = await admin.from("connect_transactions").select("status").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle();
-      if (!existing || existing.status === "active") return reply({ received: true, duplicate: true });
+      if (!existing || existing.status === "paid") return reply({ received: true, duplicate: true });
     }
     if (event.type === "checkout.session.completed") {
       const { data: attempt } = await admin.from("connect_checkout_attempts").select("*").eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).maybeSingle();
@@ -70,7 +70,14 @@ Deno.serve(async (req) => {
       await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status: "pending" } }).eq("event_id", event.id);
       return reply({ received: true, ignored: true });
     }
-    await admin.from("connect_transactions").update({ status, stripe_invoice_id: object.object === "invoice" ? object.id : transaction.stripe_invoice_id, stripe_payment_intent_id: object.payment_intent || transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() }).eq("id", transaction.id);
+    // Transaction settlement vocabulary is intentionally distinct from access
+    // vocabulary: a paid transaction grants an active entitlement.
+    const transactionStatus = status === "active" ? "paid" : status;
+    const { error: transactionError } = await admin
+      .from("connect_transactions")
+      .update({ status: transactionStatus, stripe_invoice_id: object.object === "invoice" ? object.id : transaction.stripe_invoice_id, stripe_payment_intent_id: object.payment_intent || transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", transaction.id);
+    if (transactionError) throw transactionError;
     const entitlement = { user_id: transaction.user_id, client_id: transaction.client_id, product_id: transaction.product_id, transaction_id: transaction.id, status, valid_from: status === "active" ? new Date().toISOString() : null, valid_until: validUntil, revoked_at: ["refunded", "expired", "disputed"].includes(status) ? new Date().toISOString() : null, updated_at: new Date().toISOString() };
     const { data: saved, error } = await admin.from("connect_entitlements").upsert(entitlement, { onConflict: "user_id,client_id,product_id" }).select("id").single();
     if (error) throw error;
