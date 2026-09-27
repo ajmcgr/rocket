@@ -48,7 +48,11 @@ Deno.serve(async (req) => {
       if (!attempt || object.mode !== "subscription" || object.payment_status !== "paid") throw new Error("Unmapped or unpaid checkout");
       const { data: product } = await admin.from("connect_products").select("*").eq("id", attempt.product_id).eq("client_id", attempt.client_id).maybeSingle();
       if (!product) throw new Error("Missing registered product");
-      const { data, error } = await admin.from("connect_transactions").upsert({ user_id: attempt.user_id, client_id: attempt.client_id, product_id: attempt.product_id, developer_account_id: account.id, stripe_account_id: accountId, stripe_checkout_session_id: object.id, stripe_customer_id: typeof object.customer === "string" ? object.customer : null, stripe_subscription_id: typeof object.subscription === "string" ? object.subscription : null, amount_cents: product.amount_cents, application_fee_cents: Math.round(product.amount_cents * product.platform_fee_bps / 10000), currency: product.currency, status: "pending", stripe_event_created_at: new Date(event.created * 1000).toISOString() }, { onConflict: "stripe_checkout_session_id" }).select().single();
+      // Retrieve the canonical Checkout object because connected-account event
+      // payloads can omit payment_intent. Persisting it makes later charge
+      // refunds an exact, account-scoped transaction lookup.
+      const checkout = await stripe.checkout.sessions.retrieve(object.id, { stripeAccount: accountId });
+      const { data, error } = await admin.from("connect_transactions").upsert({ user_id: attempt.user_id, client_id: attempt.client_id, product_id: attempt.product_id, developer_account_id: account.id, stripe_account_id: accountId, stripe_checkout_session_id: object.id, stripe_customer_id: typeof object.customer === "string" ? object.customer : null, stripe_subscription_id: typeof object.subscription === "string" ? object.subscription : null, stripe_payment_intent_id: typeof checkout.payment_intent === "string" ? checkout.payment_intent : null, amount_cents: product.amount_cents, application_fee_cents: Math.round(product.amount_cents * product.platform_fee_bps / 10000), currency: product.currency, status: "pending", stripe_event_created_at: new Date(event.created * 1000).toISOString() }, { onConflict: "stripe_checkout_session_id" }).select().single();
       if (error) throw error; transaction = data;
     } else if (subscriptionIdFrom(object)) {
       const subscriptionId = subscriptionIdFrom(object)!;
@@ -87,6 +91,18 @@ Deno.serve(async (req) => {
           const checkoutSessionId = sessions.data[0]?.id;
           if (checkoutSessionId) {
             const { data: mapped } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_checkout_session_id", checkoutSessionId).maybeSingle();
+            transaction = mapped;
+          }
+        }
+        if (!transaction && typeof object.customer === "string") {
+          // Older event/API combinations can omit the PaymentIntent's invoice
+          // and do not populate Checkout's payment-intent index. This remains
+          // safe: restrict to the same connected account and customer, then
+          // require an exact PaymentIntent equality before touching Rocket data.
+          const sessions = await stripe.checkout.sessions.list({ customer: object.customer, limit: 100 }, { stripeAccount: accountId });
+          const matched = sessions.data.find((session) => session.payment_intent === object.payment_intent);
+          if (matched) {
+            const { data: mapped } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_checkout_session_id", matched.id).maybeSingle();
             transaction = mapped;
           }
         }
