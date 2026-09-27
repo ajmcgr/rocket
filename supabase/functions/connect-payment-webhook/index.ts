@@ -12,15 +12,15 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return reply({ error: "method_not_allowed" }, 405);
   if (!stripe || !secret) return reply({ error: "connect_test_mode_not_configured" }, 503);
   const signature = req.headers.get("stripe-signature");
-  if (!signature) return reply({ error: "missing_signature" }, 400);
+  if (!signature) { console.error("connect-webhook: missing Stripe signature"); return reply({ error: "missing_signature" }, 400); }
   let event: Stripe.Event;
   try { event = await stripe.webhooks.constructEventAsync(await req.text(), signature, secret); }
-  catch { return reply({ error: "invalid_signature" }, 400); }
+  catch { console.error("connect-webhook: invalid Stripe signature"); return reply({ error: "invalid_signature" }, 400); }
   const accountId = event.account;
-  if (!accountId) return reply({ error: "not_connect_event" }, 400);
+  if (!accountId) { console.error(`connect-webhook: missing connected account context for ${event.type}`); return reply({ error: "not_connect_event" }, 400); }
   const admin = getAdmin();
   const { data: account } = await admin.from("connect_developer_accounts").select("id,client_id,stripe_account_id,status").eq("stripe_account_id", accountId).maybeSingle();
-  if (!account) return reply({ error: "unknown_connected_account" }, 400);
+  if (!account) { console.error(`connect-webhook: unregistered connected account ${accountId}`); return reply({ error: "unknown_connected_account" }, 400); }
   const { error: received } = await admin.from("connect_webhook_events").insert({ event_id: event.id, stripe_account_id: accountId, event_type: event.type, event_created_at: new Date(event.created * 1000).toISOString(), processing_result: "applied", detail: {} });
   if (received?.code === "23505") return reply({ received: true, duplicate: true });
   if (received) return reply({ error: "event_record_failed" }, 500);
