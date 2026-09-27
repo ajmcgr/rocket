@@ -30,12 +30,14 @@ Deno.serve(async (req) => {
   if (!account) { console.error(`connect-webhook: unregistered connected account ${accountId}`); return reply({ error: "unknown_connected_account" }, 400); }
   const { error: received } = await admin.from("connect_webhook_events").insert({ event_id: event.id, stripe_account_id: accountId, event_type: event.type, event_created_at: new Date(event.created * 1000).toISOString(), processing_result: "stale", detail: {} });
   const isDuplicate = received?.code === "23505";
-  if (isDuplicate && event.type !== "invoice.paid") return reply({ received: true, duplicate: true });
+  // Permit recovery only for payment-settlement events that can legitimately
+  // have reached the receipt ledger before their downstream state transition.
+  if (isDuplicate && !["invoice.paid", "charge.refunded"].includes(event.type)) return reply({ received: true, duplicate: true });
   if (received && !isDuplicate) return reply({ error: "event_record_failed" }, 500);
   try {
     const object: any = event.data.object;
     let transaction: any = null;
-    if (isDuplicate) {
+    if (isDuplicate && event.type === "invoice.paid") {
       const subscriptionId = subscriptionIdFrom(object);
       if (!subscriptionId) return reply({ received: true, duplicate: true });
       const { data: existing } = await admin.from("connect_transactions").select("status").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle();
@@ -51,6 +53,15 @@ Deno.serve(async (req) => {
     } else if (subscriptionIdFrom(object)) {
       const subscriptionId = subscriptionIdFrom(object)!;
       const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle(); transaction = data;
+    } else if (typeof object.invoice === "string") {
+      // Charge events do not carry the subscription ID. Resolve their invoice
+      // in the same connected-account context rather than trusting metadata or
+      // performing a broad customer lookup.
+      const invoice = await stripe.invoices.retrieve(object.invoice, { stripeAccount: accountId });
+      const subscriptionId = subscriptionIdFrom(invoice);
+      if (subscriptionId) {
+        const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle(); transaction = data;
+      }
     } else if (object.payment_intent) {
       const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_payment_intent_id", object.payment_intent).maybeSingle(); transaction = data;
     }
