@@ -5,9 +5,15 @@ export const APP_URL = (Deno.env.get("APP_URL") || "https://tryrocket.ai").repla
 export const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 export const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 export const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+export const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": APP_URL,
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Vary": "Origin",
+};
 
 export const json = (value: unknown, status = 200, headers: HeadersInit = {}) =>
-  new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...headers } });
+  new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...CORS_HEADERS, ...headers } });
 
 export function base64url(bytes: Uint8Array) {
   let raw = "";

@@ -1,6 +1,7 @@
-import { getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
+import { CORS_HEADERS, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "GET" && req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   const user = await getRocketUser(req);
   if (!user) return json({ error: "unauthorized" }, 401);
