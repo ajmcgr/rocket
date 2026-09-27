@@ -63,7 +63,23 @@ Deno.serve(async (req) => {
         const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle(); transaction = data;
       }
     } else if (object.payment_intent) {
-      const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_payment_intent_id", object.payment_intent).maybeSingle(); transaction = data;
+      const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_payment_intent_id", object.payment_intent).maybeSingle();
+      transaction = data;
+      if (!transaction) {
+        // Current connected-account charge events contain a PaymentIntent but
+        // omit the invoice. Resolve the server-authoritative relationship in
+        // Stripe, scoped to this same connected account.
+        const paymentIntent = await stripe.paymentIntents.retrieve(object.payment_intent, { stripeAccount: accountId });
+        const invoiceId = (paymentIntent as any).invoice;
+        if (typeof invoiceId === "string") {
+          const invoice = await stripe.invoices.retrieve(invoiceId, { stripeAccount: accountId });
+          const subscriptionId = subscriptionIdFrom(invoice);
+          if (subscriptionId) {
+            const { data: mapped } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle();
+            transaction = mapped;
+          }
+        }
+      }
     }
     if (!transaction) {
       await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "unmapped event" } }).eq("event_id", event.id);
