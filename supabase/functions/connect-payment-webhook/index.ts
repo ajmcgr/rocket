@@ -8,6 +8,13 @@ const reply = (value: unknown, status = 200) => new Response(JSON.stringify(valu
 
 function periodEnd(subscription: any) { return subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null; }
 
+function subscriptionIdFrom(object: any) {
+  if (object?.object === "subscription") return typeof object.id === "string" ? object.id : null;
+  if (typeof object?.subscription === "string") return object.subscription;
+  const currentSubscription = object?.parent?.subscription_details?.subscription;
+  return typeof currentSubscription === "string" ? currentSubscription : null;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return reply({ error: "method_not_allowed" }, 405);
   if (!stripe || !secret) return reply({ error: "connect_test_mode_not_configured" }, 503);
@@ -34,8 +41,8 @@ Deno.serve(async (req) => {
       if (!product) throw new Error("Missing registered product");
       const { data, error } = await admin.from("connect_transactions").upsert({ user_id: attempt.user_id, client_id: attempt.client_id, product_id: attempt.product_id, developer_account_id: account.id, stripe_account_id: accountId, stripe_checkout_session_id: object.id, stripe_customer_id: typeof object.customer === "string" ? object.customer : null, stripe_subscription_id: typeof object.subscription === "string" ? object.subscription : null, amount_cents: product.amount_cents, application_fee_cents: Math.round(product.amount_cents * product.platform_fee_bps / 10000), currency: product.currency, status: "pending", stripe_event_created_at: new Date(event.created * 1000).toISOString() }, { onConflict: "stripe_checkout_session_id" }).select().single();
       if (error) throw error; transaction = data;
-    } else if (object.subscription || object.object === "subscription") {
-      const subscriptionId = object.object === "subscription" ? object.id : object.subscription;
+    } else if (subscriptionIdFrom(object)) {
+      const subscriptionId = subscriptionIdFrom(object)!;
       const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle(); transaction = data;
     } else if (object.payment_intent) {
       const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_payment_intent_id", object.payment_intent).maybeSingle(); transaction = data;
