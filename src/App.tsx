@@ -66,6 +66,7 @@ import ToolDetail from "./pages/ToolDetail.tsx";
 import Pricing from "./pages/Pricing.tsx";
 import FAQ from "./pages/FAQ.tsx";
 import AIInfo from "./pages/AIInfo.tsx";
+import RocketConnectAuthorize from "./pages/RocketConnectAuthorize.tsx";
 import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
 import AppShell from "./components/AppShell.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
@@ -124,6 +125,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/ai-info" element={<AIInfo />} />
+            <Route path="/connect/authorize" element={<RocketConnectAuthorize />} />
             <Route path="/brand-templates" element={<BrandTemplates />} />
             <Route path="/brand-templates/:id" element={<BrandTemplateDetail />} />
             <Route path="/share/asset/:token" element={<SharedAsset />} />

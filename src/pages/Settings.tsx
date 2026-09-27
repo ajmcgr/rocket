@@ -306,6 +306,29 @@ export const AccountSettings = () => {
   const nav = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
   const { user } = useAuth();
+  const [applications, setApplications] = useState<any[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(true);
+
+  const loadApplications = async () => {
+    if (!user) return;
+    setApplicationsLoading(true);
+    const { data, error } = await supabase.functions.invoke("rocket-connect-applications", { method: "GET" });
+    if (!error) setApplications(data?.applications || []);
+    setApplicationsLoading(false);
+  };
+
+  useEffect(() => { loadApplications(); }, [user]);
+
+  const revokeApplication = async (clientId: string) => {
+    setLoading(`revoke:${clientId}`);
+    try {
+      const { error } = await supabase.functions.invoke("rocket-connect-applications", { body: { client_id: clientId } });
+      if (error) throw error;
+      setApplications((current) => current.filter((application) => application.client_id !== clientId));
+      toast({ title: "Application access revoked" });
+    } catch (e: any) { toast({ title: "Couldn't revoke access", description: e?.message, variant: "destructive" }); }
+    finally { setLoading(null); }
+  };
 
   const deleteAccount = async () => {
     if (!confirm("Permanently delete your account? This cannot be undone.")) return;
@@ -322,6 +345,14 @@ export const AccountSettings = () => {
 
   return (
     <div className="space-y-6">
+    <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+      <h2 className="text-base font-semibold">Connected applications</h2>
+      <p className="mt-1 text-sm text-neutral-600">Applications you have authorized with Continue with Rocket.</p>
+      {applicationsLoading ? <div className="mt-4 flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading applications…</div> : applications.length === 0 ? <p className="mt-4 text-sm text-neutral-500">No connected applications.</p> : <div className="mt-4 divide-y divide-neutral-100 rounded-xl border border-neutral-200">{applications.map((application) => {
+        const app = Array.isArray(application.rocket_oauth_clients) ? application.rocket_oauth_clients[0] : application.rocket_oauth_clients;
+        return <div key={application.client_id} className="flex items-center justify-between gap-4 p-4"><div className="min-w-0"><p className="truncate text-sm font-medium">{app?.name || application.client_id}</p><p className="mt-0.5 text-xs text-neutral-500">Access: {application.scopes.join(", ")}</p></div><button disabled={loading === `revoke:${application.client_id}`} onClick={() => revokeApplication(application.client_id)} className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 disabled:opacity-60">{loading === `revoke:${application.client_id}` ? "Revoking…" : "Revoke"}</button></div>;
+      })}</div>}
+    </section>
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
       <h2 className="text-base font-semibold">Trash</h2>
       <p className="mt-1 text-sm text-neutral-600">Recently deleted projects and designs live here for 30 days.</p>

@@ -62,3 +62,21 @@ verify_jwt = true
 
 [functions.blog-image]
 verify_jwt = false
+
+[functions.rocket-connect-authorize]
+verify_jwt = false
+
+[functions.rocket-connect-token]
+verify_jwt = false
+
+[functions.rocket-connect-userinfo]
+verify_jwt = false
+
+[functions.rocket-connect-applications]
+verify_jwt = false
+
+[functions.rocket-connect-discovery]
+verify_jwt = false
+
+[functions.rocket-connect-jwks]
+verify_jwt = false
