@@ -6,6 +6,7 @@ const clientId = process.env.ROCKET_CLIENT_ID || "rocket-connect-test-web";
 const rocketUrl = (process.env.ROCKET_URL || "https://tryrocket.ai").replace(/\/$/, "");
 const supabaseUrl = (process.env.ROCKET_SUPABASE_URL || "https://lcujmvdgczkjxdstzhnr.supabase.co").replace(/\/$/, "");
 const redirectUri = process.env.ROCKET_REDIRECT_URI || `http://127.0.0.1:${port}/callback`;
+const productKey = process.env.ROCKET_PRODUCT_KEY || "rocket-connect-test-monthly";
 const issuer = `${rocketUrl}/connect`;
 const jwksUrl = `${supabaseUrl}/functions/v1/rocket-connect-jwks`;
 const userinfoUrl = `${supabaseUrl}/functions/v1/rocket-connect-userinfo`;
@@ -81,7 +82,7 @@ createServer(async (req, res) => {
   if (url.pathname === "/verify-entitlement") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
     if (!session) { res.writeHead(302, { Location: "/" }); res.end(); return; }
-    const response = await fetch(`${entitlementUrl}?product_key=rocket-connect-test-monthly`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+    const response = await fetch(`${entitlementUrl}?product_key=${encodeURIComponent(productKey)}`, { headers: { Authorization: `Bearer ${session.access_token}` } });
     const result = await response.json();
     session.entitlement = response.ok ? result.entitlements?.[0]?.active ? "Access Granted" : "No active access yet — webhook pending" : `Unable to check: ${result.error || response.status}`;
     res.writeHead(302, { Location: "/" }); res.end(); return;
@@ -89,7 +90,7 @@ createServer(async (req, res) => {
   if (url.pathname === "/buy") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
     if (!session) { res.writeHead(302, { Location: "/" }); res.end(); return; }
-    const response = await fetch(checkoutUrl, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ product_key: "rocket-connect-test-monthly", return_uri: redirectUri.replace("/callback", "/") }) });
+    const response = await fetch(checkoutUrl, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ product_key: productKey, return_uri: redirectUri.replace("/callback", "/") }) });
     const result = await response.json();
     if (!response.ok || !result.checkout_url) { session.entitlement = `Checkout unavailable: ${result.error || response.status}`; res.writeHead(302, { Location: "/" }); res.end(); return; }
     res.writeHead(303, { Location: result.checkout_url }); res.end(); return;
