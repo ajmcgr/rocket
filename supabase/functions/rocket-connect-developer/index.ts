@@ -130,7 +130,11 @@ Deno.serve(async (req) => {
     if (action === "app_detail") {
       const account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
       const { data: products, error } = await ctx.admin.from("connect_products").select("id,product_key,name,stripe_product_id,stripe_price_id,amount_cents,currency,interval,platform_fee_bps,is_active,checkout_return_uris,created_at")
-        .eq("client_id", client.client_id).eq("developer_user_id", ctx.user.id).order("created_at", { ascending: false });
+        // Historical products stay preserved for auditability, but must never be
+        // surfaced to a current integration after the developer changes accounts.
+        .eq("client_id", client.client_id).eq("developer_user_id", ctx.user.id)
+        .eq("developer_account_id", account?.id || "00000000-0000-0000-0000-000000000000")
+        .eq("is_active", true).order("created_at", { ascending: false });
       if (error) throw error;
       return json({ app: client, stripe_account: account, products: products || [] });
     }
