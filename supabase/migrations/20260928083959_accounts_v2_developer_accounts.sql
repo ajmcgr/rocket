@@ -7,10 +7,11 @@ alter table public.connect_developer_accounts
     check (stripe_api_version in ('v1', 'v2')),
   add column if not exists account_configuration jsonb not null default '{}'::jsonb;
 
--- The original Phase 2 proof used a unique *index* (rather than a named
--- constraint) on client_id. Remove that single-account restriction only after
+-- The original Phase 2 proof used a single-account unique constraint on
+-- client_id. Remove that restriction only after
 -- preserving all existing rows as history below.
-drop index if exists public.connect_developer_accounts_client_id_key;
+alter table public.connect_developer_accounts
+  drop constraint if exists connect_developer_accounts_client_id_key;
 
 -- All pre-Accounts-v2 rows are retained as v1 history. They remain current
 -- until a developer deliberately starts the new v2 onboarding flow.
