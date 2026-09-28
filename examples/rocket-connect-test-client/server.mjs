@@ -7,6 +7,7 @@ const rocketUrl = (process.env.ROCKET_URL || "https://tryrocket.ai").replace(/\/
 const supabaseUrl = (process.env.ROCKET_SUPABASE_URL || "https://lcujmvdgczkjxdstzhnr.supabase.co").replace(/\/$/, "");
 const redirectUri = process.env.ROCKET_REDIRECT_URI || `http://127.0.0.1:${port}/callback`;
 const productKey = process.env.ROCKET_PRODUCT_KEY || "rocket-connect-test-monthly";
+const reconcileSessionId = process.env.ROCKET_RECONCILE_SESSION_ID;
 const issuer = `${rocketUrl}/connect`;
 const jwksUrl = `${supabaseUrl}/functions/v1/rocket-connect-jwks`;
 const userinfoUrl = `${supabaseUrl}/functions/v1/rocket-connect-userinfo`;
@@ -39,7 +40,7 @@ createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   if (url.pathname === "/") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
-    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", entitlement: session.entitlement || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/buy">Buy $10/month test product</a> <a href="/verify-entitlement">Verify access entitlement</a> <a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
+    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", entitlement: session.entitlement || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/buy">Buy $10/month test product</a> <a href="/verify-entitlement">Verify access entitlement</a> ${reconcileSessionId ? `<a href="/reconcile-purchase">Reconcile completed test purchase</a>` : ""} <a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
     return;
   }
   if (url.pathname === "/login") {
@@ -94,6 +95,14 @@ createServer(async (req, res) => {
     const result = await response.json();
     if (!response.ok || !result.checkout_url) { session.entitlement = `Checkout unavailable: ${result.error || response.status}`; res.writeHead(302, { Location: "/" }); res.end(); return; }
     res.writeHead(303, { Location: result.checkout_url }); res.end(); return;
+  }
+  if (url.pathname === "/reconcile-purchase" && reconcileSessionId) {
+    const session = sessions.get(cookie(req, "rocket_test_session"));
+    if (!session) { res.writeHead(302, { Location: "/" }); res.end(); return; }
+    const response = await fetch(checkoutUrl, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "reconcile", product_key: productKey, checkout_session_id: reconcileSessionId }) });
+    const result = await response.json();
+    session.entitlement = response.ok && result.reconciled ? "Reconciled — verify access" : `Reconciliation unavailable: ${result.error || response.status}`;
+    res.writeHead(302, { Location: "/" }); res.end(); return;
   }
   if (url.pathname === "/verify-code-reuse") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
