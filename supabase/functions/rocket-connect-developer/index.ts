@@ -15,6 +15,7 @@ function validIcon(url: string | null) {
   try { const parsed = new URL(url); return parsed.protocol === "https:" && !parsed.username && !parsed.password; } catch { return false; }
 }
 function validReturnUri(uri: string | null) { return !!uri && validRedirectUri(uri); }
+function validCountry(value: unknown) { return typeof value === "string" && /^[A-Za-z]{2}$/.test(value); }
 function productKey(name: string) {
   const prefix = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "subscription";
   return `${prefix}-${base64url(crypto.getRandomValues(new Uint8Array(5))).toLowerCase()}`;
@@ -172,7 +173,8 @@ Deno.serve(async (req) => {
       if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
       let account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
       if (!account || account.stripe_api_version !== "v2") {
-        const remote = await createStripeConnectV2Merchant({ email: ctx.user.email || undefined, displayName: client.name, clientId: client.client_id, userId: ctx.user.id });
+        if (!validCountry(body.country)) return json({ error: "invalid_onboarding_country" }, 400);
+        const remote = await createStripeConnectV2Merchant({ email: ctx.user.email || undefined, displayName: client.name, clientId: client.client_id, userId: ctx.user.id, country: body.country });
         if (!remote.id) throw new Error("Stripe Accounts v2 did not return an account ID");
         const configuration = { dashboard: remote.dashboard || "full", defaults: remote.defaults || {}, requirements: remote.requirements || null };
         const { data, error } = await ctx.admin.rpc("connect_set_current_developer_account", {

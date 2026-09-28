@@ -38,13 +38,17 @@ export type StripeConnectV2Account = {
 
 const accountInclude = "?include=configuration.merchant&include=defaults&include=requirements";
 
-export async function createStripeConnectV2Merchant(input: { email?: string; displayName: string; clientId: string; userId: string }) {
+export async function createStripeConnectV2Merchant(input: { email?: string; displayName: string; clientId: string; userId: string; country: string }) {
   return await request("/v2/core/accounts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contact_email: input.email,
       display_name: input.displayName,
+      // Stripe requires the connected merchant's country before it will add
+      // a Merchant configuration. This is explicitly selected by the invited
+      // developer; never infer it from an email address, IP, or workspace.
+      identity: { country: input.country.toLowerCase() },
       configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
       defaults: { responsibilities: { fees_collector: "stripe", losses_collector: "stripe" } },
       // Stripe's current v2 rules require the full hosted Dashboard with both
