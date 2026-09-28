@@ -63,6 +63,7 @@ const SiteHeader = () => {
         <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-7 text-sm font-medium leading-none text-neutral-600 md:flex">
           {user ? (
             <>
+              <Link to="/discover" className="hover:text-neutral-900">Discover</Link>
               <Link to="/logos" className="hover:text-neutral-900">Create</Link>
               <Link to="/logos" className="hover:text-neutral-900">Logos</Link>
               <Link to="/icons" className="hover:text-neutral-900">Icons</Link>
@@ -71,6 +72,7 @@ const SiteHeader = () => {
             </>
           ) : (
             <>
+              <Link to="/discover" className="hover:text-neutral-900">Discover</Link>
               <Link to="/pricing" className="hover:text-neutral-900">Pricing</Link>
               <Link to="/faq" className="hover:text-neutral-900">FAQ</Link>
               <Link to="/blog" className="hover:text-neutral-900">Resources</Link>

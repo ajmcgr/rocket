@@ -1,0 +1,27 @@
+name: Sync public Launch catalogue
+
+on:
+  schedule:
+    - cron: "20 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: launch-catalog-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate importer
+        run: node --test scripts/sync-launch-catalog.test.mjs
+      - name: Sync launched public products
+        env:
+          LAUNCH_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.LAUNCH_SUPABASE_PUBLISHABLE_KEY }}
+          ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync-launch-catalog.mjs --apply

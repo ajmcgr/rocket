@@ -17,7 +17,24 @@ export type Database = {
       [_ in never]: never
     }
     Views: {
-      [_ in never]: never
+      public_apps: {
+        Row: {
+          id: string; name: string; tagline: string | null; description: string | null;
+          website_url: string; canonical_host: string; logo_url: string | null;
+          categories: string[]; tags: string[]; platforms: string[];
+          launched_at: string | null; discovered_at: string;
+          launch_url: string | null; claim_state: string;
+        }
+        Relationships: []
+      }
+      public_app_sources: {
+        Row: { app_id: string; source_type: string; source_url: string; first_seen_at: string; last_seen_at: string }
+        Relationships: []
+      }
+      public_app_categories: {
+        Row: { category: string; app_count: number }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

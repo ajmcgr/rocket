@@ -10,6 +10,7 @@ import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import BuyCreditsMenu from "./BuyCreditsMenu";
 import {
   HelpCircle,
+  Compass,
   Palette,
   PenTool,
   Settings,
@@ -168,6 +169,10 @@ const AppShell = () => {
         </button>
 
         <nav className="flex flex-col gap-1" aria-label="Rocket studio">
+          <NavLink to="/discover" className={sidebarItemClass} aria-label="Discover" title="Discover">
+            <Compass className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Discover</span>}
+          </NavLink>
           {studioNav.map((item) => {
             const Icon = item.icon;
             return (

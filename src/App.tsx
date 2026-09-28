@@ -67,6 +67,8 @@ import Pricing from "./pages/Pricing.tsx";
 import FAQ from "./pages/FAQ.tsx";
 import AIInfo from "./pages/AIInfo.tsx";
 import RocketConnectAuthorize from "./pages/RocketConnectAuthorize.tsx";
+import Discover from "./pages/Discover.tsx";
+import PublicAppProfile from "./pages/PublicAppProfile.tsx";
 import Developer, { DeveloperActivate, DeveloperAppDetail } from "./pages/Developer.tsx";
 import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
 import AppShell from "./components/AppShell.tsx";
@@ -103,6 +105,8 @@ const App = () => (
             <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/apps/:id" element={<PublicAppProfile />} />
             <Route path="/reserve" element={<Reserve />} />
             <Route path="/join" element={<Navigate to="/reserve" replace />} />
             <Route path="/login" element={<Login />} />
