@@ -1,13 +1,10 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, base64url, getAdmin, getRocketUser, json, sha256, validRedirectUri } from "../_shared/rocketConnect.ts";
+import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
 
 const stripeKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const stripe = stripeKey?.startsWith("sk_test_") ? new Stripe(stripeKey, { apiVersion: "2024-06-20" }) : null;
 const scopes = ["openid", "profile", "email", "entitlements:read"];
-// New legacy Express accounts are rejected for direct charges. Keep this
-// server-side kill switch until Accounts v2 eligibility is confirmed; clients
-// must not be able to bypass the portal and create another legacy account.
-const STRIPE_ONBOARDING_PAUSED = true;
 const publicClientId = () => `rocket-dev-${base64url(crypto.getRandomValues(new Uint8Array(18)))}`;
 
 function normaliseEmail(value: unknown) { return typeof value === "string" ? value.trim().toLowerCase() : ""; }
@@ -44,9 +41,19 @@ async function ownedClient(admin: ReturnType<typeof getAdmin>, userId: string, c
 
 async function refreshAccount(admin: ReturnType<typeof getAdmin>, clientId: string, ownerId: string) {
   const { data: account } = await admin.from("connect_developer_accounts")
-    .select("id,client_id,stripe_account_id,status,charges_enabled,payouts_enabled")
-    .eq("client_id", clientId).eq("developer_user_id", ownerId).maybeSingle();
+    .select("id,client_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version,account_configuration")
+    .eq("client_id", clientId).eq("developer_user_id", ownerId).eq("is_current", true).maybeSingle();
   if (!account || !stripe) return account as any | null;
+  if (account.stripe_api_version === "v2") {
+    const remote = await retrieveStripeConnectV2Merchant(account.stripe_account_id);
+    const active = stripeConnectV2Ready(remote);
+    const status = active ? "active" : "pending";
+    const configuration = { dashboard: remote.dashboard || null, defaults: remote.defaults || {}, requirements: remote.requirements || null };
+    if (account.status !== status || account.charges_enabled !== active || account.payouts_enabled !== active || JSON.stringify(account.account_configuration) !== JSON.stringify(configuration)) {
+      await admin.from("connect_developer_accounts").update({ status, charges_enabled: active, payouts_enabled: active, account_configuration: configuration, updated_at: new Date().toISOString() }).eq("id", account.id);
+    }
+    return { ...account, status, charges_enabled: active, payouts_enabled: active, account_configuration: configuration } as any;
+  }
   const remote = await stripe.accounts.retrieve(account.stripe_account_id);
   const active = !!remote.charges_enabled && !!remote.payouts_enabled;
   const status = active ? "active" : "pending";
@@ -162,23 +169,29 @@ Deno.serve(async (req) => {
     }
 
     if (action === "stripe_onboarding") {
-      if (STRIPE_ONBOARDING_PAUSED) return json({ error: "stripe_onboarding_paused" }, 503);
       if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
       let account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
-      if (!account) {
-        const remote = await stripe.accounts.create({ type: "express", email: ctx.user.email || undefined, capabilities: { card_payments: { requested: true }, transfers: { requested: true } }, metadata: { rocket_client_id: client.client_id, rocket_developer_user_id: ctx.user.id, rocket_environment: "test" } });
-        const { data, error } = await ctx.admin.from("connect_developer_accounts").insert({ client_id: client.client_id, developer_user_id: ctx.user.id, stripe_account_id: remote.id, status: "pending", charges_enabled: !!remote.charges_enabled, payouts_enabled: !!remote.payouts_enabled }).select("id,client_id,stripe_account_id,status,charges_enabled,payouts_enabled").single();
-        if (error) throw error; account = data;
+      if (!account || account.stripe_api_version !== "v2") {
+        const remote = await createStripeConnectV2Merchant({ email: ctx.user.email || undefined, displayName: client.name, clientId: client.client_id, userId: ctx.user.id });
+        if (!remote.id) throw new Error("Stripe Accounts v2 did not return an account ID");
+        const configuration = { dashboard: remote.dashboard || "full", defaults: remote.defaults || {}, requirements: remote.requirements || null };
+        const { data, error } = await ctx.admin.rpc("connect_set_current_developer_account", {
+          target_client_id: client.client_id,
+          target_developer_user_id: ctx.user.id,
+          target_stripe_account_id: remote.id,
+          target_configuration: configuration,
+        }).single();
+        if (error || !data) throw error || new Error("Could not record Stripe Accounts v2 account");
+        account = data;
       }
       const destination = `${APP_URL}/developer/apps/${encodeURIComponent(client.client_id)}?stripe=return`;
-      const link = await stripe.accountLinks.create({ account: account.stripe_account_id, refresh_url: `${destination}&refresh=1`, return_url: destination, type: "account_onboarding" });
-      return json({ onboarding_url: link.url, stripe_account: account });
+      const onboardingUrl = await createStripeHostedOnboardingLink(account.stripe_account_id, `${destination}&refresh=1`, destination);
+      return json({ onboarding_url: onboardingUrl, stripe_account: account });
     }
 
     if (action === "stripe_status") return json({ stripe_account: await refreshAccount(ctx.admin, client.client_id, ctx.user.id) });
 
     if (action === "create_product") {
-      if (STRIPE_ONBOARDING_PAUSED) return json({ error: "stripe_onboarding_paused" }, 503);
       if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
       const account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
       const name = string(body.name, 120); const checkoutReturnUri = string(body.checkout_return_uri, 2048); const amount = body.amount_cents;
@@ -191,5 +204,12 @@ Deno.serve(async (req) => {
       return json({ product: data }, 201);
     }
     return json({ error: "invalid_action" }, 400);
-  } catch (error) { console.error("rocket-connect-developer", error); return json({ error: "developer_portal_unavailable" }, 500); }
+  } catch (error) {
+    if (error instanceof StripeConnectV2Error) {
+      console.error("rocket-connect-developer Stripe Accounts v2", { status: error.status, code: error.code, requestId: error.requestId, message: error.message });
+      return json({ error: "stripe_accounts_v2_unavailable", stripe_code: error.code || null }, error.status >= 400 && error.status < 500 ? 400 : 503);
+    }
+    console.error("rocket-connect-developer", error);
+    return json({ error: "developer_portal_unavailable" }, 500);
+  }
 });

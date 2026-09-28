@@ -47,9 +47,11 @@ Callback and Checkout return URIs are stored as exact values: no wildcard host, 
 
 This proof accepts **public PKCE clients only**. The schema reserves `confidential` clients for a later phase, but both authorization and token endpoints reject them until server-side client authentication is implemented.
 
-## Stripe Connect status
+## Stripe Connect test payments
 
-Rocket Connect identity integration is available independently of payments. New developer Stripe onboarding and new product creation are deliberately paused while Stripe confirms Accounts v2 merchant-account availability for Rocket’s direct-charge model. The portal returns a clear unavailable state and does not create a fallback legacy Express account. Existing Connect payment evidence is preserved and is not changed by this pause.
+Invited developers can create one Accounts v2 merchant account in Stripe test mode through Stripe-hosted onboarding. Rocket configures the merchant account with `fees_collector: stripe`, `losses_collector: stripe`, and Stripe’s full hosted Dashboard; Stripe collects its processing fees and is responsible for connected-account negative balances. The developer remains the direct-charge seller and Rocket receives the fixed 10% application fee.
+
+The existing checkout contract, authorization-code PKCE flow, server-side product validation, connected-account webhooks, and entitlement endpoint are unchanged. Rocket never grants access from a checkout return URL: the independent app must wait for a webhook-backed active entitlement. Legacy Connect account/product rows remain historical evidence and cannot be made current by browser input.
 
 ## Revocation and rollback
 
