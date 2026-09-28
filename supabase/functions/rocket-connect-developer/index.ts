@@ -4,6 +4,10 @@ import { APP_URL, base64url, getAdmin, getRocketUser, json, sha256, validRedirec
 const stripeKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const stripe = stripeKey?.startsWith("sk_test_") ? new Stripe(stripeKey, { apiVersion: "2024-06-20" }) : null;
 const scopes = ["openid", "profile", "email", "entitlements:read"];
+// New legacy Express accounts are rejected for direct charges. Keep this
+// server-side kill switch until Accounts v2 eligibility is confirmed; clients
+// must not be able to bypass the portal and create another legacy account.
+const STRIPE_ONBOARDING_PAUSED = true;
 const publicClientId = () => `rocket-dev-${base64url(crypto.getRandomValues(new Uint8Array(18)))}`;
 
 function normaliseEmail(value: unknown) { return typeof value === "string" ? value.trim().toLowerCase() : ""; }
@@ -113,7 +117,7 @@ Deno.serve(async (req) => {
 
     const client = await ownedClient(ctx.admin, ctx.user.id, body.client_id);
     if (!client) return json({ error: "app_not_found" }, 404);
-    if (!client.is_active && action !== "app_detail") return json({ error: "app_disabled" }, 403);
+    if (!client.is_active && !["app_detail", "update_app", "set_app_status"].includes(action)) return json({ error: "app_disabled" }, 403);
 
     if (action === "app_detail") {
       const account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
@@ -123,7 +127,42 @@ Deno.serve(async (req) => {
       return json({ app: client, stripe_account: account, products: products || [] });
     }
 
+    if (action === "update_app") {
+      const name = string(body.name, 120);
+      const redirectUri = string(body.redirect_uri, 2048);
+      const returnUri = string(body.checkout_return_uri, 2048);
+      const iconUrl = body.icon_url === "" || body.icon_url == null ? null : string(body.icon_url, 2048);
+      if (!name || !redirectUri || !returnUri || !validRedirectUri(redirectUri) || !validReturnUri(returnUri) || !validIcon(iconUrl)) return json({ error: "invalid_app_configuration" }, 400);
+      const { data, error } = await ctx.admin.from("rocket_oauth_clients")
+        .update({ name, icon_url: iconUrl, redirect_uris: [redirectUri], checkout_return_uris: [returnUri], updated_at: new Date().toISOString() })
+        .eq("client_id", client.client_id).eq("created_by", ctx.user.id)
+        .select("client_id,name,icon_url,redirect_uris,checkout_return_uris,allowed_scopes,is_active,created_at").single();
+      if (error) throw error;
+      await ctx.admin.from("rocket_oauth_events").insert({ user_id: ctx.user.id, client_id: client.client_id, event_type: "client_updated", detail: {} });
+      return json({ app: data });
+    }
+
+    if (action === "set_app_status") {
+      if (typeof body.is_active !== "boolean") return json({ error: "invalid_request" }, 400);
+      const { data, error } = await ctx.admin.from("rocket_oauth_clients")
+        .update({ is_active: body.is_active, updated_at: new Date().toISOString() })
+        .eq("client_id", client.client_id).eq("created_by", ctx.user.id)
+        .select("client_id,name,icon_url,redirect_uris,checkout_return_uris,allowed_scopes,is_active,created_at").single();
+      if (error) throw error;
+      if (!body.is_active) {
+        const revokedAt = new Date().toISOString();
+        const [{ error: tokenError }, { error: codeError }] = await Promise.all([
+          ctx.admin.from("rocket_oauth_access_tokens").update({ revoked_at: revokedAt }).eq("client_id", client.client_id).is("revoked_at", null),
+          ctx.admin.from("rocket_oauth_codes").update({ consumed_at: revokedAt }).eq("client_id", client.client_id).is("consumed_at", null),
+        ]);
+        if (tokenError || codeError) throw tokenError || codeError;
+      }
+      await ctx.admin.from("rocket_oauth_events").insert({ user_id: ctx.user.id, client_id: client.client_id, event_type: body.is_active ? "client_enabled" : "client_disabled", detail: {} });
+      return json({ app: data });
+    }
+
     if (action === "stripe_onboarding") {
+      if (STRIPE_ONBOARDING_PAUSED) return json({ error: "stripe_onboarding_paused" }, 503);
       if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
       let account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
       if (!account) {
@@ -139,6 +178,7 @@ Deno.serve(async (req) => {
     if (action === "stripe_status") return json({ stripe_account: await refreshAccount(ctx.admin, client.client_id, ctx.user.id) });
 
     if (action === "create_product") {
+      if (STRIPE_ONBOARDING_PAUSED) return json({ error: "stripe_onboarding_paused" }, 503);
       if (!stripe) return json({ error: "connect_test_mode_not_configured" }, 503);
       const account = await refreshAccount(ctx.admin, client.client_id, ctx.user.id);
       const name = string(body.name, 120); const checkoutReturnUri = string(body.checkout_return_uri, 2048); const amount = body.amount_cents;

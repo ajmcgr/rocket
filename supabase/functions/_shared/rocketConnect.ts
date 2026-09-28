@@ -54,7 +54,10 @@ export async function getConnectToken(req: Request) {
   if (!data || new Date(data.expires_at).getTime() <= Date.now()) return null;
   const { data: authorization } = await getAdmin().from("rocket_oauth_authorizations")
     .select("id,revoked_at").eq("id", data.authorization_id).maybeSingle();
-  return authorization && !authorization.revoked_at ? data as any : null;
+  // Client deactivation is an immediate kill switch. Do not let a previously
+  // issued token retain entitlement access after its developer disables the app.
+  const client = await getActiveClient(data.client_id);
+  return authorization && !authorization.revoked_at && client ? data as any : null;
 }
 
 export async function getRocketUser(req: Request) {

@@ -1,4 +1,4 @@
-# Rocket Connect — Phase 1 integration proof
+# Rocket Connect — OAuth integration guide
 
 Rocket Connect is a minimal OAuth 2.1 / OpenID Connect identity provider. It deliberately does **not** expose a Rocket Supabase Auth access token, refresh token, or product data to third parties.
 
@@ -41,7 +41,15 @@ Assign a stable `kid` before setting the secret. Keep the private JWK only in Su
 
 ## Registering another app
 
-Phase 1 intentionally has no public self-service registration UI. Add a `rocket_oauth_clients` record through a reviewed migration or restricted server-side admin workflow. Do not let browser clients write this table. Register each exact redirect URI and only the scopes the app requires. This proof accepts **public PKCE clients only**. The schema reserves `confidential` clients for a later phase, but both authorization and token endpoints reject them until server-side client authentication is implemented.
+Rocket’s invitation-only Developer portal can register a public test client. Each invited developer can manage their own app name, icon, exact OAuth callback URI, exact Checkout return URI, and enabled state. Browser clients never write `rocket_oauth_clients` directly.
+
+Callback and Checkout return URIs are stored as exact values: no wildcard host, URI prefix, credentials, fragment, or arbitrary HTTP host is accepted. Disabling an app immediately revokes its existing Rocket Connect access tokens and unused authorization codes; it can no longer start authorizations, exchange codes, or read entitlements. Re-enabling an app does not restore old tokens—authenticate again.
+
+This proof accepts **public PKCE clients only**. The schema reserves `confidential` clients for a later phase, but both authorization and token endpoints reject them until server-side client authentication is implemented.
+
+## Stripe Connect status
+
+Rocket Connect identity integration is available independently of payments. New developer Stripe onboarding and new product creation are deliberately paused while Stripe confirms Accounts v2 merchant-account availability for Rocket’s direct-charge model. The portal returns a clear unavailable state and does not create a fallback legacy Express account. Existing Connect payment evidence is preserved and is not changed by this pause.
 
 ## Revocation and rollback
 
