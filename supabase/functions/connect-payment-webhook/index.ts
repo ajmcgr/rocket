@@ -37,6 +37,10 @@ Deno.serve(async (req) => {
   try {
     const object: any = event.data.object;
     let transaction: any = null;
+    // Stripe can deliver invoice.paid before checkout.session.completed. Keep
+    // fulfillment webhook-authoritative by reconciling the canonical invoice
+    // from the completed Checkout event once its transaction mapping exists.
+    let settledInvoice: any = null;
     if (isDuplicate && event.type === "invoice.paid") {
       const subscriptionId = subscriptionIdFrom(object);
       if (!subscriptionId) return reply({ received: true, duplicate: true });
@@ -54,6 +58,10 @@ Deno.serve(async (req) => {
       const checkout = await stripe.checkout.sessions.retrieve(object.id, { stripeAccount: accountId });
       const { data, error } = await admin.from("connect_transactions").upsert({ user_id: attempt.user_id, client_id: attempt.client_id, product_id: attempt.product_id, developer_account_id: account.id, stripe_account_id: accountId, stripe_checkout_session_id: object.id, stripe_customer_id: typeof object.customer === "string" ? object.customer : null, stripe_subscription_id: typeof object.subscription === "string" ? object.subscription : null, stripe_payment_intent_id: typeof checkout.payment_intent === "string" ? checkout.payment_intent : null, amount_cents: product.amount_cents, application_fee_cents: Math.round(product.amount_cents * product.platform_fee_bps / 10000), currency: product.currency, status: "pending", stripe_event_created_at: new Date(event.created * 1000).toISOString() }, { onConflict: "stripe_checkout_session_id" }).select().single();
       if (error) throw error; transaction = data;
+      if (typeof checkout.invoice === "string") {
+        const invoice = await stripe.invoices.retrieve(checkout.invoice, { stripeAccount: accountId });
+        if (invoice.status === "paid") settledInvoice = invoice;
+      }
     } else if (subscriptionIdFrom(object)) {
       const subscriptionId = subscriptionIdFrom(object)!;
       const { data } = await admin.from("connect_transactions").select("*").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle(); transaction = data;
@@ -113,7 +121,8 @@ Deno.serve(async (req) => {
       return reply({ received: true, ignored: true });
     }
     let status: string | null = null; let validUntil: string | null = null;
-    if (event.type === "invoice.paid") { status = "active"; validUntil = object.lines?.data?.[0]?.period?.end ? new Date(object.lines.data[0].period.end * 1000).toISOString() : null; }
+    const invoiceForSettlement = event.type === "invoice.paid" ? object : settledInvoice;
+    if (invoiceForSettlement) { status = "active"; validUntil = invoiceForSettlement.lines?.data?.[0]?.period?.end ? new Date(invoiceForSettlement.lines.data[0].period.end * 1000).toISOString() : null; }
     if (event.type === "invoice.payment_failed") status = "past_due";
     if (event.type === "customer.subscription.updated") { status = object.cancel_at_period_end ? "canceling" : (object.status === "active" || object.status === "trialing" ? "active" : object.status === "past_due" ? "past_due" : null); validUntil = periodEnd(object); }
     if (event.type === "customer.subscription.deleted") { status = "expired"; validUntil = periodEnd(object); }
@@ -129,7 +138,7 @@ Deno.serve(async (req) => {
     const transactionStatus = status === "active" ? "paid" : status;
     const { error: transactionError } = await admin
       .from("connect_transactions")
-      .update({ status: transactionStatus, stripe_invoice_id: object.object === "invoice" ? object.id : transaction.stripe_invoice_id, stripe_payment_intent_id: object.payment_intent || transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() })
+      .update({ status: transactionStatus, stripe_invoice_id: invoiceForSettlement?.id || (object.object === "invoice" ? object.id : transaction.stripe_invoice_id), stripe_payment_intent_id: object.payment_intent || transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() })
       .eq("id", transaction.id);
     if (transactionError) throw transactionError;
     const entitlement = { user_id: transaction.user_id, client_id: transaction.client_id, product_id: transaction.product_id, transaction_id: transaction.id, status, valid_from: status === "active" ? new Date().toISOString() : null, valid_until: validUntil, revoked_at: ["refunded", "expired", "disputed"].includes(status) ? new Date().toISOString() : null, updated_at: new Date().toISOString() };
