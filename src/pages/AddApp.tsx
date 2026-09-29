@@ -103,14 +103,17 @@ export default function AddApp() {
         <div><h2 className="text-xl font-semibold">{app.name}</h2><a href={app.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-700 hover:underline">{app.website_url}</a></div></div>
       {app.description && <p className="mt-4 text-sm text-neutral-600">{app.description}</p>}
       {!!app.categories?.length && <p className="mt-3 text-xs text-neutral-500">{app.categories.join(" · ")}</p>}
-      {app.claim_state === "domain_verified" ? <p className="mt-5 text-sm text-green-700">Domain verified</p> : <div className="mt-6 border-t pt-5">
-        <h3 className="font-semibold">Verify this app</h3><p className="mt-1 text-sm text-neutral-600">A Rocket login alone does not prove ownership. Verify control of the app’s website.</p>
+      <div className="mt-6 border-t pt-5">
+        <h3 className="font-semibold">{app.claim_state === "domain_verified" ? "Already claimed" : "Verify this app"}</h3>
+        <p className="mt-1 text-sm text-neutral-600">{app.claim_state === "domain_verified"
+          ? "This app already has a verified claimant. If you believe you own it, request ownership review; Rocket will not transfer it automatically."
+          : "A Rocket login alone does not prove ownership. Verify control of the app’s website."}</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <button disabled={busy} onClick={() => startClaim("dns_txt")} className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Verify domain (DNS)</button>
-          <button disabled={busy} onClick={() => startClaim("https_well_known")} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Use website file</button>
+          {app.claim_state !== "domain_verified" && <><button disabled={busy} onClick={() => startClaim("dns_txt")} className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Verify domain (DNS)</button>
+          <button disabled={busy} onClick={() => startClaim("https_well_known")} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Use website file</button></>}
           <button disabled={busy} onClick={() => startClaim("manual_review")} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Request manual review</button>
         </div>
-      </div>}
+      </div>
       {challenge?.status === "review" && <p className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">{challenge.reason}</p>}
       {challenge?.status === "verified" && <p className="mt-5 rounded-lg bg-green-50 p-4 text-sm text-green-800">{challenge.reason}</p>}
       {challenge?.challenge_id && <div className="mt-5 rounded-xl bg-neutral-50 p-5 text-sm">

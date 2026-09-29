@@ -241,7 +241,13 @@ Deno.serve(async (req) => {
         if (visible.error) throw visible.error;
         const jobs = ids.length ? await admin.from("app_jobs").select("app_id,result").eq("user_id", user.id).in("app_id", ids) : { data: [], error: null };
         if (jobs.error) throw jobs.error;
-        return json((claims.data || []).map((c) => ({ ...c,
+        const byApp = new Map<string, NonNullable<typeof claims.data>[number]>();
+        const priority = (status: string) => status === "verified" ? 3 : status === "review" ? 2 : status === "pending" ? 1 : 0;
+        for (const entry of claims.data || []) {
+          const previous = byApp.get(entry.app_id);
+          if (!previous || priority(entry.status) > priority(previous.status)) byApp.set(entry.app_id, entry);
+        }
+        return json([...byApp.values()].map((c) => ({ ...c,
           app: visible.data?.find((a) => a.id === c.app_id) || jobs.data?.find((j) => j.app_id === c.app_id)?.result || null })));
       }
       default: return json({ error: "Unknown action" }, 400);
