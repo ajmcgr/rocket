@@ -36,7 +36,7 @@ No secret values belong in this document. If the Stripe App cannot be created in
 
 ## Deployment order
 
-1. Apply `20260929063046_slice3_stripe_revenue_verification.sql` to Rocket's Supabase project. Check that every private table denies `anon` and `authenticated` access and that `public_app_revenue` is empty.
+1. Apply `20260929075313_slice3_stripe_revenue_verification.sql` to Rocket's Supabase project. Check that every private table denies `anon` and `authenticated` access and that `public_app_revenue` is empty.
 2. Deploy `rocket-stripe-revenue` with `verify_jwt = false`. The function validates Rocket Auth for every owner action and uses a one-time OAuth state for the callback.
 3. Publish the frontend with `/my-apps/:id/revenue` and the public profile projection query.
 4. Leave `STRIPE_REVENUE_PILOT_APP_IDS` unset until a real external least-privilege pilot is ready. Connect reports **Coming soon** and cannot start even if OAuth credentials happen to be configured; no data is marked verified.
