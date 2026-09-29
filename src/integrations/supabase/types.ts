@@ -43,6 +43,11 @@ export type Database = {
       }
     }
     Views: {
+      public_app_trust: {
+        Row: { app_id: string; claimed: boolean; domain_verified: boolean;
+          traffic_verified: boolean; revenue_verified: boolean }
+        Relationships: []
+      }
       public_app_intelligence: {
         Row: { app_id: string; signal_type: string; evidence_source: string; net_votes: number;
           age_band: string; cohort_category: string | null; cohort_size: number;

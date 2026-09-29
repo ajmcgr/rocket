@@ -239,6 +239,9 @@ Deno.serve(async (req) => {
         const ids = [...new Set((claims.data || []).map((c) => c.app_id))];
         const visible = ids.length ? await admin.from("public_apps").select("id,name,website_url,logo_url,claim_state").in("id", ids) : { data: [], error: null };
         if (visible.error) throw visible.error;
+        const owners = ids.length ? await admin.from("app_owners").select("app_id,verification_level")
+          .eq("user_id", user.id).is("revoked_at", null).in("app_id", ids) : { data: [], error: null };
+        if (owners.error) throw owners.error;
         const jobs = ids.length ? await admin.from("app_jobs").select("app_id,result").eq("user_id", user.id).in("app_id", ids) : { data: [], error: null };
         if (jobs.error) throw jobs.error;
         const byApp = new Map<string, NonNullable<typeof claims.data>[number]>();
@@ -248,6 +251,8 @@ Deno.serve(async (req) => {
           if (!previous || priority(entry.status) > priority(previous.status)) byApp.set(entry.app_id, entry);
         }
         return json([...byApp.values()].map((c) => ({ ...c,
+          owned: (owners.data || []).some((o) => o.app_id === c.app_id),
+          owner_verification_level: (owners.data || []).find((o) => o.app_id === c.app_id)?.verification_level || null,
           app: visible.data?.find((a) => a.id === c.app_id) || jobs.data?.find((j) => j.app_id === c.app_id)?.result || null })));
       }
       default: return json({ error: "Unknown action" }, 400);

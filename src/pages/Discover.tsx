@@ -9,6 +9,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import SaveAppButton from "@/components/SaveAppButton";
 import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelligence";
+import AppTrustBadges from "@/components/AppTrustBadges";
+import type { AppTrust } from "@/lib/appTrust";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -22,6 +24,7 @@ export default function Discover() {
   const [categories, setCategories] = useState<Tables<"public_app_categories">[]>([]);
   const [categorySignals, setCategorySignals] = useState<Tables<"public_category_intelligence">[]>([]);
   const [signals, setSignals] = useState<Map<string, AppSignal>>(new Map());
+  const [trust, setTrust] = useState<Map<string, AppTrust>>(new Map());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const [count, setCount] = useState(0);
@@ -51,7 +54,7 @@ export default function Discover() {
     setLoading(true);
     setError(null);
     const load = async () => {
-      if (view === "categories") { setApps([]); setCount(categorySignals.length); setLoading(false); return; }
+      if (view === "categories") { setApps([]); setTrust(new Map()); setCount(categorySignals.length); setLoading(false); return; }
       if (view === "rising" || view === "new") {
         const { data: signalRows, count: total, error: signalError } = await supabase
           .from("public_app_intelligence").select("*", { count: "exact" })
@@ -60,12 +63,16 @@ export default function Discover() {
           .order("app_id", { ascending: true }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
         if (signalError) throw signalError;
         const ids = (signalRows || []).map((row) => row.app_id);
-        const appResult = ids.length ? await supabase.from("public_apps").select("*").in("id", ids) : { data: [] as App[], error: null };
+        const [appResult, trustResult] = ids.length ? await Promise.all([
+          supabase.from("public_apps").select("*").in("id", ids),
+          supabase.from("public_app_trust").select("*").in("app_id", ids),
+        ]) : [{ data: [] as App[], error: null }, { data: [] as AppTrust[], error: null }];
         if (appResult.error) throw appResult.error;
         const byId = new Map((appResult.data || []).map((app) => [app.id, app]));
         if (!canceled) {
           setApps(ids.map((id) => byId.get(id)).filter((app): app is App => Boolean(app)));
           setSignals(new Map((signalRows || []).map((row) => [row.app_id, row])));
+          setTrust(new Map((trustResult.data || []).map((row) => [row.app_id, row])));
           setCount(total || 0);
         }
       } else {
@@ -79,10 +86,14 @@ export default function Discover() {
           .order("id", { ascending: true }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
         if (queryError) throw queryError;
         const ids = (data || []).map((app) => app.id);
-        const evidence = ids.length ? await supabase.from("public_app_intelligence").select("*").in("app_id", ids) : { data: [] as AppSignal[] };
+        const [evidence, trustResult] = ids.length ? await Promise.all([
+          supabase.from("public_app_intelligence").select("*").in("app_id", ids),
+          supabase.from("public_app_trust").select("*").in("app_id", ids),
+        ]) : [{ data: [] as AppSignal[] }, { data: [] as AppTrust[] }];
         if (!canceled) {
           setApps(data || []); setCount(total || 0);
           setSignals(new Map((evidence.data || []).filter((row) => row.signal_type === "rising").map((row) => [row.app_id, row])));
+          setTrust(new Map((trustResult.data || []).map((row) => [row.app_id, row])));
         }
       }
       if (!canceled) setLoading(false);
@@ -112,7 +123,7 @@ export default function Discover() {
     <main className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
       <p className="text-sm font-semibold text-sky-600">Rocket Discover</p>
       <h1 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">Find what to build.</h1>
-      <p className="mt-3 max-w-2xl text-neutral-600">Explore real launched products. Sources are identified; revenue and traffic are not verified here.</p>
+      <p className="mt-3 max-w-2xl text-neutral-600">Discover independent apps worth using. Launch activity is a public-source signal, not verified traffic, revenue, or a Rocket recommendation.</p>
       <div className="mt-5 flex gap-4 text-sm"><Link to="/apps/add" className="font-semibold text-sky-700 hover:underline">Add app</Link><Link to="/my-apps" className="text-neutral-600 hover:underline">My Apps</Link><Link to="/saved-apps" className="text-neutral-600 hover:underline">Saved Apps</Link></div>
       <nav aria-label="Discover sections" className="mt-8 flex flex-wrap gap-2">
         {([ ["rising", "Rising on Launch"], ["new", "New & interesting"], ["categories", "Categories"], ["all", "All Apps"] ] as const).map(([key, label]) =>
@@ -152,6 +163,7 @@ export default function Discover() {
             <ArrowRight className="h-4 w-4 text-neutral-400 group-hover:text-sky-700" />
           </div>
           <p className="mt-4 line-clamp-2 min-h-10 text-sm text-neutral-600">{app.tagline || app.description || "Explore this launched app."}</p>
+          <AppTrustBadges trust={trust.get(app.id)} compact />
           {signals.get(app.id) && <div className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signals.get(app.id)!)}</strong><p className="mt-1">{signalExplanation(signals.get(app.id)!)}</p></div>}
           <div className="mt-4 flex flex-wrap gap-1.5">{app.categories.slice(0, 2).map((item) => <span key={item} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600">{item}</span>)}</div>
           </Link>
