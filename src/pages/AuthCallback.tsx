@@ -19,16 +19,19 @@ const AuthCallback = () => {
         const errDesc = url.searchParams.get("error_description") || url.searchParams.get("error");
         if (errDesc) throw new Error(errDesc);
 
-        // PKCE / OAuth code exchange
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+        // supabase-js may have already exchanged the PKCE code while initializing.
+        // Only exchange a code that has not produced a session yet, and pass the
+        // code itself (not the callback URL) to the Auth API.
+        let session = (await supabase.auth.getSession()).data.session;
+        if (code && !session) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
+          session = data.session;
         }
 
         // Older email confirmation flows put tokens in the hash. supabase-js
         // picks these up automatically via detectSessionInUrl on first load,
         // but we still wait briefly for the session to settle.
-        let session = (await supabase.auth.getSession()).data.session;
         for (let i = 0; i < 10 && !session; i++) {
           await new Promise((r) => setTimeout(r, 100));
           session = (await supabase.auth.getSession()).data.session;
