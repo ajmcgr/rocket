@@ -14,7 +14,15 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      public_app_traction: {
+        Row: { app_id: string; metric_type: string; visibility: string; value: number | null;
+          value_range: string | null; metric_date: string; provider: string; last_verified_at: string }
+        Insert: { app_id: string; metric_type: string; visibility: string; value?: number | null;
+          value_range?: string | null; metric_date: string; provider: string; last_verified_at: string }
+        Update: { app_id?: string; metric_type?: string; visibility?: string; value?: number | null;
+          value_range?: string | null; metric_date?: string; provider?: string; last_verified_at?: string }
+        Relationships: []
+      }
     }
     Views: {
       public_apps: {

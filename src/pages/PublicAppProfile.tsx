@@ -9,12 +9,14 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
+type Traction = Tables<"public_app_traction">;
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "Not available";
 
 export default function PublicAppProfile() {
   const { id } = useParams();
   const [app, setApp] = useState<App | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
+  const [traction, setTraction] = useState<Traction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   useDocumentMeta({ title: app ? `${app.name} | Rocket Discover` : "App profile | Rocket", description: app?.tagline || "Explore a public app listed on Rocket.", canonical: id ? `https://tryrocket.ai/apps/${id}` : undefined });
@@ -26,11 +28,13 @@ export default function PublicAppProfile() {
     Promise.all([
       supabase.from("public_apps").select("*").eq("id", id).maybeSingle(),
       supabase.from("public_app_sources").select("*").eq("app_id", id),
-    ]).then(([appResult, sourceResult]) => {
+      supabase.from("public_app_traction").select("*").eq("app_id", id),
+    ]).then(([appResult, sourceResult, tractionResult]) => {
       if (canceled) return;
       setApp(appResult.data);
       setSources(sourceResult.data || []);
-      setError(Boolean(appResult.error || sourceResult.error || !appResult.data));
+      setTraction(tractionResult.data || []);
+      setError(Boolean(appResult.error || sourceResult.error || tractionResult.error || !appResult.data));
       setLoading(false);
     });
     return () => { canceled = true; };
@@ -52,7 +56,7 @@ export default function PublicAppProfile() {
         <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Sources & verification</h2><p className="mt-2 text-sm text-neutral-600">{app.claim_state === "domain_verified" ? "The app's website domain has been verified by its Rocket claimant. Revenue and traffic are not verified." : app.claim_state === "claimed" ? "This app is claimed on Rocket. Domain control, revenue and traffic are not verified." : "This app is unclaimed on Rocket. Its listing is sourced from public records; Rocket has not verified ownership, revenue or traffic."}</p>
           {app.claim_state === "unclaimed" && <Link to={`/apps/add?app=${app.id}`} className="mt-4 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white">Claim this app</Link>}
           <ul className="mt-5 space-y-3">{sources.map((source) => <li key={`${source.source_type}-${source.source_url}`} className="flex items-center justify-between gap-3 border-t border-neutral-100 pt-3 text-sm"><span className="capitalize">{source.source_type}</span><a href={source.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 text-sky-700 hover:underline">View source <ExternalLink className="h-3 w-3" /></a></li>)}</ul></section>
-        <section className="mt-6 rounded-2xl border border-dashed border-neutral-300 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Verified traction</h2><p className="mt-2 text-sm text-neutral-500">No verified revenue or traffic is available for this listing.</p></section>
+        {traction.length > 0 && <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Traffic</h2><div className="mt-4 grid gap-4 sm:grid-cols-3">{traction.map((point) => <div key={point.metric_type} className="rounded-xl border p-4"><p className="text-sm text-neutral-500">{{ active_users: "Active users", sessions: "Sessions", views: "Views" }[point.metric_type] || point.metric_type} · {point.metric_date}</p><p className="mt-2 text-xl font-semibold">{point.visibility === "verified_only" ? "Traffic verified" : point.visibility === "range" ? point.value_range : point.value?.toLocaleString()}</p><p className="mt-2 text-xs text-neutral-500">Verified by Google Analytics · Updated {new Date(point.last_verified_at).toLocaleString()}</p></div>)}</div></section>}
       </>}
     </main><SiteFooter /></div>;
 }

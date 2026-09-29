@@ -28,7 +28,7 @@ export default function MyApps() {
       <div className="flex items-center justify-between gap-3"><div><h2 className="font-semibold">{item.app?.name || "App under review"}</h2><p className="text-sm text-neutral-500">{item.app?.website_url || "Private submission"}</p></div>
       <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs">{item.verification_state === "domain_verified" ? "Domain verified" : item.status === "review" ? "Review pending" : "Verification required"}</span></div>
       <p className="mt-3 text-xs text-neutral-500">{item.app?.claim_state === "unclaimed" ? "Public listing · unclaimed" : item.status === "verified" ? "Public listing · claimed" : "Claim pending"}</p>
-      <div className="mt-3 flex gap-4 text-sm"><Link to={`/apps/add?app=${item.app_id}`} className="text-sky-700">Manage claim</Link>{item.status === "verified" && <Link to={`/apps/${item.app_id}`} className="text-sky-700">Public profile</Link>}</div>
+      <div className="mt-3 flex gap-4 text-sm"><Link to={`/apps/add?app=${item.app_id}`} className="text-sky-700">Manage claim</Link>{item.status === "verified" && <Link to={`/apps/${item.app_id}`} className="text-sky-700">Public profile</Link>}{item.verification_state === "domain_verified" && <Link to={`/my-apps/${item.app_id}/analytics`} className="text-sky-700">Traffic connection</Link>}</div>
       {item.status === "verified" && <div className="mt-3 text-sm"><button onClick={() => { setSourceFor(sourceFor === item.app_id ? null : item.app_id); setError(""); }} className="text-sky-700">Add source</button>
         {sourceFor === item.app_id && <form className="mt-3 flex gap-2" onSubmit={async (event) => {
           event.preventDefault(); setError(""); setNotice("");

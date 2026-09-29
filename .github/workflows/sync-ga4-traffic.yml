@@ -1,0 +1,21 @@
+name: Sync verified GA4 traffic
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Sync active GA4 connections
+        env:
+          ROCKET_GA4_SYNC_SECRET: ${{ secrets.ROCKET_GA4_SYNC_SECRET }}
+        run: |
+          test -n "$ROCKET_GA4_SYNC_SECRET"
+          curl --fail-with-body --silent --show-error --max-time 840 \
+            -X POST 'https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-ga4' \
+            -H 'Content-Type: application/json' \
+            -H "x-rocket-sync-secret: $ROCKET_GA4_SYNC_SECRET" \
+            --data '{"action":"scheduled_sync"}' \
+            --output /dev/null
