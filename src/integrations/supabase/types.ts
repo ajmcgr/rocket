@@ -14,6 +14,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      public_app_revenue: {
+        Row: { app_id: string; currency: string; metric_type: string; visibility: string;
+          mrr_minor: number | null; range_lower_minor: number | null; range_upper_minor: number | null;
+          observed_at: string; last_verified_at: string; provider: string }
+        Insert: { app_id: string; currency: string; metric_type: string; visibility: string;
+          mrr_minor?: number | null; range_lower_minor?: number | null; range_upper_minor?: number | null;
+          observed_at: string; last_verified_at: string; provider: string }
+        Update: { app_id?: string; currency?: string; metric_type?: string; visibility?: string;
+          mrr_minor?: number | null; range_lower_minor?: number | null; range_upper_minor?: number | null;
+          observed_at?: string; last_verified_at?: string; provider?: string }
+        Relationships: []
+      }
       public_app_traction: {
         Row: { app_id: string; metric_type: string; visibility: string; value: number | null;
           value_range: string | null; metric_date: string; provider: string; last_verified_at: string }

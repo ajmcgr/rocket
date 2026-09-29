@@ -89,3 +89,6 @@ verify_jwt = true
 
 [functions.rocket-ga4]
 verify_jwt = false
+
+[functions.rocket-stripe-revenue]
+verify_jwt = false

@@ -72,6 +72,7 @@ import PublicAppProfile from "./pages/PublicAppProfile.tsx";
 import AddApp from "./pages/AddApp.tsx";
 import MyApps from "./pages/MyApps.tsx";
 import AppAnalytics from "./pages/AppAnalytics.tsx";
+import AppRevenue from "./pages/AppRevenue.tsx";
 import Developer, { DeveloperActivate, DeveloperAppDetail } from "./pages/Developer.tsx";
 import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
 import AppShell from "./components/AppShell.tsx";
@@ -145,6 +146,7 @@ const App = () => (
               <Route path="/apps/add" element={<AddApp />} />
               <Route path="/my-apps" element={<MyApps />} />
               <Route path="/my-apps/:id/analytics" element={<AppAnalytics />} />
+              <Route path="/my-apps/:id/revenue" element={<AppRevenue />} />
               <Route path="/projects/new" element={<ProjectWizard />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/insights" element={<Insights />} />

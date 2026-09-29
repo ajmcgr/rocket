@@ -1,0 +1,21 @@
+# Separate read-only Stripe App for Rocket revenue verification.
+# Create/upload from a dedicated Stripe App developer account, never from
+# Rocket Connect Payments' platform account or its credentials.
+id: com.worksapp.rocket-revenue-verification
+version: 0.1.0
+name: Rocket Revenue Verification
+declarations:
+  distribution_type: public
+  sandbox_install_compatible: true
+  stripe_api_access_type: oauth
+  allowed_redirect_uris:
+    - https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-stripe-revenue
+  stripe_api_access:
+    permissions:
+      - permission: subscription_read
+        purpose: Read subscription status, recurring items, and quantities for selected-app MRR.
+      - permission: product_read
+        purpose: Show product names and verify the founder's selected product mappings.
+      - permission: plan_read
+        purpose: Read recurring price amounts and intervals for selected-app MRR.
+extensions: []
