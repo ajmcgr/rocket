@@ -11,6 +11,7 @@ import BuyCreditsMenu from "./BuyCreditsMenu";
 import {
   HelpCircle,
   Compass,
+  Bookmark,
   Plus,
   Layers3,
   Palette,
@@ -182,6 +183,10 @@ const AppShell = () => {
           <NavLink to="/my-apps" className={sidebarItemClass} aria-label="My Apps" title="My Apps">
             <Layers3 className="h-4 w-4 shrink-0" />
             {!collapsed && <span>My Apps</span>}
+          </NavLink>
+          <NavLink to="/saved-apps" className={sidebarItemClass} aria-label="Saved Apps" title="Saved Apps">
+            <Bookmark className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Saved Apps</span>}
           </NavLink>
           {studioNav.map((item) => {
             const Icon = item.icon;

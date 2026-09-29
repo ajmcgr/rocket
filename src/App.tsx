@@ -68,6 +68,7 @@ import FAQ from "./pages/FAQ.tsx";
 import AIInfo from "./pages/AIInfo.tsx";
 import RocketConnectAuthorize from "./pages/RocketConnectAuthorize.tsx";
 import Discover from "./pages/Discover.tsx";
+import SavedApps from "./pages/SavedApps.tsx";
 import PublicAppProfile from "./pages/PublicAppProfile.tsx";
 import AddApp from "./pages/AddApp.tsx";
 import MyApps from "./pages/MyApps.tsx";
@@ -145,6 +146,7 @@ const App = () => (
               <Route path="/projects" element={<Navigate to="/logos" replace />} />
               <Route path="/apps/add" element={<AddApp />} />
               <Route path="/my-apps" element={<MyApps />} />
+              <Route path="/saved-apps" element={<SavedApps />} />
               <Route path="/my-apps/:id/analytics" element={<AppAnalytics />} />
               <Route path="/my-apps/:id/revenue" element={<AppRevenue />} />
               <Route path="/projects/new" element={<ProjectWizard />} />

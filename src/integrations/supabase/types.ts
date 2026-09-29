@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      saved_apps: {
+        Row: { user_id: string; app_id: string; saved_at: string }
+        Insert: { user_id: string; app_id: string; saved_at?: string }
+        Update: { user_id?: string; app_id?: string; saved_at?: string }
+        Relationships: []
+      }
       public_app_revenue: {
         Row: { app_id: string; currency: string; metric_type: string; visibility: string;
           mrr_minor: number | null; range_lower_minor: number | null; range_upper_minor: number | null;
@@ -37,6 +43,20 @@ export type Database = {
       }
     }
     Views: {
+      public_app_intelligence: {
+        Row: { app_id: string; signal_type: string; evidence_source: string; net_votes: number;
+          age_band: string; cohort_category: string | null; cohort_size: number;
+          percentile_rank: number; category_median_votes: number | null;
+          source_updated_at: string; calculated_at: string; calculation_version: number }
+        Relationships: []
+      }
+      public_category_intelligence: {
+        Row: { category: string; recent_launches: number; previous_launches: number;
+          launch_volume_change_pct: number | null; median_recent_votes: number | null;
+          top_decile_recent_count: number; recent_catalogue_share_pct: number;
+          window_ends_at: string; calculated_at: string; calculation_version: number }
+        Relationships: []
+      }
       public_apps: {
         Row: {
           id: string; name: string; tagline: string | null; description: string | null;

@@ -88,6 +88,15 @@ function byProduct(rows) {
   return map;
 }
 
+function launchVoteRecord(productId, row) {
+  const count = (value) => {
+    const number = Number(value ?? 0);
+    if (!Number.isSafeInteger(number)) throw new Error(`Invalid public Launch vote count for ${productId}`);
+    return Math.min(999999999, Math.max(0, number));
+  };
+  return { launch_id: productId, net_votes: count(row?.net_votes), total_votes: count(row?.total_votes) };
+}
+
 function createLaunchRecord(product, enrichment, duplicateCounts) {
   const normalized = normalizedWebsite(product.domain_url);
   if (!normalized || !product.slug || !product.name?.trim()) return null;
@@ -134,17 +143,20 @@ async function run() {
   }
 
   const records = [];
+  const voteRecords = [];
   for (let offset = 0; offset < products.length; offset += PAGE_SIZE) {
     const page = products.slice(offset, offset + PAGE_SIZE);
     const ids = page.map((product) => product.id);
-    const [categoryMapRows, tagMapRows, mediaRows] = await Promise.all([
+    const [categoryMapRows, tagMapRows, mediaRows, voteRows] = await Promise.all([
       relatedRows(launchKey, ids, "product_category_map", "product_id,category_id"),
       relatedRows(launchKey, ids, "product_tag_map", "product_id,tag_id"),
       relatedRows(launchKey, ids, "product_media", "id,product_id,type,url"),
+      relatedRows(launchKey, ids, "product_vote_counts", "product_id,net_votes,total_votes"),
     ]);
     const categories = byProduct(categoryMapRows);
     const tags = byProduct(tagMapRows);
     const media = byProduct(mediaRows);
+    const votes = new Map(voteRows.map((row) => [row.product_id, row]));
     for (const product of page) {
       const icon = (media.get(product.id) || []).filter((item) => item.type === "icon")
         .sort((a, b) => a.id.localeCompare(b.id))[0]?.url;
@@ -153,7 +165,10 @@ async function run() {
         tags: (tags.get(product.id) || []).map((item) => tagNames.get(item.tag_id)).filter(Boolean),
         icon,
       }, duplicates);
-      if (record) records.push(record);
+      if (record) {
+        records.push(record);
+        voteRecords.push(launchVoteRecord(product.id, votes.get(product.id)));
+      }
     }
   }
 
@@ -166,6 +181,7 @@ async function run() {
     safe_candidates: records.filter((item) => !item.ambiguous).length,
     with_icon: records.filter((item) => item.logo_url).length,
     with_category: records.filter((item) => item.categories.length).length,
+    with_positive_launch_votes: voteRecords.filter((item) => item.net_votes > 0).length,
     largest_duplicate_groups: [...duplicates.entries()].filter(([, count]) => count > 1)
       .sort((a, b) => b[1] - a[1]).slice(0, 8).map(([url, count]) => ({ url, count })),
   };
@@ -197,10 +213,20 @@ async function run() {
     catch { console.error(`Unable to close failed import ${runId}; it will time out after two hours.`); }
     throw error;
   }
+  // A vote/derived refresh failure leaves the catalogue and the last successful
+  // intelligence snapshot intact; the next daily run can retry it safely.
+  let voteUpdates = 0;
+  for (let offset = 0; offset < voteRecords.length; offset += PAGE_SIZE) {
+    voteUpdates += await rocketRpc(rocketKey, "sync_launch_vote_counts", {
+      p_items: voteRecords.slice(offset, offset + PAGE_SIZE),
+    });
+  }
+  const intelligence = await rocketRpc(rocketKey, "refresh_launch_intelligence", {});
+  console.log(JSON.stringify({ vote_updates: voteUpdates, intelligence }));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   run().catch((error) => { console.error(error); process.exitCode = 1; });
 }
 
-export { normalizedWebsite, createLaunchRecord };
+export { normalizedWebsite, createLaunchRecord, launchVoteRecord };

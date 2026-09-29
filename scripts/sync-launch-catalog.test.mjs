@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizedWebsite, createLaunchRecord } from "./sync-launch-catalog.mjs";
+import { normalizedWebsite, createLaunchRecord, launchVoteRecord } from "./sync-launch-catalog.mjs";
 
 test("normalizes tracking parameters without merging different paths", () => {
   assert.equal(normalizedWebsite("HTTPS://Example.com/App?utm_source=x#section")?.identityKey, "https://example.com/App");
@@ -28,4 +28,13 @@ test("duplicate exact URL stays ambiguous without rejecting distinct products on
   const product = { id: "abc", slug: "example", name: "Example", domain_url: "https://example.com/tool", launch_date: null, platforms: [] };
   assert.equal(createLaunchRecord(product, {}, new Map([["https://example.com/tool", 2]])).ambiguous, true);
   assert.equal(createLaunchRecord(product, {}, new Map([["https://example.com/other", 2]])).ambiguous, false);
+});
+
+test("public vote aggregates are bounded, deterministic and missing rows become zero", () => {
+  assert.deepEqual(launchVoteRecord("product", { net_votes: 5, total_votes: 7 }),
+    { launch_id: "product", net_votes: 5, total_votes: 7 });
+  assert.deepEqual(launchVoteRecord("product", undefined),
+    { launch_id: "product", net_votes: 0, total_votes: 0 });
+  assert.equal(launchVoteRecord("product", { net_votes: -1 }).net_votes, 0);
+  assert.throws(() => launchVoteRecord("product", { net_votes: "not a count" }));
 });
