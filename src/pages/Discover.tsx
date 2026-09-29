@@ -11,6 +11,7 @@ import SaveAppButton from "@/components/SaveAppButton";
 import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import AppTrustBadges from "@/components/AppTrustBadges";
 import type { AppTrust } from "@/lib/appTrust";
+import DiscoveryPreview from "@/components/DiscoveryPreview";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -35,9 +36,13 @@ export default function Discover() {
   const source = params.get("source") || "";
   const sort = params.get("sort") === "discovered" ? "discovered" : "launched";
   const page = Math.max(0, Math.min(Number(params.get("page") || 0) || 0, 1000));
-  const search = safeSearch(params.get("q") || "");
+  const rawSearch = params.get("q") || "";
+  const search = safeSearch(rawSearch);
   const view = ["rising", "new", "categories", "all"].includes(params.get("view") || "")
-    ? params.get("view")! : (search || category || platform || source ? "all" : "rising");
+    ? params.get("view")! : "all";
+  const showOverview = !params.get("view") && !search && !category && !platform && !source && page === 0;
+
+  useEffect(() => { setQuery(rawSearch); }, [rawSearch]);
 
   useDocumentMeta({ title: "Discover apps | Rocket", description: "Explore launched apps and find what to build next. Browse real products by category, platform and launch date.", canonical: "https://tryrocket.ai/discover" });
 
@@ -114,36 +119,41 @@ export default function Discover() {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value); else next.delete(key);
     if (key !== "view") next.set("view", "all");
+    if (key === "view" && value !== "all") {
+      for (const filter of ["q", "category", "platform", "source", "sort"]) next.delete(filter);
+      setQuery("");
+    }
     next.delete("page");
     setParams(next);
   };
 
   return <div className="min-h-screen bg-[#f6f8fb] text-neutral-900">
     <SiteHeader />
-    <main className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
-      <p className="text-sm font-semibold text-sky-600">Rocket Discover</p>
-      <h1 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">Find what to build.</h1>
-      <p className="mt-3 max-w-2xl text-neutral-600">Discover independent apps worth using. Launch activity is a public-source signal, not verified traffic, revenue, or a Rocket recommendation.</p>
-      <div className="mt-5 flex gap-4 text-sm"><Link to="/apps/add" className="font-semibold text-sky-700 hover:underline">Add app</Link><Link to="/my-apps" className="text-neutral-600 hover:underline">My Apps</Link><Link to="/saved-apps" className="text-neutral-600 hover:underline">Saved Apps</Link></div>
-      <nav aria-label="Discover sections" className="mt-8 flex flex-wrap gap-2">
-        {([ ["rising", "Rising on Launch"], ["new", "New & interesting"], ["categories", "Categories"], ["all", "All Apps"] ] as const).map(([key, label]) =>
+    <main className="mx-auto max-w-7xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14">
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Rocket Discover</p>
+      <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">Discover independent apps worth using.</h1>
+      <p className="mt-3 max-w-2xl text-neutral-600">Explore what is rising, find something new, or search the full catalogue.</p>
+      <form role="search" className="mt-8 flex w-full max-w-2xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm focus-within:ring-2 focus-within:ring-sky-200" onSubmit={(event) => { event.preventDefault(); change("q", safeSearch(query)); }}>
+        <Search className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400" aria-hidden="true" />
+        <input aria-label="Search apps" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps, tools, or ideas" className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none sm:text-base" />
+        <button className="rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white hover:bg-neutral-700">Search</button>
+      </form>
+      <nav aria-label="Discover sections" className="mt-7 flex flex-wrap gap-2">
+        {([ ["rising", "Rising"], ["new", "New"], ["categories", "Categories"], ["all", "All Apps"] ] as const).map(([key, label]) =>
           <button key={key} onClick={() => change("view", key)} aria-current={view === key ? "page" : undefined}
             className={`rounded-full px-4 py-2 text-sm ${view === key ? "bg-neutral-900 text-white" : "border border-neutral-200 bg-white text-neutral-700 hover:border-sky-300"}`}>{label}</button>)}
       </nav>
-      <form className="mt-8 flex max-w-xl gap-2" onSubmit={(event) => { event.preventDefault(); change("q", safeSearch(query)); }}>
-        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4">
-          <Search className="h-4 w-4 text-neutral-400" />
-          <input aria-label="Search apps" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps or ideas" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" />
-        </label>
-        <button className="rounded-xl bg-neutral-900 px-5 text-sm font-medium text-white hover:bg-neutral-700">Search</button>
-      </form>
-      <div className="mt-6 flex flex-wrap gap-3">
+      {showOverview && <DiscoveryPreview />}
+      {view === "all" && <details className="mt-9 rounded-xl border border-neutral-200 bg-white p-4" open={Boolean(search || category || platform || source || params.get("sort"))}>
+        <summary className="cursor-pointer text-sm font-semibold text-neutral-700">Filters and sorting</summary>
+      <div className="mt-4 flex flex-wrap gap-3">
         <select aria-label="Category" value={category} onChange={(event) => change("category", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All categories</option>{categories.map((item) => <option key={item.category} value={item.category}>{item.category} ({item.app_count})</option>)}</select>
         <select aria-label="Platform" value={platform} onChange={(event) => change("platform", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All platforms</option><option value="web">Web</option><option value="ios">iOS</option><option value="android">Android</option><option value="hardware">Hardware</option></select>
         <select aria-label="Source" value={source} onChange={(event) => change("source", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All sources</option><option value="launch">Launch</option></select>
         <select aria-label="Order" value={sort} onChange={(event) => change("sort", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="launched">Newest launches</option><option value="discovered">Recently discovered</option></select>
       </div>
-      <div className="mt-8 flex items-center justify-between text-sm text-neutral-500"><span>{loading ? "Loading apps…" : view === "categories" ? `${categorySignals.length} categories with comparable activity` : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}</span><span>{view === "all" ? "Source-backed public listings" : "Launch evidence only · refreshed daily"}</span></div>
+      </details>}
+      <div className="mt-9 flex items-center justify-between text-sm text-neutral-500"><span>{loading ? "Loading apps…" : view === "categories" ? `${categorySignals.length} categories` : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}</span><span>{view === "all" ? "All Apps" : "Public Launch activity"}</span></div>
       {error && <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
       {!loading && !error && view !== "categories" && apps.length === 0 && <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-600">{view === "all" ? "No apps match these filters." : "No apps currently meet this evidence threshold. Browse all apps instead."}</div>}
       {view === "categories" && !loading && !error && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{categorySignals.map((item) =>
@@ -167,7 +177,7 @@ export default function Discover() {
           {signals.get(app.id) && <div className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signals.get(app.id)!)}</strong><p className="mt-1">{signalExplanation(signals.get(app.id)!)}</p></div>}
           <div className="mt-4 flex flex-wrap gap-1.5">{app.categories.slice(0, 2).map((item) => <span key={item} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600">{item}</span>)}</div>
           </Link>
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 text-xs text-neutral-500"><span>{app.launch_url ? "Listed on Launch" : "Public source"} · {formatDate(app.launched_at) || "Date unavailable"}</span><SaveAppButton appId={app.id} saved={savedIds.has(app.id)} onChange={(saved) => setSavedIds((current) => { const next = new Set(current); if (saved) next.add(app.id); else next.delete(app.id); return next; })} /></div>
+          <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 text-xs text-neutral-500"><span>{formatDate(app.launched_at) || app.canonical_host}</span><SaveAppButton appId={app.id} saved={savedIds.has(app.id)} onChange={(saved) => setSavedIds((current) => { const next = new Set(current); if (saved) next.add(app.id); else next.delete(app.id); return next; })} /></div>
         </article>)}
       </div>}
       {!error && count > PAGE_SIZE && <div className="mt-8 flex items-center justify-center gap-4"><button disabled={page === 0 || loading} onClick={() => { const next = new URLSearchParams(params); next.set("page", String(page - 1)); setParams(next); }} className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm disabled:opacity-40">Previous</button><span className="text-sm text-neutral-500">Page {page + 1} of {Math.ceil(count / PAGE_SIZE)}</span><button disabled={(page + 1) * PAGE_SIZE >= count || loading} onClick={() => { const next = new URLSearchParams(params); next.set("page", String(page + 1)); setParams(next); }} className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm disabled:opacity-40">Next</button></div>}

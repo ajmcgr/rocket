@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "./Logo";
 import ShareExportModal from "./ShareExportModal";
@@ -7,26 +7,14 @@ import OnboardingTour from "./OnboardingTour";
 import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
-import BuyCreditsMenu from "./BuyCreditsMenu";
+import { MobilePrimaryNav } from "./PrimaryNav";
+import { destinations } from "./primaryDestinations";
 import {
   HelpCircle,
-  Compass,
-  Bookmark,
-  Plus,
-  Layers3,
-  Palette,
-  PenTool,
   Settings,
   Share2,
-  Sparkles,
-  Shapes,
-  LayoutTemplate,
-  Star,
-  Wand2,
-  Trash2,
   PanelLeftClose,
   PanelLeftOpen,
-  type LucideIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -42,29 +30,12 @@ export type AppShellOutletContext = {
   setHeaderActions: (node: ReactNode | null) => void;
 };
 
-type StudioNavItem = {
-  label: string;
-  to: string;
-  icon: LucideIcon;
-  tour?: string;
-};
-
-const studioNav: StudioNavItem[] = [
-  { label: "Logo Designer", to: "/logos", icon: Sparkles, tour: "nav-logos" },
-  { label: "Icon Designer", to: "/icons", icon: Shapes, tour: "nav-icons" },
-  { label: "Wizard", to: "/wizard", icon: Wand2, tour: "nav-wizard" },
-  { label: "Templates", to: "/templates", icon: LayoutTemplate, tour: "nav-templates" },
-  { label: "Saved", to: "/saved", icon: Star, tour: "nav-saved" },
-  { label: "Brand Kit", to: "/brands", icon: Palette, tour: "nav-brand" },
-  { label: "Editor", to: "/editor", icon: PenTool, tour: "nav-editor" },
-  { label: "Trash", to: "/trash", icon: Trash2, tour: "nav-trash" },
-];
-
 const AppShell = () => {
   const { user, signOut } = useAuth();
   const nav = useNavigate();
+  const { pathname } = useLocation();
   const initial = (user?.email?.[0] || "U").toUpperCase();
-  const avatarUrl = (user as any)?.user_metadata?.avatar_url as string | undefined;
+  const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url;
   const [shareOpen, setShareOpen] = useState(false);
   const [headerLeft, setHeaderLeft] = useState<ReactNode | null>(null);
   const [headerCenter, setHeaderCenter] = useState<ReactNode | null>(null);
@@ -88,22 +59,11 @@ const AppShell = () => {
   const sidebarWidth = collapsed ? 68 : 220;
 
   return (
-    <div className="app-shell min-h-screen bg-[#f5f7fb] font-body text-neutral-900">
+    <div className="app-shell min-h-screen bg-[#f5f7fb] pb-20 font-body text-neutral-900 lg:pb-0">
       <header className="sticky top-0 z-50 bg-white" style={{ boxShadow: "inset 0 -1px 0 #d4d4d8" }}>
         <div className="relative flex h-14 w-full items-center px-4 sm:px-5">
-          <Logo to="/logos" size="md" className="shrink-0" />
+          <Logo to="/" size="md" className="shrink-0" />
           {headerLeft && <div className="ml-2 flex shrink-0 items-center gap-2">{headerLeft}</div>}
-          <div className="ml-4 hidden items-center gap-1 md:flex lg:hidden">
-            {studioNav.slice(0, 3).map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                className={({ isActive }) => `rounded-lg px-2.5 py-2 text-sm font-medium transition ${isActive ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
           <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden -translate-x-1/2 items-center justify-center md:flex">
             <div
               className="pointer-events-auto max-w-full px-4"
@@ -143,7 +103,10 @@ const AppShell = () => {
                   <Link to="/settings">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
-                  <Link to="/pricing" target="_blank" rel="noopener noreferrer">Plans</Link>
+                  <Link to="/settings/billing">Billing & credits</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
+                  <a href="mailto:alex@tryrocket.ai">Help</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => { await signOut(); nav("/"); }}
@@ -171,31 +134,14 @@ const AppShell = () => {
           {!collapsed && <span>Collapse</span>}
         </button>
 
-        <nav className="flex flex-col gap-1" aria-label="Rocket studio">
-          <NavLink to="/discover" className={sidebarItemClass} aria-label="Discover" title="Discover">
-            <Compass className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Discover</span>}
-          </NavLink>
-          <NavLink to="/apps/add" className={sidebarItemClass} aria-label="Add app" title="Add app">
-            <Plus className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Add app</span>}
-          </NavLink>
-          <NavLink to="/my-apps" className={sidebarItemClass} aria-label="My Apps" title="My Apps">
-            <Layers3 className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>My Apps</span>}
-          </NavLink>
-          <NavLink to="/saved-apps" className={sidebarItemClass} aria-label="Saved Apps" title="Saved Apps">
-            <Bookmark className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Saved Apps</span>}
-          </NavLink>
-          {studioNav.map((item) => {
+        <nav className="flex flex-col gap-1" aria-label="Primary">
+          {destinations.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.label}
                 to={item.to}
-                data-tour={item.tour}
-                className={sidebarItemClass}
+                className={() => sidebarItemClass({ isActive: item.matches(pathname) })}
                 aria-label={item.label}
                 title={item.label}
               >
@@ -206,7 +152,6 @@ const AppShell = () => {
           })}
         </nav>
         <div className="mt-auto flex flex-col gap-1">
-          <BuyCreditsMenu collapsed={collapsed} />
           <NavLink
             to="/settings/profile"
             className={sidebarItemClass}
@@ -235,13 +180,14 @@ const AppShell = () => {
       <ShareExportModal
         open={shareOpen}
         onOpenChange={setShareOpen}
-        asset={{ id: "site", title: "Rocket — AI brand & content studio" } as any}
+        asset={{ id: "site", title: "Rocket — one account for every app" }}
         onCreateShareLink={async () => (typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai")}
       />
       <main className="w-full">
         <Outlet context={{ setHeaderLeft, setHeaderCenter, setHeaderActions }} />
       </main>
       </div>
+      <MobilePrimaryNav />
     </div>
   );
 };

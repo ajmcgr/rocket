@@ -1,4 +1,4 @@
-export const DEFAULT_AUTH_RETURN_PATH = "/logos";
+export const DEFAULT_AUTH_RETURN_PATH = "/discover";
 
 export function safeReturnPath(value: string | null | undefined, fallback = DEFAULT_AUTH_RETURN_PATH) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;

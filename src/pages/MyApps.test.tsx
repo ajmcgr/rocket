@@ -10,7 +10,7 @@ const item = {
   app: { name: "Example", website_url: "https://example.com" },
 };
 
-describe("My Apps developer journey", () => {
+describe("Your Apps next actions", () => {
   const render = async (owned: boolean) => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
@@ -23,9 +23,10 @@ describe("My Apps developer journey", () => {
   it("does not claim ownership from a stale verified claim after owner revocation", async () => {
     const { container, cleanup } = await render(false);
     try {
-      expect(container.textContent).toContain("Not yet verified");
-      expect(container.textContent).toContain("Verification required");
+      expect(container.textContent).toContain("Prove this app is yours");
+      expect(container.querySelector('a[href="/launch?app=app-1"]')).not.toBeNull();
       expect(container.textContent).not.toContain("Domain verified");
+      expect(container.textContent).not.toContain("Connect analytics");
     } finally { await cleanup(); }
   });
 
@@ -33,7 +34,7 @@ describe("My Apps developer journey", () => {
     const { container, cleanup } = await render(true);
     try {
       expect(container.textContent).toContain("Domain verified");
-      expect(container.textContent).toContain("Google Analytics settings");
+      expect(container.textContent).toContain("Connect analytics");
     } finally { await cleanup(); }
   });
 });

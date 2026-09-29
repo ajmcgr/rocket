@@ -6,6 +6,13 @@ type FoundApp = { id: string; name: string; description?: string | null; website
 type Job = { id: string; status: string; app_id?: string | null; error?: string | null; result?: Record<string, unknown> };
 type Challenge = { status: string; claim_id?: string; challenge_id?: string; method?: string; host?: string; value?: string; token?: string; expires_at?: string; reason?: string };
 
+function friendlyError(message: string) {
+  if (/invalid|unsupported|url|hostname/i.test(message)) return "Enter a public app website, Launch, GitHub, or Hacker News URL and try again.";
+  if (/timeout|fetch|unavailable|network/i.test(message)) return "We couldn't read that page right now. Check the URL and try again.";
+  if (/already.*claim|verified.*owner|ownership/i.test(message)) return "This app already has an owner. Request a review if you believe it should be yours.";
+  return message || "Something went wrong. Please try again.";
+}
+
 async function call(action: string, body: Record<string, unknown> = {}) {
   const { data, error } = await supabase.functions.invoke("rocket-apps", { body: { action, ...body } });
   if (error) {
@@ -64,7 +71,7 @@ export default function AddApp() {
           description: String(next.result?.description || ""), website_url: String(next.result?.website_url || url),
           logo_url: typeof next.result?.logo_url === "string" ? next.result.logo_url : null });
       }
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(friendlyError((cause as Error).message)); }
     finally { setBusy(false); }
   };
 
@@ -72,7 +79,7 @@ export default function AddApp() {
     if (!app) return;
     setBusy(true); setError(""); setSuccess("");
     try { setChallenge(await call("claim", { app_id: app.id, method })); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(friendlyError((cause as Error).message)); }
     finally { setBusy(false); }
   };
   const verify = async () => {
@@ -80,29 +87,29 @@ export default function AddApp() {
     setBusy(true); setError("");
     try {
       const result = await call("verify", { challenge_id: challenge.challenge_id, token: challenge.token });
-      if (result.outcome === "verified") { setSuccess("Domain verified. This app is now in My Apps."); setChallenge(null); }
+      if (result.outcome === "verified") { setSuccess("Domain verified. This app is now in Your Apps."); setChallenge(null); }
       else setError("Ownership needs manual review.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(friendlyError((cause as Error).message)); }
     finally { setBusy(false); }
   };
 
   return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
-    <div className="flex items-center justify-between"><h1 className="font-display text-3xl">Add your app</h1><Link to="/my-apps" className="text-sm text-sky-700 hover:underline">My Apps</Link></div>
+    <div className="flex items-center justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Rocket Launch</p><h1 className="mt-2 font-display text-4xl">Launch your app</h1></div><Link to="/your-apps" className="text-sm text-sky-700 hover:underline">Your Apps</Link></div>
     {!appId && <form onSubmit={submit} className="mt-8 rounded-2xl border bg-white p-6">
-      <label htmlFor="app-url" className="block text-sm font-medium">Paste your app or launch URL</label>
+      <label htmlFor="app-url" className="block text-lg font-semibold">Already launched somewhere? Paste the URL.</label>
       <input id="app-url" type="text" inputMode="url" required value={url} onChange={(event) => setUrl(event.target.value)}
-        placeholder="https://your-app.com" className="mt-3 w-full rounded-xl border px-4 py-3 text-sm" />
+          placeholder="https://your-app.com" className="mt-3 w-full rounded-xl border px-4 py-3 text-sm" />
       <button disabled={busy} className="mt-4 rounded-xl bg-neutral-900 px-5 py-3 text-sm font-medium text-white disabled:opacity-50">
-        {busy ? "Finding your app…" : "Find my app"}
+        {busy ? "Finding your app…" : "Continue"}
       </button>
-      <p className="mt-3 text-xs text-neutral-500">Rocket reads public website information. You will review the result before claiming it.</p>
+      <p className="mt-3 text-xs text-neutral-500">Website, Launch, GitHub, or Hacker News. Rocket reads public information; you review the match before claiming it.</p>
     </form>}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {success && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{success}</p>}
     {job?.status === "needs_review" && <div className="mt-6 rounded-xl border bg-white p-6">
-      <h2 className="font-semibold">This needs a closer look</h2><p className="mt-2 text-sm text-neutral-600">{job.error || "Rocket found more than one possible match and did not merge them."}</p>
+      <h2 className="font-semibold">We found more than one possible app</h2><p className="mt-2 text-sm text-neutral-600">We won't guess which one is yours. Review the URL or contact Rocket for help.</p>
     </div>}
-    {job?.status === "failed" && <p className="mt-5 text-sm text-neutral-600">{job.error || "We could not read that URL. You can retry safely."}</p>}
+    {job?.status === "failed" && <p className="mt-5 text-sm text-neutral-600">We could not read that URL. Check it and try again.</p>}
     {app && <div className="mt-7 rounded-2xl border bg-white p-6">
       <p className="text-sm font-semibold text-sky-700">{job?.result?.outcome === "existing" || appId ? "This app is already on Rocket" : "We found your app"}</p>
       <div className="mt-5 flex items-center gap-4">{app.logo_url ? <img src={app.logo_url} alt="" className="h-14 w-14 rounded-xl object-contain" /> : <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-neutral-100 text-xl">{app.name[0]}</div>}

@@ -1,11 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
 import { Button } from "./ui/button";
-import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MobilePrimaryNav, PrimaryNav } from "./PrimaryNav";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", label: "English" },
@@ -49,36 +50,19 @@ const SiteHeader = () => {
   };
   const { user, loading, signOut } = useAuth();
   const nav = useNavigate();
-  const avatarUrl = (user as any)?.user_metadata?.avatar_url as string | undefined;
+  const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url;
   const initial = (user?.email?.[0] || "U").toUpperCase();
   return (
+    <>
     <header
       className="sticky top-0 z-50 bg-white"
       style={user ? { borderBottom: "1px solid #e5e7eb" } : undefined}
     >
-      <div className="relative mx-auto flex h-16 max-w-4xl items-center px-6">
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6">
         <div className="flex h-full items-center">
           <Logo size="md" />
         </div>
-        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-7 text-sm font-medium leading-none text-neutral-600 md:flex">
-          {user ? (
-            <>
-              <Link to="/discover" className="hover:text-neutral-900">Discover</Link>
-              <Link to="/logos" className="hover:text-neutral-900">Create</Link>
-              <Link to="/logos" className="hover:text-neutral-900">Logos</Link>
-              <Link to="/icons" className="hover:text-neutral-900">Icons</Link>
-              <Link to="/brands" className="hover:text-neutral-900">Brand Kits</Link>
-              <Link to="/templates" className="hover:text-neutral-900">Templates</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/discover" className="hover:text-neutral-900">Discover</Link>
-              <Link to="/pricing" className="hover:text-neutral-900">Pricing</Link>
-              <Link to="/faq" className="hover:text-neutral-900">FAQ</Link>
-              <Link to="/blog" className="hover:text-neutral-900">Resources</Link>
-            </>
-          )}
-        </nav>
+        <PrimaryNav className="mx-auto hidden items-center gap-1 lg:flex" />
         <div className="ml-auto flex items-center gap-6">
           <DropdownMenu>
             <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-neutral-600 hover:text-neutral-900 focus:outline-none">
@@ -116,6 +100,12 @@ const SiteHeader = () => {
                 <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
                   <Link to="/settings">Settings</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
+                  <Link to="/settings/billing">Billing & credits</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
+                  <a href="mailto:alex@tryrocket.ai">Help</a>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => { await signOut(); nav("/"); }}
                   className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900"
@@ -135,6 +125,8 @@ const SiteHeader = () => {
         </div>
       </div>
     </header>
+    <MobilePrimaryNav />
+    </>
   );
 };
 

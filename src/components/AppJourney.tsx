@@ -6,15 +6,9 @@ export type MyApp = { id: string; app_id: string; status: string; verification_s
 
 export default function AppJourney({ item }: { item: MyApp }) {
   const domainVerified = item.owned && item.owner_verification_level === "domain_verified";
-  return <div className="mt-5 border-t border-neutral-100 pt-4">
-    <h3 className="text-sm font-semibold">Build trust around your app</h3>
-    <ol className="mt-3 space-y-3 text-sm">
-      <li><span className="font-medium">1. Claim ownership</span> · {item.owned ? "Claimed" : item.status === "review" ? "Review pending" : "Not yet verified"} {!item.owned && <Link to={`/apps/add?app=${item.app_id}`} className="ml-2 text-sky-700">Continue claim</Link>}</li>
-      <li><span className="font-medium">2. Verify domain</span> · {domainVerified ? "Domain verified" : "Verification required"} {!domainVerified && <Link to={`/apps/add?app=${item.app_id}`} className="ml-2 text-sky-700">Verify</Link>}</li>
-      <li><span className="font-medium">3. Verify traction</span> · {domainVerified ? <Link to={`/my-apps/${item.app_id}/analytics`} className="text-sky-700">Google Analytics settings</Link> : "Available after domain verification"} <span className="text-neutral-500">· Stripe Revenue pilot gated</span></li>
-      <li><span className="font-medium">4. Connect to Rocket</span> · <Link to="/developer" className="text-sky-700">Rocket Identity and Payments test program</Link><span className="text-neutral-500"> (invitation-only; registration alone does not mark this listing Connected)</span></li>
-      <li><span className="font-medium">5. Get discovered</span> · <span className="text-neutral-600">Verified, permissioned signals help users understand your app and may qualify it for future Rocket editorial features. No ranking boost is promised.</span></li>
-    </ol>
-    <p className="mt-4 text-xs text-neutral-500">Connected data stays private unless you choose Verified only, Range, or Exact in its settings. Public visibility does not grant Rocket permission to use your metric in external marketing.</p>
+  return <div className="mt-5 border-t border-neutral-100 pt-4 text-sm">
+    {!domainVerified ? item.status === "review" ? <p className="font-medium text-neutral-700">Ownership review pending. We’ll let you know when there is an update.</p>
+      : <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-semibold">Prove this app is yours</p><p className="mt-1 text-neutral-600">Verify control of its website to build trust in the public listing.</p></div><Link to={`/launch?app=${item.app_id}`} className="rounded-lg bg-neutral-900 px-4 py-2 font-medium text-white">Verify domain</Link></div>
+      : <div><p className="font-semibold text-neutral-900">Domain verified</p><p className="mt-1 text-neutral-600">Your public listing shows that you control the website.</p><div className="mt-3 flex flex-wrap gap-4"><Link to={`/my-apps/${item.app_id}/analytics`} className="font-medium text-sky-700 hover:underline">Connect analytics</Link><span className="text-neutral-500">Revenue verification: pilot only</span></div></div>}
   </div>;
 }

@@ -163,3 +163,10 @@
 .slide-content .slide-page     { font-size: var(--slide-chrome); line-height: 1.15; }
 .slide-content .slide-badge,
 .slide-content .slide-page     { white-space: nowrap; }
+
+/* Keep the support launcher clear of the mobile primary navigation. */
+@media (max-width: 1023px) {
+  #crisp-chatbox [role="button"][aria-label="Open chat"] {
+    bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+  }
+}

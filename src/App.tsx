@@ -1,9 +1,10 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
+import Home from "./pages/Home.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Reserve from "./pages/Reserve.tsx";
 import Login from "./pages/Login.tsx";
@@ -12,71 +13,73 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VerifyEmail from "./pages/VerifyEmail.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
-import Dashboard from "./pages/Dashboard.tsx";
-import Generate from "./pages/Generate.tsx";
-import CreateEntry from "./pages/CreateEntry.tsx";
-import LogoStudio from "./pages/LogoStudio.tsx";
-import SavedLogos from "./pages/SavedLogos.tsx";
-import IconDesigner from "./pages/IconDesigner.tsx";
-import LogoDesigner from "./pages/LogoDesigner.tsx";
-import Editor from "./pages/Editor.tsx";
-import Presenter from "./pages/Presenter.tsx";
-import Assets from "./pages/Assets.tsx";
-import Trash from "./pages/Trash.tsx";
-import ProjectDetail from "./pages/ProjectDetail.tsx";
-import Studio from "./pages/Studio.tsx";
-import Brand from "./pages/Brand.tsx";
-import BrandLayout from "./pages/BrandLayout.tsx";
-import BrandHub from "./pages/BrandHub.tsx";
-import BrandKit from "./pages/BrandKit.tsx";
-import BrandKitHub from "./pages/BrandKitHub.tsx";
-import LogoFiles from "./pages/LogoFiles.tsx";
-import WebsiteTemplates from "./pages/WebsiteTemplates.tsx";
-import PaletteExplorer from "./pages/PaletteExplorer.tsx";
-import FontExplorer from "./pages/FontExplorer.tsx";
-import SocialKit from "./pages/SocialKit.tsx";
-import SocialIcons from "./pages/SocialIcons.tsx";
-import BrandGuidelines from "./pages/BrandGuidelines.tsx";
-import ProjectWizard from "./pages/ProjectWizard.tsx";
-import Templates from "./pages/Templates.tsx";
-import Insights from "./pages/Insights.tsx";
-import Notifications from "./pages/Notifications.tsx";
-import SharedAsset from "./pages/SharedAsset.tsx";
-import SharedProject from "./pages/SharedProject.tsx";
-import Gallery from "./pages/Gallery.tsx";
-import SettingsLayout, {
-  ProfileSettings,
-  IntegrationsSettings,
-  NotificationsSettings,
-  AccountSettings,
-  BillingSettings,
-} from "./pages/Settings.tsx";
-import Team from "./pages/Team.tsx";
-import AcceptInvite from "./pages/AcceptInvite.tsx";
-import About from "./pages/About.tsx";
-import Blog from "./pages/Blog.tsx";
-import BlogPost from "./pages/BlogPost.tsx";
-import BlogAuthor from "./pages/BlogAuthor.tsx";
-import ResourcesHub, { PillarPage } from "./pages/Resources.tsx";
-import Compare from "./pages/Compare.tsx";
-import ComparisonDetail from "./pages/ComparisonDetail.tsx";
-import MediaKit from "./pages/MediaKit.tsx";
-import Tools from "./pages/Tools.tsx";
-import ToolDetail from "./pages/ToolDetail.tsx";
-import Pricing from "./pages/Pricing.tsx";
-import FAQ from "./pages/FAQ.tsx";
-import AIInfo from "./pages/AIInfo.tsx";
-import RocketConnectAuthorize from "./pages/RocketConnectAuthorize.tsx";
+const Index = lazy(() => import("./pages/Index.tsx"));
+const Generate = lazy(() => import("./pages/Generate.tsx"));
+const CreateEntry = lazy(() => import("./pages/CreateEntry.tsx"));
+const LogoStudio = lazy(() => import("./pages/LogoStudio.tsx"));
+const SavedLogos = lazy(() => import("./pages/SavedLogos.tsx"));
+const IconDesigner = lazy(() => import("./pages/IconDesigner.tsx"));
+const LogoDesigner = lazy(() => import("./pages/LogoDesigner.tsx"));
+const Editor = lazy(() => import("./pages/Editor.tsx"));
+const Presenter = lazy(() => import("./pages/Presenter.tsx"));
+const Assets = lazy(() => import("./pages/Assets.tsx"));
+const Trash = lazy(() => import("./pages/Trash.tsx"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail.tsx"));
+const Brand = lazy(() => import("./pages/Brand.tsx"));
+const BrandLayout = lazy(() => import("./pages/BrandLayout.tsx"));
+const BrandHub = lazy(() => import("./pages/BrandHub.tsx"));
+const BrandKit = lazy(() => import("./pages/BrandKit.tsx"));
+const BrandKitHub = lazy(() => import("./pages/BrandKitHub.tsx"));
+const LogoFiles = lazy(() => import("./pages/LogoFiles.tsx"));
+const WebsiteTemplates = lazy(() => import("./pages/WebsiteTemplates.tsx"));
+const PaletteExplorer = lazy(() => import("./pages/PaletteExplorer.tsx"));
+const FontExplorer = lazy(() => import("./pages/FontExplorer.tsx"));
+const SocialKit = lazy(() => import("./pages/SocialKit.tsx"));
+const SocialIcons = lazy(() => import("./pages/SocialIcons.tsx"));
+const BrandGuidelines = lazy(() => import("./pages/BrandGuidelines.tsx"));
+const ProjectWizard = lazy(() => import("./pages/ProjectWizard.tsx"));
+const Templates = lazy(() => import("./pages/Templates.tsx"));
+const Insights = lazy(() => import("./pages/Insights.tsx"));
+const Notifications = lazy(() => import("./pages/Notifications.tsx"));
+const SharedAsset = lazy(() => import("./pages/SharedAsset.tsx"));
+const SharedProject = lazy(() => import("./pages/SharedProject.tsx"));
+const Gallery = lazy(() => import("./pages/Gallery.tsx"));
+const SettingsLayout = lazy(() => import("./pages/Settings.tsx"));
+const ProfileSettings = lazy(() => import("./pages/Settings.tsx").then((module) => ({ default: module.ProfileSettings })));
+const IntegrationsSettings = lazy(() => import("./pages/Settings.tsx").then((module) => ({ default: module.IntegrationsSettings })));
+const NotificationsSettings = lazy(() => import("./pages/Settings.tsx").then((module) => ({ default: module.NotificationsSettings })));
+const AccountSettings = lazy(() => import("./pages/Settings.tsx").then((module) => ({ default: module.AccountSettings })));
+const BillingSettings = lazy(() => import("./pages/Settings.tsx").then((module) => ({ default: module.BillingSettings })));
+const Team = lazy(() => import("./pages/Team.tsx"));
+const AcceptInvite = lazy(() => import("./pages/AcceptInvite.tsx"));
+const About = lazy(() => import("./pages/About.tsx"));
+const Blog = lazy(() => import("./pages/Blog.tsx"));
+const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
+const BlogAuthor = lazy(() => import("./pages/BlogAuthor.tsx"));
+const ResourcesHub = lazy(() => import("./pages/Resources.tsx"));
+const PillarPage = lazy(() => import("./pages/Resources.tsx").then((module) => ({ default: module.PillarPage })));
+const Compare = lazy(() => import("./pages/Compare.tsx"));
+const ComparisonDetail = lazy(() => import("./pages/ComparisonDetail.tsx"));
+const MediaKit = lazy(() => import("./pages/MediaKit.tsx"));
+const Tools = lazy(() => import("./pages/Tools.tsx"));
+const ToolDetail = lazy(() => import("./pages/ToolDetail.tsx"));
+const Pricing = lazy(() => import("./pages/Pricing.tsx"));
+const FAQ = lazy(() => import("./pages/FAQ.tsx"));
+const AIInfo = lazy(() => import("./pages/AIInfo.tsx"));
+const RocketConnectAuthorize = lazy(() => import("./pages/RocketConnectAuthorize.tsx"));
 import Discover from "./pages/Discover.tsx";
-import SavedApps from "./pages/SavedApps.tsx";
-import PublicAppProfile from "./pages/PublicAppProfile.tsx";
-import AddApp from "./pages/AddApp.tsx";
-import MyApps from "./pages/MyApps.tsx";
-import AppAnalytics from "./pages/AppAnalytics.tsx";
-import AppRevenue from "./pages/AppRevenue.tsx";
-import Developer, { DeveloperActivate, DeveloperAppDetail } from "./pages/Developer.tsx";
-import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
-import AppShell from "./components/AppShell.tsx";
+const SavedApps = lazy(() => import("./pages/SavedApps.tsx"));
+const PublicAppProfile = lazy(() => import("./pages/PublicAppProfile.tsx"));
+const AddApp = lazy(() => import("./pages/AddApp.tsx"));
+const MyApps = lazy(() => import("./pages/MyApps.tsx"));
+const AppAnalytics = lazy(() => import("./pages/AppAnalytics.tsx"));
+const AppRevenue = lazy(() => import("./pages/AppRevenue.tsx"));
+const Developer = lazy(() => import("./pages/Developer.tsx"));
+const DeveloperActivate = lazy(() => import("./pages/Developer.tsx").then((module) => ({ default: module.DeveloperActivate })));
+const DeveloperAppDetail = lazy(() => import("./pages/Developer.tsx").then((module) => ({ default: module.DeveloperAppDetail })));
+const BrandTemplates = lazy(() => import("./pages/BrandTemplates.tsx").then((module) => ({ default: module.BrandTemplates })));
+const BrandTemplateDetail = lazy(() => import("./pages/BrandTemplates.tsx").then((module) => ({ default: module.BrandTemplateDetail })));
+const AppShell = lazy(() => import("./components/AppShell.tsx"));
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { ScrollToTop } from "./components/ScrollToTop.tsx";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
@@ -108,8 +111,10 @@ const App = () => (
         <AuthProvider>
           <NotificationsProvider>
             <ScrollToTop />
+          <Suspense fallback={<div className="grid min-h-[60vh] place-items-center text-sm text-neutral-500">Loading Rocket…</div>}>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/create/branding" element={<Index />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/apps/:id" element={<PublicAppProfile />} />
             <Route path="/reserve" element={<Reserve />} />
@@ -145,7 +150,9 @@ const App = () => (
             <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
               <Route path="/projects" element={<Navigate to="/logos" replace />} />
               <Route path="/apps/add" element={<AddApp />} />
+              <Route path="/launch" element={<AddApp />} />
               <Route path="/my-apps" element={<MyApps />} />
+              <Route path="/your-apps" element={<MyApps />} />
               <Route path="/saved-apps" element={<SavedApps />} />
               <Route path="/my-apps/:id/analytics" element={<AppAnalytics />} />
               <Route path="/my-apps/:id/revenue" element={<AppRevenue />} />
@@ -209,6 +216,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </NotificationsProvider>
         </AuthProvider>
       </BrowserRouter>

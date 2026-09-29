@@ -52,7 +52,7 @@ export default function SavedApps() {
   return <div className="mx-auto max-w-5xl px-6 py-10 text-neutral-900">
     <Link to="/discover" className="text-sm text-sky-700 hover:underline">← Discover</Link>
     <h1 className="mt-4 font-display text-4xl">Saved Apps</h1>
-    <p className="mt-2 text-neutral-600">Your private research shortlist. Launch evidence updates as the catalogue refreshes.</p>
+    <p className="mt-2 text-neutral-600">Apps you want to remember and explore. Looking for a design? <Link to="/saved" className="font-medium text-sky-700 hover:underline">Open Saved Designs in Create</Link>.</p>
     {loading && <p className="mt-8 text-neutral-500">Loading saved apps…</p>}
     {error && <p role="alert" className="mt-8 text-red-700">Saved Apps could not be loaded. Please reload.</p>}
     {!loading && !error && rows.length === 0 && <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-8"><p>No saved apps yet.</p><Link to="/discover" className="mt-3 inline-block text-sky-700 hover:underline">Explore Discover</Link></div>}

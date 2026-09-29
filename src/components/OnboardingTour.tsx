@@ -16,69 +16,25 @@ const STORAGE_KEY = "rocket.onboarding.v2";
 const STEPS: Step[] = [
   {
     title: "Welcome to Rocket",
-    body: "Rocket helps founders design a complete startup brand — logos, icons, palettes, fonts and a full brand kit — in minutes.",
+    body: "One account for every app. Discover independent apps worth using, or launch your own.",
     placement: "center",
     cta: "Start tour",
   },
   {
-    selector: '[data-tour="nav-logos"]',
-    title: "Design your logo",
-    body: "Chat with Rocket to generate professional logo concepts. Regenerate, refine and star the ones you love.",
-    placement: "bottom",
+    title: "Discover and save",
+    body: "Search the app catalogue, explore Rising and New, and save apps you want to revisit.",
+    placement: "center",
   },
   {
-    selector: '[data-tour="chats-sidebar"]',
-    title: "Your chat history",
-    body: "Every conversation is saved here. Jump back into a past chat, pin favourites or start a new one with the + New button.",
-    placement: "right",
-  },
-  {
-    selector: '[data-tour="nav-icons"]',
-    title: "Create matching icons",
-    body: "Generate app icons, favicons and symbols that complement your chosen logo.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="nav-wizard"]',
-    title: "Try the Wizard",
-    body: "Answer a few questions and let Rocket generate a full brand direction for you in one go.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="nav-templates"]',
-    title: "Browse templates",
-    body: "Hundreds of ready-made templates for social posts, decks, business cards and more — remix any of them in the editor.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="nav-saved"]',
-    title: "Saved designs",
-    body: "Star anything you like from chat and it lands here — filter, sort and remix at any time.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="nav-brand"]',
-    title: "Build your Brand Kit",
-    body: "Combine your saved logo, palette, fonts and brand book into one downloadable kit — ready for your team.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="nav-editor"]',
-    title: "Refine your designs",
-    body: "Fine-tune any design in the editor — swap colours, edit text, resize and export.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="nav-notifications"]',
-    title: "Stay in the loop",
-    body: "We'll ping you here when generations finish and when your kit is ready to download.",
-    placement: "bottom",
+    title: "Launch and create",
+    body: "Launch adds your app to Rocket. Create keeps your logo, icon, saved designs, and Brand Kits together.",
+    placement: "center",
   },
   {
     title: "You're ready",
-    body: "Let's design your first logo. You can replay this tour any time from Settings.",
+    body: "Start with an app, or explore Rocket Create. You can replay this tour from Settings.",
     placement: "center",
-    cta: "Open Logo Designer",
+    cta: "Explore apps",
   },
 ];
 
@@ -98,7 +54,7 @@ const OnboardingTour = () => {
     if (!user) return;
     const key = `${STORAGE_KEY}.${user.id}`;
     if (localStorage.getItem(key)) return;
-    const createdAt = new Date((user as any).created_at || 0).getTime();
+    const createdAt = new Date(user.created_at || 0).getTime();
     const isNew = createdAt > 0 && Date.now() - createdAt < 7 * 24 * 60 * 60 * 1000;
     if (!isNew) {
       // Mark older accounts as seen so the tour doesn't pop up retroactively.
@@ -186,7 +142,7 @@ const OnboardingTour = () => {
   const next = () => {
     if (last) {
       finish();
-      nav("/logos");
+      nav("/discover");
     } else setIdx(i => i + 1);
   };
 
