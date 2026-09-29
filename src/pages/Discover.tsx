@@ -59,7 +59,7 @@ export default function Discover() {
     setLoading(true);
     setError(null);
     const load = async () => {
-      if (view === "categories") { setApps([]); setTrust(new Map()); setCount(categorySignals.length); setLoading(false); return; }
+      if (view === "categories") { setApps([]); setTrust(new Map()); setCount(0); setLoading(false); return; }
       if (view === "rising" || view === "new") {
         const { data: signalRows, count: total, error: signalError } = await supabase
           .from("public_app_intelligence").select("*", { count: "exact" })
@@ -105,7 +105,7 @@ export default function Discover() {
     };
     load().catch(() => { if (!canceled) { setError("The catalogue could not be loaded. Please try again."); setLoading(false); } });
     return () => { canceled = true; };
-  }, [search, category, platform, source, sort, page, view, categorySignals.length]);
+  }, [search, category, platform, source, sort, page, view]);
 
   useEffect(() => {
     if (!user || apps.length === 0) { setSavedIds(new Set()); return; }
