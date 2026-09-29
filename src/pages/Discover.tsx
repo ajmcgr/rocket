@@ -44,7 +44,7 @@ export default function Discover() {
 
   useEffect(() => { setQuery(rawSearch); }, [rawSearch]);
 
-  useDocumentMeta({ title: "Discover apps | Rocket", description: "Explore launched apps and find what to build next. Browse real products by category, platform and launch date.", canonical: "https://tryrocket.ai/discover" });
+  useDocumentMeta({ title: "Discover apps | Rocket", description: "Discover independent apps worth using. Browse real products by category, platform and launch date.", canonical: "https://tryrocket.ai/discover" });
 
   useEffect(() => {
     supabase.from("public_app_categories").select("category,app_count").order("app_count", { ascending: false }).limit(100)
