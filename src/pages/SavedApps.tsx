@@ -6,6 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import SaveAppButton from "@/components/SaveAppButton";
 import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import AppTrustBadges from "@/components/AppTrustBadges";
+import AppLogo from "@/components/AppLogo";
 import type { AppTrust } from "@/lib/appTrust";
 
 type App = Tables<"public_apps">;
@@ -49,18 +50,18 @@ export default function SavedApps() {
     return () => { canceled = true; };
   }, [user]);
 
-  return <div className="mx-auto max-w-5xl px-6 py-10 text-neutral-900">
-    <Link to="/discover" className="text-sm text-sky-700 hover:underline">← Discover</Link>
-    <h1 className="mt-4 font-display text-4xl">Saved Apps</h1>
-    <p className="mt-2 text-neutral-600">Apps you want to remember and explore. Looking for a design? <Link to="/saved" className="font-medium text-sky-700 hover:underline">Open Saved Designs in Create</Link>.</p>
-    {loading && <p className="mt-8 text-neutral-500">Loading saved apps…</p>}
-    {error && <p role="alert" className="mt-8 text-red-700">Saved Apps could not be loaded. Please reload.</p>}
-    {!loading && !error && rows.length === 0 && <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-8"><p>No saved apps yet.</p><Link to="/discover" className="mt-3 inline-block text-sky-700 hover:underline">Explore Discover</Link></div>}
+  return <div className="mx-auto max-w-5xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-14">
+    <Link to="/discover" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">← Discover</Link>
+    <h1 className="mt-3 font-display text-4xl sm:text-5xl">Saved Apps</h1>
+    <p className="mt-3 max-w-2xl text-neutral-600">Your shortlist of apps worth returning to. Looking for a design? <Link to="/saved" className="font-medium text-sky-800 hover:underline">Open Saved Designs in Create</Link>.</p>
+    {loading && <div role="status" aria-label="Loading saved apps" className="mt-8 grid gap-4 sm:grid-cols-2">{[0, 1].map((item) => <div key={item} className="h-52 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-5"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /><div className="mt-5 h-4 w-2/3 rounded bg-neutral-100" /></div>)}</div>}
+    {error && <p role="alert" className="mt-8 rounded-2xl border border-red-200 bg-white p-6 text-red-700">Saved Apps could not be loaded. Please reload.</p>}
+    {!loading && !error && rows.length === 0 && <div className="mt-8 rounded-[1.5rem] border border-neutral-200 bg-white p-8 sm:p-10"><h2 className="font-display text-2xl">Your shortlist starts here.</h2><p className="mt-2 text-sm text-neutral-600">Save apps you want to try or revisit. They will appear here.</p><Link to="/discover" className="mt-5 inline-flex min-h-11 items-center font-semibold text-sky-800 hover:underline">Explore apps →</Link></div>}
     {!loading && !error && <div className="mt-8 grid gap-4 sm:grid-cols-2">{rows.map(({ saved, app, signal, trust }) =>
-      <article key={app.id} className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <div className="flex items-start gap-3"><div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100">{app.logo_url ? <img src={app.logo_url} alt="" loading="lazy" className="h-full w-full object-contain" /> : app.name[0]}</div><div className="min-w-0 flex-1"><Link to={`/apps/${app.id}`} className="font-semibold hover:text-sky-700">{app.name}</Link><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div><SaveAppButton appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /></div>
-        <p className="mt-4 line-clamp-2 text-sm text-neutral-600">{app.tagline || app.description}</p>
-        <AppTrustBadges trust={trust} compact />
+      <article key={app.id} className="flex min-h-52 flex-col rounded-[1.5rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_36px_-34px_rgba(15,23,42,0.4)] transition hover:border-sky-300">
+        <div className="flex items-start gap-3"><AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" /><div className="min-w-0 flex-1"><Link to={`/apps/${app.id}`} className="line-clamp-1 font-semibold text-neutral-950 hover:text-sky-800">{app.name}</Link><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div><SaveAppButton appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /></div>
+        <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-neutral-600">{app.tagline || app.description || "Explore this app."}</p>
+        <AppTrustBadges trust={trust} compact className="mt-3" />
         {signal && <p className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signal)}</strong><br />{signalExplanation(signal)}</p>}
         <p className="mt-4 text-xs text-neutral-500">Saved {new Date(saved.saved_at).toLocaleDateString()}</p>
       </article>)}</div>}

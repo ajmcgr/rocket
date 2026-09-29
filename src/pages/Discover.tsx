@@ -12,6 +12,7 @@ import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelli
 import AppTrustBadges from "@/components/AppTrustBadges";
 import type { AppTrust } from "@/lib/appTrust";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
+import AppLogo from "@/components/AppLogo";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -24,6 +25,7 @@ export default function Discover() {
   const [apps, setApps] = useState<App[]>([]);
   const [categories, setCategories] = useState<Tables<"public_app_categories">[]>([]);
   const [categorySignals, setCategorySignals] = useState<Tables<"public_category_intelligence">[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [signals, setSignals] = useState<Map<string, AppSignal>>(new Map());
   const [trust, setTrust] = useState<Map<string, AppTrust>>(new Map());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -51,7 +53,8 @@ export default function Discover() {
       .then(({ data }) => { if (data) setCategories(data); });
     supabase.from("public_category_intelligence").select("*")
       .order("launch_volume_change_pct", { ascending: false }).limit(20)
-      .then(({ data }) => { if (data) setCategorySignals(data); });
+      .then(({ data }) => { if (data) setCategorySignals(data); })
+      .finally(() => setCategoriesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -133,10 +136,10 @@ export default function Discover() {
       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Rocket Discover</p>
       <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">Discover independent apps worth using.</h1>
       <p className="mt-3 max-w-2xl text-neutral-600">Explore what is rising, find something new, or search the full catalogue.</p>
-      <form role="search" className="mt-8 flex w-full max-w-2xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm focus-within:ring-2 focus-within:ring-sky-200" onSubmit={(event) => { event.preventDefault(); change("q", safeSearch(query)); }}>
+      <form role="search" className="mt-8 flex w-full max-w-3xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-[0_14px_42px_-28px_rgba(15,23,42,0.3)] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200" onSubmit={(event) => { event.preventDefault(); change("q", safeSearch(query)); }}>
         <Search className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400" aria-hidden="true" />
-        <input aria-label="Search apps" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps, tools, or ideas" className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none sm:text-base" />
-        <button className="rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white hover:bg-neutral-700">Search</button>
+        <input aria-label="Search apps" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps, tools, or ideas" className="min-w-0 flex-1 bg-transparent px-1 text-base outline-none" />
+        <button className="min-h-11 rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">Search</button>
       </form>
       <nav aria-label="Discover sections" className="mt-7 flex flex-wrap gap-2">
         {([ ["rising", "Rising"], ["new", "New"], ["categories", "Categories"], ["all", "All Apps"] ] as const).map(([key, label]) =>
@@ -153,10 +156,11 @@ export default function Discover() {
         <select aria-label="Order" value={sort} onChange={(event) => change("sort", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="launched">Newest launches</option><option value="discovered">Recently discovered</option></select>
       </div>
       </details>}
-      <div className="mt-9 flex items-center justify-between text-sm text-neutral-500"><span>{loading ? "Loading apps…" : view === "categories" ? `${categorySignals.length} categories` : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}</span><span>{view === "all" ? "All Apps" : "Public Launch activity"}</span></div>
+      <div className="mt-9 flex items-center justify-between text-sm text-neutral-500"><span>{loading || (view === "categories" && categoriesLoading) ? "Loading apps…" : view === "categories" ? `${categorySignals.length} categories` : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}</span><span>{view === "all" ? "All Apps" : "Public Launch activity"}</span></div>
       {error && <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
       {!loading && !error && view !== "categories" && apps.length === 0 && <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-600">{view === "all" ? "No apps match these filters." : "No apps currently meet this evidence threshold. Browse all apps instead."}</div>}
-      {view === "categories" && !loading && !error && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{categorySignals.map((item) =>
+      {view === "categories" && !loading && categoriesLoading && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading categories">{[0, 1, 2].map((item) => <div key={item} className="h-40 animate-pulse rounded-2xl border border-neutral-200 bg-white p-5"><div className="h-5 w-2/3 rounded bg-neutral-100" /><div className="mt-6 h-3 w-full rounded bg-neutral-100" /></div>)}</div>}
+      {view === "categories" && !loading && !categoriesLoading && !error && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{categorySignals.map((item) =>
         <button key={item.category} onClick={() => { const next = new URLSearchParams(params); next.set("view", "all"); next.set("category", item.category); next.delete("page"); setParams(next); }}
           className="rounded-2xl border border-neutral-200 bg-white p-5 text-left hover:border-sky-300">
           <h2 className="font-semibold">{item.category}</h2>
@@ -164,19 +168,15 @@ export default function Discover() {
           <p className="mt-2 text-sm text-neutral-600">{item.launch_volume_change_pct! >= 0 ? "+" : ""}{item.launch_volume_change_pct}% launch activity · {item.recent_catalogue_share_pct}% of recent Rocket listings</p>
           <p className="mt-3 text-xs text-neutral-500">Observed founder activity, not customer demand · Updated {formatDate(item.calculated_at)}</p>
         </button>)}</div>}
-      {view !== "categories" && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {apps.map((app) => <article key={app.id} className="group rounded-2xl border border-neutral-200 bg-white p-5 transition hover:border-sky-300 hover:shadow-sm">
-          <Link to={`/apps/${app.id}`} className="block" aria-label={`View ${app.name}`}>
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100 text-lg font-semibold text-neutral-500">{app.logo_url ? <img src={app.logo_url} alt="" loading="lazy" className="h-full w-full object-contain" /> : app.name[0]}</div>
-            <div className="min-w-0 flex-1"><h2 className="truncate font-semibold group-hover:text-sky-700">{app.name}</h2><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div>
-            <ArrowRight className="h-4 w-4 text-neutral-400 group-hover:text-sky-700" />
-          </div>
-          <p className="mt-4 line-clamp-2 min-h-10 text-sm text-neutral-600">{app.tagline || app.description || "Explore this launched app."}</p>
-          <AppTrustBadges trust={trust.get(app.id)} compact />
-          {signals.get(app.id) && <div className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signals.get(app.id)!)}</strong><p className="mt-1">{signalExplanation(signals.get(app.id)!)}</p></div>}
-          <div className="mt-4 flex flex-wrap gap-1.5">{app.categories.slice(0, 2).map((item) => <span key={item} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600">{item}</span>)}</div>
+      {view !== "categories" && loading && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading apps">{[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-60 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-5"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /><div className="mt-6 h-4 w-2/3 rounded bg-neutral-100" /><div className="mt-3 h-3 w-4/5 rounded bg-neutral-100" /></div>)}</div>}
+      {view !== "categories" && !loading && !error && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {apps.map((app) => <article key={app.id} className="group flex min-h-60 flex-col rounded-[1.5rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_36px_-34px_rgba(15,23,42,0.4)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]">
+          <Link to={`/apps/${app.id}`} className="flex flex-1 flex-col rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500" aria-label={`View ${app.name}`}>
+            <div className="flex items-start gap-3"><AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" /><div className="min-w-0 flex-1"><h2 className="line-clamp-1 text-base font-semibold text-neutral-950 group-hover:text-sky-800">{app.name}</h2><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div><ArrowRight className="h-4 w-4 text-neutral-400 transition group-hover:text-sky-800" aria-hidden="true" /></div>
+            <p className="mt-4 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">{app.tagline || app.description || "Explore this app."}</p>
+            <div className="mt-auto flex items-center gap-2 pt-4"><span className="truncate text-xs text-neutral-500">{app.categories[0] || app.canonical_host}</span><AppTrustBadges trust={trust.get(app.id)} compact /></div>
           </Link>
+          {signals.get(app.id) && <details className="mt-3 text-xs text-sky-900"><summary className="cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">{signalLabel(signals.get(app.id)!)}</summary><p className="mt-2 leading-relaxed text-neutral-600">{signalExplanation(signals.get(app.id)!)}</p></details>}
           <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 text-xs text-neutral-500"><span>{formatDate(app.launched_at) || app.canonical_host}</span><SaveAppButton appId={app.id} saved={savedIds.has(app.id)} onChange={(saved) => setSavedIds((current) => { const next = new Set(current); if (saved) next.add(app.id); else next.delete(app.id); return next; })} /></div>
         </article>)}
       </div>}

@@ -32,7 +32,7 @@ export default function SaveAppButton({ appId, saved, onChange }: Props) {
   return <button type="button" aria-label={saved ? "Unsave app" : "Save app"}
     aria-pressed={saved} disabled={busy} onClick={toggle}
     title={error ? "Could not update Saved Apps. Try again." : saved ? "Remove from Saved Apps" : "Save app"}
-    className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1.5 text-xs disabled:opacity-50 ${saved ? "border-sky-300 bg-sky-50 text-sky-700" : "border-neutral-200 bg-white text-neutral-600 hover:border-sky-300"}`}>
+    className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${saved ? "border-sky-300 bg-sky-50 text-sky-700" : "border-neutral-200 bg-white text-neutral-700 hover:border-sky-300 hover:text-sky-700"}`}>
     <Bookmark className="h-4 w-4" fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save"}
   </button>;
 }

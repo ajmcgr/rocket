@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AppLogo from "@/components/AppLogo";
 
 type FoundApp = { id: string; name: string; description?: string | null; website_url: string; logo_url?: string | null; categories?: string[]; claim_state?: string };
 type Job = { id: string; status: string; app_id?: string | null; error?: string | null; result?: Record<string, unknown> };
 type Challenge = { status: string; claim_id?: string; challenge_id?: string; method?: string; host?: string; value?: string; token?: string; expires_at?: string; reason?: string };
 
 function friendlyError(message: string) {
+  if (/^Only ordinary public HTTP\(S\) websites are supported/i.test(message)) return "Only ordinary public HTTP(S) websites are supported. Try a different URL.";
   if (/invalid|unsupported|url|hostname/i.test(message)) return "Enter a public app website, Launch, GitHub, or Hacker News URL and try again.";
   if (/timeout|fetch|unavailable|network/i.test(message)) return "We couldn't read that page right now. Check the URL and try again.";
   if (/already.*claim|verified.*owner|ownership/i.test(message)) return "This app already has an owner. Request a review if you believe it should be yours.";
-  return message || "Something went wrong. Please try again.";
+  return "Something went wrong. Please try again.";
 }
 
 async function call(action: string, body: Record<string, unknown> = {}) {
@@ -37,9 +39,11 @@ export default function AddApp() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [resolvingApp, setResolvingApp] = useState(Boolean(appId));
 
   useEffect(() => {
-    if (!appId) return;
+    if (!appId) { setResolvingApp(false); return; }
+    setResolvingApp(true);
     supabase.from("public_apps").select("id,name,description,website_url,logo_url,categories,claim_state")
       .eq("id", appId).maybeSingle().then(async ({ data }) => {
         if (data) { setApp(data); return; }
@@ -50,7 +54,8 @@ export default function AddApp() {
           setApp({ id: appId, name: String(result.name || "New app"), website_url: String(result.website_url || ""),
             description: String(result.description || ""), logo_url: typeof result.logo_url === "string" ? result.logo_url : null });
         } else setError("This app was not found in your submissions.");
-      });
+      }).catch(() => setError("This app could not be loaded. Please try again."))
+      .finally(() => setResolvingApp(false));
   }, [appId]);
 
   const submit = async (event: React.FormEvent) => {
@@ -93,27 +98,28 @@ export default function AddApp() {
     finally { setBusy(false); }
   };
 
-  return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
-    <div className="flex items-center justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Rocket Launch</p><h1 className="mt-2 font-display text-4xl">Launch your app</h1></div><Link to="/your-apps" className="text-sm text-sky-700 hover:underline">Your Apps</Link></div>
-    {!appId && <form onSubmit={submit} className="mt-8 rounded-2xl border bg-white p-6">
-      <label htmlFor="app-url" className="block text-lg font-semibold">Already launched somewhere? Paste the URL.</label>
+  return <main className="mx-auto max-w-3xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-16">
+    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold tracking-[0.14em] text-sky-800">ROCKET LAUNCH</p><h1 className="mt-3 font-display text-4xl sm:text-5xl">Launch your app.</h1></div><Link to="/your-apps" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">Your Apps</Link></div>
+    {!appId && <form onSubmit={submit} className="mt-8 rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.35)] sm:p-9">
+      <label htmlFor="app-url" className="block font-display text-2xl text-neutral-950 sm:text-3xl">Already launched somewhere?<span className="block">Paste the URL.</span></label>
       <input id="app-url" type="text" inputMode="url" required value={url} onChange={(event) => setUrl(event.target.value)}
-          placeholder="https://your-app.com" className="mt-3 w-full rounded-xl border px-4 py-3 text-sm" />
-      <button disabled={busy} className="mt-4 rounded-xl bg-neutral-900 px-5 py-3 text-sm font-medium text-white disabled:opacity-50">
+          autoComplete="url" placeholder="https://your-app.com" className="mt-6 min-h-12 w-full rounded-xl border border-neutral-300 bg-white px-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+      <button disabled={busy} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-neutral-900 px-6 text-sm font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50">
         {busy ? "Finding your app…" : "Continue"}
       </button>
-      <p className="mt-3 text-xs text-neutral-500">Website, Launch, GitHub, or Hacker News. Rocket reads public information; you review the match before claiming it.</p>
+      <p className="mt-5 text-sm leading-relaxed text-neutral-600">Website · Launch · GitHub · Hacker News</p><p className="mt-1 text-sm text-neutral-500">You can review the match before claiming your app.</p>
     </form>}
+    {resolvingApp && <div role="status" aria-label="Loading app" className="mt-7 h-44 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-6"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /></div>}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {success && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{success}</p>}
     {job?.status === "needs_review" && <div className="mt-6 rounded-xl border bg-white p-6">
       <h2 className="font-semibold">We found more than one possible app</h2><p className="mt-2 text-sm text-neutral-600">We won't guess which one is yours. Review the URL or contact Rocket for help.</p>
     </div>}
     {job?.status === "failed" && <p className="mt-5 text-sm text-neutral-600">We could not read that URL. Check it and try again.</p>}
-    {app && <div className="mt-7 rounded-2xl border bg-white p-6">
+    {app && !resolvingApp && <div className="mt-7 rounded-[1.5rem] border border-neutral-200 bg-white p-6 sm:p-8">
       <p className="text-sm font-semibold text-sky-700">{job?.result?.outcome === "existing" || appId ? "This app is already on Rocket" : "We found your app"}</p>
-      <div className="mt-5 flex items-center gap-4">{app.logo_url ? <img src={app.logo_url} alt="" className="h-14 w-14 rounded-xl object-contain" /> : <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-neutral-100 text-xl">{app.name[0]}</div>}
-        <div><h2 className="text-xl font-semibold">{app.name}</h2><a href={app.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-700 hover:underline">{app.website_url}</a></div></div>
+      <div className="mt-5 flex min-w-0 items-center gap-4"><AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" />
+        <div className="min-w-0"><h2 className="line-clamp-1 text-xl font-semibold">{app.name}</h2><a href={app.website_url} target="_blank" rel="noopener noreferrer" className="block truncate text-sm text-sky-800 hover:underline">{app.website_url}</a></div></div>
       {app.description && <p className="mt-4 text-sm text-neutral-600">{app.description}</p>}
       {!!app.categories?.length && <p className="mt-3 text-xs text-neutral-500">{app.categories.join(" · ")}</p>}
       <div className="mt-6 border-t pt-5">

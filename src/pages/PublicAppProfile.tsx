@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import SaveAppButton from "@/components/SaveAppButton";
 import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import AppTrustBadges from "@/components/AppTrustBadges";
+import AppLogo from "@/components/AppLogo";
 import type { AppTrust } from "@/lib/appTrust";
 import { trustLabels } from "@/lib/appTrust";
 
@@ -90,12 +91,12 @@ export default function PublicAppProfile() {
   return <div className="min-h-screen bg-[#f6f8fb] text-neutral-900"><SiteHeader />
     <main className="mx-auto max-w-5xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14">
       <Link to="/discover" className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-sky-700"><ArrowLeft className="h-4 w-4" />Back to Discover</Link>
-      {loading && <p className="mt-12 text-neutral-500">Loading app…</p>}
+      {loading && <div className="mt-8 animate-pulse rounded-2xl border border-neutral-200 bg-white p-6 sm:p-9" aria-label="Loading app profile"><div className="flex gap-5"><div className="h-16 w-16 rounded-2xl bg-neutral-100" /><div className="flex-1 space-y-3"><div className="h-8 w-1/2 rounded bg-neutral-100" /><div className="h-4 w-2/3 rounded bg-neutral-100" /></div></div><div className="mt-8 h-12 w-40 rounded-xl bg-neutral-100" /></div>}
       {error && !loading && <div role="alert" className="mt-10 rounded-xl border border-neutral-200 bg-white p-8"><h1 className="text-2xl font-semibold">App not found</h1><p className="mt-2 text-neutral-600">This listing may no longer be public.</p></div>}
       {app && !loading && !error && <>
         <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-9">
-          <div className="flex items-start gap-4 sm:gap-5"><div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-neutral-100 text-2xl font-semibold text-neutral-500">{app.logo_url ? <img src={app.logo_url} alt="" className="h-full w-full object-contain" /> : app.name[0]}</div><div className="min-w-0 flex-1"><h1 className="font-display text-3xl sm:text-4xl">{app.name}</h1><p className="mt-2 text-neutral-600">{app.tagline || app.canonical_host}</p></div><SaveAppButton appId={app.id} saved={saved} onChange={setSaved} /></div>
-          <div className="mt-7 flex flex-wrap items-center gap-4"><a href={app.website_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-2 rounded-xl bg-sky-700 px-5 py-3 text-sm font-medium text-white hover:bg-sky-800">Visit website <ExternalLink className="h-4 w-4" /></a><span className="text-sm text-neutral-500">{app.canonical_host}</span></div>
+          <div className="flex items-start gap-4 sm:gap-5"><AppLogo name={app.name} src={app.logo_url} className="h-16 w-16 shrink-0 sm:h-20 sm:w-20" eager /><div className="min-w-0 flex-1"><h1 className="font-display text-3xl leading-tight sm:text-4xl">{app.name}</h1><p className="mt-2 max-w-2xl text-neutral-600">{app.tagline || (app.description ? descriptionSummary(app.description) : app.canonical_host)}</p></div></div>
+          <div className="mt-7 flex flex-wrap items-center gap-3"><a href={app.website_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-700 px-5 py-3 text-sm font-medium text-white hover:bg-sky-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Visit website <ExternalLink className="h-4 w-4" /></a><SaveAppButton appId={app.id} saved={saved} onChange={setSaved} /><span className="w-full text-sm text-neutral-500 sm:w-auto">{app.canonical_host}</span></div>
         </div>
         {signals.length > 0 && <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Why it’s interesting</h2><div className="mt-4 space-y-4">{signals.map((signal) => <div key={signal.signal_type}><p className="font-medium text-sky-700">{signalLabel(signal)}</p><p className="mt-1 text-sm text-neutral-700">{signalExplanation(signal)}</p></div>)}</div><p className="mt-4 text-xs text-neutral-500">Public Launch activity is not verified traffic, revenue, or a Rocket recommendation.</p></section>}
         {trustLabels(trust).length > 0 && <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Trust</h2>

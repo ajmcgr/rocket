@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MobilePrimaryNav, PrimaryNav } from "./PrimaryNav";
+import { MobilePrimaryNav, PrimaryNav, PublicMobileNav } from "./PrimaryNav";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", label: "English" },
@@ -62,7 +62,7 @@ const SiteHeader = () => {
         <div className="flex h-full items-center">
           <Logo size="md" />
         </div>
-        <PrimaryNav className="mx-auto hidden items-center gap-1 lg:flex" />
+        {user ? <PrimaryNav className="mx-auto hidden items-center gap-1 lg:flex" /> : <nav aria-label="Primary" className="mx-auto hidden items-center gap-2 lg:flex"><Link to="/discover" className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">Discover</Link><Link to="/launch" className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">Launch</Link></nav>}
         <div className="ml-auto flex items-center gap-6">
           <DropdownMenu>
             <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-neutral-600 hover:text-neutral-900 focus:outline-none">
@@ -125,7 +125,7 @@ const SiteHeader = () => {
         </div>
       </div>
     </header>
-    <MobilePrimaryNav />
+    {user ? <MobilePrimaryNav /> : <PublicMobileNav />}
     </>
   );
 };
