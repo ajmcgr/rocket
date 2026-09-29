@@ -47,7 +47,13 @@ export default function AddApp() {
   }, [appId]);
 
   const submit = async (event: React.FormEvent) => {
-    event.preventDefault(); setError(""); setSuccess(""); setBusy(true);
+    event.preventDefault();
+    setJob(null);
+    setApp(null);
+    setChallenge(null);
+    setError("");
+    setSuccess("");
+    setBusy(true);
     try {
       const next = await call("submit", { url });
       setJob(next);
