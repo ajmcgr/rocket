@@ -1,4 +1,5 @@
 -- GA4 verified traffic. All credentials and raw points remain service-only.
+-- Applied to production as migration 20260929044943.
 create table public.app_data_connections (
   id uuid primary key default gen_random_uuid(),
   app_id uuid not null references app_graph.apps(id) on delete cascade,
