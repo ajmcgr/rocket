@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.rocket-connect-developer]
 verify_jwt = false
+
+[functions.rocket-apps]
+verify_jwt = true

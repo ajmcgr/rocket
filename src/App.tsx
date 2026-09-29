@@ -69,6 +69,8 @@ import AIInfo from "./pages/AIInfo.tsx";
 import RocketConnectAuthorize from "./pages/RocketConnectAuthorize.tsx";
 import Discover from "./pages/Discover.tsx";
 import PublicAppProfile from "./pages/PublicAppProfile.tsx";
+import AddApp from "./pages/AddApp.tsx";
+import MyApps from "./pages/MyApps.tsx";
 import Developer, { DeveloperActivate, DeveloperAppDetail } from "./pages/Developer.tsx";
 import { BrandTemplateDetail, BrandTemplates } from "./pages/BrandTemplates.tsx";
 import AppShell from "./components/AppShell.tsx";
@@ -139,6 +141,8 @@ const App = () => (
             <Route path="/invite/:token" element={<AcceptInvite />} />
             <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
               <Route path="/projects" element={<Navigate to="/logos" replace />} />
+              <Route path="/apps/add" element={<AddApp />} />
+              <Route path="/my-apps" element={<MyApps />} />
               <Route path="/projects/new" element={<ProjectWizard />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/insights" element={<Insights />} />

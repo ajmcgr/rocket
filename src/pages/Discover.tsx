@@ -68,6 +68,7 @@ export default function Discover() {
       <p className="text-sm font-semibold text-sky-600">Rocket Discover</p>
       <h1 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">Find what to build.</h1>
       <p className="mt-3 max-w-2xl text-neutral-600">Explore real launched products. Sources are identified; revenue and traffic are not verified here.</p>
+      <div className="mt-5 flex gap-4 text-sm"><Link to="/apps/add" className="font-semibold text-sky-700 hover:underline">Add app</Link><Link to="/my-apps" className="text-neutral-600 hover:underline">My Apps</Link></div>
       <form className="mt-8 flex max-w-xl gap-2" onSubmit={(event) => { event.preventDefault(); change("q", safeSearch(query)); }}>
         <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4">
           <Search className="h-4 w-4 text-neutral-400" />
