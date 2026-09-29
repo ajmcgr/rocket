@@ -78,7 +78,7 @@ export default function AppRevenue() {
           : "Not connected"}</p>
         {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
         {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Sync needs attention: {status.connection.last_error}</p>}
-        {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Stripe revenue connection is awaiting the separate read-only Stripe App setup. No payment or Connect credential will be used.</p>}
+        {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Coming soon. Stripe revenue verification is not available until the read-only external integration has passed acceptance testing.</p>}
         {!status.connection && status.connect_available && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
         })} className="mt-4 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Connect Stripe</button>}

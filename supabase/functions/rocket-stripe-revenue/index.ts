@@ -10,6 +10,12 @@ const auth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
 const frontend = Deno.env.get("STRIPE_REVENUE_FRONTEND_ORIGIN") || "https://tryrocket.ai";
 const oauthUrl = Deno.env.get("STRIPE_REVENUE_TEST_OAUTH_URL");
 const oauthApiKey = Deno.env.get("STRIPE_REVENUE_APP_TEST_API_KEY");
+// No owner can start or manage an unverified integration unless their exact
+// app ID is explicitly enrolled for the external acceptance pilot.
+const pilotAppIds = new Set((Deno.env.get("STRIPE_REVENUE_PILOT_APP_IDS") || "")
+  .split(",").map((id) => id.trim())
+  .filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
+const pilotEnabled = (appId: string) => pilotAppIds.has(appId);
 const redirectUri = `${supabaseUrl}/functions/v1/rocket-stripe-revenue`;
 const cors = { "Access-Control-Allow-Origin": frontend,
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
@@ -233,6 +239,7 @@ async function callback(request: Request) {
   const claimed = await service.rpc("consume_app_revenue_oauth_state", { p_state_hash: await sha256(state) });
   const row = claimed.data?.[0];
   if (claimed.error || !row) return new Response("Connection request expired or already used", { status: 400 });
+  if (!pilotEnabled(row.app_id)) return new Response("Stripe revenue pilot is unavailable", { status: 503 });
   try {
     await ownedApp(row.app_id, row.user_id);
     const tokens = await tokenExchange(new URLSearchParams({ code, grant_type: "authorization_code" }));
@@ -268,6 +275,8 @@ async function handle(request: Request) {
   if (!uuid(body.app_id)) return fail("Invalid app");
   const app = await ownedApp(body.app_id, userId);
   if (body.action === "status") {
+    if (!pilotEnabled(app.id)) return json({ connect_available: false, connection: null,
+      mapping_version: 0, visibility: "private", mappings: [], latest: [] });
     const linked = await binding(app.id);
     const row = linked ? await connection(linked.connection_id) : null;
     if (linked && (linked.owner_user_id !== userId || row?.owner_user_id !== userId))
@@ -287,6 +296,7 @@ async function handle(request: Request) {
     mapping_version: linked?.mapping_version ?? 0, visibility: linked?.visibility ?? "private",
     mappings: mappings.data || [], latest });
   }
+  if (!pilotEnabled(app.id)) return fail("Stripe revenue verification is coming soon", 503);
   if (body.action === "start") {
     const url = configuredOAuthUrl();
     const state = random();
