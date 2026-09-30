@@ -494,7 +494,7 @@ function BrandGuidelinesView({ data }: { data: BrandGuidelinesData }) {
     <div className="space-y-4">
       <div className="flex gap-2 overflow-x-auto rounded-xl border border-neutral-200 bg-neutral-50 p-2">
         {pages.map((p, i) => (
-          <button key={i} onClick={() => setIdx(i)} className={`flex h-20 w-32 shrink-0 flex-col justify-between rounded-lg border p-2 text-left text-[10px] transition ${idx === i ? "border-brand bg-white shadow-sm" : "border-neutral-200 bg-white hover:border-neutral-300"}`}>
+          <button key={i} onClick={() => setIdx(i)} className={`flex h-20 w-32 shrink-0 flex-col justify-between rounded-lg border p-2 text-left text-[10px] transition ${idx === i ? "border-brand bg-white shadow-xs" : "border-neutral-200 bg-white hover:border-neutral-300"}`}>
             <span className="text-neutral-400">{p.label}</span>
             <span className="line-clamp-2 font-medium text-neutral-800">{p.title}</span>
           </button>
@@ -763,7 +763,7 @@ function PresentationView({ data }: { data: PresentationData }) {
       {data.overview && <div className="rounded-xl border border-neutral-200 bg-neutral-50/60 p-4 text-sm text-neutral-700">{data.overview}</div>}
       <div className="flex gap-2 overflow-x-auto rounded-xl border border-neutral-200 bg-neutral-50 p-2">
         {list.map((s, i) => (
-          <button key={i} onClick={() => setIdx(i)} className={`flex h-24 w-40 shrink-0 flex-col justify-between rounded-lg border p-2 text-left transition ${idx === i ? "border-brand bg-white shadow-sm" : "border-neutral-200 bg-white hover:border-neutral-300"}`}>
+          <button key={i} onClick={() => setIdx(i)} className={`flex h-24 w-40 shrink-0 flex-col justify-between rounded-lg border p-2 text-left transition ${idx === i ? "border-brand bg-white shadow-xs" : "border-neutral-200 bg-white hover:border-neutral-300"}`}>
             <span className="text-[10px] text-neutral-400">Slide {i + 1}</span>
             <span className="line-clamp-2 text-[11px] font-medium text-neutral-800">{s.title}</span>
           </button>

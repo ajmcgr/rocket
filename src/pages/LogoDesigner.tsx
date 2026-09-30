@@ -1,5 +1,5 @@
 import { useState, useRef, type FormEvent, type ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { Sparkles as SparklesIcon, Send, Image as ImageIcon, Shuffle, Minus, Sticker, Palette, PenTool, Box, Smile, Check, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ChatsPanelLayout from "@/components/ChatsPanelLayout";
@@ -69,7 +69,7 @@ const LogoDesigner = () => {
         <div className="mb-4 flex h-14 w-14 items-center justify-center text-[#1676e3]">
           <SparklesIcon className="h-10 w-10" strokeWidth={1.6} />
         </div>
-        <span className="rounded-full bg-[#1676e3] px-4 py-1.5 text-sm font-medium text-white shadow-sm">
+        <span className="rounded-full bg-[#1676e3] px-4 py-1.5 text-sm font-medium text-white shadow-xs">
           Logo Designer
         </span>
 
@@ -80,7 +80,7 @@ const LogoDesigner = () => {
               key={ex}
               type="button"
               onClick={() => { setPrompt(ex); go(ex); }}
-              className="rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50"
+              className="rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 shadow-xs transition hover:border-neutral-300 hover:bg-neutral-50"
             >
               {ex}
             </button>
@@ -106,7 +106,7 @@ const LogoDesigner = () => {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe your logo or business/brand…"
-            className="h-12 flex-1 rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
+            className="h-12 flex-1 rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-hidden focus:border-neutral-400"
           />
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
           <button
@@ -152,7 +152,7 @@ const LogoDesigner = () => {
           <button
             type="submit"
             disabled={!prompt.trim()}
-            className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1266c9] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#1266c9] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" /> Generate
           </button>

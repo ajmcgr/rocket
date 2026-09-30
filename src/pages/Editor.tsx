@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { setBrandKitCover } from "@/lib/brandFromAsset";
 import JSZip from "jszip";
@@ -25,7 +25,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuShortcut, DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
-import type { AppShellOutletContext } from "@/components/AppShell";
+import { useAppShell } from "@/components/AppShell";
 import { defaultLogotypeState, LOGOTYPE_FONTS, pickLogotypeText, type LogotypeState, loadGoogleFont } from "@/lib/logotype";
 import { isBrandAsset } from "@/lib/assetExperience";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -658,7 +658,7 @@ const TEMPLATES: { id: string; name: string; bg: string; build: () => El[] }[] =
 const Editor = () => {
   const { toast } = useToast();
   const nav = useNavigate();
-  const { setHeaderLeft, setHeaderCenter } = useOutletContext<AppShellOutletContext>();
+  const { setHeaderLeft, setHeaderCenter } = useAppShell();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -1198,7 +1198,7 @@ const Editor = () => {
                 setIsRenamingTitle(false);
               }
             }}
-            className="h-10 w-full rounded-full border border-neutral-200 bg-white px-4 text-center text-sm font-semibold text-neutral-900 outline-none ring-0 transition focus:border-neutral-300 focus:bg-neutral-50"
+            className="h-10 w-full rounded-full border border-neutral-200 bg-white px-4 text-center text-sm font-semibold text-neutral-900 outline-hidden ring-0 transition focus:border-neutral-300 focus:bg-neutral-50"
             aria-label="Design name"
             placeholder="Untitled design"
           />
@@ -2586,7 +2586,7 @@ const Editor = () => {
               max={200}
               step={5}
               onValueChange={([value]) => setZoomAtViewportCenter(value ?? 100)}
-              className="w-28 [&_.bg-primary]:bg-neutral-400 [&_.bg-secondary]:bg-neutral-200 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-neutral-300 [&_[role=slider]]:bg-white [&_[role=slider]]:shadow-sm"
+              className="w-28 [&_.bg-primary]:bg-neutral-400 [&_.bg-secondary]:bg-neutral-200 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-neutral-300 [&_[role=slider]]:bg-white [&_[role=slider]]:shadow-xs"
             />
             <button
               type="button"
@@ -2628,7 +2628,7 @@ const Editor = () => {
             toggleQe={toggleQe}
             onClose={() => setShowQuickEdit(false)}
           />
-          <div className="rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-sm">
+          <div className="rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-xs">
             <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">Layers</p>
             <div className="max-h-[14rem] overflow-y-auto pr-1">
               {els.length === 0 && <p className="text-xs text-neutral-400">No layers yet.</p>}
@@ -2653,12 +2653,12 @@ const Editor = () => {
             </div>
           </div>
           {!selected && (
-            <div className="rounded-[24px] border border-neutral-200 bg-white/90 p-4 text-xs text-neutral-400 shadow-sm">
+            <div className="rounded-[24px] border border-neutral-200 bg-white/90 p-4 text-xs text-neutral-400 shadow-xs">
               Select a layer to edit its properties.
             </div>
           )}
           {selected && (
-            <div className="space-y-3 rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-sm">
+            <div className="space-y-3 rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-xs">
           <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Selected</p>
@@ -2744,7 +2744,7 @@ const Field = ({ label, children }: any) => (
     {children}
   </label>
 );
-const NumberInput = (p: any) => <input type="number" {...p} className="w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-neutral-300" />;
+const NumberInput = (p: any) => <input type="number" {...p} className="w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-neutral-300" />;
 const ColorInput = (p: any) => <input type="color" {...p} className="h-9 w-full cursor-pointer rounded-md border border-neutral-200" />;
 
 const Inspector = ({ el, fonts, onChange }: { el: El; fonts: string[]; onChange: (p: Partial<El>) => void }) => {
@@ -2827,7 +2827,7 @@ export default Editor;
 
 function QeSection({ id, label, tone, open, onToggle, children }: { id: string; label: string; tone: string; open: boolean; onToggle: () => void; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/80 bg-white/95 shadow-sm">
+    <div className="rounded-2xl border border-white/80 bg-white/95 shadow-xs">
       <button
         type="button"
         onClick={onToggle}
@@ -2918,7 +2918,7 @@ function QuickEditPanel({ els, fonts, bg, setBg, touchAutosave, update, setEls, 
   };
 
   return (
-    <section className="rounded-[24px] border border-white/80 bg-white/90 p-3 shadow-sm">
+    <section className="rounded-[24px] border border-white/80 bg-white/90 p-3 shadow-xs">
       <p className="mb-2 px-1 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">Quick Edit</p>
       <div className="space-y-2">
         <QeSection id="title" label="Title" tone="bg-[#6C7BF4]" open={!!qeOpen.title} onToggle={() => toggleQe("title")}>
@@ -2929,7 +2929,7 @@ function QuickEditPanel({ els, fonts, bg, setBg, touchAutosave, update, setEls, 
                 value={title.text}
                 onChange={(e) => update(title.id, { text: e.target.value } as any)}
                 rows={2}
-                className="w-full resize-y rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-neutral-300"
+                className="w-full resize-y rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-neutral-300"
               />
               <label className="block text-[11px] font-medium text-neutral-600">Font</label>
               <select
@@ -3099,7 +3099,7 @@ function ColorPickerButton({ value, onChange, swatches = [] }: { value: string; 
             onBlur={(e) => commitHex(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { commitHex((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
             spellCheck={false}
-            className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-sm font-mono focus:border-neutral-400 focus:outline-none"
+            className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-sm font-mono focus:border-neutral-400 focus:outline-hidden"
           />
         </div>
         {swatches.length > 0 && (
@@ -3179,7 +3179,7 @@ function IconPicker({ label, onPick }: { label: string; onPick: (svgDataUrl: str
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search icons..."
-          className="mb-2 w-full rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-neutral-300"
+          className="mb-2 w-full rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-neutral-300"
         />
         <div className="grid max-h-64 grid-cols-6 gap-1 overflow-y-auto">
           {filtered.slice(0, 120).map((name) => {

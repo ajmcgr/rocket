@@ -163,7 +163,7 @@ export default function StudioLeftPanel({
                 </div>
                 <button
                   onClick={() => togglePin(t.id)}
-                  className="absolute -right-2 -top-2 hidden rounded-full border border-neutral-200 bg-white p-1 text-neutral-500 shadow-sm group-hover:block"
+                  className="absolute -right-2 -top-2 hidden rounded-full border border-neutral-200 bg-white p-1 text-neutral-500 shadow-xs group-hover:block"
                   title={pins.includes(t.id) ? "Unpin" : "Pin"}
                 >
                   {pins.includes(t.id) ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
@@ -187,7 +187,7 @@ export default function StudioLeftPanel({
             }}
             rows={2}
             placeholder="Refine your brand… e.g. make the icon smaller, generate a favicon"
-            className="min-h-[44px] flex-1 resize-none bg-transparent px-2 py-1 text-[13px] outline-none placeholder:text-neutral-400"
+            className="min-h-[44px] flex-1 resize-none bg-transparent px-2 py-1 text-[13px] outline-hidden placeholder:text-neutral-400"
           />
           <button
             onClick={() => void send()}

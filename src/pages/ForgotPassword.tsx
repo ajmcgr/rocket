@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
@@ -31,7 +31,7 @@ const ForgotPassword = () => {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
             <h1 className="text-2xl font-semibold tracking-tight">Reset your password</h1>
             <p className="mt-1.5 text-sm text-neutral-500">
               Enter your email and we'll send you a reset link.
@@ -48,7 +48,7 @@ const ForgotPassword = () => {
                   placeholder="you@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-none ring-neutral-300 transition focus:ring-2"
+                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-hidden ring-neutral-300 transition focus:ring-2"
                 />
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
                   {loading ? "Sending…" : "Send reset link"}

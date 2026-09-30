@@ -110,7 +110,7 @@ const CollaboratorsModal = ({ open, onOpenChange, projectId, projectName, ownerE
           <div className="flex flex-1 items-center rounded-lg border border-neutral-200 bg-white px-3 focus-within:border-neutral-400">
             <Mail className="h-4 w-4 text-neutral-400" />
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@team.com"
-              className="ml-2 h-9 flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-400" />
+              className="ml-2 h-9 flex-1 bg-transparent text-sm outline-hidden placeholder:text-neutral-400" />
           </div>
           <select value={role} onChange={e => setRole(e.target.value as CollabRole)} className="h-9 rounded-lg border border-neutral-200 bg-white px-2 text-sm">
             <option value="viewer">Viewer</option>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
@@ -84,7 +84,7 @@ const SharedAsset = () => {
           <Link to="/" className="text-sm font-semibold tracking-tight">Rocket</Link>
         </header>
         <main className="mx-auto grid max-w-md place-items-center px-6 py-24">
-          <form onSubmit={submitPassword} className="w-full space-y-5 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <form onSubmit={submitPassword} className="w-full space-y-5 rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
             <div className="flex items-center gap-2">
               <div className="grid h-9 w-9 place-items-center rounded-full bg-neutral-900 text-white">
                 <Lock className="h-4 w-4" />
@@ -101,7 +101,7 @@ const SharedAsset = () => {
                 autoFocus
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-400"
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-neutral-400"
                 placeholder="Enter password"
               />
               {pwError && <div className="text-xs text-red-600">{pwError}</div>}

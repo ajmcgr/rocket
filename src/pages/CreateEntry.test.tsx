@@ -1,6 +1,6 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "@/lib/router-compat";
 import { describe, expect, it, vi } from "vitest";
 import CreateEntry from "./CreateEntry";
 

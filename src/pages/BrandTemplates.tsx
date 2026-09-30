@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@/lib/router-compat";
 import { ArrowRight, Check, Palette, Type } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -18,7 +18,7 @@ const TemplateVisual = ({ template, compact = false }: { template: ReturnType<ty
       <span className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">{template.category}</span>
       <div className="flex -space-x-1.5">{template.colors.slice(0, 4).map((color) => <span key={color} className="h-5 w-5 rounded-full border-2 border-white" style={{ backgroundColor: color }} />)}</div>
     </div>
-    <div className="absolute inset-x-6 bottom-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+    <div className="absolute inset-x-6 bottom-6 rounded-2xl bg-white p-5 shadow-xs ring-1 ring-black/5">
       <div className="text-2xl font-semibold tracking-tight" style={{ color: template.colors[0], fontFamily: template.fonts[0] }}>
         {template.sampleName}
       </div>
@@ -44,7 +44,7 @@ export const BrandTemplates = () => {
         <p className="mt-5 text-lg leading-relaxed text-neutral-600">Each template is a usable starting direction—not a keyword page. See its audience, palette, typography, and voice, then start a Rocket project with those choices pre-filled.</p>
       </header>
       <section className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Brand templates">
-        {templates.map((template) => <Link key={template.id} to={templatePath(template.id)} className="group rounded-3xl border border-neutral-200 bg-white p-4 transition hover:border-neutral-900 hover:shadow-sm">
+        {templates.map((template) => <Link key={template.id} to={templatePath(template.id)} className="group rounded-3xl border border-neutral-200 bg-white p-4 transition hover:border-neutral-900 hover:shadow-xs">
           <TemplateVisual template={template} compact />
           <div className="px-2 pb-2 pt-5">
             <div className="text-xs font-medium text-neutral-500">For {template.audience}</div>

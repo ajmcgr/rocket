@@ -78,7 +78,7 @@ export default function RegenerateFeedbackBar({ asset, onDone, onNoCredits }: Pr
           onKeyDown={(e) => { if (e.key === "Enter") run(feedback); }}
           placeholder="e.g. Make the accent color mint, keep the wordmark…"
           disabled={busy}
-          className="flex-1 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+          className="flex-1 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
         />
         <button
           type="button"

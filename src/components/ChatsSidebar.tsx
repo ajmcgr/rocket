@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -203,7 +203,7 @@ const ChatsSidebar = () => {
             onChange={(e) => setRenameValue(e.target.value)}
             onBlur={commitRename}
             onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingId(null); }}
-            className="flex-1 rounded border border-neutral-300 bg-white px-1.5 py-0.5 text-sm outline-none focus:border-brand"
+            className="flex-1 rounded border border-neutral-300 bg-white px-1.5 py-0.5 text-sm outline-hidden focus:border-brand"
           />
         ) : (
           <Link to={`/create?chat=${c.id}`} className="flex min-w-0 flex-1 items-center gap-1.5 truncate">

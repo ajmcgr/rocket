@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { tools } from "@/content/tools";
 import { articles } from "@/content/articles";
 import { comparisons } from "@/content/comparisons";

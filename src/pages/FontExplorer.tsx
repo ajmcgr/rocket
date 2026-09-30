@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { loadGoogleFont } from "@/lib/logotype";
 import { Skeleton } from "@/components/ui/skeleton";

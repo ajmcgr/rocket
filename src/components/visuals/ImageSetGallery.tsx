@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import {
   ChevronLeft, ChevronRight, Download, Layers, Loader2, Shapes, X,
 } from "lucide-react";
@@ -222,7 +222,7 @@ export default function ImageSetGallery({ asset }: { asset: any }) {
       {/* Lightbox */}
       {active && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur"
+          className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           onClick={close}

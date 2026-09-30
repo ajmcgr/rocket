@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Copy, Download, Edit3, History, Share2, Trash2, RotateCcw, Check, Wand2, Loader2, Pencil, X, Save, FileCode, Play, Files, ChevronLeft, ChevronRight } from "lucide-react";
@@ -357,7 +357,7 @@ const AssetDetail = () => {
                   ))}
                 </div>
                 <div className="mt-2 flex gap-1.5">
-                  <input value={tweak} onChange={e => setTweak(e.target.value)} placeholder="Custom tweak…" disabled={varying} className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-xs outline-none focus:border-brand" />
+                  <input value={tweak} onChange={e => setTweak(e.target.value)} placeholder="Custom tweak…" disabled={varying} className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-xs outline-hidden focus:border-brand" />
                   <button onClick={() => generateVariation()} disabled={varying || !tweak.trim()} className="rounded-md bg-brand px-2 py-1 text-xs text-brand-foreground disabled:opacity-50">
                     {varying ? <Loader2 className="h-3 w-3 animate-spin" /> : "Go"}
                   </button>
@@ -442,7 +442,7 @@ const AssetDetail = () => {
           <input
             value={draftTitle}
             onChange={(e) => setDraftTitle(e.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-2xl font-semibold outline-none focus:border-brand"
+            className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-2xl font-semibold outline-hidden focus:border-brand"
           />
         ) : (
           <h1 className="mt-1 text-2xl font-semibold">{asset.title}</h1>
@@ -538,7 +538,7 @@ const AssetDetail = () => {
               <textarea
                 value={draftContent}
                 onChange={(e) => setDraftContent(e.target.value)}
-                className="min-h-[480px] w-full resize-y rounded-lg border border-neutral-200 bg-white p-4 font-sans text-sm leading-relaxed text-neutral-800 outline-none focus:border-brand"
+                className="min-h-[480px] w-full resize-y rounded-lg border border-neutral-200 bg-white p-4 font-sans text-sm leading-relaxed text-neutral-800 outline-hidden focus:border-brand"
               />
               <div className="mt-3 flex items-center justify-end gap-2">
                 <button onClick={cancelEdit} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm hover:bg-neutral-50">
@@ -553,7 +553,7 @@ const AssetDetail = () => {
             <div className="relative">
               <button
                 onClick={startEdit}
-                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/90 px-2.5 py-1 text-xs text-neutral-600 backdrop-blur hover:bg-neutral-50"
+                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/90 px-2.5 py-1 text-xs text-neutral-600 backdrop-blur-sm hover:bg-neutral-50"
                 title="Edit source"
               >
                 <Pencil className="h-3.5 w-3.5" /> Edit

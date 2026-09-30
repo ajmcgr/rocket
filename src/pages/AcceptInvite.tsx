@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ const AcceptInvite = () => {
     <div className="min-h-screen bg-white">
       <SiteHeader />
       <main className="mx-auto max-w-lg px-6 py-20">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
           <h1 className="text-2xl font-semibold tracking-tight">Workspace invitation</h1>
           {invite ? (
             invite.accepted_at ? (

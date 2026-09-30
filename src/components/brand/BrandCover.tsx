@@ -38,10 +38,10 @@ function ColorCover({ data, title }: { data: any; title: string }) {
   return (
     <div className="relative flex h-full w-full flex-col justify-between p-4 text-white" style={bgStyle}>
       <div className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-80">Palette</div>
-      <div className="truncate text-sm font-semibold drop-shadow-sm">{data?.name || title}</div>
+      <div className="truncate text-sm font-semibold drop-shadow-xs">{data?.name || title}</div>
       <div className="flex gap-1.5">
         {(swatches.length ? swatches : ["#0ea5e9", "#1676e3", "#0f172a"]).slice(0, 6).map((c, i) => (
-          <div key={i} className="h-6 w-6 rounded-md border border-white/40 shadow-sm" style={{ background: c }} />
+          <div key={i} className="h-6 w-6 rounded-md border border-white/40 shadow-xs" style={{ background: c }} />
         ))}
       </div>
     </div>
@@ -97,7 +97,7 @@ function BioCover({ title, body, hue }: { title: string; body?: string; hue: num
     <div className="flex h-full w-full flex-col justify-between p-4" style={{ background: bg }}>
       <div className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: fg }}>Bio</div>
       <div
-        className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-semibold text-white shadow-sm"
+        className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-semibold text-white shadow-xs"
         style={{ background: `hsl(${hue} 65% 45%)` }}
       >
         {initials(title, 2)}

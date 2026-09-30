@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Bell, CheckCheck, Sparkles, Download, CreditCard, FolderOpen, Info, X } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,7 +40,7 @@ const NotificationsBell = () => {
     <DropdownMenu>
       <DropdownMenuTrigger
         data-tour="nav-notifications"
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-700 outline-none transition hover:bg-neutral-100 focus:ring-2 focus:ring-neutral-300"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-700 outline-hidden transition hover:bg-neutral-100 focus:ring-2 focus:ring-neutral-300"
         aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
       >
         <Bell className="h-[18px] w-[18px]" />

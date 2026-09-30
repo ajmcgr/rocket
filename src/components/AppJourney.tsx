@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 export type MyApp = { id: string; app_id: string; status: string; verification_state: string;
   owned: boolean; owner_verification_level: string | null;

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import Logo from "./Logo";
 import { Button } from "./ui/button";
 import { Check, ChevronDown } from "lucide-react";
@@ -65,7 +65,7 @@ const SiteHeader = () => {
         {user ? <PrimaryNav className="mx-auto hidden items-center gap-1 lg:flex" /> : <nav aria-label="Primary" className="mx-auto hidden items-center gap-2 lg:flex"><Link to="/discover" className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">Discover</Link><Link to="/launch" className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100">Launch</Link></nav>}
         <div className="ml-auto flex items-center gap-6">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-neutral-600 hover:text-neutral-900 focus:outline-none">
+            <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-neutral-600 hover:text-neutral-900 focus:outline-hidden">
               <span className="text-base leading-none">{lang.flag}</span>
               <ChevronDown className="h-3 w-3" />
             </DropdownMenuTrigger>
@@ -83,7 +83,7 @@ const SiteHeader = () => {
             <div className="h-8 w-8 rounded-full bg-neutral-100" />
           ) : user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="rounded-full outline-none focus:ring-2 focus:ring-neutral-300" aria-label="Account menu">
+              <DropdownMenuTrigger className="rounded-full outline-hidden focus:ring-2 focus:ring-neutral-300" aria-label="Account menu">
                 <Avatar className="h-8 w-8 border border-neutral-200">
                   {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
                   <AvatarFallback className="bg-neutral-100 text-xs font-medium text-neutral-700">{initial}</AvatarFallback>

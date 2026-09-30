@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@/lib/router-compat";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -213,7 +213,7 @@ export default function LogoFiles() {
                 <div className="absolute bottom-4 right-4">
                   <DropdownMenu>
                     <DropdownMenuTrigger
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm outline-none transition ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-xs outline-hidden transition ${
                         isDark
                           ? "bg-white/95 text-neutral-900 hover:bg-white"
                           : "bg-neutral-900 text-white hover:bg-neutral-800"

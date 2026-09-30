@@ -183,7 +183,7 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
                         <div className="min-w-0 flex-1">
                           {editingLabelId === v.id ? (
                             <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                              <input autoFocus value={labelDraft} onChange={e => setLabelDraft(e.target.value)} className="w-full rounded border border-neutral-200 px-1.5 py-0.5 text-xs outline-none focus:border-brand" />
+                              <input autoFocus value={labelDraft} onChange={e => setLabelDraft(e.target.value)} className="w-full rounded border border-neutral-200 px-1.5 py-0.5 text-xs outline-hidden focus:border-brand" />
                               <button onClick={() => saveLabel(v)} className="text-emerald-600"><Check className="h-3.5 w-3.5" /></button>
                               <button onClick={() => setEditingLabelId(null)}><X className="h-3.5 w-3.5 text-neutral-400" /></button>
                             </div>

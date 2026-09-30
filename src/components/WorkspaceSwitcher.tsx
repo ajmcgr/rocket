@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Check, ChevronDown, Plus, Users, Lock } from "lucide-react";
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import {
   createWorkspace,
   ensureActiveWorkspaceId,
@@ -88,7 +88,7 @@ const WorkspaceSwitcher = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="inline-flex max-w-[180px] items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm text-neutral-700 outline-none hover:bg-neutral-50 focus:ring-2 focus:ring-neutral-300">
+      <DropdownMenuTrigger className="inline-flex max-w-[180px] items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm text-neutral-700 outline-hidden hover:bg-neutral-50 focus:ring-2 focus:ring-neutral-300">
         <Users className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
         <span className="truncate font-medium">{loading ? "Loading…" : active?.name || "Workspace"}</span>
         <ChevronDown className="h-3 w-3 shrink-0 text-neutral-500" />

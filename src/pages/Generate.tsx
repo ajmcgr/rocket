@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { assetHref } from "@/lib/assetExperience";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1028,14 +1028,14 @@ const Generate = () => {
             </div>
             {/* Composer pinned to bottom */}
             <form onSubmit={submit} className="mt-3">
-              <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
+              <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-xs">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Ask Rocket to create another design..."
                   rows={2}
                   disabled={loading}
-                  className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none placeholder:text-neutral-400 disabled:opacity-60"
+                  className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-hidden placeholder:text-neutral-400 disabled:opacity-60"
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
                 />
                 <div className="flex items-center justify-end px-2 pb-1">

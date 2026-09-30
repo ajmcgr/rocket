@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { ArrowLeft, Download, FileDown, Loader2 } from "lucide-react";
 import { toPng } from "html-to-image";

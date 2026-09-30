@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { useState, useRef } from "react";
 import { ArrowRight, ArrowUp, Sparkles, Zap, Target, Rocket as RocketIcon, Megaphone, ListChecks, Check, Loader2, Smartphone, Mail, Palette, ShoppingBag, Building2, Puzzle, Mic, BookOpen, Wrench, Lightbulb, Paperclip, X, BookMarked, LayoutTemplate, Shapes, Type as TypeIcon, Image as ImageIcon, Box, Sparkle, BarChart3, Play, Pause } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -318,7 +318,7 @@ const Index = () => {
                   if (isPlaying) videoRef.current.pause();
                   else videoRef.current.play();
                 }}
-                className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_48px_-12px_rgba(0,0,0,0.14)] ring-1 ring-neutral-200/50 transition-all hover:scale-105 hover:shadow-[0_16px_56px_-12px_rgba(0,0,0,0.18)] focus:outline-none focus:ring-2 focus:ring-[#1676e3]"
+                className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_48px_-12px_rgba(0,0,0,0.14)] ring-1 ring-neutral-200/50 transition-all hover:scale-105 hover:shadow-[0_16px_56px_-12px_rgba(0,0,0,0.18)] focus:outline-hidden focus:ring-2 focus:ring-[#1676e3]"
                 aria-label={isPlaying ? "Pause video" : "Play video"}
               >
                 {isPlaying ? <Pause className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} /> : <Play className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} />}
@@ -542,7 +542,7 @@ const Index = () => {
                   type="button"
                   onClick={() => startCheckout(p.id)}
                   disabled={loading === p.id}
-                  className={`rounded-2xl border p-6 text-left transition hover:shadow-sm disabled:opacity-60 ${p.highlight ? "border-brand bg-brand/5 hover:bg-brand/10" : "border-neutral-200 bg-white hover:border-neutral-300"}`}
+                  className={`rounded-2xl border p-6 text-left transition hover:shadow-xs disabled:opacity-60 ${p.highlight ? "border-brand bg-brand/5 hover:bg-brand/10" : "border-neutral-200 bg-white hover:border-neutral-300"}`}
                 >
                   <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">{p.note}</div>
                   <div className="mt-2 flex items-baseline gap-1">

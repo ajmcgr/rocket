@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "./Logo";
 import ShareExportModal from "./ShareExportModal";
@@ -30,6 +30,16 @@ export type AppShellOutletContext = {
   setHeaderActions: (node: ReactNode | null) => void;
 };
 
+// React Router's <Outlet context> has no TanStack equivalent; the header slots
+// now travel through a React context instead.
+const AppShellContext = createContext<AppShellOutletContext | null>(null);
+
+export function useAppShell(): AppShellOutletContext {
+  const ctx = useContext(AppShellContext);
+  if (!ctx) throw new Error("useAppShell must be used within AppShell");
+  return ctx;
+}
+
 const AppShell = () => {
   const { user, signOut } = useAuth();
   const nav = useNavigate();
@@ -52,7 +62,7 @@ const AppShell = () => {
 
   const sidebarItemClass = ({ isActive }: { isActive: boolean }) =>
     `group flex h-10 w-full items-center gap-3 rounded-xl font-body text-sm font-medium transition ${collapsed ? "justify-center px-0" : "px-3"} ${isActive
-      ? "bg-neutral-900 text-white shadow-sm"
+      ? "bg-neutral-900 text-white shadow-xs"
       : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950"}`;
 
 
@@ -88,7 +98,7 @@ const AppShell = () => {
               <NotificationsBell />
             </div>
             <DropdownMenu>
-              <DropdownMenuTrigger className="rounded-full outline-none focus:ring-2 focus:ring-neutral-300" aria-label="Account menu">
+              <DropdownMenuTrigger className="rounded-full outline-hidden focus:ring-2 focus:ring-neutral-300" aria-label="Account menu">
                 <Avatar className="h-8 w-8 border border-neutral-200">
                   {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
                   <AvatarFallback className="bg-neutral-100 text-xs font-medium text-neutral-700">{initial}</AvatarFallback>
@@ -141,7 +151,7 @@ const AppShell = () => {
               <NavLink
                 key={item.label}
                 to={item.to}
-                className={() => sidebarItemClass({ isActive: item.matches(pathname) })}
+                className={sidebarItemClass({ isActive: item.matches(pathname) })}
                 aria-label={item.label}
                 title={item.label}
               >
@@ -154,7 +164,7 @@ const AppShell = () => {
         <div className="mt-auto flex flex-col gap-1">
           <NavLink
             to="/settings/profile"
-            className={sidebarItemClass}
+            className={sidebarItemClass({ isActive: pathname.startsWith("/settings") })}
             aria-label="Settings"
             title="Settings"
           >
@@ -184,7 +194,14 @@ const AppShell = () => {
         onCreateShareLink={async () => (typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai")}
       />
       <main className="w-full">
-        <Outlet context={{ setHeaderLeft, setHeaderCenter, setHeaderActions }} />
+        <AppShellContext.Provider
+          value={useMemo(
+            () => ({ setHeaderLeft, setHeaderCenter, setHeaderActions }),
+            [setHeaderLeft, setHeaderCenter, setHeaderActions],
+          )}
+        >
+          <Outlet />
+        </AppShellContext.Provider>
       </main>
       </div>
       <MobilePrimaryNav />

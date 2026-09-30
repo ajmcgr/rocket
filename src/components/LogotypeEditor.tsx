@@ -53,7 +53,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
           <input
             value={state.text}
             onChange={e => update({ text: e.target.value })}
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
           />
         </label>
         <label className="space-y-1">
@@ -65,7 +65,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
               const newWeight = f && !f.weights.includes(state.weight) ? f.weights[Math.floor(f.weights.length / 2)] : state.weight;
               update({ font: e.target.value, weight: newWeight });
             }}
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
           >
             {(["sans", "serif", "display", "mono"] as const).map(cat => (
               <optgroup key={cat} label={cat.toUpperCase()}>
@@ -81,7 +81,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
           <select
             value={state.weight}
             onChange={e => update({ weight: parseInt(e.target.value) })}
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
           >
             {weights.map(w => <option key={w} value={w}>{w}</option>)}
           </select>
@@ -98,7 +98,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
             <input
               value={state.color}
               onChange={e => update({ color: e.target.value })}
-              className="flex-1 rounded-md border border-neutral-200 bg-white px-3 py-2 font-mono text-sm outline-none focus:border-brand"
+              className="flex-1 rounded-md border border-neutral-200 bg-white px-3 py-2 font-mono text-sm outline-hidden focus:border-brand"
             />
           </div>
         </label>
@@ -116,7 +116,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
           <select
             value={state.transform}
             onChange={e => update({ transform: e.target.value as LogotypeState["transform"] })}
-            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
           >
             <option value="none">As typed</option>
             <option value="uppercase">UPPERCASE</option>

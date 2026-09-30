@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -430,7 +430,7 @@ const Projects = () => {
           <button onClick={() => setCreatingFolder(true)} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium hover:bg-neutral-50">
             <Folder className="h-4 w-4" /> New folder
           </button>
-          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand-hover">
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
             <Plus className="h-4 w-4" /> New Project
           </button>
         </div>
@@ -515,7 +515,7 @@ const Projects = () => {
                   return (
                     <div key={project.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${isSelected ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                       {selectMode && (
-                        <button onClick={() => toggleSelected(selKey("project", project.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-sm">
+                        <button onClick={() => toggleSelected(selKey("project", project.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs">
                           {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
@@ -602,7 +602,7 @@ const Projects = () => {
                   return (
                     <div key={folder.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${isSelected ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                       {selectMode && (
-                        <button onClick={() => toggleSelected(selKey("folder", folder.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-sm">
+                        <button onClick={() => toggleSelected(selKey("folder", folder.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs">
                           {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
@@ -681,7 +681,7 @@ const Projects = () => {
                   return (
                     <div key={asset.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${isSelected ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                       {selectMode && (
-                        <button onClick={() => toggleSelected(selKey("upload", asset.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-sm">
+                        <button onClick={() => toggleSelected(selKey("upload", asset.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs">
                           {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
@@ -697,7 +697,7 @@ const Projects = () => {
                       {!selectMode && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="absolute right-2 top-2 rounded-md bg-white/95 p-1 opacity-0 shadow-sm transition group-hover:opacity-100 hover:bg-neutral-100"><MoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
+                            <button className="absolute right-2 top-2 rounded-md bg-white/95 p-1 opacity-0 shadow-xs transition group-hover:opacity-100 hover:bg-neutral-100"><MoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuItem onClick={() => duplicateUpload(asset)}><Copy className="mr-2 h-4 w-4" /> Duplicate</DropdownMenuItem>

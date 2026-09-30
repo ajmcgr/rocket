@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
@@ -40,7 +40,7 @@ const ResetPassword = () => {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
             <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
             <p className="mt-1.5 text-sm text-neutral-500">Choose a strong password you'll remember.</p>
             {!token ? (
@@ -56,7 +56,7 @@ const ResetPassword = () => {
                   placeholder="New password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-none ring-neutral-300 transition focus:ring-2"
+                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-hidden ring-neutral-300 transition focus:ring-2"
                 />
                 <input
                   type="password"
@@ -65,7 +65,7 @@ const ResetPassword = () => {
                   placeholder="Confirm new password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-none ring-neutral-300 transition focus:ring-2"
+                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-hidden ring-neutral-300 transition focus:ring-2"
                 />
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
                   {loading ? "Updating…" : "Update password"}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -246,7 +246,7 @@ const Trash = () => {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search trash…"
-            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-none focus:border-neutral-400 sm:w-72"
+            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-hidden focus:border-neutral-400 sm:w-72"
           />
         </div>
 
@@ -302,7 +302,7 @@ const Trash = () => {
         <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((a) => (
             <div key={a.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${selected.has(a.id) ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
-              <button onClick={() => toggle(a.id)} className="absolute left-2 top-2 z-10 rounded-md bg-white/90 p-1 text-neutral-500 shadow-sm backdrop-blur hover:text-neutral-900">
+              <button onClick={() => toggle(a.id)} className="absolute left-2 top-2 z-10 rounded-md bg-white/90 p-1 text-neutral-500 shadow-xs backdrop-blur-sm hover:text-neutral-900">
                 {selected.has(a.id) ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4" />}
               </button>
               <div className="aspect-square w-full overflow-hidden bg-neutral-50">

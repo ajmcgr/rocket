@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -113,7 +113,7 @@ const VerifyEmail = () => {
     <div className="flex min-h-screen flex-col bg-white text-neutral-900">
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-xs">
           {mode === "inbox" && (
             <>
               <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>

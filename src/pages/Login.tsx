@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { safeReturnPath } from "@/lib/navigation";
 import { track } from "@/lib/analytics";
 
-const AUTH_CALLBACK_URL = `${window.location.origin}/auth/callback`;
+const AUTH_CALLBACK_URL =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/auth/callback`
+    : "https://tryrocket.ai/auth/callback";
 
 const Login = ({ mode = "login" as "login" | "signup" }) => {
   const [email, setEmail] = useState("");
@@ -97,7 +100,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
           <h1 className="text-2xl font-semibold tracking-tight">{isSignup ? "Create your account" : "Log in"}</h1>
           <p className="mt-1.5 text-sm text-neutral-500">{isSignup ? "Start with 500 free credits." : "Welcome back."}</p>
 
@@ -123,12 +126,12 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
                   placeholder="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="h-11 flex-1 rounded-r-lg bg-transparent px-2 text-sm outline-none"
+                  className="h-11 flex-1 rounded-r-lg bg-transparent px-2 text-sm outline-hidden"
                 />
               </div>
             )}
-            <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-none ring-neutral-300 transition focus:ring-2" />
-            <input type="password" required minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-none ring-neutral-300 transition focus:ring-2" />
+            <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-hidden ring-neutral-300 transition focus:ring-2" />
+            <input type="password" required minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-hidden ring-neutral-300 transition focus:ring-2" />
             {!isSignup && (
               <div className="text-right">
                 <Link to="/forgot-password" className="text-xs font-medium text-neutral-500 hover:text-neutral-900 hover:underline">Forgot password?</Link>

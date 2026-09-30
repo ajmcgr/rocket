@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Download, Copy, GitBranch, History, Wand2, ExternalLink } from "lucide-react";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
 import { assetHref, assetOpenLabel, isBrandAsset } from "@/lib/assetExperience";
@@ -82,7 +82,7 @@ export default function CurrentDeliverable({
           )}
         </div>
       </div>
-      <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
+      <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-xs">
         {hasVisualRenderer(asset) ? (
           <div className="min-h-[420px]">
             <AssetVisual asset={asset} />

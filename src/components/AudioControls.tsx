@@ -26,7 +26,7 @@ const AudioControls = () => {
       <audio ref={audioRef} src={meteorAudio.url} loop preload="auto" />
       <button
         onClick={togglePlay}
-        className="rounded-full border border-cream/20 bg-background/30 p-2.5 text-cream/60 backdrop-blur-sm transition-colors hover:text-[#FFFFFF]"
+        className="rounded-full border border-cream/20 bg-background/30 p-2.5 text-cream/60 backdrop-blur-xs transition-colors hover:text-[#FFFFFF]"
         aria-label={isPlaying ? "Pause music" : "Play music"}
       >
         {isPlaying ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}

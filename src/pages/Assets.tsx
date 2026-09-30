@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { assetHref, isBrandAsset } from "@/lib/assetExperience";
 import BrandCover from "@/components/brand/BrandCover";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -479,7 +479,7 @@ const Assets = () => {
           >
             <Trash2 className="h-4 w-4" />
           </Link>
-          <Link to="/logos" className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand-hover">
+          <Link to="/logos" className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
             <Plus className="h-4 w-4" /> New Design
           </Link>
         </div>
@@ -501,7 +501,7 @@ const Assets = () => {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search designs…  ( / )"
-            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-none focus:border-neutral-400 sm:w-64"
+            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-hidden focus:border-neutral-400 sm:w-64"
           />
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -638,7 +638,7 @@ const Assets = () => {
                 {selectMode && (
                   <button
                     onClick={(e) => { e.preventDefault(); toggleSelect(asset.id); }}
-                    className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-sm"
+                    className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs"
                     aria-label="Select"
                   >
                     {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "@/lib/router-compat";
 import { Download, Loader2, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -386,7 +386,7 @@ export default function Brand() {
                           toast({ title: "Download failed", description: err?.message || String(err), variant: "destructive" });
                         }
                       }}
-                      className={`absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm transition ${(v.bg === "#FFFFFF") ? "bg-neutral-900 text-white hover:bg-neutral-800" : "bg-white/95 text-neutral-900 hover:bg-white"}`}
+                      className={`absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-xs transition ${(v.bg === "#FFFFFF") ? "bg-neutral-900 text-white hover:bg-neutral-800" : "bg-white/95 text-neutral-900 hover:bg-white"}`}
                     >
                       <Download className="h-3.5 w-3.5" /> Download
                       {!subLoading && !isPro && (
@@ -438,7 +438,7 @@ export default function Brand() {
                           toast({ title: "Download failed", description: err?.message || String(err), variant: "destructive" });
                         }
                       }}
-                      className={`absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm transition ${(v.bg === "#FFFFFF") ? "bg-neutral-900 text-white hover:bg-neutral-800" : "bg-white/95 text-neutral-900 hover:bg-white"}`}
+                      className={`absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-xs transition ${(v.bg === "#FFFFFF") ? "bg-neutral-900 text-white hover:bg-neutral-800" : "bg-white/95 text-neutral-900 hover:bg-white"}`}
                     >
                       <Download className="h-3.5 w-3.5" /> Download
                       {!subLoading && !isPro && (
@@ -479,7 +479,7 @@ export default function Brand() {
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm outline-none transition ${
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-xs outline-hidden transition ${
                             isDark
                               ? "bg-white/95 text-neutral-900 hover:bg-white"
                               : "bg-neutral-900 text-white hover:bg-neutral-800"
@@ -542,7 +542,7 @@ export default function Brand() {
               <h2 className="text-sm font-semibold text-neutral-700">All files in this brand kit ({logoAssets.length})</h2>
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {logoAssets.map((a) => (
-                  <div key={a.id} className={`group relative overflow-hidden rounded-xl border bg-white transition hover:shadow-sm ${logoAsset?.id === a.id ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
+                  <div key={a.id} className={`group relative overflow-hidden rounded-xl border bg-white transition hover:shadow-xs ${logoAsset?.id === a.id ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                     <button onClick={() => setLogoAsset(a)} className="block w-full">
                       <div className="flex aspect-square items-center justify-center bg-neutral-50 p-3">
                         <AssetThumbnail asset={a} alt={a.title || project?.name || "Brand"} />
@@ -552,7 +552,7 @@ export default function Brand() {
                       type="button"
                       title="Remove from brand kit"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFromKit(a.id); }}
-                      className="absolute right-1.5 top-1.5 rounded-full bg-white/95 p-1 text-neutral-500 opacity-0 shadow-sm transition hover:text-red-600 group-hover:opacity-100"
+                      className="absolute right-1.5 top-1.5 rounded-full bg-white/95 p-1 text-neutral-500 opacity-0 shadow-xs transition hover:text-red-600 group-hover:opacity-100"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>

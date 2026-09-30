@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Logotype } from "@/components/Logotype";

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useEffect, useState } from "react";
 import HandleReserveForm from "@/components/HandleReserveForm";
 import AudioControls from "@/components/AudioControls";

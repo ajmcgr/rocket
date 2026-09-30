@@ -1,0 +1,19 @@
+{
+  "customizations": [
+    { "token": "--brand / --brand-foreground / --brand-hover", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--gold / --gold-glow / --cream", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--sidebar-* palette", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "shadcn core tokens (background/foreground/card/popover/primary/secondary/muted/accent/destructive/border/input/ring/radius)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "font-display / font-serif / font-body families (Reckless, Inter)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "Reckless @font-face declarations", "source": "index.html", "reappliedIn": "src/styles.css" },
+    { "token": "base typography rules (body, h1/h2, footer, .app-shell headings)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".text-glow / .text-glow-sm utilities", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "fade-in-up keyframes + .animate-fade-in-up(-delay-1/2/3)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "fluid-gradient keyframes + .animate-fluid-gradient", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "slide typography block (.slide-content et al)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "Google Translate banner hide CSS", "source": "index.html", "reappliedIn": "src/styles.css" },
+    { "token": "Crisp launcher mobile offset", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "accordion-down/up keyframes + animations", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "container (centered, 2rem padding, 1400px)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" }
+  ]
+}
