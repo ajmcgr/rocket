@@ -72,8 +72,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           'window.$crisp=[];window.CRISP_WEBSITE_ID="3630204c-84d4-4805-a7aa-074ba31a7c12";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
       },
-      { children: googleTranslateInit },
-      { src: "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit", async: true },
     ],
   }),
   shellComponent: RootShell,
@@ -88,9 +86,9 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
-        <div id="google_translate_element" style={{ display: "none" }} />
+        <div id="google_translate_element" style={{ display: "none" }} suppressHydrationWarning />
         <Scripts />
       </body>
     </html>
@@ -99,6 +97,26 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Google Translate mutates the DOM (body styles + widget markup); loading it
+  // before hydration causes a mismatch on every page, so defer it until after.
+  useEffect(() => {
+    if (document.getElementById("google-translate-loader")) return;
+    (window as any).googleTranslateElementInit = () => {
+      new (window as any).google.translate.TranslateElement(
+        {
+          pageLanguage: "en",
+          includedLanguages: "en,de,fr,es,it,pt,nl,pl,tr,ja",
+          autoDisplay: false,
+        },
+        "google_translate_element",
+      );
+    };
+    const s = document.createElement("script");
+    s.id = "google-translate-loader";
+    s.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    s.async = true;
+    document.head.appendChild(s);
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
