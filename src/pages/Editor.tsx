@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link, useNavigate, useOutletContext, useSearchParams } from "@/lib/router-compat";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { setBrandKitCover } from "@/lib/brandFromAsset";
 import JSZip from "jszip";
@@ -25,7 +25,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuShortcut, DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
-import type { AppShellOutletContext } from "@/components/AppShell";
+import { useAppShell } from "@/components/AppShell";
 import { defaultLogotypeState, LOGOTYPE_FONTS, pickLogotypeText, type LogotypeState, loadGoogleFont } from "@/lib/logotype";
 import { isBrandAsset } from "@/lib/assetExperience";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -658,7 +658,7 @@ const TEMPLATES: { id: string; name: string; bg: string; build: () => El[] }[] =
 const Editor = () => {
   const { toast } = useToast();
   const nav = useNavigate();
-  const { setHeaderLeft, setHeaderCenter } = useOutletContext<AppShellOutletContext>();
+  const { setHeaderLeft, setHeaderCenter } = useAppShell();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const fileRef = useRef<HTMLInputElement>(null);

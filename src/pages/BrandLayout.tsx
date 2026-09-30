@@ -160,7 +160,7 @@ export default function BrandLayout() {
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <Outlet context={{ project, projectId, downloadBrandKit, zipping }} />
+        <Outlet />
       </main>
     </div>
   );
