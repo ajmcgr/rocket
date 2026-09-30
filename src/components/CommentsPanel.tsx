@@ -107,7 +107,7 @@ export default function CommentsPanel({ assetId }: { assetId: string }) {
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") post(); }}
             placeholder="Write a comment… (⌘↵ to send)"
-            className="min-h-[42px] flex-1 resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className="min-h-[42px] flex-1 resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
           />
           <button onClick={post} disabled={posting || !body.trim()} className="inline-flex items-center gap-1.5 self-end rounded-full bg-brand px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50">
             {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

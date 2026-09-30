@@ -122,8 +122,8 @@ export default function AddApp() {
     {!appId && <form onSubmit={submit} className="mt-8 rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.35)] sm:p-9">
       <label htmlFor="app-url" className="block font-display text-2xl text-neutral-950 sm:text-3xl">Already launched somewhere?<span className="block">Paste the URL.</span></label>
       <input id="app-url" type="text" inputMode="url" required value={url} onChange={(event) => setUrl(event.target.value)}
-          autoComplete="url" placeholder="https://your-app.com" className="mt-6 min-h-12 w-full rounded-xl border border-neutral-300 bg-white px-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-      <button disabled={busy} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-neutral-900 px-6 text-sm font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50">
+          autoComplete="url" placeholder="https://your-app.com" className="mt-6 min-h-12 w-full rounded-xl border border-neutral-300 bg-white px-4 text-base focus:border-sky-500 focus:outline-hidden focus:ring-2 focus:ring-sky-200" />
+      <button disabled={busy} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-neutral-900 px-6 text-sm font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50">
         {busy ? "Finding your app…" : "Continue"}
       </button>
       <p className="mt-5 text-sm leading-relaxed text-neutral-600">Website · Launch · GitHub · Hacker News</p><p className="mt-1 text-sm text-neutral-500">You can review the match before claiming your app.</p>

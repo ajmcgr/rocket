@@ -133,7 +133,7 @@ const Team = () => {
           <h3 className="text-sm font-semibold text-neutral-900">Invite by email</h3>
           <form onSubmit={sendInvite} className="mt-3 flex flex-wrap items-center gap-2">
             <input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="teammate@company.com"
-              className="min-w-[240px] flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-400" />
+              className="min-w-[240px] flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-neutral-400" />
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
               {ROLES.filter(r => r !== "owner").map(r => <option key={r} value={r}>{r}</option>)}
             </select>

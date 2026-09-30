@@ -479,7 +479,7 @@ export default function Brand() {
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm outline-none transition ${
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium shadow-sm outline-hidden transition ${
                             isDark
                               ? "bg-white/95 text-neutral-900 hover:bg-white"
                               : "bg-neutral-900 text-white hover:bg-neutral-800"

@@ -197,7 +197,7 @@ export default function ShareExportModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Set a password to protect this link"
-                className="flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-400"
+                className="flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-neutral-400"
               />
               <button
                 disabled={!password || savingPw}

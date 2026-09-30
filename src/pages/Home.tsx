@@ -29,8 +29,8 @@ export default function Home() {
         <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">Discover, use and buy independent software with one Rocket account. Connected apps choose which Rocket features they offer.</p>
         <form onSubmit={search} role="search" className="mx-auto mt-8 flex w-full max-w-2xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-[0_16px_50px_-26px_rgba(15,23,42,0.35)] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200">
           <Search className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400" aria-hidden="true" />
-          <input aria-label="Search apps" placeholder="Search apps..." value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 bg-transparent px-1 text-base outline-none" />
-          <button className="min-h-11 rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">Search</button>
+          <input aria-label="Search apps" placeholder="Search apps..." value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 bg-transparent px-1 text-base outline-hidden" />
+          <button className="min-h-11 rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500">Search</button>
         </form>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-sm font-semibold"><Link to="/discover" className="inline-flex min-h-11 items-center gap-1 text-sky-800 hover:underline">Explore apps <ArrowRight className="h-4 w-4" /></Link><Link to="/launch" className="inline-flex min-h-11 items-center text-neutral-700 hover:underline">Launch your app</Link></div>
       </section>
@@ -55,7 +55,7 @@ export default function Home() {
             { label: "Grow", Icon: TrendingUp, copy: "Help more people discover your app." },
           ].map(({ label, Icon, copy }) => <div key={label}><Icon className="h-5 w-5 text-sky-300" aria-hidden="true" /><h3 className="mt-4 text-base font-semibold">{label}</h3><p className="mt-1 text-sm leading-relaxed text-neutral-300">{copy}</p></div>)}
         </div>
-        <Link to="/launch" className="mt-9 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">Launch your app <ArrowRight className="h-4 w-4" /></Link>
+        <Link to="/launch" className="mt-9 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-300">Launch your app <ArrowRight className="h-4 w-4" /></Link>
       </section>
     </main>
     <SiteFooter />

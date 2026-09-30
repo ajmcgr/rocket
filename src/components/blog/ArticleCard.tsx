@@ -8,7 +8,7 @@ type Props = { post: BlogPost; query?: string; className?: string; compact?: boo
 
 const ArticleCard = ({ post, query = "", className, compact = false }: Props) => (
   <article className={cn("group", className)}>
-    <Link to={`/blog/${post.slug}`} className="block focus:outline-none">
+    <Link to={`/blog/${post.slug}`} className="block focus:outline-hidden">
       <ArticleCover
         post={post}
         className={cn(

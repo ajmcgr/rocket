@@ -1198,7 +1198,7 @@ const Editor = () => {
                 setIsRenamingTitle(false);
               }
             }}
-            className="h-10 w-full rounded-full border border-neutral-200 bg-white px-4 text-center text-sm font-semibold text-neutral-900 outline-none ring-0 transition focus:border-neutral-300 focus:bg-neutral-50"
+            className="h-10 w-full rounded-full border border-neutral-200 bg-white px-4 text-center text-sm font-semibold text-neutral-900 outline-hidden ring-0 transition focus:border-neutral-300 focus:bg-neutral-50"
             aria-label="Design name"
             placeholder="Untitled design"
           />
@@ -2744,7 +2744,7 @@ const Field = ({ label, children }: any) => (
     {children}
   </label>
 );
-const NumberInput = (p: any) => <input type="number" {...p} className="w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-neutral-300" />;
+const NumberInput = (p: any) => <input type="number" {...p} className="w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-neutral-300" />;
 const ColorInput = (p: any) => <input type="color" {...p} className="h-9 w-full cursor-pointer rounded-md border border-neutral-200" />;
 
 const Inspector = ({ el, fonts, onChange }: { el: El; fonts: string[]; onChange: (p: Partial<El>) => void }) => {
@@ -2929,7 +2929,7 @@ function QuickEditPanel({ els, fonts, bg, setBg, touchAutosave, update, setEls, 
                 value={title.text}
                 onChange={(e) => update(title.id, { text: e.target.value } as any)}
                 rows={2}
-                className="w-full resize-y rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-neutral-300"
+                className="w-full resize-y rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-neutral-300"
               />
               <label className="block text-[11px] font-medium text-neutral-600">Font</label>
               <select
@@ -3099,7 +3099,7 @@ function ColorPickerButton({ value, onChange, swatches = [] }: { value: string; 
             onBlur={(e) => commitHex(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { commitHex((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
             spellCheck={false}
-            className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-sm font-mono focus:border-neutral-400 focus:outline-none"
+            className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-sm font-mono focus:border-neutral-400 focus:outline-hidden"
           />
         </div>
         {swatches.length > 0 && (
@@ -3179,7 +3179,7 @@ function IconPicker({ label, onPick }: { label: string; onPick: (svgDataUrl: str
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search icons..."
-          className="mb-2 w-full rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-neutral-300"
+          className="mb-2 w-full rounded-md border border-neutral-200 px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-neutral-300"
         />
         <div className="grid max-h-64 grid-cols-6 gap-1 overflow-y-auto">
           {filtered.slice(0, 120).map((name) => {

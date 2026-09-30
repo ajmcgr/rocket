@@ -167,7 +167,7 @@ export default function BrandDocument({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Untitled"
-            className="mt-0.5 w-full truncate border-none bg-transparent p-0 text-xl font-semibold text-neutral-900 outline-none focus:ring-0"
+            className="mt-0.5 w-full truncate border-none bg-transparent p-0 text-xl font-semibold text-neutral-900 outline-hidden focus:ring-0"
           />
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -223,7 +223,7 @@ export default function BrandDocument({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Start writing…"
-          className="min-h-[520px] w-full resize-y rounded-2xl border border-neutral-200 bg-white p-6 font-mono text-[13px] leading-relaxed text-neutral-800 outline-none focus:border-neutral-300 focus:ring-0"
+          className="min-h-[520px] w-full resize-y rounded-2xl border border-neutral-200 bg-white p-6 font-mono text-[13px] leading-relaxed text-neutral-800 outline-hidden focus:border-neutral-300 focus:ring-0"
         />
       ) : usesVisualPreview ? (
         <AssetVisual asset={previewAsset} />

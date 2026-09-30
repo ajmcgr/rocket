@@ -73,7 +73,7 @@ const ToolDetail = () => {
             placeholder={tool.inputPlaceholder}
             rows={4}
             disabled={loading}
-            className="mt-2 w-full resize-y rounded-xl border border-neutral-200 bg-white p-3 text-sm outline-none ring-brand/30 transition focus:ring-2"
+            className="mt-2 w-full resize-y rounded-xl border border-neutral-200 bg-white p-3 text-sm outline-hidden ring-brand/30 transition focus:ring-2"
           />
           <Button type="submit" disabled={loading || !input.trim()} className="mt-4">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Generate <ArrowRight className="h-4 w-4" /></>}

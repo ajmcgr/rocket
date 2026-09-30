@@ -48,7 +48,7 @@ const ForgotPassword = () => {
                   placeholder="you@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-none ring-neutral-300 transition focus:ring-2"
+                  className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm outline-hidden ring-neutral-300 transition focus:ring-2"
                 />
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
                   {loading ? "Sending…" : "Send reset link"}

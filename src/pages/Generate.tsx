@@ -1035,7 +1035,7 @@ const Generate = () => {
                   placeholder="Ask Rocket to create another design..."
                   rows={2}
                   disabled={loading}
-                  className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none placeholder:text-neutral-400 disabled:opacity-60"
+                  className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-hidden placeholder:text-neutral-400 disabled:opacity-60"
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
                 />
                 <div className="flex items-center justify-end px-2 pb-1">

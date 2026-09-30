@@ -88,7 +88,7 @@ const LogoStudio = () => {
             <select
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
-              className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-800 focus:border-neutral-400 focus:outline-none"
+              className="h-11 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-800 focus:border-neutral-400 focus:outline-hidden"
             >
               <option value="">Industry (optional)</option>
               {INDUSTRIES.map((i) => (

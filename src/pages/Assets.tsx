@@ -501,7 +501,7 @@ const Assets = () => {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search designs…  ( / )"
-            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-none focus:border-neutral-400 sm:w-64"
+            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-hidden focus:border-neutral-400 sm:w-64"
           />
         </div>
         <div className="flex flex-wrap items-center gap-1.5">

@@ -246,7 +246,7 @@ const Trash = () => {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search trash…"
-            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-none focus:border-neutral-400 sm:w-72"
+            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-hidden focus:border-neutral-400 sm:w-72"
           />
         </div>
 

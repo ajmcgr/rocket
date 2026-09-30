@@ -128,7 +128,7 @@ const HandleReserveForm = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
-          className="h-14 w-full rounded-2xl border border-cream/15 bg-background/40 px-5 text-base text-cream placeholder:text-cream/40 outline-none backdrop-blur-md focus:border-cream/40"
+          className="h-14 w-full rounded-2xl border border-cream/15 bg-background/40 px-5 text-base text-cream placeholder:text-cream/40 outline-hidden backdrop-blur-md focus:border-cream/40"
         />
         <input
           type="password"
@@ -137,7 +137,7 @@ const HandleReserveForm = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password (min 6 chars)"
-          className="h-14 w-full rounded-2xl border border-cream/15 bg-background/40 px-5 text-base text-cream placeholder:text-cream/40 outline-none backdrop-blur-md focus:border-cream/40"
+          className="h-14 w-full rounded-2xl border border-cream/15 bg-background/40 px-5 text-base text-cream placeholder:text-cream/40 outline-hidden backdrop-blur-md focus:border-cream/40"
         />
         <button
           type="submit"
@@ -166,7 +166,7 @@ const HandleReserveForm = () => {
               onChange={(e) => { setHandle(e.target.value); if (status !== "idle") setStatus("idle"); }}
               placeholder="your-handle"
               maxLength={30}
-              className="flex-1 bg-transparent py-3 text-base text-cream placeholder:text-cream/40 outline-none"
+              className="flex-1 bg-transparent py-3 text-base text-cream placeholder:text-cream/40 outline-hidden"
             />
             <button
               type="submit"

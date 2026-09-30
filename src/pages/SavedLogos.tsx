@@ -238,7 +238,7 @@ const SavedLogos = () => {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search saved logos…"
-            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-none focus:border-neutral-400 sm:w-72"
+            className="h-9 w-full min-w-0 rounded-lg border border-neutral-200 bg-white pl-8 pr-3 text-sm outline-hidden focus:border-neutral-400 sm:w-72"
           />
         </div>
 
@@ -303,7 +303,7 @@ const SavedLogos = () => {
                           if (e.key === "Enter") { e.preventDefault(); void commitRename(); }
                           if (e.key === "Escape") { e.preventDefault(); setRenamingId(null); }
                         }}
-                        className="w-full truncate rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-500"
+                        className="w-full truncate rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 text-sm font-medium text-neutral-900 outline-hidden focus:border-neutral-500"
                       />
                     ) : (
                       <button
@@ -377,7 +377,7 @@ const SavedLogos = () => {
                       if (e.key === "Enter") { e.preventDefault(); void commitRename(); }
                       if (e.key === "Escape") { e.preventDefault(); setRenamingId(null); }
                     }}
-                    className="w-full truncate rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-500"
+                    className="w-full truncate rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 text-sm font-medium text-neutral-900 outline-hidden focus:border-neutral-500"
                   />
                 ) : (
                   <button

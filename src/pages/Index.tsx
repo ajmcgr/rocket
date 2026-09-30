@@ -318,7 +318,7 @@ const Index = () => {
                   if (isPlaying) videoRef.current.pause();
                   else videoRef.current.play();
                 }}
-                className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_48px_-12px_rgba(0,0,0,0.14)] ring-1 ring-neutral-200/50 transition-all hover:scale-105 hover:shadow-[0_16px_56px_-12px_rgba(0,0,0,0.18)] focus:outline-none focus:ring-2 focus:ring-[#1676e3]"
+                className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_48px_-12px_rgba(0,0,0,0.14)] ring-1 ring-neutral-200/50 transition-all hover:scale-105 hover:shadow-[0_16px_56px_-12px_rgba(0,0,0,0.18)] focus:outline-hidden focus:ring-2 focus:ring-[#1676e3]"
                 aria-label={isPlaying ? "Pause video" : "Play video"}
               >
                 {isPlaying ? <Pause className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} /> : <Play className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} />}

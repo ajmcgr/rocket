@@ -100,7 +100,7 @@ const Blog = () => {
               }}
               placeholder="Search articles, categories, tags…"
               aria-label="Search articles"
-              className="h-12 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-10 text-sm text-neutral-900 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              className="h-12 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-10 text-sm text-neutral-900 outline-hidden transition focus:border-brand focus:ring-2 focus:ring-brand/15"
             />
             {query && (
               <button

@@ -300,15 +300,15 @@ const ProjectDetail = () => {
         <div className="mt-6 grid gap-5">
           <label className="grid gap-1.5 text-sm font-medium text-neutral-800">
             Brand name
-            <input value={settingsName} onChange={(event) => setSettingsName(event.target.value)} className="h-10 rounded-lg border border-neutral-200 px-3 text-sm font-normal outline-none focus:border-neutral-400" />
+            <input value={settingsName} onChange={(event) => setSettingsName(event.target.value)} className="h-10 rounded-lg border border-neutral-200 px-3 text-sm font-normal outline-hidden focus:border-neutral-400" />
           </label>
           <label className="grid gap-1.5 text-sm font-medium text-neutral-800">
             Website
-            <input value={settingsUrl} onChange={(event) => setSettingsUrl(event.target.value)} placeholder="https://yourcompany.com" className="h-10 rounded-lg border border-neutral-200 px-3 text-sm font-normal outline-none focus:border-neutral-400" />
+            <input value={settingsUrl} onChange={(event) => setSettingsUrl(event.target.value)} placeholder="https://yourcompany.com" className="h-10 rounded-lg border border-neutral-200 px-3 text-sm font-normal outline-hidden focus:border-neutral-400" />
           </label>
           <label className="grid gap-1.5 text-sm font-medium text-neutral-800">
             Brand description
-            <textarea value={settingsDescription} onChange={(event) => setSettingsDescription(event.target.value)} placeholder="What does this company do?" rows={4} className="rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal outline-none focus:border-neutral-400" />
+            <textarea value={settingsDescription} onChange={(event) => setSettingsDescription(event.target.value)} placeholder="What does this company do?" rows={4} className="rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal outline-hidden focus:border-neutral-400" />
           </label>
         </div>
         <button disabled={savingSettings} className="mt-6 inline-flex items-center rounded-full bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-hover disabled:opacity-50">

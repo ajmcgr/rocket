@@ -106,7 +106,7 @@ const LogoDesigner = () => {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe your logo or business/brand…"
-            className="h-12 flex-1 rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
+            className="h-12 flex-1 rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-hidden focus:border-neutral-400"
           />
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
           <button

@@ -101,7 +101,7 @@ const SharedAsset = () => {
                 autoFocus
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-400"
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-neutral-400"
                 placeholder="Enter password"
               />
               {pwError && <div className="text-xs text-red-600">{pwError}</div>}

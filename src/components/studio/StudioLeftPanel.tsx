@@ -187,7 +187,7 @@ export default function StudioLeftPanel({
             }}
             rows={2}
             placeholder="Refine your brand… e.g. make the icon smaller, generate a favicon"
-            className="min-h-[44px] flex-1 resize-none bg-transparent px-2 py-1 text-[13px] outline-none placeholder:text-neutral-400"
+            className="min-h-[44px] flex-1 resize-none bg-transparent px-2 py-1 text-[13px] outline-hidden placeholder:text-neutral-400"
           />
           <button
             onClick={() => void send()}
