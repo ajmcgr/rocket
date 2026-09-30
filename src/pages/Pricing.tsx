@@ -62,6 +62,8 @@ const COMPARE = [
 ];
 
 const FAQS = [
+  { q: "When does Rocket take 10%?", a: "Only when an eligible connected app processes a purchase through Buy with Rocket. Rocket ID by itself has no subscription or revenue-share fee. Buy with Rocket currently runs as a test-mode developer pilot, not a production checkout for catalogue apps." },
+  { q: "Are Stripe fees included in Rocket's 10%?", a: "No. Rocket's platform fee is separate from Stripe processing fees and any other applicable charges. A $100 purchase leaves $90 for the app before those separate costs." },
   { q: "What is a Rocket Credit?", a: "Credits power everything you generate. Free includes 500 credits; Starter includes 500/month, Pro 3,000/month, and Business 15,000/month. One-time credit packs never expire." },
   { q: "How is Free different from Starter?", a: "Free includes 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG and SVG downloads. Choose Starter when you need ongoing generation or files to use outside Rocket." },
   { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, team workspace access, and priority generation." },
@@ -77,8 +79,8 @@ const Pricing = () => {
   const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
 
   useDocumentMeta({
-    title: "Rocket pricing — AI logo and Brand Kit plans",
-    description: "Compare Rocket Starter, Pro and Business plans, monthly credits, Brand Kit features and exports.",
+    title: "Rocket pricing — Buy with Rocket, Rocket ID and branding",
+    description: "See Rocket's 10% Buy with Rocket pilot fee, Rocket ID pricing, and optional branding plans.",
     canonical: "https://tryrocket.ai/pricing",
   });
 
@@ -136,25 +138,48 @@ const Pricing = () => {
     <div className="min-h-screen bg-white text-neutral-900">
       <SiteHeader />
 
-      {/* Hero */}
+      {/* Developer platform pricing */}
       <section className="border-b border-neutral-200/60">
-        <div className="mx-auto max-w-6xl px-6 pt-24 pb-16 text-center">
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Pricing built for founders</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Free gives you 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG &amp; SVG downloads.</p>
+        <div id="buy-with-rocket" className="mx-auto max-w-6xl scroll-mt-24 px-6 pt-24 pb-16">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Rocket pricing</h1>
+          <p className="mt-5 max-w-2xl text-lg text-neutral-600">Rocket ID is free. When an eligible connected app sells through Buy with Rocket, Rocket takes a share of that purchase.</p>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+              <h2 className="text-2xl font-semibold tracking-tight">Buy with Rocket</h2>
+              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">10%</span><span className="text-neutral-600">Rocket platform fee</span></div>
+              <p className="mt-4 text-neutral-600">For payments processed through Buy with Rocket on an eligible, connected app. On a $100 purchase, Rocket's share is $10 and the app's share is $90 before Stripe processing fees and other applicable charges.</p>
+              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Test-mode pilot only. Production purchases and general developer onboarding are not available yet.</p>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+              <h2 className="text-2xl font-semibold tracking-tight">Rocket ID</h2>
+              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">Free</span><span className="text-neutral-600">for identity</span></div>
+              <p className="mt-4 text-neutral-600">Rocket ID lets a connected app offer Rocket sign-in. There is no Rocket subscription or revenue-share fee for using identity alone. The 10% fee applies only to purchases processed through Buy with Rocket.</p>
+              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Integration is in a developer pilot. It is not available across every app listed on Rocket.</p>
+            </div>
+          </div>
+          <p className="mt-5 text-sm text-neutral-500">Branding credits and plans below are separate from the Buy with Rocket fee.</p>
+        </div>
+      </section>
+
+      {/* Branding plans */}
+      <section className="border-b border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 py-16 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Branding plans</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Free gives you 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG &amp; SVG downloads.</p>
           <div className="mt-8 inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 text-sm">
             <button
               type="button"
               onClick={() => setBilling("monthly")}
-              className={`rounded-full px-4 py-1.5 font-medium transition ${billing === "monthly" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:text-neutral-900"}`}
+              className={`rounded-full px-4 py-1.5 font-medium transition ${billing === "monthly" ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:text-neutral-900"}`}
             >
               Monthly
             </button>
             <button
               type="button"
               onClick={() => setBilling("yearly")}
-              className={`rounded-full px-4 py-1.5 font-medium transition ${billing === "yearly" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:text-neutral-900"}`}
+              className={`rounded-full px-4 py-1.5 font-medium transition ${billing === "yearly" ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:text-neutral-900"}`}
             >
-              Yearly <span className={billing === "yearly" ? "text-white/70" : "text-brand"}>Save ~31%</span>
+              Yearly <span className={billing === "yearly" ? "text-neutral-600" : "text-brand"}>Save ~31%</span>
             </button>
           </div>
         </div>

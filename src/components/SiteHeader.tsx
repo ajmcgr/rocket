@@ -19,6 +19,7 @@ import {
   PenLine,
   Database,
   Search,
+  MessageCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -61,7 +62,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Monetize",
     items: [
-      { label: "App revenue", to: "/your-apps", icon: Wallet },
+      { label: "Buy with Rocket", to: "/pricing#buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/developer", icon: ShieldCheck },
     ],
   },
@@ -103,7 +104,8 @@ export default function SiteHeader() {
 
   const navItem = ({ label, to, icon: Icon }: NavItem) => {
     const active =
-      (label !== "App revenue" && pathname + locationSearch === to) ||
+      (label !== "Buy with Rocket" && pathname + locationSearch === to) ||
+      (label === "Buy with Rocket" && pathname === "/pricing") ||
       (to === "/discover" && pathname === "/discover" && !locationSearch) ||
       (to === "/saved-apps" && pathname === "/saved-apps") ||
       (to === "/submit" && pathname === "/submit") ||
@@ -176,6 +178,20 @@ export default function SiteHeader() {
                   {!sidebarCompact && <><span>{label}</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
                 </a>
               ))}
+            </div>
+            <div>
+              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">Community</p>}
+              <a
+                href="https://discord.gg/aSkXPHhTjJ"
+                target="_blank"
+                rel="noopener noreferrer"
+                title={sidebarCompact ? "Discord" : undefined}
+                aria-label={sidebarCompact ? "Discord (opens in a new tab)" : undefined}
+                className={`flex min-h-9 items-center gap-3 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
+              >
+                <MessageCircle className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                {!sidebarCompact && <><span>Discord</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
+              </a>
             </div>
           </nav>
         </div>

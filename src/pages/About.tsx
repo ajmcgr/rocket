@@ -1,13 +1,12 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { Link } from "@/lib/router-compat";
 import alexAvatar from "@/assets/alex-macgregor.png.asset.json";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const About = () => {
   useDocumentMeta({
-    title: "About Rocket — Discover independent apps worth using",
-    description: "Rocket helps people discover independent apps and gives builders a place to launch, build trust, connect, and grow.",
+    title: "About Rocket — The open app platform",
+    description: "Find rising apps and new software from vibe coders and developers. Learn what Rocket does today and how we help people discover new software.",
     canonical: "https://tryrocket.ai/about",
   });
 
@@ -17,33 +16,24 @@ const About = () => {
       <article className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-6 py-10 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-12 sm:py-14">
         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl">About Rocket</h1>
 
-        <div className="mt-10 space-y-6 text-base leading-8 text-neutral-700 dark:text-neutral-300 sm:text-lg">
-          <p>Rocket is a place to discover independent apps worth using.</p>
+        <div className="mt-10 space-y-7 text-lg leading-8 text-neutral-700 dark:text-neutral-300 sm:text-xl sm:leading-9">
+          <p>Rocket is the open app platform to find rising apps and new software from vibe coders and developers.</p>
           <p className="font-semibold text-neutral-950 dark:text-white">Hello there!</p>
           <p>
-            Independent builders are making remarkable software. We want to make it easier for people to find those apps, understand what they do, and decide which ones are worth their time.
+            More people can build useful software than ever before. The hard part is finding it. Promising apps can be scattered across launch sites, social posts, and personal websites, with little context to help you decide what is worth trying. Rocket brings them into a place where you can browse by category, explore new arrivals, see public Launch activity, and save the apps you want to revisit.
           </p>
           <p>
-            For builders, Rocket is a place to bring an app into the open, tell its story, and build a relationship with the people who use it. Here is what you can do today:
+            For the people making those apps, a Rocket profile is a clearer way to show what they have built. Vibe coders and developers can submit an app, claim an existing listing, improve its public information, and choose which verified details to share. That gives visitors a better basis for understanding the product while keeping the builder in control of their own information.
           </p>
-
-          <div className="space-y-4 border-l-2 border-[#167ac6] pl-5">
-            <p><strong className="text-neutral-950 dark:text-white">Submit</strong><br />Add your app to Rocket.</p>
-            <p><strong className="text-neutral-950 dark:text-white">Verify</strong><br />Build trust with details you choose to share.</p>
-            <p><strong className="text-neutral-950 dark:text-white">Connect</strong><br />Use Rocket identity and payment integrations where supported.</p>
-            <p><strong className="text-neutral-950 dark:text-white">Grow</strong><br />Help more people discover your app.</p>
-          </div>
-
           <p>
-            Rocket is still growing. Not every listed app is claimed or connected, and a listing is not an endorsement. We will keep making discovery more useful and giving independent developers better ways to earn trust.
+            A listing is not an endorsement. Rankings based on public Launch activity do not prove customer growth, and a claimed app is not automatically verified in every way. Where an app supports Rocket identity or payments, those capabilities belong to that specific connected app; they are not available across the whole catalogue.
+          </p>
+          <p>
+            Rocket is still growing. Our aim is to make discovery genuinely useful for visitors and to give builders a fairer, more trustworthy way to be found. We will keep improving the information people can rely on without asking them to mistake an indexed app for a recommendation.
           </p>
         </div>
 
-        <Link to="/submit" className="mt-8 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#167ac6] px-5 text-sm font-semibold text-white transition hover:bg-[#1268aa]">
-          Submit your app
-        </Link>
-
-        <div className="mt-14 border-t border-neutral-200 pt-8 dark:border-neutral-800">
+        <div className="mt-14">
           <img src={alexAvatar.url} alt="Alex MacGregor" className="h-20 w-20 rounded-full object-cover" />
           <p className="mt-4 font-semibold text-neutral-950 dark:text-white">Alex MacGregor</p>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">Founder, Rocket</p>

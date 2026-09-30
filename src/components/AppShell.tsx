@@ -43,6 +43,7 @@ import {
   Image,
   Wallet,
   ShieldCheck,
+  MessageCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -128,7 +129,7 @@ const AppShell = () => {
     {
       label: "Monetize",
       items: [
-        { label: "Revenue in your apps", to: "/your-apps", icon: Wallet },
+        { label: "Buy with Rocket", to: "/pricing#buy-with-rocket", icon: Wallet },
         { label: "Rocket Identity", to: "/developer", icon: ShieldCheck },
       ],
     },
@@ -306,6 +307,21 @@ const AppShell = () => {
                   <ExternalLink className="ml-auto h-3.5 w-3.5 text-neutral-400" />
                 </a>
               ))}
+            </div>
+          )}
+          {!collapsed && (
+            <div className="border-t border-neutral-200 pt-4">
+              <p className="mb-2 px-3 text-xs font-semibold text-neutral-500">Community</p>
+              <a
+                href="https://discord.gg/aSkXPHhTjJ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              >
+                <MessageCircle className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
+                <span>Discord</span>
+                <ExternalLink className="ml-auto h-3.5 w-3.5 text-neutral-400" />
+              </a>
             </div>
           )}
         </nav>
