@@ -1375,7 +1375,7 @@ const Editor = () => {
   };
   const copySelectedStyle = () => {
     if (!selected) return;
-    const style: Record<string, any> = selected.kind === "text"
+    const style: Record<string, any> | null = selected.kind === "text"
       ? {
           color: selected.color,
           fontFamily: selected.fontFamily,

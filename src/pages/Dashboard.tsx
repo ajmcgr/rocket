@@ -192,7 +192,7 @@ const Projects = () => {
     const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
     const workspace_id = await ensureActiveWorkspaceId();
     const { data, error } = await supabase.from("projects").insert({ user_id: user!.id, workspace_id, name } as any).select().single();
-    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Failed", description: error.message, variant: "destructive" }); return; }
     setProjects((prev) => [data, ...prev]);
     setCreating(false);
     setNewName("");
@@ -204,7 +204,7 @@ const Projects = () => {
     const { ensureActiveWorkspaceId } = await import("@/lib/workspace");
     const workspace_id = await ensureActiveWorkspaceId();
     const { data, error } = await supabase.from("folders").insert({ user_id: user!.id, workspace_id, name } as any).select().single();
-    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Failed", description: error.message, variant: "destructive" }); return; }
     setFolders((prev) => [data, ...prev]);
     setCreatingFolder(false);
     setNewFolderName("");

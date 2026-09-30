@@ -138,14 +138,14 @@ const Trash = () => {
 
   const restoreAsset = async (id: string) => {
     const { error } = await supabase.from("assets").update({ deleted_at: null }).eq("id", id);
-    if (error) return toast({ title: "Restore failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Restore failed", description: error.message, variant: "destructive" }); return; }
     setAssets((prev) => prev.filter(x => x.id !== id));
     toast({ title: "Design restored" });
   };
   const purgeAsset = async (id: string) => {
     if (!confirm("Permanently delete this design? This can't be undone.")) return;
     const { error } = await supabase.from("assets").delete().eq("id", id);
-    if (error) return toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Delete failed", description: error.message, variant: "destructive" }); return; }
     setAssets((prev) => prev.filter(x => x.id !== id));
   };
 

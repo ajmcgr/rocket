@@ -23,7 +23,7 @@ const date = (value: string | null) => value ? new Date(value).toLocaleDateStrin
 const revenueMoney = (minor: number, currency: string) => {
   try {
     const format = new Intl.NumberFormat(undefined, { style: "currency", currency: currency.toUpperCase() });
-    return format.format(minor / 10 ** format.resolvedOptions().maximumFractionDigits);
+    return format.format(minor / 10 ** (format.resolvedOptions().maximumFractionDigits ?? 2));
   } catch { return `${minor} ${currency.toUpperCase()} minor units`; }
 };
 const descriptionSummary = (description: string) => {

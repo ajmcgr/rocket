@@ -52,9 +52,10 @@ export default function Discover() {
   useEffect(() => {
     supabase.from("public_app_categories").select("category,app_count").order("app_count", { ascending: false }).limit(100)
       .then(({ data }) => { if (data) setCategories(data); });
-    supabase.from("public_category_intelligence").select("*")
-      .order("launch_volume_change_pct", { ascending: false }).limit(20)
-      .then(({ data }) => { if (data) setCategorySignals(data); })
+    Promise.resolve(
+      supabase.from("public_category_intelligence").select("*")
+        .order("launch_volume_change_pct", { ascending: false }).limit(20),
+    ).then(({ data }) => { if (data) setCategorySignals(data); })
       .finally(() => setCategoriesLoading(false));
   }, []);
 

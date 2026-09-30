@@ -51,10 +51,12 @@ export default function AddApp() {
   useEffect(() => {
     if (!appId) { setResolvingApp(false); return; }
     setResolvingApp(true);
-    supabase.from("public_apps").select("id,name,description,website_url,logo_url,categories,claim_state")
-      .eq("id", appId).maybeSingle().then(async ({ data }) => {
+    Promise.resolve(
+      supabase.from("public_apps").select("id,name,description,website_url,logo_url,categories,claim_state")
+        .eq("id", appId).maybeSingle(),
+    ).then(async ({ data }) => {
         if (data) { setApp(data); return; }
-        const own = await supabase.from("app_jobs" as "public_apps").select("result")
+        const own = await (supabase as any).from("app_jobs").select("result")
           .eq("app_id", appId).eq("status", "complete").limit(1).maybeSingle();
         if (own.data?.result && typeof own.data.result === "object") {
           const result = own.data.result as Record<string, unknown>;

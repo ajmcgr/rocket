@@ -194,7 +194,7 @@ const Assets = () => {
         toast({ title: "Failed to load designs", description: firstError.message, variant: "destructive" });
       }
       const page = (data || []).slice(0, PAGE_SIZE);
-      setAssets((current) => append ? [...current, ...page.filter((asset) => !current.some((existing) => existing.id === asset.id))] : page);
+      setAssets((current) => append ? [...current, ...page.filter((asset: any) => !current.some((existing) => existing.id === asset.id))] : page);
       setHasMore((data || []).length > PAGE_SIZE);
       setProjects(p.data || []);
       setFolders(f.data || []);
@@ -454,7 +454,7 @@ const Assets = () => {
 
     return (
       <>
-        {isLogotype ? <Logotype state={asset.editor_state as any} fit="contain" /> : fallbackLogotype ? <Logotype state={logotypePreviewState(asset)} fit="contain" /> : isImage ? <img src={rasterPreview} alt={asset.title} className="h-full w-full object-contain" loading="lazy" onError={() => setRasterFailed(true)} /> : isCanvas ? <CanvasAssetPreview elements={asset.editor_state as any} className="h-full w-full" /> : brand ? <BrandCover asset={asset} /> : (
+        {isLogotype ? <Logotype state={asset.editor_state as any} fit="contain" /> : fallbackLogotype ? <Logotype state={logotypePreviewState(asset)} fit="contain" /> : isImage ? <img src={rasterPreview ?? undefined} alt={asset.title} className="h-full w-full object-contain" loading="lazy" onError={() => setRasterFailed(true)} /> : isCanvas ? <CanvasAssetPreview elements={asset.editor_state as any} className="h-full w-full" /> : brand ? <BrandCover asset={asset} /> : (
           <div className="flex h-full w-full items-center justify-center p-4 text-center text-xs text-neutral-500">
             <div className="line-clamp-6 whitespace-pre-wrap">{fallbackText ? fallbackText.slice(0, 200) : "No preview available"}</div>
           </div>

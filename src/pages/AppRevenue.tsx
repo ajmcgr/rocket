@@ -23,7 +23,7 @@ const visibilityChoices: Array<{ value: Visibility; label: string }> = [
 function moneyFromMinor(value: string, currency: string) {
   try {
     const format = new Intl.NumberFormat(undefined, { style: "currency", currency: currency.toUpperCase() });
-    const exponent = format.resolvedOptions().maximumFractionDigits;
+    const exponent = format.resolvedOptions().maximumFractionDigits ?? 2;
     const amount = Number(value) / 10 ** exponent;
     return Number.isFinite(amount) ? format.format(amount) : `${value} ${currency.toUpperCase()} minor units`;
   } catch { return `${value} ${currency.toUpperCase()} minor units`; }
