@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-// The public catalogue is the only input. This runs after Vite copies the
-// static sitemap into dist, so no thousands-of-URLs source file is maintained.
+// The public catalogue is the only input. This runs after the build copies the
+// static sitemap into its public output, so no thousands-of-URLs source file is maintained.
 const env = readFileSync(".env", "utf8");
 const getEnv = (name) => process.env[name] || env.match(new RegExp(`^${name}=(.*)$`, "m"))?.[1]?.replace(/^['"]|['"]$/g, "");
 const url = getEnv("VITE_SUPABASE_URL");
@@ -24,7 +24,8 @@ for (let offset = 0; ; offset += 1000) {
   if (page.length < 1000) break;
 }
 
-const sitemapPath = "dist/sitemap.xml";
+const sitemapPath = [".output/public/sitemap.xml", "dist/sitemap.xml"].find(existsSync);
+if (!sitemapPath) throw new Error("Built public sitemap was not found");
 const sitemap = readFileSync(sitemapPath, "utf8");
 if (!sitemap.includes("</urlset>")) throw new Error("Built sitemap is not a URL set");
 const entries = apps.map(({ id }) => `  <url><loc>https://tryrocket.ai/apps/${id}</loc></url>`).join("\n");

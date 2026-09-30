@@ -1,6 +1,6 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter } from "@/lib/router-compat";
+import { MemoryRouter } from "@/test/MemoryRouter";
 import { describe, expect, it, vi } from "vitest";
 import AppJourney from "@/components/AppJourney";
 
