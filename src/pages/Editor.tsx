@@ -1,3 +1,4 @@
+import { Pencil as ControlPencil, FilePlus as ControlFilePlus, Keyboard as ControlKeyboard, Settings2 as ControlSettings2, Save as ControlSave, Copy as ControlCopy, History as ControlHistory, FolderPlus as ControlFolderPlus, Loader2 as ControlLoader2, Check as ControlCheck, Printer as ControlPrinter, Trash2 as ControlTrash2, Minimize2 as ControlMinimize2, Maximize2 as ControlMaximize2, Eye as ControlEye, EyeOff as ControlEyeOff, Lock as ControlLock, Unlock as ControlUnlock, Scissors as ControlScissors } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -20,7 +21,7 @@ import {
  History, FilePlus, Pencil, ChevronDown, Settings2, Grid3X3, Printer, FolderPlus,
  Maximize2, Minimize2, Paintbrush, ClipboardPaste,
  Scissors,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuShortcut, DropdownMenuCheckboxItem,
@@ -30,7 +31,7 @@ import { defaultLogotypeState, LOGOTYPE_FONTS, pickLogotypeText, type LogotypeSt
 import { isBrandAsset } from "@/lib/assetExperience";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { renderToStaticMarkup } from "react-dom/server";
-import * as LucideIcons from "lucide-react";
+import * as LucideIcons from "@/components/EmojiIcons";
 import { createArtworkPreviewCanvasFromCanvas } from "@/lib/previewThumbnail";
 const supabase = _sb as any;
 
@@ -1210,7 +1211,7 @@ const Editor = () => {
             aria-label="Rename design"
           >
             <span className="truncate">{displayTitle}</span>
-            <Pencil className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+            <ControlPencil className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
           </button>
         )}
       </div>
@@ -1944,7 +1945,7 @@ const Editor = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-72">
           <DropdownMenuItem onClick={startNewDesign}>
-            <FilePlus className="mr-2 h-4 w-4" />
+            <ControlFilePlus className="mr-2 h-4 w-4" />
             Create new design
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => fileRef.current?.click()}>
@@ -1963,11 +1964,11 @@ const Editor = () => {
                 Show guides
               </DropdownMenuCheckboxItem>
               <DropdownMenuItem onClick={() => setShowShortcuts(true)}>
-                <Keyboard className="mr-2 h-4 w-4" />
+                <ControlKeyboard className="mr-2 h-4 w-4" />
                 Keyboard shortcuts
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => nav("/settings/profile")}>
-                <Settings2 className="mr-2 h-4 w-4" />
+                <ControlSettings2 className="mr-2 h-4 w-4" />
                 Open settings
               </DropdownMenuItem>
             </DropdownMenuSubContent>
@@ -1984,18 +1985,18 @@ const Editor = () => {
             <DropdownMenuShortcut>⇧⌘Z</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={save}>
-            <Save className="mr-2 h-4 w-4" />
+            <ControlSave className="mr-2 h-4 w-4" />
             Save
             {assetId && saveStatus !== "idle" && (
               <DropdownMenuShortcut>{saveStatus === "saved" ? "Saved" : "Saving…"}</DropdownMenuShortcut>
             )}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={saveAsNew}>
-            <Copy className="mr-2 h-4 w-4" />
+            <ControlCopy className="mr-2 h-4 w-4" />
             Make a copy
           </DropdownMenuItem>
           <DropdownMenuItem onClick={saveVersion} disabled={!assetId}>
-            <History className="mr-2 h-4 w-4" />
+            <ControlHistory className="mr-2 h-4 w-4" />
             Save version
           </DropdownMenuItem>
           <DropdownMenuSub>
@@ -2005,20 +2006,17 @@ const Editor = () => {
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-64">
               <DropdownMenuItem onClick={() => void createProjectAndAssign()}>
-                <FolderPlus className="mr-2 h-4 w-4" />
+                <ControlFolderPlus className="mr-2 h-4 w-4" />
                 New brand kit…
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {loadingProjects ? (
-                <DropdownMenuItem disabled>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading brand kits…
-                </DropdownMenuItem>
+                <div role="status" aria-label="Loading brand kits" className="animate-pulse space-y-2 px-3 py-2"><div className="h-4 w-3/4 rounded bg-neutral-100" /><div className="h-4 w-1/2 rounded bg-neutral-100" /></div>
               ) : projectOptions.length > 0 ? (
                 projectOptions.map((project) => (
                   <DropdownMenuItem key={project.id} onClick={() => void assignProject(project.id)}>
                     <span className="mr-2 inline-flex h-4 w-4 items-center justify-center">
-                      {project.id === assetMeta?.project_id ? <Check className="h-4 w-4 text-emerald-600" /> : null}
+                      {project.id === assetMeta?.project_id ? <ControlCheck className="h-4 w-4 text-emerald-600" /> : null}
                     </span>
                     <span className="truncate">{project.name}</span>
                   </DropdownMenuItem>
@@ -2051,16 +2049,16 @@ const Editor = () => {
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuItem onClick={() => void printCanvas()}>
-            <Printer className="mr-2 h-4 w-4" />
+            <ControlPrinter className="mr-2 h-4 w-4" />
             Print
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => nav("/trash")}>
-            <Trash2 className="mr-2 h-4 w-4" />
+            <ControlTrash2 className="mr-2 h-4 w-4" />
             Open Trash
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void moveToTrash()} className="text-red-600 focus:text-red-600">
-            <Trash2 className="mr-2 h-4 w-4" />
+            <ControlTrash2 className="mr-2 h-4 w-4" />
             Move to Trash
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -2604,7 +2602,7 @@ const Editor = () => {
               aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
               title={isFullscreen ? "Exit full screen" : "Enter full screen"}
             >
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {isFullscreen ? <ControlMinimize2 className="h-4 w-4" /> : <ControlMaximize2 className="h-4 w-4" />}
             </button>
           </div>
       </main>
@@ -2641,10 +2639,10 @@ const Editor = () => {
                     >
                       <span className="flex-1 truncate capitalize">{e.kind}{e.kind === "text" ? `: ${(e as TextEl).text.slice(0, 16)}` : ""}</span>
                       <span onClick={(ev) => { ev.stopPropagation(); update(e.id, { visible: e.visible === false } as any); }} className="opacity-60 hover:opacity-100">
-                        {e.visible !== false ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                        {e.visible !== false ? <ControlEye className="h-3.5 w-3.5" /> : <ControlEyeOff className="h-3.5 w-3.5" />}
                       </span>
                       <span onClick={(ev) => { ev.stopPropagation(); update(e.id, { locked: !e.locked } as any); }} className="opacity-60 hover:opacity-100">
-                        {e.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                        {e.locked ? <ControlLock className="h-3.5 w-3.5" /> : <ControlUnlock className="h-3.5 w-3.5" />}
                       </span>
                     </button>
                   </li>
@@ -2680,7 +2678,7 @@ const Editor = () => {
               disabled={selected.locked || isSeparating}
               onClick={() => void separateSelectedImage()}
             >
-              <Scissors className="h-3.5 w-3.5" />
+              <ControlScissors className="h-3.5 w-3.5" />
               {isSeparating ? "Separating pieces…" : "Separate pieces"}
             </Button>
           )}

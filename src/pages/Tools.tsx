@@ -2,7 +2,7 @@ import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { tools } from "@/content/tools";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "@/components/EmojiIcons";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Tools = () => {

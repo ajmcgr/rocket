@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "check:button-emojis": "node scripts/audit-button-emojis.cjs",
     "test:watch": "vitest",
     "test:rocket-connect": "node scripts/test-rocket-connect.mjs",
     "format": "prettier --write ."

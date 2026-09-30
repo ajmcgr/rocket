@@ -1,8 +1,9 @@
+import { History as ControlHistory, Wand2 as ControlWand2, Loader2 as ControlLoader2, Share2 as ControlShare2, Check as ControlCheck, Edit3 as ControlEdit3, Play as ControlPlay, FileCode as ControlFileCode, Copy as ControlCopy, Trash2 as ControlTrash2, Files as ControlFiles, X as ControlX, Save as ControlSave, Pencil as ControlPencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, Download, Edit3, History, Share2, Trash2, RotateCcw, Check, Wand2, Loader2, Pencil, X, Save, FileCode, Play, Files, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Copy, Download, Edit3, History, Share2, Trash2, RotateCcw, Check, Wand2, Loader2, Pencil, X, Save, FileCode, Play, Files, ChevronLeft, ChevronRight } from "@/components/EmojiIcons";
 import { imageUrlToSvg, downloadSvg } from "@/lib/vectorize";
 const supabase = _sb as any;
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
@@ -342,11 +343,11 @@ const AssetDetail = () => {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setHistoryOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50">
-            <History className="h-4 w-4" /> Versions {versions.length > 0 && <span className="rounded-full bg-neutral-100 px-1.5 text-[10px]">{versions.length}</span>}
+            <ControlHistory className="h-4 w-4" /> Versions {versions.length > 0 && <span className="rounded-full bg-neutral-100 px-1.5 text-[10px]">{versions.length}</span>}
           </button>
           <div className="relative">
             <button onClick={() => setVaryOpen(v => !v)} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50">
-              <Wand2 className="h-4 w-4" /> Variation
+              <ControlWand2 className="h-4 w-4" /> Variation
             </button>
             {varyOpen && (
               <div className="absolute right-0 z-30 mt-1 w-72 rounded-xl border border-neutral-200 bg-white p-3 shadow-lg">
@@ -359,7 +360,7 @@ const AssetDetail = () => {
                 <div className="mt-2 flex gap-1.5">
                   <input value={tweak} onChange={e => setTweak(e.target.value)} placeholder="Custom tweak…" disabled={varying} className="flex-1 rounded-md border border-neutral-200 px-2 py-1 text-xs outline-hidden focus:border-brand" />
                   <button onClick={() => generateVariation()} disabled={varying || !tweak.trim()} className="rounded-md bg-brand px-2 py-1 text-xs text-brand-foreground disabled:opacity-50">
-                    {varying ? <Loader2 className="h-3 w-3 animate-spin" /> : "Go"}
+                    {varying ? <ControlLoader2 className="h-3 w-3 animate-spin" /> : "Go"}
                   </button>
                 </div>
                 <p className="mt-2 text-[10px] text-neutral-500">Creates a new asset, original is preserved.</p>
@@ -367,12 +368,12 @@ const AssetDetail = () => {
             )}
           </div>
           <button onClick={() => setShareOpen(true)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm ${asset.share_token ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-neutral-200 bg-white hover:bg-neutral-50"}`}>
-            <Share2 className="h-4 w-4" /> Share & export
+            <ControlShare2 className="h-4 w-4" /> Share & export
           </button>
           <AddToProjectMenu assetId={asset.id} currentProjectId={asset.project_id} onChanged={(pid) => setAsset((a: any) => ({ ...a, project_id: pid }))} />
           {asset.share_token && (
             <button onClick={toggleShare} disabled={sharing} title="Disable public link" className="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white p-2 text-xs text-neutral-500 hover:bg-neutral-50">
-              <Check className="h-3.5 w-3.5 text-emerald-600" />
+              <ControlCheck className="h-3.5 w-3.5 text-emerald-600" />
             </button>
           )}
           <Link
@@ -381,7 +382,7 @@ const AssetDetail = () => {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover"
           >
-            <Edit3 className="h-4 w-4" /> Open in Editor
+            <ControlEdit3 className="h-4 w-4" /> Open in Editor
           </Link>
           {asset.asset_type === "presentation" && (
             <Link
@@ -389,7 +390,7 @@ const AssetDetail = () => {
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50"
               title="Present fullscreen"
             >
-              <Play className="h-4 w-4" /> Present
+              <ControlPlay className="h-4 w-4" /> Present
             </Link>
           )}
           {isImage && (
@@ -411,19 +412,19 @@ const AssetDetail = () => {
               title="Download as SVG (vectorized)"
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50"
             >
-              <FileCode className="h-4 w-4" /> SVG
+              <ControlFileCode className="h-4 w-4" /> SVG
             </button>
           )}
           {!isImage && !isLogo && (
             <button onClick={copy} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50">
-              <Copy className="h-4 w-4" />
+              <ControlCopy className="h-4 w-4" />
             </button>
           )}
           <button onClick={del} className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-            <Trash2 className="h-4 w-4" />
+            <ControlTrash2 className="h-4 w-4" />
           </button>
           <button onClick={duplicate} disabled={duplicating} title="Duplicate as new asset" className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50">
-            {duplicating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Files className="h-4 w-4" />}
+            {duplicating ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlFiles className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -511,7 +512,7 @@ const AssetDetail = () => {
             disabled={rebuilding}
             className="inline-flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            {rebuilding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />} Rebuild as structured
+            {rebuilding ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlWand2 className="h-3.5 w-3.5" />} Rebuild as structured
           </button>
         </div>
       )}
@@ -542,10 +543,10 @@ const AssetDetail = () => {
               />
               <div className="mt-3 flex items-center justify-end gap-2">
                 <button onClick={cancelEdit} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm hover:bg-neutral-50">
-                  <X className="h-4 w-4" /> Cancel
+                  <ControlX className="h-4 w-4" /> Cancel
                 </button>
                 <button onClick={saveEdit} disabled={savingEdit} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1.5 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50">
-                  {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
+                  {savingEdit ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlSave className="h-4 w-4" />} Save
                 </button>
               </div>
             </div>
@@ -556,7 +557,7 @@ const AssetDetail = () => {
                 className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/90 px-2.5 py-1 text-xs text-neutral-600 backdrop-blur-sm hover:bg-neutral-50"
                 title="Edit source"
               >
-                <Pencil className="h-3.5 w-3.5" /> Edit
+                <ControlPencil className="h-3.5 w-3.5" /> Edit
               </button>
               <div className="p-6"><AssetVisual asset={asset} /></div>
             </div>
@@ -576,7 +577,7 @@ const AssetDetail = () => {
                 onClick={startEdit}
                 className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] text-neutral-600 hover:bg-neutral-50"
               >
-                <Pencil className="h-3 w-3" /> Edit source
+                <ControlPencil className="h-3 w-3" /> Edit source
               </button>
             </div>
             {showRaw ? (

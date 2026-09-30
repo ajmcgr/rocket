@@ -1,6 +1,7 @@
+import { X as ControlX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { Search, X, ArrowRight } from "lucide-react";
+import { Search, X, ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
@@ -122,7 +123,7 @@ const Blog = () => {
                 aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-neutral-400 hover:text-neutral-700"
               >
-                <X className="h-4 w-4" />
+                <ControlX className="h-4 w-4" />
               </button>
             )}
           </div>

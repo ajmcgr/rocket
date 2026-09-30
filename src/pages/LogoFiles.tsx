@@ -1,6 +1,7 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2 } from "@/components/EmojiIcons";
 import jsPDF from "jspdf";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype } from "@/components/Logotype";
@@ -220,7 +221,7 @@ export default function LogoFiles() {
                       }`}
                     >
                       {busy?.startsWith(`${v.key}:`) ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <ControlLoader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <Download className="h-3.5 w-3.5" />
                       )}

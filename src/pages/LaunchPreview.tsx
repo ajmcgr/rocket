@@ -6,6 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import AppLogo from "@/components/AppLogo";
 import { track } from "@/lib/analytics";
+import { APP_CATEGORIES } from "@/lib/appCategories";
 const supportedSources: { name: string; detail: string; emoji: string }[] = [
   { name: "Directories", detail: "Public listings with a clear app website", emoji: "🌐" },
   { name: "Launch", detail: "A trylaunch.ai product page", emoji: "🚀" },
@@ -186,6 +187,18 @@ export default function LaunchPreview() {
               {busy ? "Finding your app…" : "Preview app"}
             </button>
           </div>
+          <label className="mt-4 block max-w-sm text-sm font-medium">
+            Category {manual ? "" : "(optional)"}
+            <select
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              required={manual}
+              className="mt-1 block min-h-11 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm"
+            >
+              <option value="">{manual ? "Choose a category" : "Let Rocket suggest one"}</option>
+              {APP_CATEGORIES.map(({ name }) => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </label>
           <button
             type="button"
             className="mt-4 text-sm font-medium text-sky-800 underline"
@@ -204,15 +217,6 @@ export default function LaunchPreview() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   maxLength={240}
-                  className="mt-1 w-full rounded-lg border p-3"
-                />
-              </label>
-              <label className="text-sm">
-                Category
-                <input
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value)}
-                  maxLength={80}
                   className="mt-1 w-full rounded-lg border p-3"
                 />
               </label>
@@ -259,7 +263,7 @@ export default function LaunchPreview() {
             Product Hunt, Apple App Store, and Google Play listing URLs are not supported yet. Paste the app’s own website URL instead. Other public directory pages may work when they expose that website, but Rocket does not guarantee directory-specific imports.
           </p>
           <a href="https://launchdirectories.com/free-startup-directories" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-sky-800 hover:underline">
-            Browse external directories (not Rocket integrations) <span aria-hidden="true">↗️</span>
+            Browse external directories (not Rocket integrations) <span aria-hidden="true">→</span>
           </a>
         </section>
         {error && (

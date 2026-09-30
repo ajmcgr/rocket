@@ -1,5 +1,6 @@
+import { Loader2 as ControlLoader2, Sparkles as ControlSparkles } from "lucide-react";
 import { useState } from "react";
-import { ArrowRight, Check, Loader2, Sparkles, X, AlertCircle } from "lucide-react";
+import { ArrowRight, Check, Loader2, Sparkles, X, AlertCircle } from "@/components/EmojiIcons";
 import { useToast } from "@/hooks/use-toast";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
@@ -144,7 +145,7 @@ const HandleReserveForm = () => {
           disabled={status === "reserving"}
           className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-cream text-sm font-semibold text-background transition hover:bg-white disabled:opacity-60"
         >
-          {status === "reserving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating account…</> : <>Claim @{normalized} <ArrowRight className="h-4 w-4" /></>}
+          {status === "reserving" ? <><ControlLoader2 className="h-4 w-4 animate-spin" /> Creating account…</> : <>Claim @{normalized} <ArrowRight className="h-4 w-4" /></>}
         </button>
         <button type="button" onClick={() => setStatus("idle")} className="block w-full text-center text-xs text-cream/50 hover:text-cream/80">
           ← try a different handle
@@ -173,7 +174,7 @@ const HandleReserveForm = () => {
               disabled={status === "checking" || !handle.trim()}
               className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-cream px-5 text-sm font-semibold text-background transition hover:bg-white disabled:opacity-60"
             >
-              {status === "checking" ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Check <ArrowRight className="h-4 w-4" /></>}
+              {status === "checking" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <>Check <ArrowRight className="h-4 w-4" /></>}
             </button>
           </div>
         </div>
@@ -192,7 +193,7 @@ const HandleReserveForm = () => {
             onClick={() => setStatus("collecting")}
             className="inline-flex h-12 items-center gap-2 rounded-2xl bg-cream px-5 text-sm font-semibold text-background transition hover:bg-white"
           >
-            <Sparkles className="h-4 w-4" /> Claim @{normalized}
+            <ControlSparkles className="h-4 w-4" /> Claim @{normalized}
           </button>
         </div>
       )}

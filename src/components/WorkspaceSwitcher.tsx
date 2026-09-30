@@ -1,6 +1,7 @@
+import { Users as ControlUsers, Check as ControlCheck, Plus as ControlPlus, Lock as ControlLock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { Check, ChevronDown, Plus, Users, Lock } from "lucide-react";
+import { Check, ChevronDown, Plus, Users, Lock } from "@/components/EmojiIcons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,8 +90,8 @@ const WorkspaceSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="inline-flex max-w-[180px] items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm text-neutral-700 outline-hidden hover:bg-neutral-50 focus:ring-2 focus:ring-neutral-300">
-        <Users className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
-        <span className="truncate font-medium">{loading ? "Loading…" : active?.name || "Workspace"}</span>
+        <ControlUsers className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
+        {loading ? <span role="status" aria-label="Loading workspace" className="h-4 w-20 animate-pulse rounded bg-neutral-100" /> : <span className="truncate font-medium">{active?.name || "Workspace"}</span>}
         <ChevronDown className="h-3 w-3 shrink-0 text-neutral-500" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-64 rounded-xl border border-neutral-200 bg-white p-2 shadow-lg">
@@ -98,6 +99,7 @@ const WorkspaceSwitcher = () => {
         {workspaces.length === 0 && !loading ? (
           <div className="px-2 py-2 text-sm text-neutral-500">No workspaces yet.</div>
         ) : null}
+        {loading && <div role="status" aria-label="Loading workspaces" className="animate-pulse space-y-2 px-2 py-2"><div className="h-4 w-3/4 rounded bg-neutral-100" /><div className="h-4 w-1/2 rounded bg-neutral-100" /></div>}
         {workspaces.map(w => (
           <DropdownMenuItem
             key={w.id}
@@ -105,7 +107,7 @@ const WorkspaceSwitcher = () => {
             className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900"
           >
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              {w.id === activeId ? <Check className="h-4 w-4 shrink-0 text-brand" /> : <span className="w-4" />}
+              {w.id === activeId ? <ControlCheck className="h-4 w-4 shrink-0 text-brand" /> : <span className="w-4" />}
               <span className="min-w-0 flex-1 truncate">{w.name}</span>
               {w.is_personal && <span className="shrink-0 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-600">Personal</span>}
             </div>
@@ -118,12 +120,12 @@ const WorkspaceSwitcher = () => {
           className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900"
           title={!isPro ? "Pro plan required" : undefined}
         >
-          {isPro ? <Plus className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4 text-neutral-400" />}
+          {isPro ? <ControlPlus className="mr-2 h-4 w-4" /> : <ControlLock className="mr-2 h-4 w-4 text-neutral-400" />}
           <span className="flex-1">New workspace</span>
           {!isPro && <span className="ml-2 rounded bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-brand">Pro</span>}
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
-          <Link to="/settings/team"><Users className="mr-2 h-4 w-4" /> Manage team</Link>
+          <Link to="/settings/team"><ControlUsers className="mr-2 h-4 w-4" /> Manage team</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

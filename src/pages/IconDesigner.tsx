@@ -1,6 +1,7 @@
+import { Image as ControlImageIcon, Check as ControlCheck, Send as ControlSend } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "@/lib/router-compat";
-import { Shapes, Send, Image as ImageIcon, Shuffle, Minus, Sticker, Palette, PenTool, Box, Smile, Check } from "lucide-react";
+import { Shapes, Send, Image as ImageIcon, Shuffle, Minus, Sticker, Palette, PenTool, Box, Smile, Check } from "@/components/EmojiIcons";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ChatsPanelLayout from "@/components/ChatsPanelLayout";
 
@@ -90,7 +91,7 @@ const IconDesigner = () => {
             aria-label="Upload reference"
             className="flex h-12 w-12 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition hover:bg-neutral-50"
           >
-            <ImageIcon className="h-4 w-4" />
+            <ControlImageIcon className="h-4 w-4" />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -109,7 +110,7 @@ const IconDesigner = () => {
                   <DropdownMenuItem key={s.id} onSelect={() => setStyle(s.id)} className="flex items-center gap-2 text-sm">
                     <Icon className="h-4 w-4" />
                     <span className="flex-1">{s.label}</span>
-                    {s.id === style && <Check className="h-3.5 w-3.5" />}
+                    {s.id === style && <ControlCheck className="h-3.5 w-3.5" />}
                   </DropdownMenuItem>
                 );
               })}
@@ -129,7 +130,7 @@ const IconDesigner = () => {
             disabled={!prompt.trim()}
             className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0d5ec5] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Send className="h-4 w-4" /> Generate
+            <ControlSend className="h-4 w-4" /> Generate
           </button>
         </div>
       </form>

@@ -1,9 +1,10 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/EmojiIcons";
 
 const NewsletterCta = () => {
   const [email, setEmail] = useState("");
@@ -53,7 +54,7 @@ const NewsletterCta = () => {
             className="h-12 min-w-0 flex-1 border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-400 sm:h-13"
           />
           <Button type="submit" size="lg" className="h-12 shrink-0 bg-[#167ac6] text-white hover:bg-[#1268aa] sm:h-13" disabled={loading}>
-            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Subscribing…</> : "Subscribe"}
+            {loading ? <><ControlLoader2 className="h-4 w-4 animate-spin" /> Subscribing…</> : "Subscribe"}
           </Button>
         </form>
         {status === "success" && <p role="status" className="mt-3 text-sm text-emerald-700">Thanks for subscribing. Please check your inbox.</p>}

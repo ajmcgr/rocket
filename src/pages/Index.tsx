@@ -1,6 +1,7 @@
+import { Pause as ControlPause, Play as ControlPlay, Loader2 as ControlLoader2 } from "lucide-react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import { useState, useRef } from "react";
-import { ArrowRight, ArrowUp, Sparkles, Zap, Target, Rocket as RocketIcon, Megaphone, ListChecks, Check, Loader2, Smartphone, Mail, Palette, ShoppingBag, Building2, Puzzle, Mic, BookOpen, Wrench, Lightbulb, Paperclip, X, BookMarked, LayoutTemplate, Shapes, Type as TypeIcon, Image as ImageIcon, Box, Sparkle, BarChart3, Play, Pause } from "lucide-react";
+import { ArrowRight, ArrowUp, Sparkles, Zap, Target, Rocket as RocketIcon, Megaphone, ListChecks, Check, Loader2, Smartphone, Mail, Palette, ShoppingBag, Building2, Puzzle, Mic, BookOpen, Wrench, Lightbulb, Paperclip, X, BookMarked, LayoutTemplate, Shapes, Type as TypeIcon, Image as ImageIcon, Box, Sparkle, BarChart3, Play, Pause } from "@/components/EmojiIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -321,7 +322,7 @@ const Index = () => {
                 className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_48px_-12px_rgba(0,0,0,0.14)] ring-1 ring-neutral-200/50 transition-all hover:scale-105 hover:shadow-[0_16px_56px_-12px_rgba(0,0,0,0.18)] focus:outline-hidden focus:ring-2 focus:ring-[#1676e3]"
                 aria-label={isPlaying ? "Pause video" : "Play video"}
               >
-                {isPlaying ? <Pause className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} /> : <Play className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} />}
+                {isPlaying ? <ControlPause className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} /> : <ControlPlay className="h-8 w-8 fill-neutral-900 text-neutral-900" strokeWidth={2} />}
               </button>
             </div>
           </div>
@@ -459,7 +460,7 @@ const Index = () => {
                 variant="outline"
                 className="mt-8 w-full"
               >
-                {loading === productId("starter") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start 7-day free trial"}
+                {loading === productId("starter") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Start 7-day free trial"}
               </Button>
             </div>
 
@@ -488,7 +489,7 @@ const Index = () => {
                 variant="outline"
                 className="mt-8 w-full"
               >
-                {loading === productId("growth") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
+                {loading === productId("growth") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
               </Button>
             </div>
 
@@ -514,7 +515,7 @@ const Index = () => {
                 variant="outline"
                 className="mt-8 w-full"
               >
-                {loading === productId("business") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Business"}
+                {loading === productId("business") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Business"}
               </Button>
             </div>
           </div>
@@ -549,7 +550,7 @@ const Index = () => {
                     <span className="text-4xl font-semibold tracking-tight">{p.price}</span>
                   </div>
                   <div className="mt-1 flex items-center gap-2 text-sm font-medium text-neutral-900">
-                    {loading === p.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    {loading === p.id && <ControlLoader2 className="h-3.5 w-3.5 animate-spin" />}
                     {p.credits} credits
                   </div>
                 </button>

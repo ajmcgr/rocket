@@ -1,5 +1,6 @@
+import { Check as ControlCheck, Copy as ControlCopy } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Copy, Check, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { Copy, Check, ChevronLeft, ChevronRight, AlertTriangle } from "@/components/EmojiIcons";
 import { Logotype } from "@/components/Logotype";
 import CanvasAssetPreview from "@/components/CanvasAssetPreview";
 import { isCanvasAsset } from "@/lib/canvasAsset";
@@ -34,7 +35,7 @@ function CopyBtn({ text, label = "Copy" }: { text: string; label?: string }) {
       onClick={() => { navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 1200); }}
       className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] text-neutral-600 hover:bg-neutral-50"
     >
-      {done ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />} {done ? "Copied" : label}
+      {done ? <ControlCheck className="h-3 w-3 text-emerald-600" /> : <ControlCopy className="h-3 w-3" />} {done ? "Copied" : label}
     </button>
   );
 }

@@ -371,6 +371,9 @@ async function preview(req: Request, body: Record<string, unknown>) {
     if (attempted.error) throw attempted.error;
   }
   const manual = body.manual === true;
+  const selectedCategory = text(body.category, 80);
+  if (selectedCategory && !/^[\p{L}\p{N} &-]{2,80}$/u.test(selectedCategory))
+    throw new Error("Choose a valid category");
   let item: Extracted | null = null;
   let name = "";
   let description = "";
@@ -384,7 +387,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
     description = text(body.description, 2000);
     if (name.length < 2 || description.length < 20)
       throw new Error("Add a name and a short description");
-    category = text(body.category, 80) || null;
+    category = selectedCategory || null;
     const candidate = text(body.logo_url, 2048);
     if (candidate) {
       const logo = parsePublicUrl(candidate);
@@ -437,6 +440,9 @@ async function preview(req: Request, body: Record<string, unknown>) {
       }
     }
   }
+  // A founder's explicit choice takes precedence over an AI suggestion for a
+  // new app. Existing canonical app categories are never changed by preview.
+  if (!manual && selectedCategory) category = selectedCategory;
   const normalized = normalizeSourceUrl(websiteUrl);
   const canonicalHost = parsePublicUrl(normalized).hostname.replace(
     /^www\./,

@@ -1,3 +1,4 @@
+import { Plus as ControlPlus, Loader2 as ControlLoader2, Zap as ControlZap, LayoutGrid as ControlLayoutGrid, List as ControlList, X as ControlX, CheckSquare as ControlCheckSquare, Sparkles as ControlSparkles, Check as ControlCheck, Trash2 as ControlTrash2, Square as ControlSquare, RefreshCw as ControlRefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "@/lib/router-compat";
 import { assetHref, BRAND_TYPES, DESIGN_TYPES, isBrandAsset, normalizeAssetType } from "@/lib/assetExperience";
@@ -5,7 +6,7 @@ import BrandCover from "@/components/brand/BrandCover";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Sparkles, Trash2, Check, Paintbrush, Send, Radio, Wand2, LayoutGrid, List, ArrowUpDown, CheckSquare, Square, Loader2, Zap, X, RefreshCw, Download } from "lucide-react";
+import { ArrowLeft, Plus, Sparkles, Trash2, Check, Paintbrush, Send, Radio, Wand2, LayoutGrid, List, ArrowUpDown, CheckSquare, Square, Loader2, Zap, X, RefreshCw, Download } from "@/components/EmojiIcons";
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import { Logotype } from "@/components/Logotype";
 import { handleAiError } from "@/lib/aiErrors";
@@ -325,8 +326,8 @@ const ProjectDetail = () => {
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{project.name}</h1>
         <div className="flex flex-wrap gap-2">
           <Link to={`/projects/${id}/hub`} className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/5 px-4 py-2 text-sm font-medium text-brand hover:bg-brand/10"><Download className="h-4 w-4" /> Download</Link>
-          <button onClick={openDesignPicker} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><Plus className="h-4 w-4" /> Add design</button>
-          <button onClick={openPicker} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><Plus className="h-4 w-4" /> Add brand work</button>
+          <button onClick={openDesignPicker} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><ControlPlus className="h-4 w-4" /> Add design</button>
+          <button onClick={openPicker} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><ControlPlus className="h-4 w-4" /> Add brand work</button>
           {missingKit().length > 0 && (
             <button
               onClick={completeBrandKit}
@@ -334,7 +335,7 @@ const ProjectDetail = () => {
               className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-4 py-2 text-sm font-medium text-brand hover:bg-brand/15 disabled:opacity-50"
               title={`Generate ${missingKit().length} missing brand asset${missingKit().length === 1 ? "" : "s"}`}
             >
-              {completing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+              {completing ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlZap className="h-4 w-4" />}
               Complete brand kit
               <span className="ml-1 rounded-full bg-brand/20 px-1.5 text-[10px]">{missingKit().length}</span>
             </button>
@@ -372,10 +373,10 @@ const ProjectDetail = () => {
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
             <button onClick={() => setView("card")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "card" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Card
+              <ControlLayoutGrid className="h-3.5 w-3.5" /> Card
             </button>
             <button onClick={() => setView("list")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "list" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <List className="h-3.5 w-3.5" /> List
+              <ControlList className="h-3.5 w-3.5" /> List
             </button>
           </div>
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
@@ -391,7 +392,7 @@ const ProjectDetail = () => {
               onClick={() => { setSelectMode(v => !v); clearSelection(); }}
               className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition ${selectMode ? "border-brand bg-brand/10 text-brand" : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"}`}
             >
-              {selectMode ? <X className="h-3.5 w-3.5" /> : <CheckSquare className="h-3.5 w-3.5" />} {selectMode ? "Cancel" : "Select"}
+              {selectMode ? <ControlX className="h-3.5 w-3.5" /> : <ControlCheckSquare className="h-3.5 w-3.5" />} {selectMode ? "Cancel" : "Select"}
             </button>
           </div>
         </div>
@@ -402,7 +403,7 @@ const ProjectDetail = () => {
           <h2 className="text-lg font-semibold text-neutral-900">No templates in this brand yet.</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-neutral-500">Create a social post, presentation, or reusable layout and it will appear here.</p>
           <Link to={`/create?project=${id}&asset_type=template&prompt=${encodeURIComponent(`Create a reusable brand template for ${project.name}`)}`} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover">
-            <Sparkles className="h-4 w-4" /> Create a template
+            <ControlSparkles className="h-4 w-4" /> Create a template
           </Link>
         </div>
       ) : assets.length === 0 ? (
@@ -429,9 +430,9 @@ const ProjectDetail = () => {
               ))}
             </ol>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Link to={`/create?project=${id}&workflow=brand&prompt=${encodeURIComponent(`Logotype for ${project.name}`)}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover"><Sparkles className="h-4 w-4" /> Generate logotype</Link>
+              <Link to={`/create?project=${id}&workflow=brand&prompt=${encodeURIComponent(`Logotype for ${project.name}`)}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover"><ControlSparkles className="h-4 w-4" /> Generate logotype</Link>
               <button onClick={completeBrandKit} disabled={completing} className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-4 py-2 text-sm font-medium text-brand hover:bg-brand/15 disabled:opacity-50">
-                {completing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />} Complete brand kit
+                {completing ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlZap className="h-4 w-4" />} Complete brand kit
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("rocket:start-tour"))}
@@ -446,7 +447,7 @@ const ProjectDetail = () => {
             <div className="text-xs normal-case tracking-wider text-neutral-500">Or</div>
             <h2 className="mt-1 text-lg font-semibold">Bring in existing work</h2>
             <p className="mt-1 text-sm text-neutral-500">Attach brand work you've already generated in Rocket to this project.</p>
-            <button onClick={openPicker} className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><Plus className="h-4 w-4" /> Add existing brand work</button>
+            <button onClick={openPicker} className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><ControlPlus className="h-4 w-4" /> Add existing brand work</button>
           </div>
         </div>
       ) : view === "card" ? (
@@ -471,9 +472,9 @@ const ProjectDetail = () => {
                 className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border bg-white/95 transition ${selected.has(a.id) || selectMode ? "opacity-100" : "opacity-0 group-hover:opacity-100"} ${selected.has(a.id) ? "border-brand text-brand" : "border-neutral-300 text-transparent"}`}
                 title={selected.has(a.id) ? "Deselect" : "Select"}
               >
-                {selected.has(a.id) && <Check className="h-4 w-4" />}
+                {selected.has(a.id) && <ControlCheck className="h-4 w-4" />}
               </button>
-              <button onClick={() => removeAsset(a.id)} className="absolute right-2 top-2 rounded-md bg-white/90 p-1 opacity-0 transition group-hover:opacity-100" title="Remove from project"><Trash2 className="h-4 w-4 text-red-600" /></button>
+              <button onClick={() => removeAsset(a.id)} className="absolute right-2 top-2 rounded-md bg-white/90 p-1 opacity-0 transition group-hover:opacity-100" title="Remove from project"><ControlTrash2 className="h-4 w-4 text-red-600" /></button>
             </div>
           ))}
         </div>
@@ -486,7 +487,7 @@ const ProjectDetail = () => {
                 className="shrink-0 rounded-md p-1"
                 aria-label={selected.has(a.id) ? "Deselect" : "Select"}
               >
-                {selected.has(a.id) ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                {selected.has(a.id) ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
               </button>
               <Link to={assetHref(a)} target="_blank" rel="noopener noreferrer" onClick={(e) => { if (selected.size > 0 || selectMode) { e.preventDefault(); toggleSelect(a.id); } }} className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="h-14 w-20 overflow-hidden rounded-lg bg-neutral-100">
@@ -500,7 +501,7 @@ const ProjectDetail = () => {
                   <div className="mt-0.5 text-xs text-neutral-500">{a.asset_type} · {designStatus(a)} · {new Date(a.created_at).toLocaleDateString()}</div>
                 </div>
               </Link>
-              <button onClick={() => removeAsset(a.id)} className="rounded-md p-1 text-neutral-500 hover:bg-neutral-100" title="Remove from project"><Trash2 className="h-4 w-4 text-red-600" /></button>
+              <button onClick={() => removeAsset(a.id)} className="rounded-md p-1 text-neutral-500 hover:bg-neutral-100" title="Remove from project"><ControlTrash2 className="h-4 w-4 text-red-600" /></button>
             </div>
           ))}
         </div>
@@ -513,7 +514,7 @@ const ProjectDetail = () => {
             <button onClick={() => selectAllVisible(visibleSorted)} className="rounded-full px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-100">Select all</button>
             <button onClick={bulkRemoveFromProject} className="rounded-full border border-neutral-200 px-3 py-1 text-xs hover:bg-neutral-50">Remove from project</button>
             <button onClick={bulkTrash} className="rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700">Move to Trash</button>
-            <button onClick={clearSelection} className="rounded-full px-2 py-1 text-neutral-500 hover:bg-neutral-100"><X className="h-4 w-4" /></button>
+            <button onClick={clearSelection} className="rounded-full px-2 py-1 text-neutral-500 hover:bg-neutral-100"><ControlX className="h-4 w-4" /></button>
           </div>
         </div>
       )}
@@ -576,10 +577,10 @@ const ProjectDetail = () => {
                   className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] hover:bg-neutral-50"
                   title="Retry all failed"
                 >
-                  <RefreshCw className="h-3 w-3" /> Retry failed
+                  <ControlRefreshCw className="h-3 w-3" /> Retry failed
                 </button>
               )}
-              <button onClick={() => setCompletePanelOpen(false)} className="rounded p-1 text-neutral-500 hover:bg-neutral-100"><X className="h-3.5 w-3.5" /></button>
+              <button onClick={() => setCompletePanelOpen(false)} className="rounded p-1 text-neutral-500 hover:bg-neutral-100"><ControlX className="h-3.5 w-3.5" /></button>
             </div>
           </div>
           <div className="max-h-72 overflow-auto p-2">
@@ -601,7 +602,7 @@ const ProjectDetail = () => {
                             disabled={completing}
                             className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-[10px] hover:bg-neutral-50 disabled:opacity-50"
                           >
-                            <RefreshCw className="h-2.5 w-2.5" /> Retry
+                            <ControlRefreshCw className="h-2.5 w-2.5" /> Retry
                           </button>
                         </>
                       )}

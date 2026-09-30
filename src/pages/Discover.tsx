@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { signalLabel, type AppSignal } from "@/lib/appIntelligence";
+import TrendArrow from "@/components/TrendArrow";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import {
@@ -15,17 +16,11 @@ import {
   MarketplaceListRow,
 } from "@/components/MarketplaceCards";
 import { track } from "@/lib/analytics";
+import { availableCategories } from "@/lib/appCategories";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
-const formatDate = (date: string | null) =>
-  date
-    ? new Date(date).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : null;
+const RANKING_SIZE = 20;
 const safeSearch = (value: string) =>
   value
     .replace(/[^\p{L}\p{N}\s-]/gu, " ")
@@ -39,10 +34,12 @@ export default function Discover() {
   const [categories, setCategories] = useState<
     Tables<"public_app_categories">[]
   >([]);
-  const [categorySignals, setCategorySignals] = useState<
-    Tables<"public_category_intelligence">[]
-  >([]);
+  const [categorySignals, setCategorySignals] = useState<Tables<"public_category_intelligence">[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [rankingCategories, setRankingCategories] = useState<Tables<"public_ranking_categories">[]>([]);
+  const [rankingCategoriesLoading, setRankingCategoriesLoading] = useState(true);
+  const [rankingVotes, setRankingVotes] = useState<Map<string, number>>(new Map());
+  const [rankingObservedAt, setRankingObservedAt] = useState<string | null>(null);
   const [signals, setSignals] = useState<Map<string, AppSignal>>(new Map());
   const [media, setMedia] = useState<Map<string, PublicAppMedia[]>>(new Map());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -60,10 +57,10 @@ export default function Discover() {
   );
   const rawSearch = params.get("q") || "";
   const search = safeSearch(rawSearch);
-  const view = ["rising", "new", "categories", "all"].includes(
+  const view = ["rising", "rankings", "new", "categories", "all"].includes(
     params.get("view") || "",
   )
-    ? params.get("view")!
+    ? params.get("view") === "rising" ? "rankings" : params.get("view")!
     : "all";
   const showOverview =
     !params.get("view") &&
@@ -85,25 +82,26 @@ export default function Discover() {
   });
 
   useEffect(() => {
-    supabase
+    Promise.resolve(supabase
       .from("public_app_categories")
       .select("category,app_count")
       .order("app_count", { ascending: false })
-      .limit(100)
+      .limit(100))
       .then(({ data }) => {
         if (data) setCategories(data);
-      });
-    Promise.resolve(
-      supabase
-        .from("public_category_intelligence")
-        .select("*")
-        .order("launch_volume_change_pct", { ascending: false })
-        .limit(20),
-    )
-      .then(({ data }) => {
-        if (data) setCategorySignals(data);
       })
       .finally(() => setCategoriesLoading(false));
+    supabase.from("public_category_intelligence").select("*")
+      .order("launch_volume_change_pct", { ascending: false }).limit(20)
+      .then(({ data }) => { if (data) setCategorySignals(data); });
+    Promise.resolve(supabase
+      .from("public_ranking_categories")
+      .select("category,app_count")
+      .order("app_count", { ascending: false }))
+      .then(({ data }) => {
+        if (data) setRankingCategories(data);
+      })
+      .finally(() => setRankingCategoriesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -117,7 +115,34 @@ export default function Discover() {
         setLoading(false);
         return;
       }
-      if (view === "rising" || view === "new") {
+      if (view === "rankings") {
+        if (rankingCategoriesLoading) return;
+        const eligibleCategory = rankingCategories.some((item) => item.category === category) ? category : "";
+        let request = supabase
+          .from("public_app_rankings")
+          .select("app_id,launch_net_votes,votes_observed_at")
+          .order("launch_net_votes", { ascending: false })
+          .order("launched_at", { ascending: false, nullsFirst: false })
+          .order("app_id", { ascending: true })
+          .limit(RANKING_SIZE);
+        if (eligibleCategory) request = request.contains("categories", [eligibleCategory]);
+        const { data: rankingRows, error: rankingError } = await request;
+        if (rankingError) throw rankingError;
+        const ids = (rankingRows || []).map((row) => row.app_id);
+        const appResult = ids.length
+          ? await supabase.from("public_discoverable_apps").select("*").in("id", ids)
+          : { data: [] as App[], error: null };
+        if (appResult.error) throw appResult.error;
+        const byId = new Map((appResult.data || []).map((app) => [app.id, app]));
+        if (!canceled) {
+          setApps(ids.map((id) => byId.get(id)).filter((app): app is App => Boolean(app)));
+          setRankingVotes(new Map((rankingRows || []).map((row) => [row.app_id, row.launch_net_votes])));
+          setRankingObservedAt((rankingRows || []).map((row) => row.votes_observed_at).filter((value): value is string => Boolean(value)).sort().at(-1) || null);
+          setSignals(new Map());
+          setCount(ids.length);
+          setMedia(new Map());
+        }
+      } else if (view === "new") {
         const {
           data: signalRows,
           count: total,
@@ -125,7 +150,7 @@ export default function Discover() {
         } = await supabase
           .from("public_discoverable_app_intelligence")
           .select("*", { count: "exact" })
-          .eq("signal_type", view === "rising" ? "rising" : "new_interesting")
+          .eq("signal_type", "new_interesting")
           .order("percentile_rank", { ascending: false })
           .order("net_votes", { ascending: false })
           .order("app_id", { ascending: true })
@@ -218,7 +243,7 @@ export default function Discover() {
     return () => {
       canceled = true;
     };
-  }, [search, category, platform, source, sort, page, view]);
+  }, [search, category, platform, source, sort, page, view, rankingCategories, rankingCategoriesLoading]);
 
   useEffect(() => {
     if (!user || apps.length === 0) {
@@ -256,6 +281,15 @@ export default function Discover() {
     next.delete("page");
     setParams(next);
   };
+  const selectRankingCategory = (value: string) => {
+    const next = new URLSearchParams();
+    next.set("view", "rankings");
+    if (value) next.set("category", value);
+    track("discovery_category_selected", { category: value || "all", view: "rankings" });
+    setParams(next);
+  };
+  const activeRankingCategory = rankingCategories.some((item) => item.category === category) ? category : "";
+  const discoverCategories = availableCategories(categories.map((item) => item.category));
 
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
@@ -265,7 +299,7 @@ export default function Discover() {
           Discover
         </h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Apps worth using, from new arrivals to rising finds.
+          Apps worth using, from new arrivals to category rankings.
         </p>
         <form
           role="search"
@@ -298,7 +332,7 @@ export default function Discover() {
         >
           {(
             [
-              ["rising", "Rising"],
+              ["rankings", "Rankings"],
               ["new", "New"],
               ["categories", "Categories"],
               ["all", "All Apps"],
@@ -311,40 +345,75 @@ export default function Discover() {
                 change("view", key);
               }}
               aria-current={view === key ? "page" : undefined}
-              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${view === key ? "bg-[#167ac6] text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
+              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${view === key ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
             >
               {label}
             </button>
           ))}
         </nav>
-        {categories.length > 0 && (
-          <nav
-            aria-label="Browse categories"
-            className="mt-3 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none]"
-          >
-            <button
-              onClick={() => change("category", "")}
-              aria-current={!category ? "page" : undefined}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${!category ? "bg-[#167ac6] text-white" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
-            >
-              All categories
-            </button>
-            {categories.slice(0, 12).map((item) => (
-              <button
-                key={item.category}
-                onClick={() => {
-                  track("discovery_category_selected", {
-                    category: item.category,
-                  });
-                  change("category", item.category);
-                }}
-                aria-current={category === item.category ? "page" : undefined}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${category === item.category ? "bg-[#167ac6] text-white" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
-              >
-                {item.category}
+        {view === "rankings" && (
+          <section className="mt-6" aria-labelledby="ranking-categories-heading">
+            <h2 id="ranking-categories-heading" className="text-lg font-bold">Top 20 by Launch votes</h2>
+            <p className="mt-1 text-sm text-neutral-600">Public Launch vote totals, not verified users, revenue or a Rocket endorsement.{rankingObservedAt && !loading ? ` Latest observed ${new Date(rankingObservedAt).toLocaleDateString()}.` : ""}</p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Ranking categories">
+              <button onClick={() => selectRankingCategory("")} aria-current={!activeRankingCategory ? "page" : undefined} className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium ${!activeRankingCategory ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-700 hover:bg-neutral-100"}`}>
+                All Apps
               </button>
-            ))}
-          </nav>
+              {rankingCategories.map((item) => (
+                <button key={item.category} onClick={() => selectRankingCategory(item.category)} aria-current={activeRankingCategory === item.category ? "page" : undefined} className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium ${activeRankingCategory === item.category ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-700 hover:bg-neutral-100"}`}>
+                  <span className="min-w-0 truncate">{item.category}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+        {view !== "rankings" && (
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+            {categories.length > 0 && (
+              <nav
+                aria-label="Browse categories"
+                className="flex min-w-0 gap-2 overflow-x-auto pb-2 [scrollbar-width:none] sm:flex-1"
+              >
+                <button
+                  onClick={() => change("category", "")}
+                  aria-current={!category ? "page" : undefined}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${!category ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
+                >
+                  All categories
+                </button>
+                {categories.slice(0, 12).map((item) => (
+                  <button
+                    key={item.category}
+                    onClick={() => {
+                      track("discovery_category_selected", {
+                        category: item.category,
+                      });
+                      change("category", item.category);
+                    }}
+                    aria-current={category === item.category ? "page" : undefined}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${category === item.category ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
+                  >
+                    {item.category}
+                  </button>
+                ))}
+              </nav>
+            )}
+            <label className="flex shrink-0 items-center gap-2 text-sm font-medium text-neutral-600">
+              <span>Platform</span>
+              <select
+                aria-label="Browse by platform"
+                value={platform}
+                onChange={(event) => change("platform", event.target.value)}
+                className="min-h-10 rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
+              >
+                <option value="">All platforms</option>
+                <option value="web">Web</option>
+                <option value="ios">iOS</option>
+                <option value="android">Android</option>
+                <option value="hardware">Hardware</option>
+              </select>
+            </label>
+          </div>
         )}
         {showOverview && <DiscoveryPreview />}
         {view === "all" && (
@@ -375,18 +444,6 @@ export default function Discover() {
                 ))}
               </select>
               <select
-                aria-label="Platform"
-                value={platform}
-                onChange={(event) => change("platform", event.target.value)}
-                className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
-              >
-                <option value="">All platforms</option>
-                <option value="web">Web</option>
-                <option value="ios">iOS</option>
-                <option value="android">Android</option>
-                <option value="hardware">Hardware</option>
-              </select>
-              <select
                 aria-label="Source"
                 value={source}
                 onChange={(event) => change("source", event.target.value)}
@@ -410,12 +467,14 @@ export default function Discover() {
         <div className="mt-6 flex items-center justify-between text-sm text-neutral-500">
           <span>
             {loading || (view === "categories" && categoriesLoading)
-              ? "Loading apps…"
+              ? <span className="inline-block h-4 w-24 animate-pulse rounded bg-neutral-200 align-middle dark:bg-neutral-800" role="status" aria-label="Loading app count" />
               : view === "categories"
-                ? `${categorySignals.length} categories`
+                ? `${discoverCategories.length} categories`
+                : view === "rankings"
+                  ? `Top ${count} apps`
                 : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}
           </span>
-          <span>{view === "all" ? "All Apps" : "Public Launch activity"}</span>
+          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by public Launch votes" : "Public Launch activity"}</span>
         </div>
         {error && (
           <div
@@ -450,38 +509,45 @@ export default function Discover() {
           </div>
         )}
         {view === "categories" && !loading && !categoriesLoading && !error && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {categorySignals.map((item) => (
+          <div className="mt-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {discoverCategories.map((name) => {
+              const appCount = categories.find((row) => row.category === name)?.app_count || 0;
+              return (
               <button
-                key={item.category}
+                key={name}
+                disabled={appCount === 0}
                 onClick={() => {
                   track("discovery_category_selected", {
-                    category: item.category,
+                    category: name,
                   });
                   const next = new URLSearchParams(params);
                   next.set("view", "all");
-                  next.set("category", item.category);
+                  next.set("category", name);
                   next.delete("page");
                   setParams(next);
                 }}
-                className="rounded-2xl border border-neutral-200 bg-white p-5 text-left hover:border-sky-300"
+                className="rounded-2xl border border-neutral-200 bg-white p-5 text-left hover:border-sky-300 disabled:cursor-default disabled:opacity-55 disabled:hover:border-neutral-200"
               >
-                <h2 className="font-semibold">{item.category}</h2>
-                <p className="mt-3 text-sm text-neutral-700">
-                  {item.recent_launches} Launch products in the last 30 days vs{" "}
-                  {item.previous_launches} in the preceding 30 days.
-                </p>
-                <p className="mt-2 text-sm text-neutral-600">
-                  {item.launch_volume_change_pct! >= 0 ? "+" : ""}
-                  {item.launch_volume_change_pct}% launch activity ·{" "}
-                  {item.recent_catalogue_share_pct}% of recent Rocket listings
-                </p>
-                <p className="mt-3 text-xs text-neutral-500">
-                  Observed founder activity, not customer demand · Updated{" "}
-                  {formatDate(item.calculated_at)}
-                </p>
+                <h2 className="mt-3 font-semibold">{name}</h2>
+                <p className="mt-2 text-sm text-neutral-600">{appCount ? `${appCount.toLocaleString()} apps` : "No listings yet"}</p>
               </button>
-            ))}
+            );})}
+            </div>
+            {categorySignals.length > 0 && <section className="mt-10" aria-labelledby="category-activity-heading">
+              <h2 id="category-activity-heading" className="text-xl font-bold">Recent Launch activity by category</h2>
+              <p className="mt-1 text-sm text-neutral-600">Observed founder activity, not verified customer demand.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {categorySignals.map((item) => <div key={item.category} className="rounded-xl border border-neutral-200 bg-white p-4">
+                  <h3 className="font-semibold">{item.category}</h3>
+                  <p className="mt-2 text-sm text-neutral-600">{item.recent_launches} Launch products in the last 30 days vs {item.previous_launches} in the preceding 30 days.</p>
+                  <p className="mt-1 flex items-center gap-1 text-xs text-neutral-500">
+                    {item.launch_volume_change_pct !== 0 && <TrendArrow direction={item.launch_volume_change_pct! > 0 ? "up" : "down"} />}
+                    {item.launch_volume_change_pct! > 0 ? "+" : ""}{item.launch_volume_change_pct}% launch activity
+                  </p>
+                </div>)}
+              </div>
+            </section>}
           </div>
         )}
         {view !== "categories" && loading && (
@@ -490,7 +556,7 @@ export default function Discover() {
             role="status"
             aria-label="Loading apps"
           >
-            {[0, 1, 2, 3, 4, 5].map((item) => (
+            {Array.from({ length: view === "rankings" ? RANKING_SIZE : 6 }, (_, item) => item).map((item) => (
               <div
                 key={item}
                 className={`rocket-skeleton-surface ${view === "new" ? "h-56" : "h-20"} animate-pulse border-b border-neutral-200 p-3`}
@@ -504,18 +570,14 @@ export default function Discover() {
         {view !== "categories" &&
           !loading &&
           !error &&
-          (view === "rising" ? (
+          (view === "rankings" ? (
             <div className="mt-3 grid gap-x-7 sm:grid-cols-2">
               {apps.map((app, index) => (
                 <RankedAppRow
                   key={app.id}
                   app={app}
-                  rank={page * PAGE_SIZE + index + 1}
-                  eyebrow={
-                    signals.get(app.id)
-                      ? signalLabel(signals.get(app.id)!)
-                      : undefined
-                  }
+                  rank={index + 1}
+                  eyebrow={`${rankingVotes.get(app.id)?.toLocaleString() || "0"} Launch votes`}
                 />
               ))}
             </div>
@@ -531,6 +593,7 @@ export default function Discover() {
                       ? signalLabel(signals.get(app.id)!)
                       : undefined
                   }
+                  trend={signals.get(app.id)?.signal_type === "rising" ? "up" : undefined}
                   saved={savedIds.has(app.id)}
                   onSave={(saved) =>
                     setSavedIds((current) => {
@@ -562,7 +625,7 @@ export default function Discover() {
               ))}
             </div>
           ))}
-        {!error && count > PAGE_SIZE && (
+        {!error && view !== "rankings" && count > PAGE_SIZE && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <button
               disabled={page === 0 || loading}

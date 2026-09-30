@@ -1,6 +1,7 @@
+import { Loader2 as ControlLoader2, Check as ControlCheck, Copy as ControlCopy } from "lucide-react";
 import { useState } from "react";
 import JSZip from "jszip";
-import { Download, Loader2, Copy, Check } from "lucide-react";
+import { Download, Loader2, Copy, Check } from "@/components/EmojiIcons";
 import { useToast } from "@/hooks/use-toast";
 import { logotypeToSvg, logotypeToPng } from "@/components/Logotype";
 import { loadGoogleFont, type LogotypeState } from "@/lib/logotype";
@@ -140,16 +141,16 @@ export default function LogotypeExportBar({ state, name }: { state: LogotypeStat
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/70 px-3 py-2">
       <span className="text-[11px] uppercase tracking-wider text-neutral-500">Export</span>
       <button className={btn} onClick={doPack} disabled={!!busy}>
-        {busy === "pack" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />} Full pack (.zip)
+        {busy === "pack" ? <ControlLoader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />} Full pack (.zip)
       </button>
       <button className={btn} onClick={doSvg} disabled={!!busy}>SVG</button>
       <button className={btn} onClick={copySvg} disabled={!!busy}>
-        {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />} {copied ? "Copied" : "Copy SVG"}
+        {copied ? <ControlCheck className="h-3 w-3 text-emerald-600" /> : <ControlCopy className="h-3 w-3" />} {copied ? "Copied" : "Copy SVG"}
       </button>
       <span className="mx-1 text-[10px] text-neutral-400">PNG</span>
       {[160, 320, 640].map(h => (
         <button key={h} className={btn} onClick={() => doPng(h, `png-${h}`)} disabled={!!busy}>
-          {busy === `png-${h}` ? <Loader2 className="h-3 w-3 animate-spin" /> : null} {h}px
+          {busy === `png-${h}` ? <ControlLoader2 className="h-3 w-3 animate-spin" /> : null} {h}px
         </button>
       ))}
       <span className="mx-1 text-[10px] text-neutral-400">Favicon</span>

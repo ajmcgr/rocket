@@ -1,8 +1,9 @@
+import { Trash2 as ControlTrash2, Loader2 as ControlLoader2, Send as ControlSend } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Send, Loader2, Trash2 } from "lucide-react";
+import { MessageSquare, Send, Loader2, Trash2 } from "@/components/EmojiIcons";
 const supabase = _sb as any;
 
 type Comment = {
@@ -73,7 +74,7 @@ export default function CommentsPanel({ assetId }: { assetId: string }) {
         <MessageSquare className="h-4 w-4 text-neutral-500" /> Comments {items.length > 0 && <span className="rounded-full bg-neutral-100 px-1.5 text-[10px]">{items.length}</span>}
       </div>
       {loading ? (
-        <div className="py-4 text-xs text-neutral-400">Loading…</div>
+        <div role="status" aria-label="Loading comments" className="animate-pulse space-y-3 py-4"><div className="h-3 w-1/3 rounded bg-neutral-100" /><div className="h-3 w-4/5 rounded bg-neutral-100" /><div className="h-3 w-2/3 rounded bg-neutral-100" /></div>
       ) : items.length === 0 ? (
         <div className="py-3 text-xs text-neutral-500">No comments yet. Kick off the thread.</div>
       ) : (
@@ -89,7 +90,7 @@ export default function CommentsPanel({ assetId }: { assetId: string }) {
                   <span className="text-[10px] text-neutral-400">{new Date(c.created_at).toLocaleString()}</span>
                   {c.user_id === user?.id && (
                     <button onClick={() => remove(c.id)} className="ml-auto rounded p-1 text-neutral-400 opacity-0 hover:text-red-600 group-hover:opacity-100" title="Delete">
-                      <Trash2 className="h-3 w-3" />
+                      <ControlTrash2 className="h-3 w-3" />
                     </button>
                   )}
                 </div>
@@ -110,7 +111,7 @@ export default function CommentsPanel({ assetId }: { assetId: string }) {
             className="min-h-[42px] flex-1 resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-hidden focus:border-brand"
           />
           <button onClick={post} disabled={posting || !body.trim()} className="inline-flex items-center gap-1.5 self-end rounded-full bg-brand px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50">
-            {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {posting ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlSend className="h-4 w-4" />}
           </button>
         </div>
       ) : (

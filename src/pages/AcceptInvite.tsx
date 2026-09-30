@@ -1,9 +1,10 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, Check, X } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import { invalidateWorkspacesCache, setActiveWorkspaceId } from "@/lib/workspace";
 
@@ -80,7 +81,7 @@ const AcceptInvite = () => {
           ) : (
             <div className="mt-6">
               <Button onClick={accept} disabled={state === "loading" || !invite || !!invite?.accepted_at}>
-                {state === "loading" && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                {state === "loading" && <ControlLoader2 className="mr-1.5 h-4 w-4 animate-spin" />}
                 Accept invitation
               </Button>
               {user.email && invite?.email && user.email.toLowerCase() !== invite.email.toLowerCase() && (

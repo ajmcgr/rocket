@@ -1,3 +1,4 @@
+import { Loader2 as ControlLoader2, Unplug as ControlUnplug, Plug as ControlPlug } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -5,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { CREDIT_PACKS } from "@/lib/credits";
 import { track } from "@/lib/analytics";
-import { Check, Loader2, Plug, Cloud, Unplug } from "lucide-react";
+import { Check, Loader2, Plug, Cloud, Unplug } from "@/components/EmojiIcons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const supabase = _sb as any;
@@ -182,7 +183,7 @@ export const ProfileSettings = () => {
         />
       </div>
       <button onClick={saveProfile} disabled={loading === "profile"} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60">
-        {loading === "profile" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save profile"}
+        {loading === "profile" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Save profile"}
       </button>
     </section>
   );
@@ -264,11 +265,11 @@ export const IntegrationsSettings = () => {
         </div>
         {drive ? (
           <button onClick={disconnectDrive} disabled={busy === "disconnect"} className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-            {busy === "disconnect" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Unplug className="h-3.5 w-3.5" />} Disconnect
+            {busy === "disconnect" ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlUnplug className="h-3.5 w-3.5" />} Disconnect
           </button>
         ) : (
           <button onClick={connectDrive} disabled={busy === "drive"} className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50">
-            {busy === "drive" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plug className="h-3.5 w-3.5" />} Connect
+            {busy === "drive" ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlPlug className="h-3.5 w-3.5" />} Connect
           </button>
         )}
       </div>
@@ -348,7 +349,7 @@ export const AccountSettings = () => {
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
       <h2 className="text-base font-semibold">Connected applications</h2>
       <p className="mt-1 text-sm text-neutral-600">Applications you have authorized with Continue with Rocket.</p>
-      {applicationsLoading ? <div className="mt-4 flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading applications…</div> : applications.length === 0 ? <p className="mt-4 text-sm text-neutral-500">No connected applications.</p> : <div className="mt-4 divide-y divide-neutral-100 rounded-xl border border-neutral-200">{applications.map((application) => {
+      {applicationsLoading ? <div role="status" aria-label="Loading applications" className="mt-4 animate-pulse space-y-3"><div className="h-5 w-2/3 rounded bg-neutral-100" /><div className="h-5 w-1/2 rounded bg-neutral-100" /></div> : applications.length === 0 ? <p className="mt-4 text-sm text-neutral-500">No connected applications.</p> : <div className="mt-4 divide-y divide-neutral-100 rounded-xl border border-neutral-200">{applications.map((application) => {
         const app = Array.isArray(application.rocket_oauth_clients) ? application.rocket_oauth_clients[0] : application.rocket_oauth_clients;
         return <div key={application.client_id} className="flex items-center justify-between gap-4 p-4"><div className="min-w-0"><p className="truncate text-sm font-medium">{app?.name || application.client_id}</p><p className="mt-0.5 text-xs text-neutral-500">Access: {application.scopes.join(", ")}</p></div><button disabled={loading === `revoke:${application.client_id}`} onClick={() => revokeApplication(application.client_id)} className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 disabled:opacity-60">{loading === `revoke:${application.client_id}` ? "Revoking…" : "Revoke"}</button></div>;
       })}</div>}
@@ -362,7 +363,7 @@ export const AccountSettings = () => {
       <h2 className="text-base font-semibold text-red-700">Delete account</h2>
       <p className="mt-1 text-sm text-neutral-600">Permanently delete your account and all data. This cannot be undone.</p>
       <button onClick={deleteAccount} disabled={loading === "delete"} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60">
-        {loading === "delete" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete account"}
+        {loading === "delete" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Delete account"}
       </button>
     </section>
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
@@ -453,11 +454,11 @@ export const BillingSettings = () => {
           </div>
           {canManageBilling ? (
             <button onClick={portal} disabled={loading === "portal"} className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50">
-              {loading === "portal" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Manage billing"}
+              {loading === "portal" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Manage billing"}
             </button>
           ) : (
             <button onClick={() => checkout("growth")} disabled={loading === "growth"} className="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800">
-              {loading === "growth" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
+              {loading === "growth" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
             </button>
           )}
         </div>

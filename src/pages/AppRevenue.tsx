@@ -71,7 +71,7 @@ export default function AppRevenue() {
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
       <h2 className="font-semibold">Stripe account</h2>
-      {!status && !error && <p className="mt-2 text-sm text-neutral-500">Loading connection…</p>}
+      {!status && !error && <div role="status" aria-label="Loading connection" className="mt-3 animate-pulse space-y-2"><div className="h-4 w-44 rounded bg-neutral-100" /><div className="h-4 w-64 max-w-full rounded bg-neutral-100" /></div>}
       {status && <>
         <p className="mt-2 text-sm text-neutral-600">{status.connection
           ? `${status.connection.status} · ${status.connection.external_account_id} · ${status.connection.livemode ? "Live" : "Sandbox"}`

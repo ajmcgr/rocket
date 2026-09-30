@@ -63,7 +63,7 @@ export default function AppMediaGallery({
                 className="h-64 w-full object-contain sm:h-80"
               />
               <span className="absolute bottom-3 right-3 rounded-full bg-white/90 p-2 text-neutral-800 opacity-0 transition group-hover:opacity-100">
-                <span aria-hidden="true">↗️</span>
+                <span aria-hidden="true">→</span>
               </span>
             </a>
           ))}
@@ -79,9 +79,8 @@ export default function AppMediaGallery({
               rel="noopener noreferrer nofollow"
               className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium hover:border-sky-300"
             >
-              <span aria-hidden="true">▶️</span>
               Watch product video {index + 1}
-              <span aria-hidden="true">↗️</span>
+              <span aria-hidden="true">→</span>
             </a>
           ))}
         </div>

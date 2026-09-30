@@ -1,5 +1,6 @@
+import { GitBranch as ControlGitBranch, Copy as ControlCopy, History as ControlHistory } from "lucide-react";
 import { Link } from "@/lib/router-compat";
-import { Download, Copy, GitBranch, History, Wand2, ExternalLink } from "lucide-react";
+import { Download, Copy, GitBranch, History, Wand2, ExternalLink } from "@/components/EmojiIcons";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
 import { assetHref, assetOpenLabel, isBrandAsset } from "@/lib/assetExperience";
 
@@ -53,7 +54,7 @@ export default function CurrentDeliverable({
               onClick={onVariation}
               className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
             >
-              <GitBranch className="h-3.5 w-3.5" /> Create Variation
+              <ControlGitBranch className="h-3.5 w-3.5" /> Create Variation
             </button>
           )}
           {onDuplicate && (
@@ -61,7 +62,7 @@ export default function CurrentDeliverable({
               onClick={onDuplicate}
               className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
             >
-              <Copy className="h-3.5 w-3.5" /> Duplicate
+              <ControlCopy className="h-3.5 w-3.5" /> Duplicate
             </button>
           )}
           {onHistory && (
@@ -69,7 +70,7 @@ export default function CurrentDeliverable({
               onClick={onHistory}
               className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
             >
-              <History className="h-3.5 w-3.5" /> History
+              <ControlHistory className="h-3.5 w-3.5" /> History
             </button>
           )}
           {onExport && (

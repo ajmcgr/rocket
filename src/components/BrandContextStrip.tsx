@@ -1,5 +1,6 @@
+import { Loader2 as ControlLoader2, RefreshCw as ControlRefreshCw } from "lucide-react";
 import { useMemo } from "react";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2 } from "@/components/EmojiIcons";
 
 // Compact "who is this asset for?" strip used across Generate, AssetDetail, and Editor.
 // Purely presentational — takes a brand_context object (from asset.meta.brand_context
@@ -70,7 +71,7 @@ export default function BrandContextStrip({
                 title="Re-analyze the site"
                 className="ml-auto inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-1.5 py-0.5 text-[9px] text-neutral-500 hover:bg-neutral-50 disabled:opacity-50"
               >
-                {refreshing ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <RefreshCw className="h-2.5 w-2.5" />}
+                {refreshing ? <ControlLoader2 className="h-2.5 w-2.5 animate-spin" /> : <ControlRefreshCw className="h-2.5 w-2.5" />}
                 {refreshing ? "Refreshing" : "Refresh"}
               </button>
             )}

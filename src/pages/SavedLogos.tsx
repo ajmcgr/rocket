@@ -1,3 +1,4 @@
+import { LayoutGrid as ControlLayoutGrid, List as ControlList, PenTool as ControlPenTool, Copy as ControlCopy, Shuffle as ControlShuffle, Lock as ControlLock, Globe as ControlGlobe, StarOff as ControlStarOff, Trash2 as ControlTrash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -19,7 +20,7 @@ import {
   PenTool,
   Download,
   Copy,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CollectionView, DesignSort, sortByOption } from "@/lib/designCollections";
@@ -245,10 +246,10 @@ const SavedLogos = () => {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
             <button onClick={() => setView("card")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "card" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Card
+              <ControlLayoutGrid className="h-3.5 w-3.5" /> Card
             </button>
             <button onClick={() => setView("list")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "list" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <List className="h-3.5 w-3.5" /> List
+              <ControlList className="h-3.5 w-3.5" /> List
             </button>
           </div>
 
@@ -326,7 +327,7 @@ const SavedLogos = () => {
                     <Download className="h-3.5 w-3.5" />
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); edit(a); }} title="Edit" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    <PenTool className="h-3.5 w-3.5" />
+                    <ControlPenTool className="h-3.5 w-3.5" />
                   </button>
                   <BrandFromAssetMenu
                     asset={a}
@@ -334,19 +335,19 @@ const SavedLogos = () => {
                     className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
                   />
                   <button type="button" onClick={(e) => { e.stopPropagation(); void duplicate(a); }} title="Duplicate" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    <Copy className="h-3.5 w-3.5" />
+                    <ControlCopy className="h-3.5 w-3.5" />
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); remix(a); }} title="Remix" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    <Shuffle className="h-3.5 w-3.5" />
+                    <ControlShuffle className="h-3.5 w-3.5" />
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); void togglePublic(a); }} title={a?.meta?.public ? "Make private" : "Make public"} className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    {a?.meta?.public ? <Lock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                    {a?.meta?.public ? <ControlLock className="h-3.5 w-3.5" /> : <ControlGlobe className="h-3.5 w-3.5" />}
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); void unfavourite(a); }} title="Remove from Saved" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    <StarOff className="h-3.5 w-3.5" />
+                    <ControlStarOff className="h-3.5 w-3.5" />
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); void trash(a); }} title="Move to Trash" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <ControlTrash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -397,7 +398,7 @@ const SavedLogos = () => {
                 <Download className="h-3.5 w-3.5" />
               </button>
               <button type="button" onClick={(e) => { e.stopPropagation(); edit(a); }} title="Edit" className="shrink-0 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                <PenTool className="h-3.5 w-3.5" />
+                <ControlPenTool className="h-3.5 w-3.5" />
               </button>
               <BrandFromAssetMenu
                 asset={a}
@@ -405,19 +406,19 @@ const SavedLogos = () => {
                 className="shrink-0 inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
               />
               <button type="button" onClick={(e) => { e.stopPropagation(); void duplicate(a); }} title="Duplicate" className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                <Copy className="h-3.5 w-3.5" />
+                <ControlCopy className="h-3.5 w-3.5" />
               </button>
               <button type="button" onClick={(e) => { e.stopPropagation(); remix(a); }} title="Remix" className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                <Shuffle className="h-3.5 w-3.5" />
+                <ControlShuffle className="h-3.5 w-3.5" />
               </button>
               <button type="button" onClick={(e) => { e.stopPropagation(); void togglePublic(a); }} title={a?.meta?.public ? "Make private" : "Make public"} className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                {a?.meta?.public ? <Lock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                {a?.meta?.public ? <ControlLock className="h-3.5 w-3.5" /> : <ControlGlobe className="h-3.5 w-3.5" />}
               </button>
               <button type="button" onClick={(e) => { e.stopPropagation(); void unfavourite(a); }} title="Remove from Saved" className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                <StarOff className="h-3.5 w-3.5" />
+                <ControlStarOff className="h-3.5 w-3.5" />
               </button>
               <button type="button" onClick={(e) => { e.stopPropagation(); void trash(a); }} title="Move to Trash" className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
-                <Trash2 className="h-3.5 w-3.5" />
+                <ControlTrash2 className="h-3.5 w-3.5" />
               </button>
               <div className="shrink-0 text-xs text-neutral-400">{new Date(a.updated_at || a.created_at).toLocaleDateString()}</div>
             </div>

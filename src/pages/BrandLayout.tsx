@@ -1,3 +1,4 @@
+import { Loader2 as ControlLoader2, Check as ControlCheckIcon, X as ControlXIcon, Pencil as ControlPencil } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, NavLink, Outlet, useParams } from "@/lib/router-compat";
 import {
@@ -11,7 +12,7 @@ import {
   Check as CheckIcon,
   X as XIcon,
   Share2,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { downloadCompleteBrandKit } from "@/lib/brandKitDownload";
@@ -106,7 +107,7 @@ export default function BrandLayout() {
             disabled={zipping}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition hover:bg-brand-hover disabled:opacity-60"
           >
-            {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {zipping ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Download
             {!subLoading && !isPro && (
               <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-white">Pro</span>
@@ -124,13 +125,13 @@ export default function BrandLayout() {
                   onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") cancelRename(); }}
                   className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-sm text-neutral-900 outline-hidden focus:border-brand"
                 />
-                <button onClick={commitRename} disabled={savingName} className="rounded-md p-1 text-emerald-600 hover:bg-emerald-50"><CheckIcon className="h-3.5 w-3.5" /></button>
-                <button onClick={cancelRename} className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100"><XIcon className="h-3.5 w-3.5" /></button>
+                <button onClick={commitRename} disabled={savingName} className="rounded-md p-1 text-emerald-600 hover:bg-emerald-50"><ControlCheckIcon className="h-3.5 w-3.5" /></button>
+                <button onClick={cancelRename} className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100"><ControlXIcon className="h-3.5 w-3.5" /></button>
               </div>
             ) : (
               <button onClick={startRename} className="group flex w-full items-center gap-1 truncate text-left text-base font-semibold text-neutral-900" title="Rename brand">
                 <span className="truncate">{project?.name || "Untitled brand"}</span>
-                <Pencil className="h-3 w-3 shrink-0 opacity-0 transition group-hover:opacity-70" />
+                <ControlPencil className="h-3 w-3 shrink-0 opacity-0 transition group-hover:opacity-70" />
               </button>
             )}
           </div>

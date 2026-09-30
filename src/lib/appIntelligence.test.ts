@@ -11,7 +11,7 @@ const signal: AppSignal = {
 
 describe("public Launch signal copy", () => {
   it("states its actual evidence and cohort without implying revenue or demand", () => {
-    expect(signalLabel(signal)).toBe("Rising on Launch");
+    expect(signalLabel(signal)).toBe("Notable Launch activity");
     expect(signalExplanation(signal)).toContain("7 net Launch votes · top 4% of 100 Productivity products");
     expect(signalExplanation(signal)).not.toMatch(/revenue|demand|users/i);
   });

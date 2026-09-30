@@ -207,6 +207,20 @@ export type Database = {
         };
         Relationships: [];
       };
+      public_app_rankings: {
+        Row: {
+          app_id: string;
+          categories: string[];
+          launched_at: string | null;
+          launch_net_votes: number;
+          votes_observed_at: string | null;
+        };
+        Relationships: [];
+      };
+      public_ranking_categories: {
+        Row: { category: string; app_count: number };
+        Relationships: [];
+      };
       public_category_intelligence: {
         Row: {
           category: string;

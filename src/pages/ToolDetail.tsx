@@ -1,3 +1,4 @@
+import { Loader2 as ControlLoader2, Copy as ControlCopy } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import ReactMarkdown from "react-markdown";
@@ -7,7 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { getTool } from "@/content/tools";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Copy, ArrowRight } from "lucide-react";
+import { Loader2, Copy, ArrowRight } from "@/components/EmojiIcons";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -76,7 +77,7 @@ const ToolDetail = () => {
             className="mt-2 w-full resize-y rounded-xl border border-neutral-200 bg-white p-3 text-sm outline-hidden ring-brand/30 transition focus:ring-2"
           />
           <Button type="submit" disabled={loading || !input.trim()} className="mt-4">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Generate <ArrowRight className="h-4 w-4" /></>}
+            {loading ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <>Generate <ArrowRight className="h-4 w-4" /></>}
           </Button>
         </form>
 
@@ -88,7 +89,7 @@ const ToolDetail = () => {
                 onClick={() => { navigator.clipboard.writeText(output); toast({ title: "Copied" }); }}
                 className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-100"
               >
-                <Copy className="h-3.5 w-3.5" /> Copy
+                <ControlCopy className="h-3.5 w-3.5" /> Copy
               </button>
             </div>
             <article className="prose prose-sm prose-neutral mt-4 max-w-none">

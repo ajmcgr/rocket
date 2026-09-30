@@ -5,10 +5,25 @@ import type { PublicAppMedia } from "@/lib/appMedia";
 import { coverMedia, optimizedMediaUrl } from "@/lib/appMedia";
 import AppLogo from "./AppLogo";
 import SaveAppButton from "./SaveAppButton";
+import TrendArrow from "./TrendArrow";
+import AppPurchaseActions from "./AppPurchaseActions";
 
 type App = Tables<"public_apps">;
-type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string };
+type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string; trend?: "up" | "down" };
 type SaveProps = { saved?: boolean; onSave?: (saved: boolean) => void };
+
+function AppCardIdentity({ app, rank }: { app: App; rank?: number }) {
+  return (
+    <div className="flex min-w-0 items-start gap-3">
+      <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-base font-semibold text-neutral-950">{app.name}</h3>
+        <p className="truncate text-xs text-neutral-500">{app.categories[0] || app.canonical_host}</p>
+      </div>
+      {rank !== undefined && <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-400">{String(rank).padStart(2, "0")}</span>}
+    </div>
+  );
+}
 
 function Artwork({
   app,
@@ -54,10 +69,7 @@ export function EditorialAppCard({
   eyebrow = "Explore",
 }: BaseProps) {
   return (
-    <Link
-      to={`/apps/${app.id}`}
-      className="group relative block min-h-[22rem] overflow-hidden rounded-[1.25rem] bg-[#167ac6] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
-    >
+    <article className="group relative min-h-[22rem] overflow-hidden rounded-[1.25rem] border border-neutral-200 bg-[#167ac6] text-white">
       <Artwork
         app={app}
         media={media}
@@ -84,12 +96,12 @@ export function EditorialAppCard({
             </p>
           </div>
         </div>
-        <div className="mt-6 flex items-center justify-between text-xs text-neutral-200">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-200">
           <span>{app.categories[0] || "App"}</span>
-          <span className="text-lg" aria-hidden="true">↗️</span>
+          <AppPurchaseActions appId={app.id} light />
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
@@ -99,37 +111,31 @@ export function StandardAppCard({
   saved,
   onSave,
   eyebrow,
+  trend,
 }: BaseProps & SaveProps) {
   const hasCover = Boolean(coverMedia(media));
   return (
-    <article className="group flex min-w-0 flex-col overflow-hidden rounded-xl bg-white transition hover:bg-neutral-50">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-sky-300 hover:bg-neutral-50 hover:shadow-sm">
       <Link
         to={`/apps/${app.id}`}
         className="min-w-0 focus-visible:outline-2 focus-visible:outline-sky-500"
       >
         {hasCover && <Artwork app={app} media={media} className="h-40 w-full sm:h-44" />}
         <div className="px-3 pb-3 pt-4 sm:px-4">
-          <div className="flex items-start gap-3">
-            <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
-            <div className="min-w-0 flex-1">
-              <h3 className="truncate text-lg font-semibold text-neutral-950">
-                {app.name}
-              </h3>
-              <p className="truncate text-xs text-neutral-500">
-                {app.categories[0] || app.canonical_host}
-              </p>
-            </div>
-          </div>
+          <AppCardIdentity app={app} />
           <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">
             {app.tagline || app.description || "Explore this app."}
           </p>
           {eyebrow && (
-            <p className="mt-3 text-xs font-medium text-sky-800">{eyebrow}</p>
+            <p className="mt-3 flex items-center gap-1 text-xs font-medium text-sky-800">
+              {trend && <TrendArrow direction={trend} />}{eyebrow}
+            </p>
           )}
         </div>
       </Link>
-      <div className="mt-auto flex items-center justify-between px-3 pb-3 text-xs text-neutral-500 sm:px-4">
-        <span className="truncate">{app.canonical_host}</span>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 px-3 pb-3 text-xs text-neutral-500 sm:px-4">
+        <span className="min-w-0 truncate">{app.canonical_host}</span>
+        <div className="flex flex-wrap items-center gap-2">
         {onSave && (
           <SaveAppButton
             appId={app.id}
@@ -137,6 +143,8 @@ export function StandardAppCard({
             onChange={onSave}
           />
         )}
+        <AppPurchaseActions appId={app.id} />
+        </div>
       </div>
     </article>
   );
@@ -148,10 +156,7 @@ export function RankedAppRow({
   eyebrow,
 }: BaseProps & { rank: number }) {
   return (
-    <Link
-      to={`/apps/${app.id}`}
-      className="group flex min-h-20 min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
-    >
+    <article className="group flex min-h-20 min-w-0 flex-wrap items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70">
       <span className="w-5 shrink-0 text-sm font-semibold tabular-nums text-neutral-400">
         {rank}
       </span>
@@ -160,7 +165,7 @@ export function RankedAppRow({
         src={app.logo_url}
         className="h-11 w-11"
       />
-      <span className="min-w-0 flex-1">
+      <Link to={`/apps/${app.id}`} className="min-w-32 flex-1 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
         <strong className="block truncate text-sm font-semibold text-neutral-950">
           {app.name}
         </strong>
@@ -171,9 +176,9 @@ export function RankedAppRow({
           {app.categories[0] || "App"}
           {eyebrow ? ` · ${eyebrow}` : ""}
         </span>
-      </span>
-      <span className="shrink-0 text-base" aria-hidden="true">↗️</span>
-    </Link>
+      </Link>
+      <AppPurchaseActions appId={app.id} />
+    </article>
   );
 }
 
@@ -182,23 +187,18 @@ export function RisingAppCard({
   rank,
 }: BaseProps & { rank: number }) {
   return (
-    <Link
-      to={`/apps/${app.id}`}
-      className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6]"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
-        <span className="text-sm font-semibold tabular-nums text-neutral-400">{String(rank).padStart(2, "0")}</span>
-      </div>
-      <strong className="mt-5 line-clamp-1 text-base font-semibold text-neutral-950">{app.name}</strong>
-      <span className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-600">
+    <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm">
+      <Link to={`/apps/${app.id}`} className="focus-visible:outline-2 focus-visible:outline-[#167ac6]">
+      <AppCardIdentity app={app} rank={rank} />
+      <span className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-600">
         {app.tagline || app.description || app.canonical_host}
       </span>
-      <span className="mt-auto flex items-center justify-between gap-2 pt-5 text-xs text-neutral-500">
-        <span className="truncate">{app.categories[0] || "App"}</span>
-        <span className="shrink-0 text-base" aria-hidden="true">↗️</span>
-      </span>
-    </Link>
+      </Link>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5 text-xs text-neutral-500">
+        <span className="min-w-0 truncate">{app.canonical_host}</span>
+        <AppPurchaseActions appId={app.id} />
+      </div>
+    </article>
   );
 }
 
@@ -226,6 +226,7 @@ export function MarketplaceListRow({
           </span>
         </span>
       </Link>
+      <div className="flex flex-wrap items-center gap-2">
       {onSave && (
         <SaveAppButton
           appId={app.id}
@@ -233,6 +234,8 @@ export function MarketplaceListRow({
           onChange={onSave}
         />
       )}
+      <AppPurchaseActions appId={app.id} />
+      </div>
     </article>
   );
 }

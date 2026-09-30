@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useParams } from "@/lib/router-compat";
-import { ArrowRight, Check, Palette, Type } from "lucide-react";
+import { ArrowRight, Check, Palette, Type } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";

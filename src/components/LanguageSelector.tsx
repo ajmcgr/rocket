@@ -18,6 +18,9 @@ const LANGUAGES = [
   { code: "pl", flag: "🇵🇱", label: "Polski" },
   { code: "tr", flag: "🇹🇷", label: "Türkçe" },
   { code: "ja", flag: "🇯🇵", label: "日本語" },
+  { code: "zh-CN", flag: "🇨🇳", label: "中文" },
+  { code: "ko", flag: "🇰🇷", label: "한국어" },
+  { code: "ru", flag: "🇷🇺", label: "Русский" },
 ];
 
 export default function LanguageSelector() {
@@ -43,29 +46,29 @@ export default function LanguageSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Choose language"
-        className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-neutral-600 hover:text-neutral-900"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg px-2 text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-[#167ac6] dark:text-neutral-100 dark:hover:bg-neutral-800"
       >
-        <span className="text-base leading-none">{lang.flag}</span>
-        <ChevronDown className="h-3 w-3" />
+        <span className="text-[21px] leading-none" aria-hidden="true">{lang.flag}</span>
+        <ChevronDown className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="max-h-80 overflow-y-auto border-neutral-200 bg-white text-neutral-900"
-        style={{ colorScheme: "light" }}
+        sideOffset={8}
+        className="w-52 max-h-[min(38rem,calc(100vh-5rem))] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1.5 text-neutral-800 shadow-[0_10px_28px_rgba(0,0,0,0.16)] dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
       >
         {LANGUAGES.map((item) => (
           <DropdownMenuItem
             key={item.code}
             onSelect={() => select(item)}
-            className="gap-2 text-neutral-900 focus:bg-neutral-100"
+            className={`min-h-11 gap-2 rounded-lg px-2 text-base font-medium text-neutral-800 focus:bg-neutral-100 dark:text-neutral-100 dark:focus:bg-neutral-800 ${item.code === lang.code ? "bg-neutral-200" : ""}`}
           >
             {item.code === lang.code ? (
-              <Check className="h-4 w-4" />
+              <Check className="h-[18px] w-[18px] shrink-0 stroke-[1.8]" aria-hidden="true" />
             ) : (
-              <span className="w-4" />
+              <span className="w-[18px] shrink-0" aria-hidden="true" />
             )}
-            <span className="text-base">{item.flag}</span>
-            <span>{item.label}</span>
+            <span className="w-6 shrink-0 text-xl leading-none" aria-hidden="true">{item.flag}</span>
+            <span className="truncate">{item.label}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

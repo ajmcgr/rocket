@@ -1,5 +1,5 @@
 import { Link } from "@/lib/router-compat";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/EmojiIcons";
 import type { Category } from "@/content/blogMeta";
 
 const CTA_BY_CATEGORY: Record<string, { label: string; to: string; copy: string }> = {

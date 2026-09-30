@@ -581,7 +581,7 @@ html.dark .logo-dark {
 /* Abstract category art: distinct gradients, never simulated product screenshots. */
 .rocket-category-card {
   color: #14202c;
-  border: 1px solid rgba(20, 32, 44, 0.08);
+  border: 1px solid #e5e7eb;
   background-size: cover;
 }
 .rocket-category-ocean {
@@ -607,6 +607,9 @@ html.dark .logo-dark {
 }
 .rocket-category-indigo {
   background: radial-gradient(circle at 95% 0%, #98bcff 0, transparent 46%), linear-gradient(130deg, #d8ddff 0%, #c4b6e7 100%);
+}
+.rocket-developer-panel {
+  background: radial-gradient(circle at 88% 8%, #ffd49d 0, transparent 45%), radial-gradient(circle at 8% 95%, #d6bcfa 0, transparent 52%), linear-gradient(125deg, #fbe0e4 0%, #e8d7f7 55%, #f9dfbd 100%);
 }
 html.dark .rocket-category-card {
   color: #f9fbff;
@@ -635,6 +638,9 @@ html.dark .rocket-category-lime {
 }
 html.dark .rocket-category-indigo {
   background: radial-gradient(circle at 95% 0%, #4b65aa 0, transparent 48%), linear-gradient(130deg, #3c3b79 0%, #292c4d 100%);
+}
+html.dark .rocket-developer-panel {
+  background: radial-gradient(circle at 88% 8%, #704b42 0, transparent 48%), radial-gradient(circle at 8% 95%, #493568 0, transparent 55%), linear-gradient(125deg, #34243f 0%, #30283f 60%, #443338 100%);
 }
 
 /* Keep actionable controls on the Rocket palette, including older screens. */

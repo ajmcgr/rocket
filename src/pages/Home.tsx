@@ -10,7 +10,7 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   useDocumentMeta({
-    title: "Rocket — Discover apps worth using",
+    title: "Rocket — The open app platform",
     description:
       "Find rising apps and new software from vibe coders and developers.",
     canonical: "https://tryrocket.ai/",
@@ -24,17 +24,14 @@ export default function Home() {
   };
 
   return (
-    <div className="marketplace-page min-h-screen bg-[#f7f9fc] pb-16 text-neutral-900 lg:pb-0">
+    <div className="marketplace-page min-h-screen bg-white pb-16 text-neutral-900 lg:pb-0">
       <SiteHeader />
       <main className="mx-auto max-w-[90rem] px-5 pb-20 sm:px-8">
         <DiscoveryPreview
           intro={
             <section className="flex min-w-0 flex-col justify-center py-6 lg:py-10">
-              <p className="text-sm font-semibold text-[#075985]">
-                Discover
-              </p>
-              <h1 className="mt-4 max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
-                Discover apps worth using.
+              <h1 className="max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
+                The open app platform.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
                 Find rising apps and new software from vibe coders and developers.
@@ -61,7 +58,7 @@ export default function Home() {
                   to="/discover"
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-white hover:bg-[#1268aa]"
                 >
-                  Explore apps <span aria-hidden="true">➡️</span>
+                  Explore apps <span aria-hidden="true">→</span>
                 </Link>
                 <Link
                   to="/submit"
@@ -74,11 +71,11 @@ export default function Home() {
           }
         />
         <section
-          className="mt-20 overflow-hidden rounded-[2rem] bg-[#167ac6] p-7 text-white sm:mt-24 sm:p-12"
+          className="rocket-developer-panel mt-20 overflow-hidden rounded-[2rem] border border-neutral-200 p-7 text-neutral-950 sm:mt-24 sm:p-12 dark:border-white/10 dark:text-white"
           aria-labelledby="developer-heading"
         >
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold text-white/85">
+            <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
               Built for vibe coders
             </p>
             <h2
@@ -87,12 +84,12 @@ export default function Home() {
             >
               Your app belongs on the open web.
             </h2>
-            <p className="mt-4 max-w-2xl leading-relaxed text-neutral-300">
+            <p className="mt-4 max-w-2xl leading-relaxed text-neutral-700 dark:text-neutral-200">
               Give people a clear place to find your app, show what you can
               verify, and connect to Rocket where it fits.
             </p>
           </div>
-          <div className="mt-9 grid gap-6 border-t border-white/15 pt-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-9 grid gap-6 border-t border-neutral-950/15 pt-8 sm:grid-cols-2 lg:grid-cols-4 dark:border-white/20">
             {[
               {
                 label: "Submit",
@@ -118,7 +115,7 @@ export default function Home() {
               <div key={label}>
                 <span className="text-xl" aria-hidden="true">{emoji}</span>
                 <h3 className="mt-4 text-base font-semibold">{label}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-300">
+                <p className="mt-1 text-sm leading-relaxed text-neutral-700 dark:text-neutral-200">
                   {copy}
                 </p>
               </div>
@@ -126,9 +123,9 @@ export default function Home() {
           </div>
           <Link
             to="/submit"
-            className="mt-9 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-300"
+            className="mt-9 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white transition hover:bg-[#1268aa] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-300"
           >
-            Submit your app <span aria-hidden="true">➡️</span>
+            Submit your app <span aria-hidden="true">→</span>
           </Link>
         </section>
       </main>

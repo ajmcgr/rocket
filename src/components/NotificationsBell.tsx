@@ -1,5 +1,6 @@
+import { Bell as ControlBell, CheckCheck as ControlCheckCheck, X as ControlX } from "lucide-react";
 import { Link } from "@/lib/router-compat";
-import { Bell, CheckCheck, Sparkles, Download, CreditCard, FolderOpen, Info, X } from "lucide-react";
+import { Bell, CheckCheck, Sparkles, Download, CreditCard, FolderOpen, Info, X } from "@/components/EmojiIcons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +44,7 @@ const NotificationsBell = () => {
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-700 outline-hidden transition hover:bg-neutral-100 focus:ring-2 focus:ring-neutral-300"
         aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
       >
-        <Bell className="h-[18px] w-[18px]" />
+        <ControlBell className="h-[18px] w-[18px]" />
         {unread > 0 && (
           <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold leading-none text-brand-foreground">
             {unread > 9 ? "9+" : unread}
@@ -61,7 +62,7 @@ const NotificationsBell = () => {
             disabled={unread === 0}
             className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100 disabled:opacity-40"
           >
-            <CheckCheck className="h-3.5 w-3.5" />
+            <ControlCheckCheck className="h-3.5 w-3.5" />
             Mark all read
           </button>
         </div>
@@ -95,7 +96,7 @@ const NotificationsBell = () => {
                       aria-label="Dismiss"
                       className="self-start rounded p-1 text-neutral-300 transition hover:bg-neutral-100 hover:text-neutral-600"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <ControlX className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 );

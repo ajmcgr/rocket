@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Mail, MessageCircle, MessageSquare, Facebook, Send, Copy, Link as LinkIcon, FileText, Image as ImageIcon, Cloud, Lock } from "lucide-react";
+import { Download, Mail, MessageCircle, MessageSquare, Facebook, Send, Copy, Link as LinkIcon, FileText, Image as ImageIcon, Cloud, Lock } from "@/components/EmojiIcons";
 import { exportAsset, formatsForAsset, FORMAT_LABEL, type ExportFormat } from "@/lib/exporters";
 import { supabase as _sb } from "@/integrations/supabase/client";
 const supabase = _sb as any;

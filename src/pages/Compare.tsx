@@ -1,5 +1,5 @@
 import { Link } from "@/lib/router-compat";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { marketplaceComparisons } from "@/content/marketplaceComparisons";

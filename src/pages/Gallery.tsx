@@ -1,9 +1,10 @@
+import { Heart as ControlHeart, Wand2 as ControlWand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Logotype } from "@/components/Logotype";
-import { Heart, Wand2 } from "lucide-react";
+import { Heart, Wand2 } from "@/components/EmojiIcons";
 const supabase = _sb as any;
 
 type GalleryEntry = { project: any; assets: any[] };
@@ -148,7 +149,7 @@ const Gallery = () => {
                       className={`inline-flex h-8 items-center gap-1 rounded-full border px-2 text-xs transition ${(() => { const k = assets[0]?.id; return k && likes[k] ? "border-brand bg-brand/10 text-brand" : "border-neutral-200 text-neutral-500 hover:border-neutral-400"; })()}`}
                     >
                       {(() => { const k = assets[0]?.id; const liked = k && likes[k]; const n = k ? (counts[k] || 0) : 0; return (<>
-                        <Heart className="h-3.5 w-3.5" fill={liked ? "currentColor" : "none"} />
+                        <ControlHeart className="h-3.5 w-3.5" fill={liked ? "currentColor" : "none"} />
                         {n > 0 && <span>{n}</span>}
                       </>); })()}
                     </button>
@@ -162,7 +163,7 @@ const Gallery = () => {
                       title="Remix this"
                       className="inline-flex h-8 items-center gap-1 rounded-full border border-neutral-200 px-2.5 text-xs font-medium text-neutral-700 hover:border-brand hover:text-brand"
                     >
-                      <Wand2 className="h-3 w-3" /> Remix
+                      <ControlWand2 className="h-3 w-3" /> Remix
                     </button>
                   </div>
                 </div>

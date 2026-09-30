@@ -1,5 +1,6 @@
+import { Check as ControlCheck, Copy as ControlCopy, FileText as ControlFileText, FileDown as ControlFileDown } from "lucide-react";
 import { useState } from "react";
-import { Copy, Check, FileText, FileDown } from "lucide-react";
+import { Copy, Check, FileText, FileDown } from "@/components/EmojiIcons";
 import { tryJson } from "@/lib/assetSchemas";
 import {
   brandVoiceToMarkdown, brandGuidelinesToMarkdown, founderBioToMarkdown,
@@ -91,16 +92,16 @@ export default function TextAssetExportBar({ asset }: { asset: any }) {
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/70 px-3 py-2">
       <span className="text-[11px] uppercase tracking-wider text-neutral-500">Export</span>
       <button className={btn} onClick={async () => { await navigator.clipboard.writeText(md); setCopied(true); setTimeout(() => setCopied(false), 1200); }}>
-        {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />} {copied ? "Copied" : "Copy Markdown"}
+        {copied ? <ControlCheck className="h-3 w-3 text-emerald-600" /> : <ControlCopy className="h-3 w-3" />} {copied ? "Copied" : "Copy Markdown"}
       </button>
       <button className={btn} onClick={() => download(`${base}.md`, md, "text/markdown")}>
-        <FileText className="h-3 w-3" /> Markdown (.md)
+        <ControlFileText className="h-3 w-3" /> Markdown (.md)
       </button>
       <button className={btn} onClick={() => download(`${base}.txt`, md.replace(/[#>*_]/g, ""), "text/plain")}>
         Plain text
       </button>
       <button className={btn} onClick={() => printAsPdf(mdToHtml(md), asset.title || "Export")}>
-        <FileDown className="h-3 w-3" /> Print / PDF
+        <ControlFileDown className="h-3 w-3" /> Print / PDF
       </button>
     </div>
   );

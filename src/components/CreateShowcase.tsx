@@ -1,5 +1,5 @@
 import { Link } from "@/lib/router-compat";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/EmojiIcons";
 import { Button } from "@/components/ui/button";
 import logoAsset from "@/assets/showcase/logo.png.asset.json";
 import guidelinesAsset from "@/assets/showcase/guidelines.png.asset.json";

@@ -60,6 +60,7 @@ describe("signed-out Launch preview", () => {
       expect(container.textContent).toContain("Submit your app.");
       expect(container.textContent).toContain("URLs Rocket can use to submit apps");
       expect(container.textContent).toContain("Product Hunt, Apple App Store, and Google Play listing URLs are not supported yet.");
+      expect(Array.from(container.querySelectorAll("select option")).map((option) => option.textContent)).toContain("Books");
       const input = container.querySelector<HTMLInputElement>("#launch-url")!;
       await act(async () => {
         Object.getOwnPropertyDescriptor(
@@ -67,6 +68,11 @@ describe("signed-out Launch preview", () => {
           "value",
         )!.set!.call(input, "https://example.com");
         input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      const category = container.querySelector<HTMLSelectElement>("select")!;
+      await act(async () => {
+        category.value = "Books";
+        category.dispatchEvent(new Event("change", { bubbles: true }));
       });
       await act(async () => {
         container
@@ -79,6 +85,7 @@ describe("signed-out Launch preview", () => {
       expect(container.textContent).toContain("Example");
       expect(mocks.invoke).toHaveBeenCalledOnce();
       expect(mocks.invoke.mock.calls[0][1].body.action).toBe("preview");
+      expect(mocks.invoke.mock.calls[0][1].body.category).toBe("Books");
       expect(sessionStorage.getItem("rocket:launch-preview-v1")).toContain(
         "example.com",
       );

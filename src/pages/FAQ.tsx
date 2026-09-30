@@ -8,9 +8,9 @@ const sections = [
   {
     title: "Discovering apps",
     questions: [
-      { q: "What is Rocket?", a: "Rocket helps people discover independent apps worth using. You can search, browse categories, explore New and Rising, view app profiles, and save apps to revisit." },
+      { q: "What is Rocket?", a: "Rocket helps people discover apps worth using. You can search, browse categories, explore New and Rankings, view app profiles, and save apps to revisit." },
       { q: "Are all apps on Rocket reviewed or recommended?", a: "No. An indexed app is one Rocket knows about; listing does not equal endorsement. A Rocket Pick is an explicit editorial selection. Claims and verification describe specific evidence, not an overall quality guarantee." },
-      { q: "What does Rising mean?", a: "Rising highlights apps with notable public Launch activity. It does not claim verified customer growth, revenue, or Rocket endorsement." },
+      { q: "How do Rankings work?", a: "Rankings list the top 20 eligible apps by observed public Launch vote totals. Category rankings are offered when at least 20 apps qualify. They do not claim verified customer growth, revenue, or Rocket endorsement." },
       { q: "Can I use every listed app with my Rocket account?", a: "No. You can use your Rocket account for Rocket features such as saving apps. Only apps that have explicitly integrated Rocket identity support Continue with Rocket; other apps use their own sign-in." },
       { q: "Can I buy every app through Rocket?", a: "No. Rocket payments are available only where a developer has integrated them for that app. Otherwise, pricing and payment happen on the app's own website." },
       { q: "How do I save an app?", a: "Select Save on an app card or profile and sign in if prompted. Your saved apps are private to your Rocket account." },

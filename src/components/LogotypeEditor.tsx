@@ -1,7 +1,8 @@
+import { FileCode as ControlFileCode, Loader2 as ControlLoader2, Save as ControlSave } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { LOGOTYPE_FONTS, loadGoogleFont, type LogotypeState, defaultLogotypeState } from "@/lib/logotype";
 import { Logotype, logotypeToSvg, logotypeToPng } from "./Logotype";
-import { Download, FileCode, Loader2, Save } from "lucide-react";
+import { Download, FileCode, Loader2, Save } from "@/components/EmojiIcons";
 
 interface Props {
   initial: LogotypeState | null;
@@ -127,7 +128,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-100 bg-neutral-50 px-5 py-3">
         <button onClick={downloadSvg} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm hover:bg-neutral-100">
-          <FileCode className="h-4 w-4" /> SVG
+          <ControlFileCode className="h-4 w-4" /> SVG
         </button>
         <button onClick={downloadPng} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm hover:bg-neutral-100">
           <Download className="h-4 w-4" /> PNG
@@ -137,7 +138,7 @@ export function LogotypeEditor({ initial, defaultText, saving, onSave }: Props) 
           disabled={saving || !dirty}
           className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50"
         >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
+          {saving ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlSave className="h-4 w-4" />} Save
         </button>
       </div>
     </div>

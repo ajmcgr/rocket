@@ -1,6 +1,7 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype, logotypeToPng } from "@/components/Logotype";
 import BrandLogotypePreview from "@/components/BrandLogotypePreview";
@@ -388,7 +389,7 @@ export default function SocialIcons() {
             disabled={busy === "all"}
             className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-brand px-3 py-2 text-sm font-medium text-brand-foreground transition hover:bg-brand-hover disabled:opacity-60"
           >
-            {busy === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {busy === "all" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Download all
             {!subLoading && !isPro && (
               <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-wide">PRO</span>
@@ -470,7 +471,7 @@ export default function SocialIcons() {
                               isDark ? "bg-white/95 text-neutral-900 hover:bg-white" : "bg-neutral-900 text-white hover:bg-neutral-800"
                             } disabled:opacity-60`}
                           >
-                            {busy === bkey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                            {busy === bkey ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                             PNG
                           </button>
                         </div>

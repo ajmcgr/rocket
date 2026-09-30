@@ -1,3 +1,4 @@
+import { Trash2 as ControlTrash2, Plus as ControlPlus, LayoutGrid as ControlLayoutGrid, List as ControlList, X as ControlX, CheckSquare as ControlCheckSquare, FolderPlus as ControlFolderPlus, Square as ControlSquare, MoreHorizontal as ControlMoreHorizontal, Edit3 as ControlEdit3, Share2 as ControlShare2, Lock as ControlLock, Compass as ControlCompass } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { assetHref, isBrandAsset } from "@/lib/assetExperience";
@@ -22,7 +23,7 @@ import {
   Share2,
   Lock,
   Compass,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -477,10 +478,10 @@ const Assets = () => {
             aria-label="Trash"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
           >
-            <Trash2 className="h-4 w-4" />
+            <ControlTrash2 className="h-4 w-4" />
           </Link>
           <Link to="/logos" className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
-            <Plus className="h-4 w-4" /> New Design
+            <ControlPlus className="h-4 w-4" /> New Design
           </Link>
         </div>
       </div>
@@ -515,10 +516,10 @@ const Assets = () => {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
             <button onClick={() => setView("card")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "card" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Card
+              <ControlLayoutGrid className="h-3.5 w-3.5" /> Card
             </button>
             <button onClick={() => setView("list")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "list" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <List className="h-3.5 w-3.5" /> List
+              <ControlList className="h-3.5 w-3.5" /> List
             </button>
           </div>
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
@@ -533,7 +534,7 @@ const Assets = () => {
             onClick={() => { setSelectMode((value) => !value); clearSelection(); }}
             className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition ${selectMode ? "border-brand bg-brand/10 text-brand" : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"}`}
           >
-            {selectMode ? <X className="h-3.5 w-3.5" /> : <CheckSquare className="h-3.5 w-3.5" />} {selectMode ? "Cancel" : "Select"}
+            {selectMode ? <ControlX className="h-3.5 w-3.5" /> : <ControlCheckSquare className="h-3.5 w-3.5" />} {selectMode ? "Cancel" : "Select"}
           </button>
         </div>
       </div>
@@ -554,7 +555,7 @@ const Assets = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button disabled={!selected.size} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-                <FolderPlus className="h-3.5 w-3.5" /> Move
+                <ControlFolderPlus className="h-3.5 w-3.5" /> Move
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-white">
@@ -596,7 +597,7 @@ const Assets = () => {
             disabled={!selected.size}
             className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Delete
+            <ControlTrash2 className="h-3.5 w-3.5" /> Delete
           </button>
         </div>
       )}
@@ -615,7 +616,7 @@ const Assets = () => {
                 Your designs will appear here. Start with a logo, brand kit, social graphic, presentation, or launch asset.
               </p>
               <Link to="/logos" className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground hover:bg-brand-hover">
-                <Plus className="h-3.5 w-3.5" /> Create your first design
+                <ControlPlus className="h-3.5 w-3.5" /> Create your first design
               </Link>
             </>
           ) : (
@@ -641,7 +642,7 @@ const Assets = () => {
                     className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs"
                     aria-label="Select"
                   >
-                    {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                    {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                   </button>
                 )}
 
@@ -682,25 +683,25 @@ const Assets = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="absolute right-2 top-2 rounded-md bg-white/90 p-1 opacity-0 transition group-hover:opacity-100" aria-label="Actions">
-                      <MoreHorizontal className="h-4 w-4 text-neutral-700" />
+                      <ControlMoreHorizontal className="h-4 w-4 text-neutral-700" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-white">
                     <DropdownMenuItem asChild className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">
-                      <Link to={assetHref(asset)} target="_blank" rel="noopener noreferrer"><Edit3 className="mr-2 h-4 w-4" /> Open design</Link>
+                      <Link to={assetHref(asset)} target="_blank" rel="noopener noreferrer"><ControlEdit3 className="mr-2 h-4 w-4" /> Open design</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => makePublic(asset)}
                       className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900"
                     >
-                      <Share2 className="mr-2 h-4 w-4" /> {asset.share_token ? "Public link" : "Make Public"}
+                      <ControlShare2 className="mr-2 h-4 w-4" /> {asset.share_token ? "Public link" : "Make Public"}
                     </DropdownMenuItem>
                     {asset.share_token && (
                       <DropdownMenuItem
                         onClick={() => makePrivate(asset)}
                         className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900"
                       >
-                        <Lock className="mr-2 h-4 w-4" /> Make Private
+                        <ControlLock className="mr-2 h-4 w-4" /> Make Private
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
@@ -708,7 +709,7 @@ const Assets = () => {
                       onClick={() => useAsBrandDirection(asset)}
                       className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900"
                     >
-                      <Compass className="mr-2 h-4 w-4" /> Make this my style
+                      <ControlCompass className="mr-2 h-4 w-4" /> Make this my style
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900 data-[state=open]:bg-neutral-100 data-[state=open]:text-neutral-900">
@@ -747,7 +748,7 @@ const Assets = () => {
                       </DropdownMenuPortal>
                     </DropdownMenuSub>
                     <DropdownMenuItem className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700" onClick={() => del(asset.id)}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      <ControlTrash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -764,7 +765,7 @@ const Assets = () => {
               <div key={asset.id} className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3 last:border-b-0">
                 {selectMode && (
                   <button onClick={() => toggleSelect(asset.id)}>
-                    {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                    {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                   </button>
                 )}
                 <Link to={assetHref(asset)} target="_blank" rel="noopener noreferrer" className="flex min-w-0 flex-1 items-center gap-3">
@@ -786,7 +787,7 @@ const Assets = () => {
                   title="Make this my style"
                   aria-label="Make this my style"
                 >
-                  <Compass className="h-4 w-4" />
+                  <ControlCompass className="h-4 w-4" />
                 </button>
               </div>
             );

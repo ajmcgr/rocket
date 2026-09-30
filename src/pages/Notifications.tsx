@@ -1,6 +1,7 @@
+import { CheckCheck as ControlCheckCheck, Trash2 as ControlTrash2, X as ControlX } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Link } from "@/lib/router-compat";
-import { Bell, CheckCheck, Trash2, Sparkles, Download, CreditCard, FolderOpen, Info, X } from "lucide-react";
+import { Bell, CheckCheck, Trash2, Sparkles, Download, CreditCard, FolderOpen, Info, X } from "@/components/EmojiIcons";
 import { useNotifications, type NotificationKind } from "@/contexts/NotificationsContext";
 
 const ICONS: Record<NotificationKind, React.ComponentType<{ className?: string }>> = {
@@ -52,7 +53,7 @@ const Notifications = () => {
             disabled={unread === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-40"
           >
-            <CheckCheck className="h-4 w-4" />
+            <ControlCheckCheck className="h-4 w-4" />
             Mark all read
           </button>
           <button
@@ -60,7 +61,7 @@ const Notifications = () => {
             disabled={items.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-40"
           >
-            <Trash2 className="h-4 w-4" />
+            <ControlTrash2 className="h-4 w-4" />
             Clear
           </button>
         </div>
@@ -113,7 +114,7 @@ const Notifications = () => {
                     aria-label="Dismiss"
                     className="self-start rounded p-1 text-neutral-300 transition hover:bg-neutral-100 hover:text-neutral-600"
                   >
-                    <X className="h-4 w-4" />
+                    <ControlX className="h-4 w-4" />
                   </button>
                 </div>
               );

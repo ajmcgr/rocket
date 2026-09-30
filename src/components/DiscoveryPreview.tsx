@@ -44,14 +44,14 @@ function SectionHeading({ id, title, description, href, action, emoji }: {
         </div>
       </div>
       <Link to={href} className="inline-flex items-center gap-1.5 pb-0.5 text-sm font-semibold text-sky-800 hover:underline">
-        {action} <span aria-hidden="true">➡️</span>
+        {action} <span aria-hidden="true">→</span>
       </Link>
     </div>
   );
 }
 
 export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
-  const [rising, setRising] = useState<Preview[]>([]);
+  const [rankings, setRankings] = useState<App[]>([]);
   const [fresh, setFresh] = useState<Preview[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [media, setMedia] = useState<Map<string, PublicAppMedia[]>>(new Map());
@@ -60,13 +60,13 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   useEffect(() => {
     let active = true;
     const load = async () => {
-      const [risingResult, newResult, categoryResult] = await Promise.all([
+      const [rankingResult, newResult, categoryResult] = await Promise.all([
         supabase
-          .from("public_discoverable_app_intelligence")
-          .select("*")
-          .eq("signal_type", "rising")
-          .order("percentile_rank", { ascending: false })
-          .order("net_votes", { ascending: false })
+          .from("public_app_rankings")
+          .select("app_id,launch_net_votes")
+          .order("launch_net_votes", { ascending: false })
+          .order("launched_at", { ascending: false, nullsFirst: false })
+          .order("app_id", { ascending: true })
           .limit(5),
         supabase
           .from("public_discoverable_app_intelligence")
@@ -81,11 +81,13 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           .order("app_count", { ascending: false })
           .limit(8),
       ]);
-      const risingSignals = risingResult.data || [];
+      if (rankingResult.error || newResult.error || categoryResult.error)
+        throw rankingResult.error || newResult.error || categoryResult.error;
+      const rankingRows = rankingResult.data || [];
       const freshSignals = newResult.data || [];
       const ids = [
         ...new Set(
-          [...risingSignals, ...freshSignals].map((signal) => signal.app_id),
+          [...rankingRows, ...freshSignals].map((signal) => signal.app_id),
         ),
       ];
       const [appResult, mediaResult] = await Promise.all([
@@ -101,7 +103,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           const app = apps.get(signal.app_id);
           return app ? [{ app, signal }] : [];
         });
-      setRising(mapRows(risingSignals));
+      setRankings(rankingRows.flatMap((row) => apps.get(row.app_id) ? [apps.get(row.app_id)!] : []));
       setFresh(mapRows(freshSignals));
       setCategories(categoryResult.data || []);
       setMedia(mediaResult);
@@ -154,19 +156,17 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   return (
     <>
       {(() => {
-        const visual = [...rising, ...fresh].find(({ app }) =>
-          coverMedia(media.get(app.id)),
-        );
+        const visual = [...rankings, ...fresh.map(({ app }) => app)].find((app) => coverMedia(media.get(app.id)));
         if (!intro) return null;
         return visual ? (
           <div className="grid items-stretch gap-6 pt-6 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:pt-10">
             {intro}
             <EditorialAppCard
-              app={visual.app}
-              media={media.get(visual.app.id)}
+              app={visual}
+              media={media.get(visual.id)}
               eyebrow={
-                rising.some(({ app }) => app.id === visual.app.id)
-                  ? "Rising on Launch"
+                rankings.some((app) => app.id === visual.id)
+                  ? "Popular on Launch"
                   : "New with Launch activity"
               }
             />
@@ -177,17 +177,17 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           </div>
         );
       })()}
-      <section className="mt-10 sm:mt-12" aria-labelledby="rising-heading">
-        <SectionHeading id="rising-heading" title="Rising" description="Apps with notable public Launch activity. This is not verified customer growth or a Rocket endorsement." href="/discover?view=rising" action="See all Rising" emoji="📈" />
-        {rising.length > 0 ? (
+      <section className="mt-10 sm:mt-12" aria-labelledby="rankings-heading">
+        <SectionHeading id="rankings-heading" title="Rankings" description="Top apps by public Launch votes. This is not verified customer growth or a Rocket endorsement." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
+        {rankings.length > 0 ? (
           <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5">
-            {rising.map(({ app }, index) => (
+            {rankings.map((app, index) => (
               <div key={app.id} className="w-[min(72vw,18rem)] shrink-0 snap-start sm:w-auto">
                 <RisingAppCard app={app} rank={index + 1} />
               </div>
             ))}
           </div>
-        ) : <p className="text-sm text-neutral-500">No Rising apps are available right now.</p>}
+        ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="new-heading">
         <SectionHeading id="new-heading" title="New" description="Recently listed apps with public Launch activity." href="/discover?view=new" action="See all New" emoji="✨" />
@@ -223,7 +223,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
                   aria-hidden="true"
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-white/25 text-lg transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 >
-                  ↗
+                  →
                 </span>
               </Link>
             ))}
@@ -234,7 +234,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         <SectionHeading id="saved-heading" title="Saved" description="Keep the apps you want to try in one place." href="/saved-apps" action="Open Saved" emoji="🔖" />
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-5 sm:px-7">
           <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">Save an app from its profile or a Discover card, then return to it whenever you’re ready.</p>
-          <Link to="/saved-apps" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa]">View saved apps <span aria-hidden="true">➡️</span></Link>
+          <Link to="/saved-apps" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa]">View saved apps <span aria-hidden="true">→</span></Link>
         </div>
       </section>
     </>

@@ -7,6 +7,7 @@ import { MobilePrimaryNav, PrimaryNav, PublicMobileNav } from "./PrimaryNav";
 describe("platform primary navigation", () => {
   it("keeps desktop destinations and exposes search/account on mobile", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    window.scrollTo = vi.fn();
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -32,7 +33,13 @@ describe("platform primary navigation", () => {
         expect(
           nav.querySelector('a[href="/submit"]')?.getAttribute("aria-current"),
         ).toBe("page");
+        expect(nav.querySelector('a[href="/submit"]')?.className).toContain("bg-neutral-200");
       });
+      const mobileNav = container.querySelector('nav[aria-label="Mobile primary"]');
+      expect(mobileNav?.querySelectorAll("a > svg")).toHaveLength(6);
+      expect(mobileNav?.querySelector('a[href="/discover"] svg')?.getAttribute("class")).toContain("lucide-compass");
+      expect(mobileNav?.querySelector('a[href="/saved-apps"] svg')?.getAttribute("class")).toContain("lucide-bookmark");
+      expect(mobileNav?.querySelector('a[href="/your-apps"] svg')?.getAttribute("class")).toContain("lucide-layers");
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -42,6 +49,7 @@ describe("platform primary navigation", () => {
 
   it("keeps public mobile discovery and submission visible with auth return destinations", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    window.scrollTo = vi.fn();
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -70,6 +78,8 @@ describe("platform primary navigation", () => {
           .querySelector('a[href="/discover"]')
           ?.getAttribute("aria-current"),
       ).toBe("page");
+      expect(container.querySelector('a[href="/discover"]')?.className).toContain("bg-neutral-200");
+      expect(container.querySelectorAll('nav[aria-label="Mobile primary"] a > svg')).toHaveLength(6);
     } finally {
       await act(async () => root.unmount());
       container.remove();

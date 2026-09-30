@@ -1,5 +1,6 @@
+import { Loader2 as ControlLoader2, Save as ControlSave, Eye as ControlEye, Pencil as ControlPencil, GitBranch as ControlGitBranch, Copy as ControlCopy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Download, Eye, GitBranch, Loader2, Pencil, Save } from "lucide-react";
+import { Copy, Download, Eye, GitBranch, Loader2, Pencil, Save } from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
@@ -176,14 +177,14 @@ export default function BrandDocument({
             disabled={!dirty || saving}
             className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            {saving ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlSave className="h-3.5 w-3.5" />}
             {saving ? "Saving" : dirty ? "Save" : "Saved"}
           </button>
           <button
             onClick={() => setEditing((current) => !current)}
             className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
           >
-            {editing ? <Eye className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+            {editing ? <ControlEye className="h-3.5 w-3.5" /> : <ControlPencil className="h-3.5 w-3.5" />}
             {editing ? "Preview" : "Edit"}
           </button>
           {onVariation && (
@@ -191,7 +192,7 @@ export default function BrandDocument({
               onClick={onVariation}
               className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
             >
-              <GitBranch className="h-3.5 w-3.5" /> Variation
+              <ControlGitBranch className="h-3.5 w-3.5" /> Variation
             </button>
           )}
           {onDuplicate && (
@@ -207,7 +208,7 @@ export default function BrandDocument({
               onClick={onExport}
               className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
             >
-              <Copy className="h-3.5 w-3.5" /> Copy text
+              <ControlCopy className="h-3.5 w-3.5" /> Copy text
             </button>
           )}
           <button

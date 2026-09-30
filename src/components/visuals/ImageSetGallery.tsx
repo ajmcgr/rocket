@@ -1,8 +1,9 @@
+import { Loader2 as ControlLoader2, Shapes as ControlShapes, X as ControlX } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import {
   ChevronLeft, ChevronRight, Download, Layers, Loader2, Shapes, X,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { packAssetsZip } from "@/lib/exporters/zipPack";
@@ -138,7 +139,7 @@ export default function ImageSetGallery({ asset }: { asset: any }) {
           disabled={zipping}
           className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
         >
-          {zipping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+          {zipping ? <ControlLoader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
           Download all (ZIP)
         </button>
       </div>
@@ -189,9 +190,9 @@ export default function ImageSetGallery({ asset }: { asset: any }) {
                       className="rounded-full bg-white/90 p-1 text-neutral-700 hover:bg-white disabled:opacity-50"
                     >
                       {vectorizingId === r.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <ControlLoader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <Shapes className="h-3 w-3" />
+                        <ControlShapes className="h-3 w-3" />
                       )}
                     </button>
                   )}
@@ -238,7 +239,7 @@ export default function ImageSetGallery({ asset }: { asset: any }) {
                   disabled={vectorizingId === active.id}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs hover:bg-white/20 disabled:opacity-50"
                 >
-                  {vectorizingId === active.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Shapes className="h-3.5 w-3.5" />}
+                  {vectorizingId === active.id ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlShapes className="h-3.5 w-3.5" />}
                   Vectorize SVG
                 </button>
               )}
@@ -261,7 +262,7 @@ export default function ImageSetGallery({ asset }: { asset: any }) {
                 onClick={close}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs hover:bg-white/20"
               >
-                <X className="h-3.5 w-3.5" /> Close
+                <ControlX className="h-3.5 w-3.5" /> Close
               </button>
             </div>
           </div>

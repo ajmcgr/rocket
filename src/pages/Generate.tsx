@@ -1,10 +1,11 @@
+import { Loader2 as ControlLoader2, List as ControlListIcon, LayoutGrid as ControlLayoutGrid, Wand2 as ControlWand2, Layers as ControlLayers, Star as ControlStar, MoreHorizontal as ControlMoreHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { assetHref } from "@/lib/assetExperience";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowUp, Loader2, Sparkles, Wand2, Image as ImageIcon, Type, Palette, Megaphone, Rocket as RocketIcon, Wand, Paintbrush, Send, Radio, FileText, LayoutTemplate, Camera, Layers, Shapes, LayoutGrid, List as ListIcon, Star, MoreHorizontal, Copy } from "lucide-react";
+import { ArrowUp, Loader2, Sparkles, Wand2, Image as ImageIcon, Type, Palette, Megaphone, Rocket as RocketIcon, Wand, Paintbrush, Send, Radio, FileText, LayoutTemplate, Camera, Layers, Shapes, LayoutGrid, List as ListIcon, Star, MoreHorizontal, Copy } from "@/components/EmojiIcons";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import { Logotype } from "@/components/Logotype";
@@ -1044,7 +1045,7 @@ const Generate = () => {
                     disabled={!prompt.trim() || loading}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-brand text-brand-foreground transition hover:bg-brand-hover disabled:opacity-40"
                   >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
+                    {loading ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
@@ -1066,7 +1067,7 @@ const Generate = () => {
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${resultsView === "list" ? "bg-neutral-900 text-white" : "hover:text-neutral-900"}`}
                       title="List view"
                     >
-                      <ListIcon className="h-3.5 w-3.5" />
+                      <ControlListIcon className="h-3.5 w-3.5" />
                     </button>
                     <button
                       type="button"
@@ -1074,7 +1075,7 @@ const Generate = () => {
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${resultsView === "grid" ? "bg-neutral-900 text-white" : "hover:text-neutral-900"}`}
                       title="Grid view"
                     >
-                      <LayoutGrid className="h-3.5 w-3.5" /> Grid
+                      <ControlLayoutGrid className="h-3.5 w-3.5" /> Grid
                     </button>
                   </div>
                 </div>
@@ -1098,21 +1099,21 @@ const Generate = () => {
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
                           >
-                            <Wand2 className="h-3.5 w-3.5" /> Edit
+                            <ControlWand2 className="h-3.5 w-3.5" /> Edit
                           </Link>
                           <button
                             type="button"
                             onClick={() => { setPrompt(`Variants of "${a.title || "this design"}"`); }}
                             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
                           >
-                            <Layers className="h-3.5 w-3.5" /> Variants
+                            <ControlLayers className="h-3.5 w-3.5" /> Variants
                           </button>
                           <button
                             type="button"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); void saveToSaved(a.id); }}
                             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
                           >
-                            <Star className={`h-3.5 w-3.5 ${a?.meta?.saved_at ? "fill-amber-400 text-amber-400" : ""}`} /> {a?.meta?.saved_at ? "Saved" : "Save"}
+                            <ControlStar className={`h-3.5 w-3.5 ${a?.meta?.saved_at ? "fill-amber-400 text-amber-400" : ""}`} /> {a?.meta?.saved_at ? "Saved" : "Save"}
                           </button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1121,7 +1122,7 @@ const Generate = () => {
                                 className="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
                                 title="More"
                               >
-                                <MoreHorizontal className="h-4 w-4" />
+                                <ControlMoreHorizontal className="h-4 w-4" />
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">

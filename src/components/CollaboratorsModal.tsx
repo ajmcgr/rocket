@@ -1,5 +1,6 @@
+import { X as ControlX, UserPlus as ControlUserPlus, Copy as ControlCopy, Trash2 as ControlTrash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Crown, Mail, Trash2, UserPlus, X } from "lucide-react";
+import { Copy, Crown, Mail, Trash2, UserPlus, X } from "@/components/EmojiIcons";
 import { useToast } from "@/hooks/use-toast";
 
 export type CollabRole = "viewer" | "editor";
@@ -103,7 +104,7 @@ const CollaboratorsModal = ({ open, onOpenChange, projectId, projectName, ownerE
             <h2 className="text-base font-semibold tracking-tight">Collaborators</h2>
             <p className="text-xs text-neutral-500">Invite people to view or edit “{projectName}”.</p>
           </div>
-          <button onClick={() => onOpenChange(false)} aria-label="Close" className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100"><X className="h-4 w-4" /></button>
+          <button onClick={() => onOpenChange(false)} aria-label="Close" className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100"><ControlX className="h-4 w-4" /></button>
         </div>
 
         <form onSubmit={invite} className="flex flex-wrap items-center gap-2 px-5 py-4">
@@ -117,7 +118,7 @@ const CollaboratorsModal = ({ open, onOpenChange, projectId, projectName, ownerE
             <option value="editor">Editor</option>
           </select>
           <button type="submit" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-sm font-medium text-brand-foreground hover:bg-brand-hover">
-            <UserPlus className="h-4 w-4" /> Invite
+            <ControlUserPlus className="h-4 w-4" /> Invite
           </button>
         </form>
 
@@ -150,8 +151,8 @@ const CollaboratorsModal = ({ open, onOpenChange, projectId, projectName, ownerE
               {c.status === "pending" ? (
                 <button onClick={() => activate(c.id)} className="rounded-md border border-neutral-200 bg-white px-2 py-1 text-[11px] hover:bg-neutral-100" title="Mark as accepted">Accept</button>
               ) : null}
-              <button onClick={() => copyInvite(c)} className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100" title="Copy invite link"><Copy className="h-4 w-4" /></button>
-              <button onClick={() => remove(c.id)} className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-red-600" title="Remove"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => copyInvite(c)} className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100" title="Copy invite link"><ControlCopy className="h-4 w-4" /></button>
+              <button onClick={() => remove(c.id)} className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-red-600" title="Remove"><ControlTrash2 className="h-4 w-4" /></button>
             </div>
           ))}
         </div>

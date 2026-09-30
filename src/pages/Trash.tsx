@@ -1,9 +1,10 @@
+import { RotateCcw as ControlRotateCcw, Trash2 as ControlTrash2, LayoutGrid as ControlLayoutGrid, List as ControlList, CheckSquare as ControlCheckSquare, Square as ControlSquare } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { RotateCcw, Trash2, ArrowLeft, Search, LayoutGrid, List, ArrowUpDown, CheckSquare, Square, AlertTriangle } from "lucide-react";
+import { RotateCcw, Trash2, ArrowLeft, Search, LayoutGrid, List, ArrowUpDown, CheckSquare, Square, AlertTriangle } from "@/components/EmojiIcons";
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import { Logotype } from "@/components/Logotype";
 import AssetThumbnail from "@/components/AssetThumbnail";
@@ -225,8 +226,8 @@ const Trash = () => {
           {selected.size > 0 && (
             <>
               <span className="text-xs text-neutral-500">{selected.size} selected</span>
-              <button onClick={bulkRestore} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 disabled:opacity-60"><RotateCcw className="h-3.5 w-3.5" /> Restore</button>
-              <button onClick={bulkDelete} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-60"><Trash2 className="h-3.5 w-3.5" /> Delete</button>
+              <button onClick={bulkRestore} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 disabled:opacity-60"><ControlRotateCcw className="h-3.5 w-3.5" /> Restore</button>
+              <button onClick={bulkDelete} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-60"><ControlTrash2 className="h-3.5 w-3.5" /> Delete</button>
             </>
           )}
           <button
@@ -234,7 +235,7 @@ const Trash = () => {
             disabled={busy || assets.length === 0}
             className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-40"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Empty trash
+            <ControlTrash2 className="h-3.5 w-3.5" /> Empty trash
           </button>
         </div>
       </div>
@@ -262,10 +263,10 @@ const Trash = () => {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
             <button onClick={() => setView("card")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "card" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Card
+              <ControlLayoutGrid className="h-3.5 w-3.5" /> Card
             </button>
             <button onClick={() => setView("list")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "list" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <List className="h-3.5 w-3.5" /> List
+              <ControlList className="h-3.5 w-3.5" /> List
             </button>
           </div>
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
@@ -303,7 +304,7 @@ const Trash = () => {
           {filtered.map((a) => (
             <div key={a.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${selected.has(a.id) ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
               <button onClick={() => toggle(a.id)} className="absolute left-2 top-2 z-10 rounded-md bg-white/90 p-1 text-neutral-500 shadow-xs backdrop-blur-sm hover:text-neutral-900">
-                {selected.has(a.id) ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4" />}
+                {selected.has(a.id) ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4" />}
               </button>
               <div className="aspect-square w-full overflow-hidden bg-neutral-50">
                 <AssetPreview a={a} />
@@ -316,8 +317,8 @@ const Trash = () => {
                   </div>
                 </div>
                 <div className="mt-2 flex items-center gap-1.5">
-                  <button onClick={() => restoreAsset(a.id)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-full border border-neutral-200 bg-white px-2 py-1 text-[11px] hover:bg-neutral-50"><RotateCcw className="h-3 w-3" /> Restore</button>
-                  <button onClick={() => purgeAsset(a.id)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-full border border-red-200 bg-white px-2 py-1 text-[11px] text-red-600 hover:bg-red-50"><Trash2 className="h-3 w-3" /> Delete</button>
+                  <button onClick={() => restoreAsset(a.id)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-full border border-neutral-200 bg-white px-2 py-1 text-[11px] hover:bg-neutral-50"><ControlRotateCcw className="h-3 w-3" /> Restore</button>
+                  <button onClick={() => purgeAsset(a.id)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-full border border-red-200 bg-white px-2 py-1 text-[11px] text-red-600 hover:bg-red-50"><ControlTrash2 className="h-3 w-3" /> Delete</button>
                 </div>
               </div>
             </div>
@@ -329,7 +330,7 @@ const Trash = () => {
           {filtered.map((a) => (
             <div key={a.id} className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3 last:border-b-0">
               <button onClick={() => toggle(a.id)} className="text-neutral-400 hover:text-neutral-800">
-                {selected.has(a.id) ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4" />}
+                {selected.has(a.id) ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4" />}
               </button>
               <div className="h-14 w-14 overflow-hidden rounded-lg bg-neutral-50">
                 <AssetPreview a={a} />
@@ -340,8 +341,8 @@ const Trash = () => {
                   {(ASSET_TYPE_LABELS[a.asset_type] || a.asset_type)} · deleted {new Date(a.deleted_at).toLocaleDateString()} · {daysRemaining(a.deleted_at)}d left
                 </div>
               </div>
-              <button onClick={() => restoreAsset(a.id)} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs hover:bg-neutral-50"><RotateCcw className="h-3 w-3" /> Restore</button>
-              <button onClick={() => purgeAsset(a.id)} className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs text-red-600 hover:bg-red-50"><Trash2 className="h-3 w-3" /> Delete forever</button>
+              <button onClick={() => restoreAsset(a.id)} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs hover:bg-neutral-50"><ControlRotateCcw className="h-3 w-3" /> Restore</button>
+              <button onClick={() => purgeAsset(a.id)} className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs text-red-600 hover:bg-red-50"><ControlTrash2 className="h-3 w-3" /> Delete forever</button>
             </div>
           ))}
         </div>

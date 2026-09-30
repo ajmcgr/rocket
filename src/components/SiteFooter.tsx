@@ -61,34 +61,6 @@ const SiteFooter = () => (
                 AI Info
               </Link>
             </li>
-            <li>
-              <Link to="/contact" className="hover:text-neutral-900">
-                Contact
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <div className={HEADER}>Support</div>
-          <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
-            <li>
-              <a
-                href="mailto:alex@tryrocket.ai"
-                className="hover:text-neutral-900"
-              >
-                Support
-              </a>
-            </li>
-            <li>
-              <Link to="/privacy" className="hover:text-neutral-900">
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link to="/terms" className="hover:text-neutral-900">
-                Terms of Service
-              </Link>
-            </li>
           </ul>
         </div>
         <div>
@@ -121,6 +93,26 @@ const SiteFooter = () => (
               <li key={item.slug}><Link to={`/compare/${item.slug}`} className="hover:text-neutral-900">Rocket vs {item.name}</Link></li>
             ))}
             <li><Link to="/compare" className="font-semibold hover:text-neutral-900">All compared →</Link></li>
+          </ul>
+        </div>
+        <div>
+          <div className={HEADER}>Support</div>
+          <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
+            <li>
+              <Link to="/contact" className="hover:text-neutral-900">
+                Contact
+              </Link>
+            </li>
+            <li>
+              <Link to="/privacy" className="hover:text-neutral-900">
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms" className="hover:text-neutral-900">
+                Terms of Service
+              </Link>
+            </li>
           </ul>
         </div>
         <div>

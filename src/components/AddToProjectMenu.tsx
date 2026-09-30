@@ -1,9 +1,10 @@
+import { FolderPlus as ControlFolderPlus, Check as ControlCheck, Loader2 as ControlLoader2, Plus as ControlPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FolderPlus, Check, Plus, Loader2 } from "lucide-react";
+import { FolderPlus, Check, Plus, Loader2 } from "@/components/EmojiIcons";
 const supabase = _sb as any;
 
 type Props = {
@@ -57,11 +58,11 @@ export default function AddToProjectMenu({ assetId, currentProjectId, onChanged,
       <DropdownMenuTrigger asChild>
         {variant === "icon" ? (
           <button title="Add to project" className={className || "inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white p-2 text-sm hover:bg-neutral-50"}>
-            <FolderPlus className="h-4 w-4" />
+            <ControlFolderPlus className="h-4 w-4" />
           </button>
         ) : (
           <button className={className || "inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm hover:bg-neutral-50"}>
-            <FolderPlus className="h-4 w-4" />
+            <ControlFolderPlus className="h-4 w-4" />
             {currentProjectId ? (currentName ? `In: ${currentName}` : "In project") : "Add to project"}
           </button>
         )}
@@ -76,14 +77,14 @@ export default function AddToProjectMenu({ assetId, currentProjectId, onChanged,
             {projects.map(p => (
               <DropdownMenuItem key={p.id} disabled={busy} onClick={() => assign(p.id)} className="flex items-center justify-between cursor-pointer">
                 <span className="truncate">{p.name}</span>
-                {p.id === currentProjectId && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                {p.id === currentProjectId && <ControlCheck className="h-3.5 w-3.5 text-emerald-600" />}
               </DropdownMenuItem>
             ))}
           </div>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={createAndAssign} disabled={creating} className="cursor-pointer">
-          {creating ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-2 h-3.5 w-3.5" />} New project…
+          {creating ? <ControlLoader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <ControlPlus className="mr-2 h-3.5 w-3.5" />} New project…
         </DropdownMenuItem>
         {currentProjectId && (
           <DropdownMenuItem onClick={() => assign(null)} disabled={busy} className="text-red-600 focus:text-red-600 cursor-pointer">

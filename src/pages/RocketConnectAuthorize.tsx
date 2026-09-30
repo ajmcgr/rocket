@@ -1,6 +1,7 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck } from "@/components/EmojiIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -56,6 +57,6 @@ export default function RocketConnectAuthorize() {
     <p className="mt-6 text-sm text-neutral-700"><span className="font-medium">{details?.client.name}</span> is asking to:</p>
     <ul className="mt-3 space-y-2">{details?.scopes.map((scope) => <li key={scope} className="flex items-center gap-2 text-sm text-neutral-600"><ShieldCheck className="h-4 w-4 text-emerald-600" />{scopeLabel[scope] || scope}</li>)}</ul>
     <p className="mt-5 text-xs leading-5 text-neutral-500">You can revoke this application at any time in Rocket Settings → Account.</p>
-    <div className="mt-6 flex gap-3"><button disabled={submitting} onClick={() => respond("deny")} className="h-10 flex-1 rounded-lg border border-neutral-200 text-sm font-medium hover:bg-neutral-50 disabled:opacity-60">Cancel</button><button disabled={submitting} onClick={() => respond("approve")} className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-neutral-900 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}</button></div>
+    <div className="mt-6 flex gap-3"><button disabled={submitting} onClick={() => respond("deny")} className="h-10 flex-1 rounded-lg border border-neutral-200 text-sm font-medium hover:bg-neutral-50 disabled:opacity-60">Cancel</button><button disabled={submitting} onClick={() => respond("approve")} className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-neutral-900 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60">{submitting ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Continue"}</button></div>
   </section></main>;
 }

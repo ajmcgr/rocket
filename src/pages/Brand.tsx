@@ -1,6 +1,7 @@
+import { Loader2 as ControlLoader2, X as ControlX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "@/lib/router-compat";
-import { Download, Loader2, X } from "lucide-react";
+import { Download, Loader2, X } from "@/components/EmojiIcons";
 import jsPDF from "jspdf";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype, logotypeToPng, logotypeToSvg } from "@/components/Logotype";
@@ -486,7 +487,7 @@ export default function Brand() {
                           }`}
                         >
                           {busy?.startsWith(`${v.key}:`) ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <ControlLoader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
                             <Download className="h-3.5 w-3.5" />
                           )}
@@ -554,7 +555,7 @@ export default function Brand() {
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFromKit(a.id); }}
                       className="absolute right-1.5 top-1.5 rounded-full bg-white/95 p-1 text-neutral-500 opacity-0 shadow-xs transition hover:text-red-600 group-hover:opacity-100"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <ControlX className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}

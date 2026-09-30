@@ -1,3 +1,4 @@
+import { X as ControlX } from "lucide-react";
 import {
   useEffect,
   useLayoutEffect,
@@ -7,7 +8,7 @@ import {
 } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
-import { X, ArrowRight, Sparkles } from "lucide-react";
+import { X, ArrowRight, Sparkles } from "@/components/EmojiIcons";
 
 type Step = {
   selector?: string;
@@ -28,7 +29,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Discover and save",
-    body: "Search the app catalogue, explore Rising and New, and save apps you want to revisit.",
+    body: "Search the app catalogue, explore Rankings and New, and save apps you want to revisit.",
     placement: "center",
   },
   {
@@ -241,7 +242,7 @@ const OnboardingTour = () => {
             aria-label="Skip tour"
             className="rounded-md p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
           >
-            <X className="h-4 w-4" />
+            <ControlX className="h-4 w-4" />
           </button>
         </div>
         <h3 className="mt-3 text-base font-semibold tracking-tight text-neutral-900">

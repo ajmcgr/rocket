@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "@/lib/router-compat";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/EmojiIcons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 

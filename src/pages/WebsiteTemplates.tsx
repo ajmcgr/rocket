@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { Link, useParams } from "@/lib/router-compat";
-import { ArrowLeft, ExternalLink, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Download, Loader2 } from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Logotype } from "@/components/Logotype";
 import { defaultLogotypeState, type LogotypeState } from "@/lib/logotype";

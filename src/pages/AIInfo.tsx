@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";

@@ -1,9 +1,10 @@
+import { Loader2 as ControlLoader2, Globe as ControlGlobe, Sparkles as ControlSparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Globe } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Globe } from "@/components/EmojiIcons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
@@ -217,7 +218,7 @@ const ProjectWizard = () => {
             <div className="mt-1.5 flex gap-2">
               <Input value={ctx.url} onChange={e => { setF("url", e.target.value); setScraped(null); }} placeholder="https://trylaunch.ai" />
               <Button type="button" variant="outline" onClick={analyzeBrand} disabled={!ctx.url.trim() || !isUrl(ctx.url) || scraping} className="shrink-0">
-                {scraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Globe className="mr-1 h-4 w-4" /> Analyze</>}
+                {scraping ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <><ControlGlobe className="mr-1 h-4 w-4" /> Analyze</>}
               </Button>
             </div>
             <p className="mt-1 text-xs text-neutral-500">{scraped ? `Analyzed: ${scraped.productName || ctx.url}${scraped.colors?.length ? ` · ${scraped.colors.length} colors` : ""}` : "We'll scrape colors, fonts, logo and copy."}</p>
@@ -291,7 +292,7 @@ const ProjectWizard = () => {
             })}
           </div>
           <Button onClick={run} disabled={running} className="w-full">
-            {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</> : <><Sparkles className="mr-1 h-4 w-4" /> Generate starter pack</>}
+            {running ? <><ControlLoader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</> : <><ControlSparkles className="mr-1 h-4 w-4" /> Generate starter pack</>}
           </Button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { Link, useParams } from "@/lib/router-compat";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const ComparisonDetail = () => {
         </div>
         <section className="mt-10 border-t border-neutral-200 pt-8">
           <h2 className="text-2xl font-semibold">What Rocket offers today</h2>
-          <p className="mt-3 max-w-3xl leading-relaxed text-neutral-600">Search and browse independent apps, explore categories and evidence-based Rising or New sections, save listings, and submit or claim an app. Listing does not mean endorsement. Rocket Login and Payments work only where a developer has integrated them.</p>
+          <p className="mt-3 max-w-3xl leading-relaxed text-neutral-600">Search and browse apps, explore categories, Launch-vote Rankings and New arrivals, save listings, and submit or claim an app. Listing does not mean endorsement. Rocket Login and Payments work only where a developer has integrated them.</p>
           <Link to="/discover" className="mt-6 inline-flex rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa]">Explore apps <ArrowRight className="ml-2 h-4 w-4" /></Link>
         </section>
         <p className="mt-12 text-sm text-neutral-500">Competitor description source: <a href={marketplace.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-900">{marketplace.sourceLabel}</a>. Product capabilities may change.</p>

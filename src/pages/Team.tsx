@@ -1,10 +1,11 @@
+import { Loader2 as ControlLoader2, Mail as ControlMail, Trash2 as ControlTrash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ensureActiveWorkspaceId, getActiveWorkspaceIdSync, listWorkspaces } from "@/lib/workspace";
-import { Loader2, Trash2, Mail } from "lucide-react";
+import { Loader2, Trash2, Mail } from "@/components/EmojiIcons";
 
 const sb = supabase as any;
 
@@ -138,7 +139,7 @@ const Team = () => {
               {ROLES.filter(r => r !== "owner").map(r => <option key={r} value={r}>{r}</option>)}
             </select>
             <Button type="submit" disabled={sending}>
-              {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Mail className="mr-1.5 h-4 w-4" />}
+              {sending ? <ControlLoader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <ControlMail className="mr-1.5 h-4 w-4" />}
               Send invite
             </Button>
           </form>
@@ -158,7 +159,7 @@ const Team = () => {
                 {canManage && (
                   <div className="flex items-center gap-2">
                     <button onClick={() => copyLink(i.token)} className="rounded-md border border-neutral-200 px-2.5 py-1 text-xs text-neutral-700 hover:bg-neutral-50">Copy link</button>
-                    <button onClick={() => revokeInvite(i.id)} className="rounded-md border border-neutral-200 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => revokeInvite(i.id)} className="rounded-md border border-neutral-200 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50"><ControlTrash2 className="h-3.5 w-3.5" /></button>
                   </div>
                 )}
               </li>
@@ -186,7 +187,7 @@ const Team = () => {
                 )}
                 {canManage && m.role !== "owner" && m.user_id !== user?.id && (
                   <button onClick={() => removeMember(m.id, m.user_id)} className="rounded-md border border-neutral-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <ControlTrash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>

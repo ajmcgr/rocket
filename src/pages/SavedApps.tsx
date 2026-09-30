@@ -7,6 +7,7 @@ import SaveAppButton from "@/components/SaveAppButton";
 import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import AppTrustBadges from "@/components/AppTrustBadges";
 import AppLogo from "@/components/AppLogo";
+import AppPurchaseActions from "@/components/AppPurchaseActions";
 import type { AppTrust } from "@/lib/appTrust";
 
 type App = Tables<"public_apps">;
@@ -59,11 +60,12 @@ export default function SavedApps() {
     {!loading && !error && rows.length === 0 && <div className="mt-8 rounded-[1.5rem] border border-neutral-200 bg-white p-8 sm:p-10"><h2 className="font-display text-2xl">Your shortlist starts here.</h2><p className="mt-2 text-sm text-neutral-600">Save apps you want to try or revisit. They will appear here.</p><Link to="/discover" className="mt-5 inline-flex min-h-11 items-center font-semibold text-sky-800 hover:underline">Explore apps →</Link></div>}
     {!loading && !error && <div className="mt-8 grid gap-4 sm:grid-cols-2">{rows.map(({ saved, app, signal, trust }) =>
       <article key={app.id} className="flex min-h-52 flex-col rounded-[1.5rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_36px_-34px_rgba(15,23,42,0.4)] transition hover:border-sky-300">
-        <div className="flex items-start gap-3"><AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" /><div className="min-w-0 flex-1"><Link to={`/apps/${app.id}`} className="line-clamp-1 font-semibold text-neutral-950 hover:text-sky-800">{app.name}</Link><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div><SaveAppButton appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /></div>
+        <div className="flex items-start gap-3"><AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" /><div className="min-w-0 flex-1"><Link to={`/apps/${app.id}`} className="line-clamp-1 font-semibold text-neutral-950 hover:text-sky-800">{app.name}</Link><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div></div>
         <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-neutral-600">{app.tagline || app.description || "Explore this app."}</p>
         <AppTrustBadges trust={trust} compact className="mt-3" />
         {signal && <p className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signal)}</strong><br />{signalExplanation(signal)}</p>}
         <p className="mt-4 text-xs text-neutral-500">Saved {new Date(saved.saved_at).toLocaleDateString()}</p>
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4"><SaveAppButton appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /><AppPurchaseActions appId={app.id} /></div>
       </article>)}</div>}
   </div>;
 }

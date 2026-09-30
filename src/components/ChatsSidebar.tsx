@@ -1,9 +1,10 @@
+import { Plus as ControlPlus, Pin as ControlPin, MoreHorizontal as ControlMoreHorizontal, PinOff as ControlPinOff, Pencil as ControlPencil, Trash2 as ControlTrash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Pin, PinOff, Pencil, Trash2, Plus, MoreHorizontal } from "lucide-react";
+import { Pin, PinOff, Pencil, Trash2, Plus, MoreHorizontal } from "@/components/EmojiIcons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -158,7 +159,7 @@ const ChatsSidebar = () => {
           to={newChatPath}
           className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-white py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
         >
-          <Plus className="h-4 w-4" /> New
+          <ControlPlus className="h-4 w-4" /> New
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto px-2 py-3">
@@ -207,7 +208,7 @@ const ChatsSidebar = () => {
           />
         ) : (
           <Link to={`/create?chat=${c.id}`} className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
-            {c.pinned && <Pin className="h-3 w-3 shrink-0 text-brand" aria-label="Pinned" />}
+            {c.pinned && <ControlPin className="h-3 w-3 shrink-0 text-brand" aria-label="Pinned" />}
             <span className="truncate">{c.title}</span>
           </Link>
         )}
@@ -218,17 +219,17 @@ const ChatsSidebar = () => {
               aria-label="Chat actions"
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreHorizontal className="h-3.5 w-3.5" />
+              <ControlMoreHorizontal className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44 bg-white p-1.5 shadow-lg">
               <DropdownMenuItem onClick={() => togglePin(c)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
-                {c.pinned ? <><PinOff className="mr-2 h-3.5 w-3.5" /> Unpin</> : <><Pin className="mr-2 h-3.5 w-3.5" /> Pin</>}
+                {c.pinned ? <><ControlPinOff className="mr-2 h-3.5 w-3.5" /> Unpin</> : <><ControlPin className="mr-2 h-3.5 w-3.5" /> Pin</>}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => startRename(c)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Rename
+                <ControlPencil className="mr-2 h-3.5 w-3.5" /> Rename
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => remove(c)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600">
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                <ControlTrash2 className="mr-2 h-3.5 w-3.5" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

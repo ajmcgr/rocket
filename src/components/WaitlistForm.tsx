@@ -1,9 +1,10 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail } from "lucide-react"; // v2
+import { Loader2, Mail } from "@/components/EmojiIcons"; // v2
 import { supabase } from "@/integrations/supabase/client";
 
 const WaitlistForm = () => {
@@ -66,7 +67,7 @@ const WaitlistForm = () => {
       >
         {loading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <ControlLoader2 className="h-4 w-4 animate-spin" />
             Joining...
           </>
         ) : (

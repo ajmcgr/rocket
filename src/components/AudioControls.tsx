@@ -1,5 +1,6 @@
+import { Volume2 as ControlVolume2, VolumeX as ControlVolumeX } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "@/components/EmojiIcons";
 import meteorAudio from "@/assets/meteor.mp3.asset.json";
 
 const AudioControls = () => {
@@ -29,7 +30,7 @@ const AudioControls = () => {
         className="rounded-full border border-cream/20 bg-background/30 p-2.5 text-cream/60 backdrop-blur-xs transition-colors hover:text-[#FFFFFF]"
         aria-label={isPlaying ? "Pause music" : "Play music"}
       >
-        {isPlaying ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        {isPlaying ? <ControlVolume2 className="h-4 w-4" /> : <ControlVolumeX className="h-4 w-4" />}
       </button>
     </div>
   );

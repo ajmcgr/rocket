@@ -1,5 +1,6 @@
+import { X as ControlX, Loader2 as ControlLoader2, Zap as ControlZap } from "lucide-react";
 import { Link } from "@/lib/router-compat";
-import { Zap, Loader2, ArrowRight, X } from "lucide-react";
+import { Zap, Loader2, ArrowRight, X } from "@/components/EmojiIcons";
 import { useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -51,7 +52,7 @@ export default function OutOfCreditsModal({ open, onClose, needed, remaining, so
         className="relative w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl"
       >
         <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 rounded-full p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
-          <X className="h-4 w-4" />
+          <ControlX className="h-4 w-4" />
         </button>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
           <Zap className="h-5 w-5 text-brand" />
@@ -80,7 +81,7 @@ export default function OutOfCreditsModal({ open, onClose, needed, remaining, so
               }`}
             >
               <span className="inline-flex items-center gap-2 font-medium">
-                {loading === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                {loading === p.id ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlZap className="h-4 w-4" />}
                 {p.label}
               </span>
               <span className={p.highlight ? "font-semibold text-brand" : "text-neutral-500"}>{p.price}</span>
@@ -93,7 +94,7 @@ export default function OutOfCreditsModal({ open, onClose, needed, remaining, so
           disabled={!!loading}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white hover:bg-neutral-800"
         >
-          {loading === "growth" ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Upgrade to Pro — $20/mo · 3,000 credits <ArrowRight className="h-4 w-4" /></>}
+          {loading === "growth" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <>Upgrade to Pro — $20/mo · 3,000 credits <ArrowRight className="h-4 w-4" /></>}
         </button>
 
         <Link to="/pricing" target="_blank" rel="noreferrer" onClick={onClose} className="mt-3 block text-center text-xs text-neutral-500 hover:text-neutral-700">

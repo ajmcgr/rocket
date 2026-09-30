@@ -1,4 +1,4 @@
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink } from "@/components/EmojiIcons";
 import { Link } from "@/lib/router-compat";
 import {
   DropdownMenu,

@@ -1,3 +1,4 @@
+import { Loader2 as ControlLoader2, Sparkles as ControlSparkles, Share2 as ControlShare2, FileImage as ControlFileImage, Globe as ControlGlobe, Palette as ControlPalette, Type as ControlTypeIcon, Megaphone as ControlMegaphone, BookOpen as ControlBookOpen, Check as ControlCheck, Trash2 as ControlTrash2, Plus as ControlPlus, X as ControlX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import {
   Share2, Facebook, Send, MessageCircle, MessageSquare as MessageSquareIcon, Mail, Link as LinkIcon, Lock,
   Download, Loader2, FileImage, Globe, ChevronRight, Type as TypeIcon,
   BookOpen,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import { downloadCompleteBrandKit } from "@/lib/brandKitDownload";
 import { exportAsset } from "@/lib/exporters";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -365,21 +366,21 @@ const BrandKitHub = () => {
               disabled={zipping || !assets.length}
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:opacity-50"
             >
-              {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download
+              {zipping ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download
               {!subLoading && !isPro && (
                 <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-white">Pro</span>
               )}
             </button>
           ) : (
             <Link to={`/brands?project=${id}`} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50">
-              <Sparkles className="h-4 w-4" /> Complete your brand kit
+              <ControlSparkles className="h-4 w-4" /> Complete your brand kit
             </Link>
           )}
           <button
             onClick={() => setShareOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover"
           >
-            <Share2 className="h-4 w-4" /> Share
+            <ControlShare2 className="h-4 w-4" /> Share
           </button>
         </div>
       </div>
@@ -400,7 +401,7 @@ const BrandKitHub = () => {
           className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-            <FileImage className="h-5 w-5" />
+            <ControlFileImage className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-neutral-900">Logo/Icon Files</span>
@@ -413,7 +414,7 @@ const BrandKitHub = () => {
           className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-            <Globe className="h-5 w-5" />
+            <ControlGlobe className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-neutral-900">Website Templates</span>
@@ -426,7 +427,7 @@ const BrandKitHub = () => {
           className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-            <Palette className="h-5 w-5" />
+            <ControlPalette className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-neutral-900">Palette Explorer</span>
@@ -439,7 +440,7 @@ const BrandKitHub = () => {
           className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-            <TypeIcon className="h-5 w-5" />
+            <ControlTypeIcon className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-neutral-900">Font Explorer</span>
@@ -452,7 +453,7 @@ const BrandKitHub = () => {
           className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-            <Megaphone className="h-5 w-5" />
+            <ControlMegaphone className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-neutral-900">Social Media Kit</span>
@@ -465,7 +466,7 @@ const BrandKitHub = () => {
           className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-            <BookOpen className="h-5 w-5" />
+            <ControlBookOpen className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-neutral-900">Brand Guidelines</span>
@@ -497,12 +498,12 @@ const BrandKitHub = () => {
                 disabled={zipping || !assets.length}
                 className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50"
               >
-                {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {zipping ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 Download complete brand kit
               </button>
             ) : (
               <Link to={`/brands?project=${id}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover">
-                <Sparkles className="h-4 w-4" /> Complete your brand kit
+                <ControlSparkles className="h-4 w-4" /> Complete your brand kit
               </Link>
             )}
             {downloaded && (
@@ -578,7 +579,7 @@ const BrandKitHub = () => {
                       className={`absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border bg-white/95 transition ${isSelected ? "border-brand text-brand opacity-100" : "border-neutral-300 text-transparent opacity-0 group-hover:opacity-100"}`}
                       title={isSelected ? "Deselect" : "Select"}
                     >
-                      {isSelected && <Check className="h-4 w-4" />}
+                      {isSelected && <ControlCheck className="h-4 w-4" />}
                     </button>
                   )}
                   {preview?.image_url ? (
@@ -612,11 +613,11 @@ const BrandKitHub = () => {
                         className="inline-flex items-center rounded-full border border-neutral-200 px-2 py-1 text-[11px] text-red-600 hover:bg-red-50"
                         title={`Remove ${it.label} from brand kit`}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <ControlTrash2 className="h-3 w-3" />
                       </button>
                     )}
                     <Link to={generateHref(it)} className="inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-[11px] font-medium text-brand-foreground hover:bg-brand-hover">
-                      <Plus className="h-3 w-3" /> {done ? "New" : "Generate"}
+                      <ControlPlus className="h-3 w-3" /> {done ? "New" : "Generate"}
                     </Link>
                   </div>
                 </div>
@@ -631,7 +632,7 @@ const BrandKitHub = () => {
           <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 shadow-lg">
             <span className="pl-2 pr-1 text-sm font-medium">{selected.size} selected</span>
             <button onClick={bulkTrash} className="rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700">Move to Trash</button>
-            <button onClick={clearSelection} className="rounded-full px-2 py-1 text-neutral-500 hover:bg-neutral-100"><X className="h-4 w-4" /></button>
+            <button onClick={clearSelection} className="rounded-full px-2 py-1 text-neutral-500 hover:bg-neutral-100"><ControlX className="h-4 w-4" /></button>
           </div>
         </div>
       )}

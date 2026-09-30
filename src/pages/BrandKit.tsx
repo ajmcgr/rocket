@@ -1,7 +1,8 @@
+import { Loader2 as ControlLoader2, FileDown as ControlFileDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
-import { ArrowLeft, Download, FileDown, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, FileDown, Loader2 } from "@/components/EmojiIcons";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 const supabase = _sb as any;
@@ -100,10 +101,10 @@ const BrandKit = () => {
         </Link>
         <div className="flex items-center gap-2">
           <button disabled={!!exporting} onClick={exportPng} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50">
-            {exporting === "png" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PNG
+            {exporting === "png" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PNG
           </button>
           <button disabled={!!exporting} onClick={exportPdf} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50">
-            {exporting === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />} PDF
+            {exporting === "pdf" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlFileDown className="h-4 w-4" />} PDF
           </button>
         </div>
       </div>

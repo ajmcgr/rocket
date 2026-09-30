@@ -1,6 +1,7 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { Download, Loader2, Layers } from "lucide-react";
+import { Download, Loader2, Layers } from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { packAssetsZip } from "@/lib/exporters/zipPack";
@@ -89,7 +90,7 @@ export default function RelatedVariantsGrid({ asset }: { asset: any }) {
           disabled={zipping}
           className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
         >
-          {zipping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />} Download all (ZIP)
+          {zipping ? <ControlLoader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />} Download all (ZIP)
         </button>
       </div>
       <div className="flex gap-2 overflow-x-auto p-3">

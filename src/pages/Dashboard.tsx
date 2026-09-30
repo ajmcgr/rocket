@@ -1,3 +1,4 @@
+import { Trash2 as ControlTrash2, Folder as ControlFolder, Plus as ControlPlus, LayoutGrid as ControlLayoutGrid, List as ControlList, X as ControlX, CheckSquare as ControlCheckSquare, FolderPlus as ControlFolderPlus, Square as ControlSquare, MoreHorizontal as ControlMoreHorizontal, Pencil as ControlPencil, ImageIcon as ControlImageIcon, Share2 as ControlShare2, Copy as ControlCopy, Check as ControlCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -22,7 +23,7 @@ import {
   Square,
   FolderPlus,
   ExternalLink,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -425,13 +426,13 @@ const Projects = () => {
             aria-label="Trash"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
           >
-            <Trash2 className="h-4 w-4" />
+            <ControlTrash2 className="h-4 w-4" />
           </Link>
           <button onClick={() => setCreatingFolder(true)} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium hover:bg-neutral-50">
-            <Folder className="h-4 w-4" /> New folder
+            <ControlFolder className="h-4 w-4" /> New folder
           </button>
           <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
-            <Plus className="h-4 w-4" /> New Project
+            <ControlPlus className="h-4 w-4" /> New Project
           </button>
         </div>
       </div>
@@ -439,10 +440,10 @@ const Projects = () => {
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
           <button onClick={() => setView("card")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "card" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-            <LayoutGrid className="h-3.5 w-3.5" /> Card
+            <ControlLayoutGrid className="h-3.5 w-3.5" /> Card
           </button>
           <button onClick={() => setView("list")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "list" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-            <List className="h-3.5 w-3.5" /> List
+            <ControlList className="h-3.5 w-3.5" /> List
           </button>
         </div>
         <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
@@ -458,7 +459,7 @@ const Projects = () => {
             onClick={() => { setSelectMode((value) => !value); clearSelection(); }}
             className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition ${selectMode ? "border-brand bg-brand/10 text-brand" : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"}`}
           >
-            {selectMode ? <X className="h-3.5 w-3.5" /> : <CheckSquare className="h-3.5 w-3.5" />} {selectMode ? "Cancel" : "Select"}
+            {selectMode ? <ControlX className="h-3.5 w-3.5" /> : <ControlCheckSquare className="h-3.5 w-3.5" />} {selectMode ? "Cancel" : "Select"}
           </button>
         </div>
       </div>
@@ -470,7 +471,7 @@ const Projects = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button disabled={!selectedUploads.length} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-                <FolderPlus className="h-3.5 w-3.5" /> Move files to folder
+                <ControlFolderPlus className="h-3.5 w-3.5" /> Move files to folder
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white" align="start">
@@ -489,7 +490,7 @@ const Projects = () => {
             disabled={!selected.size}
             className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Delete
+            <ControlTrash2 className="h-3.5 w-3.5" /> Delete
           </button>
         </div>
       )}
@@ -505,7 +506,7 @@ const Projects = () => {
                 <Folder className="mx-auto h-8 w-8 text-neutral-300" />
                 <p className="mt-3 text-sm text-neutral-500">No projects yet. Create one to organize your brand and designs.</p>
                 <button onClick={() => setCreating(true)} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm text-brand-foreground hover:bg-brand-hover">
-                  <Plus className="h-3.5 w-3.5" /> New Project
+                  <ControlPlus className="h-3.5 w-3.5" /> New Project
                 </button>
               </div>
             ) : view === "card" ? (
@@ -516,7 +517,7 @@ const Projects = () => {
                     <div key={project.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${isSelected ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                       {selectMode && (
                         <button onClick={() => toggleSelected(selKey("project", project.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs">
-                          {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                          {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
                       {selectMode ? (
@@ -542,16 +543,16 @@ const Projects = () => {
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="absolute right-2 top-2 rounded-md p-1 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-100"><MoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
+                          <button className="absolute right-2 top-2 rounded-md p-1 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-100"><ControlMoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => { setRenameVal(project.name); setRenaming(project); }}><Pencil className="mr-2 h-4 w-4" /> Rename</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openCoverPicker(project)}><ImageIcon className="mr-2 h-4 w-4" /> Change cover</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setRenameVal(project.name); setRenaming(project); }}><ControlPencil className="mr-2 h-4 w-4" /> Rename</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openCoverPicker(project)}><ControlImageIcon className="mr-2 h-4 w-4" /> Change cover</DropdownMenuItem>
                           {project.cover_url && (
-                            <DropdownMenuItem onClick={async () => { setProjects((prev) => prev.map((item) => item.id === project.id ? { ...item, cover_url: null } : item)); await supabase.from("projects").update({ cover_url: null }).eq("id", project.id); }}><X className="mr-2 h-4 w-4" /> Reset cover</DropdownMenuItem>
+                            <DropdownMenuItem onClick={async () => { setProjects((prev) => prev.map((item) => item.id === project.id ? { ...item, cover_url: null } : item)); await supabase.from("projects").update({ cover_url: null }).eq("id", project.id); }}><ControlX className="mr-2 h-4 w-4" /> Reset cover</DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => enableShare(project)}><Share2 className="mr-2 h-4 w-4" /> {project.share_token ? "Manage public link" : "Share publicly"}</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => del(project.id)}><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => enableShare(project)}><ControlShare2 className="mr-2 h-4 w-4" /> {project.share_token ? "Manage public link" : "Share publicly"}</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => del(project.id)}><ControlTrash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -566,7 +567,7 @@ const Projects = () => {
                     <div key={project.id} className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3 last:border-b-0">
                       {selectMode && (
                         <button onClick={() => toggleSelected(selKey("project", project.id))}>
-                          {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                          {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
                       <Link to={counts[project.id] ? `/projects/${project.id}` : `/create?project=${project.id}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -592,7 +593,7 @@ const Projects = () => {
                 <Folder className="mx-auto h-8 w-8 text-neutral-300" />
                 <p className="mt-3 text-sm text-neutral-500">No folders yet. Create one to group related designs outside a full project.</p>
                 <button onClick={() => setCreatingFolder(true)} className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50">
-                  <Plus className="h-3.5 w-3.5" /> New folder
+                  <ControlPlus className="h-3.5 w-3.5" /> New folder
                 </button>
               </div>
             ) : view === "card" ? (
@@ -603,7 +604,7 @@ const Projects = () => {
                     <div key={folder.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${isSelected ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                       {selectMode && (
                         <button onClick={() => toggleSelected(selKey("folder", folder.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs">
-                          {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                          {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
                       {selectMode ? (
@@ -629,11 +630,11 @@ const Projects = () => {
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="absolute right-2 top-2 rounded-md p-1 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-100"><MoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
+                          <button className="absolute right-2 top-2 rounded-md p-1 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-100"><ControlMoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => { setRenameFolderVal(folder.name); setRenamingFolder(folder); }}><Pencil className="mr-2 h-4 w-4" /> Rename</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => delFolder(folder)}><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setRenameFolderVal(folder.name); setRenamingFolder(folder); }}><ControlPencil className="mr-2 h-4 w-4" /> Rename</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => delFolder(folder)}><ControlTrash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -648,7 +649,7 @@ const Projects = () => {
                     <div key={folder.id} className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3 last:border-b-0">
                       {selectMode && (
                         <button onClick={() => toggleSelected(selKey("folder", folder.id))}>
-                          {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                          {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
                       <Link to={`/designs?folder=${folder.id}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -682,7 +683,7 @@ const Projects = () => {
                     <div key={asset.id} className={`group relative overflow-hidden rounded-2xl border bg-white transition hover:shadow-md ${isSelected ? "border-brand ring-2 ring-brand/30" : "border-neutral-200"}`}>
                       {selectMode && (
                         <button onClick={() => toggleSelected(selKey("upload", asset.id))} className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs">
-                          {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                          {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                         </button>
                       )}
                       <Link to={`/editor?id=${asset.id}`} target="_blank" rel="noopener noreferrer" className="block">
@@ -697,10 +698,10 @@ const Projects = () => {
                       {!selectMode && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="absolute right-2 top-2 rounded-md bg-white/95 p-1 opacity-0 shadow-xs transition group-hover:opacity-100 hover:bg-neutral-100"><MoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
+                            <button className="absolute right-2 top-2 rounded-md bg-white/95 p-1 opacity-0 shadow-xs transition group-hover:opacity-100 hover:bg-neutral-100"><ControlMoreHorizontal className="h-4 w-4 text-neutral-600" /></button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem onClick={() => duplicateUpload(asset)}><Copy className="mr-2 h-4 w-4" /> Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => duplicateUpload(asset)}><ControlCopy className="mr-2 h-4 w-4" /> Duplicate</DropdownMenuItem>
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger className="cursor-pointer"><FolderPlus className="mr-2 h-4 w-4" /> Move to folder</DropdownMenuSubTrigger>
                               <DropdownMenuPortal>
@@ -711,12 +712,12 @@ const Projects = () => {
                                     </DropdownMenuItem>
                                   ))}
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => createFolderAndAssignUpload(asset)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900"><Plus className="mr-2 h-4 w-4" /> New folder…</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => createFolderAndAssignUpload(asset)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900"><ControlPlus className="mr-2 h-4 w-4" /> New folder…</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => assignUploadToFolder(asset, null)} className="cursor-pointer text-neutral-600 focus:bg-neutral-100 focus:text-neutral-900">Remove from folder</DropdownMenuItem>
                                 </DropdownMenuSubContent>
                               </DropdownMenuPortal>
                             </DropdownMenuSub>
-                            <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => delUpload(asset.id)}><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => delUpload(asset.id)}><ControlTrash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}
@@ -731,7 +732,7 @@ const Projects = () => {
                   return (
                     <div key={asset.id} className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3 last:border-b-0">
                       <button onClick={() => toggleSelected(selKey("upload", asset.id))}>
-                        {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}
+                        {isSelected ? <ControlCheckSquare className="h-4 w-4 text-brand" /> : <ControlSquare className="h-4 w-4 text-neutral-500" />}
                       </button>
                       <Link to={`/editor?id=${asset.id}`} target="_blank" rel="noopener noreferrer" className="flex min-w-0 flex-1 items-center gap-3">
                         <div className="h-14 w-20 overflow-hidden rounded-lg bg-neutral-100">
@@ -825,7 +826,7 @@ const Projects = () => {
             <Link2 className="h-4 w-4 shrink-0 text-neutral-500" />
             <span className="flex-1 truncate font-mono text-xs text-neutral-800">{shareUrl(sharing?.share_token)}</span>
             <button onClick={copyShare} className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs font-medium hover:bg-neutral-100">
-              {copied ? <><Check className="h-3 w-3" /> Copied</> : <><Copy className="h-3 w-3" /> Copy</>}
+              {copied ? <><ControlCheck className="h-3 w-3" /> Copied</> : <><ControlCopy className="h-3 w-3" /> Copy</>}
             </button>
           </div>
           <DialogFooter className="sm:justify-between">

@@ -1,3 +1,4 @@
+import { Share2 as ControlShareEmoji } from "lucide-react";
 import {
   createContext,
   useContext,
@@ -21,6 +22,7 @@ import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { MobilePrimaryNav } from "./PrimaryNav";
+import { Share2 as ShareEmoji } from "./EmojiIcons";
 import LanguageSelector from "./LanguageSelector";
 import ThemeToggle from "./ThemeToggle";
 import {
@@ -34,7 +36,6 @@ import {
   Plus,
   Palette,
   Settings,
-  Share2,
   PanelLeftClose,
   PanelLeftOpen,
   Send,
@@ -105,7 +106,7 @@ const AppShell = () => {
       label: "Discover",
       items: [
         { label: "Discover", to: "/discover", icon: Compass },
-        { label: "Rising", to: "/discover?view=rising", icon: BarChart3 },
+        { label: "Rankings", to: "/discover?view=rankings", icon: BarChart3 },
         { label: "Categories", to: "/discover?view=categories", icon: Layers3 },
         { label: "Saved Apps", to: "/saved-apps", icon: Bookmark },
       ],
@@ -165,7 +166,7 @@ const AppShell = () => {
               className="hidden items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 md:inline-flex"
               aria-label="Share Rocket"
             >
-              <Share2 className="h-4 w-4" />
+              <ControlShareEmoji className="h-4 w-4" />
               Share
             </button>
             <div data-tour="nav-notifications" className="inline-flex">

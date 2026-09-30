@@ -1,3 +1,4 @@
+import { StickyNote as ControlStickyNote, Grid3x3 as ControlGrid3x3, Keyboard as ControlKeyboard, Loader2 as ControlLoader2, Palette as ControlPalette, Minimize2 as ControlMinimize2, Maximize2 as ControlMaximize2, Wand2 as ControlWand2, Plus as ControlPlus, X as ControlX, Copy as ControlCopy, Trash2 as ControlTrash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -8,12 +9,12 @@ import {
   ArrowLeft, ChevronLeft, ChevronRight, Grid3x3, Maximize2, Minimize2, X,
   Download, StickyNote, Loader2, GripVertical, Palette, Copy, Trash2, Keyboard,
   Plus,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import { exportAsset } from "@/lib/exporters";
 import { toast } from "@/hooks/use-toast";
 import { track } from "@/lib/analytics";
 import { handleAiError } from "@/lib/aiErrors";
-import { Wand2 } from "lucide-react";
+import { Wand2 } from "@/components/EmojiIcons";
 
 const supabase = _sb as any;
 
@@ -289,21 +290,21 @@ export default function Presenter() {
               }`}
               title="Notes (N)"
             >
-              <StickyNote className="h-3.5 w-3.5" /> Notes
+              <ControlStickyNote className="h-3.5 w-3.5" /> Notes
             </button>
             <button
               onClick={() => setGridOpen((v) => !v)}
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
               title="Grid overview (G)"
             >
-              <Grid3x3 className="h-3.5 w-3.5" /> Grid
+              <ControlGrid3x3 className="h-3.5 w-3.5" /> Grid
             </button>
             <button
               onClick={() => setHelpOpen((v) => !v)}
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
               title="Keyboard shortcuts (?)"
             >
-              <Keyboard className="h-3.5 w-3.5" /> Shortcuts
+              <ControlKeyboard className="h-3.5 w-3.5" /> Shortcuts
             </button>
             <div className="relative">
               <button
@@ -311,7 +312,7 @@ export default function Presenter() {
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
                 title="Theme"
               >
-                {savingTheme ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Palette className="h-3.5 w-3.5" />} Theme
+                {savingTheme ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlPalette className="h-3.5 w-3.5" />} Theme
               </button>
               {themeOpen && (
                 <div className="absolute right-0 z-30 mt-1 w-56 rounded-xl border border-white/10 bg-neutral-900 p-2 shadow-xl">
@@ -340,7 +341,7 @@ export default function Presenter() {
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 disabled:opacity-40"
               title="Export PDF"
             >
-              {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} PDF
+              {exporting === "pdf" ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} PDF
             </button>
             <button
               onClick={() => doExport("pptx")}
@@ -348,7 +349,7 @@ export default function Presenter() {
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 disabled:opacity-40"
               title="Export PPTX"
             >
-              {exporting === "pptx" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} PPTX
+              {exporting === "pptx" ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} PPTX
             </button>
             <button
               onClick={() => {
@@ -365,7 +366,7 @@ export default function Presenter() {
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
               title="Fullscreen (F)"
             >
-              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              {isFullscreen ? <ControlMinimize2 className="h-3.5 w-3.5" /> : <ControlMaximize2 className="h-3.5 w-3.5" />}
               {isFullscreen ? "Exit" : "Present"}
             </button>
             <button
@@ -374,7 +375,7 @@ export default function Presenter() {
               className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/10 px-3 py-1.5 text-xs text-white/90 hover:bg-brand/20 disabled:opacity-40"
               title="Rewrite this slide with Rocket (1 credit)"
             >
-              {regeneratingSlide ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+              {regeneratingSlide ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlWand2 className="h-3.5 w-3.5" />}
               Regen slide
             </button>
           </div>
@@ -470,13 +471,13 @@ export default function Presenter() {
                 onClick={() => addSlide()}
                 className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/15 px-3 py-1.5 text-xs text-white hover:bg-brand/25"
               >
-                <Plus className="h-3.5 w-3.5" /> New slide
+                <ControlPlus className="h-3.5 w-3.5" /> New slide
               </button>
               <button
                 onClick={() => setGridOpen(false)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
               >
-                <X className="h-3.5 w-3.5" /> Close
+                <ControlX className="h-3.5 w-3.5" /> Close
               </button>
             </div>
           </div>
@@ -521,7 +522,7 @@ export default function Presenter() {
                     className="rounded-md bg-black/60 p-1 text-white/80 backdrop-blur-sm hover:bg-black/80"
                     title="Duplicate slide"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <ControlCopy className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
@@ -532,7 +533,7 @@ export default function Presenter() {
                     className="rounded-md bg-black/60 p-1 text-red-300 backdrop-blur-sm hover:bg-red-500/30"
                     title="Delete slide"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <ControlTrash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -553,7 +554,7 @@ export default function Presenter() {
             <div className="mb-4 flex items-center justify-between">
               <div className="text-base font-medium text-white">Keyboard shortcuts</div>
               <button onClick={() => setHelpOpen(false)} className="rounded-md p-1 text-white/60 hover:bg-white/10">
-                <X className="h-4 w-4" />
+                <ControlX className="h-4 w-4" />
               </button>
             </div>
             <ul className="space-y-2">

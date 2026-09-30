@@ -1,8 +1,9 @@
+import { Linkedin as ControlLinkedin, Check as ControlCheck, Link2 as ControlLink2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, ArrowRight, Check, Link2, Linkedin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Link2, Linkedin } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
@@ -255,7 +256,7 @@ const BlogPost = () => {
                 aria-label="Share on LinkedIn"
                 className="grid h-9 w-9 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:border-neutral-900 hover:text-neutral-900"
               >
-                <Linkedin className="h-4 w-4" />
+                <ControlLinkedin className="h-4 w-4" />
               </a>
               <button
                 type="button"
@@ -263,7 +264,7 @@ const BlogPost = () => {
                 aria-label="Copy link"
                 className="grid h-9 w-9 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:border-neutral-900 hover:text-neutral-900"
               >
-                {copied ? <Check className="h-4 w-4 text-brand" /> : <Link2 className="h-4 w-4" />}
+                {copied ? <ControlCheck className="h-4 w-4 text-brand" /> : <ControlLink2 className="h-4 w-4" />}
               </button>
             </div>
           </div>

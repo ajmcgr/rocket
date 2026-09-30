@@ -3,6 +3,7 @@ import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { loadAppMedia } from "@/lib/appMedia";
+import { availableCategories } from "@/lib/appCategories";
 
 type App = Tables<"public_apps">;
 
@@ -191,12 +192,14 @@ export default function EditAppProfile() {
           </label>
           <label className="block text-sm font-medium">
             Primary category
-            <input
-              maxLength={80}
+            <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              className="mt-1 w-full rounded-lg border p-3"
-            />
+              className="mt-1 w-full rounded-lg border bg-white p-3"
+            >
+              <option value="">Choose a category</option>
+              {availableCategories(category ? [category] : []).map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
           </label>
           <label className="block text-sm font-medium">
             Logo URL

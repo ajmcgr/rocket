@@ -1,7 +1,8 @@
+import { Loader2 as ControlLoader2, Save as ControlSave, X as ControlX, Check as ControlCheck, Pencil as ControlPencil, Trash2 as ControlTrash2, RotateCcw as ControlRotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { X, RotateCcw, Save, Trash2, Pencil, Check, Loader2, Clock } from "lucide-react";
+import { X, RotateCcw, Save, Trash2, Pencil, Check, Loader2, Clock } from "@/components/EmojiIcons";
 import { diffLines } from "@/lib/aiErrors";
 const supabase = _sb as any;
 
@@ -162,16 +163,16 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
               <input type="checkbox" checked={showDiff} onChange={e => setShowDiff(e.target.checked)} disabled={!compare} /> Diff view
             </label>
             <button onClick={saveCurrent} disabled={busy === "save"} className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 disabled:opacity-50">
-              {busy === "save" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save current as version
+              {busy === "save" ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ControlSave className="h-3.5 w-3.5" />} Save current as version
             </button>
-            <button onClick={onClose} className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100"><X className="h-4 w-4" /></button>
+            <button onClick={onClose} className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100"><ControlX className="h-4 w-4" /></button>
           </div>
         </header>
 
         <div className="grid flex-1 grid-cols-[280px_1fr] overflow-hidden">
           <aside className="overflow-y-auto border-r border-neutral-200 bg-neutral-50/50">
             {loading ? (
-              <div className="p-6 text-center text-xs text-neutral-500">Loading…</div>
+              <div role="status" aria-label="Loading versions" className="animate-pulse space-y-3 p-6"><div className="h-4 w-2/3 rounded bg-neutral-100" /><div className="h-4 w-full rounded bg-neutral-100" /><div className="h-4 w-3/4 rounded bg-neutral-100" /></div>
             ) : versions.length === 0 ? (
               <div className="p-6 text-center text-xs text-neutral-500">No saved versions yet.</div>
             ) : (
@@ -184,8 +185,8 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
                           {editingLabelId === v.id ? (
                             <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                               <input autoFocus value={labelDraft} onChange={e => setLabelDraft(e.target.value)} className="w-full rounded border border-neutral-200 px-1.5 py-0.5 text-xs outline-hidden focus:border-brand" />
-                              <button onClick={() => saveLabel(v)} className="text-emerald-600"><Check className="h-3.5 w-3.5" /></button>
-                              <button onClick={() => setEditingLabelId(null)}><X className="h-3.5 w-3.5 text-neutral-400" /></button>
+                              <button onClick={() => saveLabel(v)} className="text-emerald-600"><ControlCheck className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => setEditingLabelId(null)}><ControlX className="h-3.5 w-3.5 text-neutral-400" /></button>
                             </div>
                           ) : (
                             <div className="truncate text-xs font-medium text-neutral-900">{v.label || `Snapshot ${versions.length - i}`}</div>
@@ -193,8 +194,8 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
                           <div className="mt-0.5 text-[10px] text-neutral-500">{fmtDate(v.created_at)}</div>
                         </div>
                         <div className="flex shrink-0 gap-0.5 opacity-60">
-                          <button onClick={(e) => { e.stopPropagation(); setEditingLabelId(v.id); setLabelDraft(v.label || ""); }} title="Rename" className="rounded p-1 hover:bg-neutral-100"><Pencil className="h-3 w-3" /></button>
-                          <button onClick={(e) => { e.stopPropagation(); del(v); }} title="Delete" className="rounded p-1 text-red-600 hover:bg-red-50"><Trash2 className="h-3 w-3" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setEditingLabelId(v.id); setLabelDraft(v.label || ""); }} title="Rename" className="rounded p-1 hover:bg-neutral-100"><ControlPencil className="h-3 w-3" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); del(v); }} title="Delete" className="rounded p-1 text-red-600 hover:bg-red-50"><ControlTrash2 className="h-3 w-3" /></button>
                         </div>
                       </div>
                     </button>
@@ -215,7 +216,7 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
                     <div className="text-xs text-neutral-500">{fmtDate(selected.created_at)}</div>
                   </div>
                   <button onClick={() => restore(selected)} disabled={busy === `restore-${selected.id}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50">
-                    {busy === `restore-${selected.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Restore this version
+                    {busy === `restore-${selected.id}` ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlRotateCcw className="h-4 w-4" />} Restore this version
                   </button>
                 </div>
                 <div className={`flex-1 overflow-hidden grid gap-3 ${compare ? "grid-cols-2" : "grid-cols-1"}`}>

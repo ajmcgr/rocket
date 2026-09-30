@@ -1,9 +1,10 @@
+import { Palette as ControlPalette, Loader2 as ControlLoader2, Plus as ControlPlus, Check as ControlCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Palette, Plus, Loader2, Check } from "lucide-react";
+import { Palette, Plus, Loader2, Check } from "@/components/EmojiIcons";
 import { addAssetToBrand, createBrandFromAsset, listBrandKits, type BrandableAsset } from "@/lib/brandFromAsset";
 
 type Props = {
@@ -82,7 +83,7 @@ export default function BrandFromAssetMenu({ asset, className, onAssigned, label
           title="Use in brand kit"
           className={className || "inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"}
         >
-          <Palette className="h-3.5 w-3.5" />
+          <ControlPalette className="h-3.5 w-3.5" />
           {label ? <span className="ml-1.5">{label}</span> : null}
         </button>
       </DropdownMenuTrigger>
@@ -90,13 +91,13 @@ export default function BrandFromAssetMenu({ asset, className, onAssigned, label
         <DropdownMenuLabel className="text-xs text-neutral-500">Use in brand kit</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={busy} onClick={createNew} className="cursor-pointer">
-          {busy ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-2 h-3.5 w-3.5" />}
+          {busy ? <ControlLoader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <ControlPlus className="mr-2 h-3.5 w-3.5" />}
           Create new brand kit from this
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-[11px] normal-case tracking-wide text-neutral-400">Add to existing</DropdownMenuLabel>
         {loading ? (
-          <DropdownMenuItem disabled><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Loading…</DropdownMenuItem>
+          <div role="status" aria-label="Loading brand kits" className="animate-pulse space-y-2 px-2 py-3"><div className="h-4 w-3/4 rounded bg-neutral-100" /><div className="h-4 w-1/2 rounded bg-neutral-100" /></div>
         ) : brands.length === 0 ? (
           <div className="px-2 py-2 text-xs text-neutral-500">No brand kits yet.</div>
         ) : (
@@ -104,7 +105,7 @@ export default function BrandFromAssetMenu({ asset, className, onAssigned, label
             {brands.map((b) => (
               <DropdownMenuItem key={b.id} disabled={busy} onClick={(e) => attach(b.id, e as any)} className="flex items-center justify-between cursor-pointer">
                 <span className="truncate">{b.name || "Untitled brand"}</span>
-                {asset.project_id === b.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : null}
+                {asset.project_id === b.id ? <ControlCheck className="h-3.5 w-3.5 text-emerald-600" /> : null}
               </DropdownMenuItem>
             ))}
           </div>

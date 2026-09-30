@@ -1,3 +1,4 @@
+import { Plus as ControlPlus, Copy as ControlCopy, Trash2 as ControlTrash2, Sparkles as ControlSparkles, Loader2 as ControlLoader2, RefreshCw as ControlRefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { assetHref, isBrandAsset, isDesignAsset, normalizeAssetType } from "@/li
 import { getActiveWorkspaceIdSync } from "@/lib/workspace";
 import BrandCover from "@/components/brand/BrandCover";
 import { Logotype } from "@/components/Logotype";
-import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import { ArrowRight, Check, Copy, Download, Loader2, Plus, RefreshCw, Sparkles, Trash2 } from "@/components/EmojiIcons";
 
 const supabase = _sb as any;
 
@@ -435,7 +436,7 @@ export default function BrandHub() {
             }}
             className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-white shadow-xs hover:opacity-90"
           >
-            <Plus className="h-4 w-4" /> New Brand
+            <ControlPlus className="h-4 w-4" /> New Brand
           </Link>
         </div>
 
@@ -480,7 +481,7 @@ export default function BrandHub() {
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); void duplicateBrand(project); }}
                         className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
                       >
-                        <Copy className="h-3.5 w-3.5" />
+                        <ControlCopy className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
@@ -494,7 +495,7 @@ export default function BrandHub() {
                         }}
                         className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <ControlTrash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
@@ -529,7 +530,7 @@ export default function BrandHub() {
                 aria-label="Trash"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
               >
-                <Trash2 className="h-4 w-4" />
+                <ControlTrash2 className="h-4 w-4" />
               </Link>
               {selectedProject && (
                 <Link
@@ -540,7 +541,7 @@ export default function BrandHub() {
                 </Link>
               )}
               <Link to={createOnBrandHref} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
-                <Sparkles className="h-4 w-4" /> Create on-brand
+                <ControlSparkles className="h-4 w-4" /> Create on-brand
               </Link>
             </>
           )}
@@ -578,7 +579,7 @@ export default function BrandHub() {
               disabled={completingKit}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover disabled:opacity-60"
             >
-              {completingKit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {completingKit ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlSparkles className="h-4 w-4" />}
               {completingKit ? kitProgress || "Completing your brand kit…" : "Complete your brand kit"}
             </button>
           ) : (
@@ -691,7 +692,7 @@ export default function BrandHub() {
                 to={createWithStyleHref(suggestion.assetType, suggestion.prompt)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 transition hover:border-amber-400 hover:bg-amber-100"
               >
-                <RefreshCw className="h-3.5 w-3.5 text-amber-700" /> {suggestion.label}
+                <ControlRefreshCw className="h-3.5 w-3.5 text-amber-700" /> {suggestion.label}
               </Link>
             ))}
           </div>
@@ -717,7 +718,7 @@ export default function BrandHub() {
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-50">
                 {items.length === 0 ? (
                   <div className="flex h-full w-full items-center justify-center text-neutral-300">
-                    <Plus className="h-8 w-8" />
+                    <ControlPlus className="h-8 w-8" />
                   </div>
                 ) : items.length === 1 ? (
                   <BrandCover asset={items[0]} />
@@ -772,7 +773,7 @@ export default function BrandHub() {
           <h2 className="text-lg font-semibold">Start your brand</h2>
           <p className="mt-1 text-sm text-neutral-500">Create a logo, then choose the colours, type and voice that fit it.</p>
           <Link to="/logos" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover">
-            <Sparkles className="h-4 w-4" /> Create your first design
+            <ControlSparkles className="h-4 w-4" /> Create your first design
           </Link>
         </div>
       )}

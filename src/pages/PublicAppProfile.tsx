@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import SaveAppButton from "@/components/SaveAppButton";
+import AppPurchaseActions from "@/components/AppPurchaseActions";
 import {
   signalExplanation,
   signalLabel,
@@ -21,6 +22,7 @@ import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import AppMediaGallery from "@/components/AppMediaGallery";
 import AppReviews from "@/components/AppReviews";
 import { MarketplaceListRow } from "@/components/MarketplaceCards";
+import TrendArrow from "@/components/TrendArrow";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -261,7 +263,7 @@ export default function PublicAppProfile() {
           to="/discover"
           className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-sky-700"
         >
-          <span aria-hidden="true">⬅️</span>
+          <span aria-hidden="true">←</span>
           Back to Discover
         </Link>
         {loading && (
@@ -333,19 +335,20 @@ export default function PublicAppProfile() {
                   }
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
                 >
-                  Visit website <span aria-hidden="true">↗️</span>
+                  Visit website <span aria-hidden="true">→</span>
                 </a>
                 <SaveAppButton
                   appId={app.id}
                   saved={saved}
                   onChange={setSaved}
                 />
+                <AppPurchaseActions appId={app.id} showOpen={false} />
                 <button
                   type="button"
                   onClick={shareApp}
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-sky-300 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
                 >
-                  <span aria-hidden="true">📤</span> Share
+                  Share
                 </button>
                 {shareStatus && <span role="status" className="text-sm text-neutral-600">{shareStatus}</span>}
                 <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
@@ -366,8 +369,8 @@ export default function PublicAppProfile() {
                 <div className="mt-4 space-y-4">
                   {signals.map((signal) => (
                     <div key={signal.signal_type}>
-                      <p className="font-medium text-sky-700">
-                        {signalLabel(signal)}
+                      <p className="flex items-center gap-1 font-medium text-sky-700">
+                        {signal.signal_type === "rising" && <TrendArrow direction="up" />}{signalLabel(signal)}
                       </p>
                       <p className="mt-1 text-sm text-neutral-700">
                         {signalExplanation(signal)}
@@ -566,7 +569,7 @@ export default function PublicAppProfile() {
                         rel="noopener noreferrer nofollow"
                         className="inline-flex items-center gap-1 text-sky-700 hover:underline"
                       >
-                        View source <span aria-hidden="true">↗️</span>
+                        View source <span aria-hidden="true">→</span>
                       </a>
                     </li>
                   ))}

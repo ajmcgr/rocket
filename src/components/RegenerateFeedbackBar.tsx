@@ -1,5 +1,6 @@
+import { Loader2 as ControlLoader2, Wand2 as ControlWand2 } from "lucide-react";
 import { useState } from "react";
-import { Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Sparkles, Wand2 } from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { handleAiError } from "@/lib/aiErrors";
@@ -86,7 +87,7 @@ export default function RegenerateFeedbackBar({ asset, onDone, onNoCredits }: Pr
           disabled={busy || !feedback.trim()}
           className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Regenerate
+          {busy ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : <ControlWand2 className="h-4 w-4" />} Regenerate
         </button>
       </div>
     </div>

@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Sparkles, LayoutGrid, LineChart, Settings, CreditCard,
   LogOut, FileText, Palette, Bell, BookOpen,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 
 const supabase = _sb as any;
 

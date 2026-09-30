@@ -1,6 +1,7 @@
+import { X as ControlX, Image as ControlImageIcon, Check as ControlCheck, Send as ControlSend } from "lucide-react";
 import { useState, useRef, type FormEvent, type ChangeEvent } from "react";
 import { useNavigate } from "@/lib/router-compat";
-import { Sparkles as SparklesIcon, Send, Image as ImageIcon, Shuffle, Minus, Sticker, Palette, PenTool, Box, Smile, Check, X } from "lucide-react";
+import { Sparkles as SparklesIcon, Send, Image as ImageIcon, Shuffle, Minus, Sticker, Palette, PenTool, Box, Smile, Check, X } from "@/components/EmojiIcons";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ChatsPanelLayout from "@/components/ChatsPanelLayout";
 
@@ -98,7 +99,7 @@ const LogoDesigner = () => {
               <img src={refImage.dataUrl} alt="reference" className="h-8 w-8 rounded object-cover" />
               <span className="max-w-[120px] truncate text-xs text-neutral-600">{refImage.name}</span>
               <button type="button" onClick={() => { setRefImage(null); try { sessionStorage.removeItem("rocket:ref-image"); } catch {} }} className="rounded p-1 text-neutral-500 hover:bg-neutral-100" aria-label="Remove reference">
-                <X className="h-3.5 w-3.5" />
+                <ControlX className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
@@ -115,7 +116,7 @@ const LogoDesigner = () => {
             onClick={() => fileRef.current?.click()}
             className="flex h-12 w-12 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition hover:bg-neutral-50"
           >
-            <ImageIcon className="h-4 w-4" />
+            <ControlImageIcon className="h-4 w-4" />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -134,7 +135,7 @@ const LogoDesigner = () => {
                   <DropdownMenuItem key={s.id} onSelect={() => setStyle(s.id)} className="flex items-center gap-2 text-sm">
                     <Icon className="h-4 w-4" />
                     <span className="flex-1">{s.label}</span>
-                    {s.id === style && <Check className="h-3.5 w-3.5" />}
+                    {s.id === style && <ControlCheck className="h-3.5 w-3.5" />}
                   </DropdownMenuItem>
                 );
               })}
@@ -154,7 +155,7 @@ const LogoDesigner = () => {
             disabled={!prompt.trim()}
             className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#1266c9] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Send className="h-4 w-4" /> Generate
+            <ControlSend className="h-4 w-4" /> Generate
           </button>
         </div>
       </form>

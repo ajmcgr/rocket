@@ -1,3 +1,4 @@
+import { LayoutGrid as ControlLayoutGrid, List as ControlList, Star as ControlStar, Shuffle as ControlShuffle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { toast } from "@/hooks/use-toast";
@@ -9,7 +10,7 @@ import {
   ArrowUpDown,
   Star,
   Shuffle,
-} from "lucide-react";
+} from "@/components/EmojiIcons";
 import { AssetGridSkeleton } from "@/components/Skeletons";
 import AssetThumbnail from "@/components/AssetThumbnail";
 import { CollectionView, DesignSort, sortByOption } from "@/lib/designCollections";
@@ -276,10 +277,10 @@ const Templates = () => {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1">
             <button onClick={() => setView("card")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "card" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Card
+              <ControlLayoutGrid className="h-3.5 w-3.5" /> Card
             </button>
             <button onClick={() => setView("list")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs ${view === "list" ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>
-              <List className="h-3.5 w-3.5" /> List
+              <ControlList className="h-3.5 w-3.5" /> List
             </button>
           </div>
 
@@ -327,10 +328,10 @@ const Templates = () => {
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button type="button" onClick={(e) => { e.stopPropagation(); void saveTemplateToSaved(design, e); }} title="Save to Saved" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    <Star className={`h-3.5 w-3.5 ${design?.meta?.saved_at ? "fill-amber-400 text-amber-400" : ""}`} />
+                    <ControlStar className={`h-3.5 w-3.5 ${design?.meta?.saved_at ? "fill-amber-400 text-amber-400" : ""}`} />
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); void openTemplateInEditor(design, e); }} title="Remix" className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    <Shuffle className="h-3.5 w-3.5" />
+                    <ControlShuffle className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -355,7 +356,7 @@ const Templates = () => {
                 </div>
               </div>
               <button type="button" onClick={(e) => { e.stopPropagation(); void saveTemplateToSaved(design, e); }} title="Save to Saved" className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                <Star className={`h-3.5 w-3.5 ${design?.meta?.saved_at ? "fill-amber-400 text-amber-400" : ""}`} />
+                <ControlStar className={`h-3.5 w-3.5 ${design?.meta?.saved_at ? "fill-amber-400 text-amber-400" : ""}`} />
               </button>
               <div className="shrink-0 text-xs text-neutral-400">{new Date(design.created_at).toLocaleDateString()}</div>
             </div>

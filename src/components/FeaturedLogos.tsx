@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "@/components/EmojiIcons";
 import { Button } from "@/components/ui/button";
 import designduel from "@/assets/featured/designduel.png.asset.json";
 import brandbear from "@/assets/featured/brandbear.png.asset.json";

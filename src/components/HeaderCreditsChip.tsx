@@ -1,6 +1,7 @@
+import { Zap as ControlZap } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { useEffect, useRef, useState } from "react";
-import { Zap } from "lucide-react";
+import { Zap } from "@/components/EmojiIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -67,7 +68,7 @@ export default function HeaderCreditsChip() {
           title={`${credits} credits remaining — click to top up`}
           className="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 sm:inline-flex"
         >
-          <Zap className="h-3 w-3 text-amber-500" />
+          <ControlZap className="h-3 w-3 text-amber-500" />
           {credits.toLocaleString()}
         </button>
       ) : (
@@ -76,7 +77,7 @@ export default function HeaderCreditsChip() {
           title={`${credits} credits remaining`}
           className="hidden items-center gap-1 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 sm:inline-flex"
         >
-          <Zap className="h-3 w-3 text-brand" />
+          <ControlZap className="h-3 w-3 text-brand" />
           {credits.toLocaleString()}
         </Link>
       )}

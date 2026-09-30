@@ -1,5 +1,6 @@
+import { MessageSquarePlus as ControlMessageSquarePlus, PinOff as ControlPinOff, Pin as ControlPin, Loader2 as ControlLoader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Loader2, MessageSquarePlus, Pin, PinOff } from "lucide-react";
+import { ArrowUp, Loader2, MessageSquarePlus, Pin, PinOff } from "@/components/EmojiIcons";
 
 export type StudioTurn = {
   id: string;
@@ -125,7 +126,7 @@ export default function StudioLeftPanel({
           }}
           className="inline-flex items-center gap-1 rounded-full border border-neutral-200 px-2 py-1 text-[10px] text-neutral-600 hover:bg-neutral-50"
         >
-          <MessageSquarePlus className="h-3 w-3" /> New
+          <ControlMessageSquarePlus className="h-3 w-3" /> New
         </button>
       </div>
       {pinned.length > 0 && (
@@ -166,7 +167,7 @@ export default function StudioLeftPanel({
                   className="absolute -right-2 -top-2 hidden rounded-full border border-neutral-200 bg-white p-1 text-neutral-500 shadow-xs group-hover:block"
                   title={pins.includes(t.id) ? "Unpin" : "Pin"}
                 >
-                  {pins.includes(t.id) ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                  {pins.includes(t.id) ? <ControlPinOff className="h-3 w-3" /> : <ControlPin className="h-3 w-3" />}
                 </button>
               </div>
             </div>
@@ -195,7 +196,7 @@ export default function StudioLeftPanel({
             className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand text-brand-foreground disabled:opacity-40"
             aria-label="Send"
           >
-            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowUp className="h-3.5 w-3.5" />}
+            {busy ? <ControlLoader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowUp className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
+import { Copy as ControlCopy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "@/lib/router-compat";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy } from "@/components/EmojiIcons";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -262,7 +263,7 @@ export default function PaletteExplorer() {
                   <span className={`text-xs font-medium tracking-wide ${isLight ? "text-neutral-800" : "text-white/90"}`}>
                     {hex}
                   </span>
-                  <Copy className={`h-4 w-4 opacity-0 transition group-hover:opacity-100 ${isLight ? "text-neutral-800" : "text-white"}`} />
+                  <ControlCopy className={`h-4 w-4 opacity-0 transition group-hover:opacity-100 ${isLight ? "text-neutral-800" : "text-white"}`} />
                 </div>
               </button>
             );

@@ -1,10 +1,11 @@
+import { Minimize2 as ControlMinimize2, Maximize2 as ControlMaximize2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
 import BrandContextStrip from "@/components/BrandContextStrip";
-import { Maximize2, Minimize2, Lock } from "lucide-react";
+import { Maximize2, Minimize2, Lock } from "@/components/EmojiIcons";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const supabase = _sb as any;
 
@@ -153,7 +154,7 @@ const SharedAsset = () => {
               onClick={togglePresent}
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"
             >
-              {isFs ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {isFs ? <ControlMinimize2 className="h-4 w-4" /> : <ControlMaximize2 className="h-4 w-4" />}
               {isFs ? "Exit present" : "Present fullscreen"}
             </button>
           </div>

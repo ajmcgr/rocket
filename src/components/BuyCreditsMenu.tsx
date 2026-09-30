@@ -1,6 +1,7 @@
+import { Coins as ControlCoins, Loader2 as ControlLoader2, Zap as ControlZap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { Coins, Loader2, Zap } from "lucide-react";
+import { Coins, Loader2, Zap } from "@/components/EmojiIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -90,7 +91,7 @@ export default function BuyCreditsMenu({ collapsed }: Props) {
           aria-label="Buy credits"
           title="Buy credits"
         >
-          <Coins className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
+          <ControlCoins className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
           {!collapsed && <span className="truncate">Buy credits</span>}
         </button>
       </DropdownMenuTrigger>
@@ -121,9 +122,9 @@ export default function BuyCreditsMenu({ collapsed }: Props) {
             >
               <span className="flex items-center gap-2">
                 {loading === pack.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+                  <ControlLoader2 className="h-4 w-4 animate-spin text-neutral-500" />
                 ) : (
-                  <Zap className="h-4 w-4 text-neutral-500" />
+                  <ControlZap className="h-4 w-4 text-neutral-500" />
                 )}
                 {pack.credits.toLocaleString()} credits
               </span>

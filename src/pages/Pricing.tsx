@@ -1,5 +1,6 @@
+import { Loader2 as ControlLoader2 } from "lucide-react";
 import { Link, useNavigate } from "@/lib/router-compat";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "@/components/EmojiIcons";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -185,7 +186,7 @@ const Pricing = () => {
                 variant="outline"
                 className="mt-8 w-full"
               >
-                {loading === productId("starter") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start 7-day free trial"}
+                {loading === productId("starter") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Start 7-day free trial"}
               </Button>
             </div>
 
@@ -214,7 +215,7 @@ const Pricing = () => {
                 variant="outline"
                 className="mt-8 w-full"
               >
-                {loading === productId("growth") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
+                {loading === productId("growth") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
               </Button>
             </div>
 
@@ -240,7 +241,7 @@ const Pricing = () => {
                 variant="outline"
                 className="mt-8 w-full"
               >
-                {loading === productId("business") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Business"}
+                {loading === productId("business") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Business"}
               </Button>
             </div>
           </div>
@@ -306,7 +307,7 @@ const Pricing = () => {
                   <span className="text-4xl font-semibold tracking-tight">{p.price}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-sm font-medium text-neutral-900">
-                  {loading === p.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {loading === p.id && <ControlLoader2 className="h-3.5 w-3.5 animate-spin" />}
                   {p.credits} credits
                 </div>
               </button>

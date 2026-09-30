@@ -1,5 +1,5 @@
 import { Link } from "@/lib/router-compat";
-import { ExternalLink, Info } from "lucide-react";
+import { ExternalLink, Info } from "@/components/EmojiIcons";
 import { categoryOf, CATEGORY_LABEL } from "@/lib/assetFamily";
 import { assetHref, assetOpenLabel, isBrandAsset } from "@/lib/assetExperience";
 

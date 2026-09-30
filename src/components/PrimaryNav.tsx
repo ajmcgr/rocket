@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "@/lib/router-compat";
+import { Bookmark, Compass, Layers3, Plus, Search, User } from "lucide-react";
 import { destinations } from "./primaryDestinations";
 
 export function PrimaryNav({ className = "" }: { className?: string }) {
@@ -10,7 +11,7 @@ export function PrimaryNav({ className = "" }: { className?: string }) {
           key={to}
           to={to}
           aria-current={matches(pathname) ? "page" : undefined}
-          className={`rounded-lg px-3 py-2 text-sm font-medium transition ${matches(pathname) ? "bg-[#167ac6] text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
+          className={`rounded-lg px-3 py-2 text-sm font-medium transition ${matches(pathname) ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
         >
           {label}
         </NavLink>
@@ -22,27 +23,27 @@ export function PrimaryNav({ className = "" }: { className?: string }) {
 export function MobilePrimaryNav() {
   const { pathname } = useLocation();
   const mobile = [
-    { label: "Discover", to: "/discover", emoji: "🧭" },
-    { label: "Search", to: "/discover#search-apps", emoji: "🔎" },
-    { label: "Saved", to: "/saved-apps", emoji: "🔖" },
-    { label: "Submit", to: "/submit", emoji: "🚀" },
-    { label: "Your Apps", to: "/your-apps", emoji: "📦" },
-    { label: "Account", to: "/settings", emoji: "👤" },
+    { label: "Discover", to: "/discover", Icon: Compass },
+    { label: "Search", to: "/discover#search-apps", Icon: Search },
+    { label: "Saved", to: "/saved-apps", Icon: Bookmark },
+    { label: "Submit", to: "/submit", Icon: Plus },
+    { label: "Your Apps", to: "/your-apps", Icon: Layers3 },
+    { label: "Account", to: "/settings", Icon: User },
   ];
   return (
     <nav
       aria-label="Mobile primary"
       className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.5)] backdrop-blur-sm lg:hidden"
     >
-      {mobile.map(({ label, to, emoji }) => (
+      {mobile.map(({ label, to, Icon }) => (
         <NavLink
           key={to}
           to={to}
           aria-label={label}
           aria-current={pathname === to ? "page" : undefined}
-          className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium ${pathname === to ? "text-[#075985]" : "text-neutral-600"}`}
+          className={`my-1 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium ${pathname === to ? "bg-neutral-200 text-neutral-900" : "text-neutral-600"}`}
         >
-          <span className="text-xl leading-none" aria-hidden="true">{emoji}</span>
+          <Icon className="h-5 w-5" aria-hidden="true" />
           <span className="whitespace-nowrap">{label}</span>
         </NavLink>
       ))}
@@ -53,27 +54,27 @@ export function MobilePrimaryNav() {
 export function PublicMobileNav() {
   const { pathname } = useLocation();
   const items = [
-    { label: "Discover", to: "/discover", emoji: "🧭" },
-    { label: "Search", to: "/discover#search-apps", emoji: "🔎" },
-    { label: "Saved", to: "/saved-apps", emoji: "🔖" },
-    { label: "Submit", to: "/submit", emoji: "🚀" },
-    { label: "Your Apps", to: "/your-apps", emoji: "📦" },
-    { label: "Account", to: "/login", emoji: "👤" },
+    { label: "Discover", to: "/discover", Icon: Compass },
+    { label: "Search", to: "/discover#search-apps", Icon: Search },
+    { label: "Saved", to: "/saved-apps", Icon: Bookmark },
+    { label: "Submit", to: "/submit", Icon: Plus },
+    { label: "Your Apps", to: "/your-apps", Icon: Layers3 },
+    { label: "Account", to: "/login", Icon: User },
   ];
   return (
     <nav
       aria-label="Mobile primary"
       className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.5)] backdrop-blur-sm lg:hidden"
     >
-      {items.map(({ label, to, emoji }) => (
+      {items.map(({ label, to, Icon }) => (
         <NavLink
           key={to}
           to={to}
           aria-label={label}
           aria-current={pathname === to ? "page" : undefined}
-          className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium ${pathname === to ? "text-[#075985]" : "text-neutral-600"}`}
+          className={`my-1 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium ${pathname === to ? "bg-neutral-200 text-neutral-900" : "text-neutral-600"}`}
         >
-          <span className="text-xl leading-none" aria-hidden="true">{emoji}</span>
+          <Icon className="h-5 w-5" aria-hidden="true" />
           <span>{label}</span>
         </NavLink>
       ))}
