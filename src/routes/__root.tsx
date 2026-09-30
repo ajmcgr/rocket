@@ -21,7 +21,6 @@ import appCss from "../styles.css?url";
 // throw unhandled rejections unrelated to the app; swallow those before hydration.
 const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&r.stack)||"")+" "+((r&&r.message)||String(r||""));return /chrome-extension:\\/\\/|moz-extension:\\/\\/|safari-web-extension:\\/\\/|MetaMask/i.test(t)};window.addEventListener("unhandledrejection",function(e){if(isExt(e.reason))e.preventDefault()});window.addEventListener("error",function(e){if(isExt(e.error)||/-extension:\\/\\//.test(e.filename||""))e.preventDefault()});})();`;
 
-const googleTranslateInit = `function googleTranslateElementInit(){new google.translate.TranslateElement({pageLanguage:'en',includedLanguages:'en,de,fr,es,it,pt,nl,pl,tr,ja',autoDisplay:false},'google_translate_element');}`;
 
 const SITE_TITLE = "Rocket — One account for every app";
 const SITE_DESCRIPTION =
