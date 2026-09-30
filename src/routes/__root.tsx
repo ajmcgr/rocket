@@ -72,6 +72,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children:
           'window.$crisp=[];window.CRISP_WEBSITE_ID="3630204c-84d4-4805-a7aa-074ba31a7c12";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
       },
+      { children: googleTranslateInit },
+      { src: "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit", async: true },
     ],
   }),
   shellComponent: RootShell,
@@ -89,8 +91,6 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <div id="google_translate_element" style={{ display: "none" }} />
-        <script dangerouslySetInnerHTML={{ __html: googleTranslateInit }} />
-        <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" />
         <Scripts />
       </body>
     </html>
