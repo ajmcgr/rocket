@@ -1,14 +1,9 @@
-name: Publish daily Rocket blog post
+name: Publish weekly Rocket blog post
 
 on:
-  # Workflow-only changes run one verification publish; article commits never do.
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/publish-daily-blog.yml"
   schedule:
-    # 09:15 Asia/Bangkok, after the top-of-hour Actions load spike.
-    - cron: "15 2 * * *"
+    # Monday 09:15 Asia/Bangkok, after the top-of-hour Actions load spike.
+    - cron: "15 9 * * 1"
       timezone: "Asia/Bangkok"
   workflow_dispatch:
 
@@ -30,6 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: oven-sh/setup-bun@v2
       - name: Write the next post
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -37,7 +33,7 @@ jobs:
         run: node scripts/publish-daily-blog.mjs
       - name: Verify the production build
         run: |
-          npm ci --legacy-peer-deps
+          bun ci
           npm run build
       - name: Commit and publish the post
         run: |
@@ -48,5 +44,5 @@ jobs:
           git config user.name "rocket-blog-bot"
           git config user.email "rocket-blog-bot@users.noreply.github.com"
           git add src/content/articles.ts public/blog-covers
-          git commit -m "Publish daily Rocket blog post"
+          git commit -m "Publish weekly Rocket blog post"
           git push origin main

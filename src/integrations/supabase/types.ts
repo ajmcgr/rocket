@@ -160,6 +160,16 @@ export type Database = {
           pricing_display: string | null;
           public_links: string[];
           updated_at: string;
+          developer_handle: string | null;
+        };
+        Relationships: [];
+      };
+      public_app_card_metadata: {
+        Row: {
+          app_id: string;
+          save_count: number;
+          rating_count: number;
+          developer_handle: string | null;
         };
         Relationships: [];
       };
@@ -212,8 +222,8 @@ export type Database = {
           app_id: string;
           categories: string[];
           launched_at: string | null;
-          launch_net_votes: number;
-          votes_observed_at: string | null;
+          rocket_view_count: number;
+          last_viewed_at: string | null;
         };
         Relationships: [];
       };

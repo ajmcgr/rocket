@@ -6,7 +6,7 @@ export default function RoutePendingSkeleton() {
       role="status"
       aria-label="Loading page"
       aria-busy="true"
-      className="rocket-skeleton-surface min-h-screen motion-safe:animate-pulse"
+      className="rocket-skeleton-surface min-h-screen"
     >
       <aside aria-hidden="true" className="fixed inset-y-0 left-0 hidden w-60 border-r border-neutral-200 p-5 lg:block">
         <div className={`h-9 w-32 ${line}`} />

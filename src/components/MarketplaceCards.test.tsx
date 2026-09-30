@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "@/test/MemoryRouter";
 import type { Tables } from "@/integrations/supabase/types";
-import { RankedAppRow, RisingAppCard, StandardAppCard } from "./MarketplaceCards";
+import { AppCardByline, AppCardRating, RankedAppRow, RisingAppCard, StandardAppCard } from "./MarketplaceCards";
 import TrendArrow from "./TrendArrow";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -18,6 +18,17 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
+  it("shows only authoritative card counts and an owner-provided handle", () => {
+    expect(renderToStaticMarkup(<AppCardByline />)).toBe("");
+    const markup = renderToStaticMarkup(<AppCardByline metadata={{ app_id: app.id, save_count: 27, rating_count: 3, developer_handle: "maker" }} />);
+    expect(markup).toContain("@maker");
+    expect(markup).toContain("27 saves");
+    expect(markup).not.toContain("3 ratings");
+    const rating = renderToStaticMarkup(<AppCardRating metadata={{ app_id: app.id, save_count: 27, rating_count: 3, average_rating: 4.3, developer_handle: "maker" }} />);
+    expect(rating).toContain("4.3 out of 5 stars from 3 ratings");
+    expect(rating).toContain("★");
+    expect(renderToStaticMarkup(<AppCardRating />)).toBe("");
+  });
   it("uses colored text arrows only for supplied trend directions", () => {
     expect(renderToStaticMarkup(<TrendArrow direction="up" />)).toContain("text-green-700");
     expect(renderToStaticMarkup(<TrendArrow direction="up" />)).toContain("↑");
@@ -53,6 +64,10 @@ describe("marketplace content treatments", () => {
       expect(container.textContent).toContain("1Sample app");
       expect(container.textContent).toContain("Productivity · Launch activity");
       expect(container.querySelectorAll('a[href="/apps/app-1"]')).toHaveLength(6);
+      const viewLinks = Array.from(container.querySelectorAll('a[href="/apps/app-1"]')).filter((link) => link.textContent === "View");
+      expect(viewLinks).toHaveLength(3);
+      expect(viewLinks[0].className).toContain("bg-transparent");
+      expect(viewLinks[0].className).toContain("border-[#167ac6]");
       expect(container.querySelectorAll('button[disabled][aria-label^="Buy unavailable"]')).toHaveLength(3);
     } finally {
       await act(async () => root.unmount());

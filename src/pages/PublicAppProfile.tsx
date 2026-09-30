@@ -20,8 +20,10 @@ import { trustLabels } from "@/lib/appTrust";
 import { track } from "@/lib/analytics";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import AppMediaGallery from "@/components/AppMediaGallery";
+import { AppProfileContentSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import AppReviews from "@/components/AppReviews";
 import { MarketplaceListRow } from "@/components/MarketplaceCards";
+import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
 import TrendArrow from "@/components/TrendArrow";
 
 type App = Tables<"public_apps">;
@@ -76,6 +78,7 @@ export default function PublicAppProfile() {
   const [trust, setTrust] = useState<AppTrust | null>(null);
   const [media, setMedia] = useState<PublicAppMedia[]>([]);
   const [similar, setSimilar] = useState<App[]>([]);
+  const [similarMetadata, setSimilarMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
   const [reviewSummary, setReviewSummary] = useState<{
     rating_count: number;
     average_rating: number;
@@ -176,8 +179,15 @@ export default function PublicAppProfile() {
             !appResult.data,
           ),
         );
-        if (appResult.data && !appResult.error)
+        if (appResult.data && !appResult.error) {
           track("app_profile_viewed", { app_id: appResult.data.id });
+          // First-party rankings count real production profile visits only.
+          if (["https://tryrocket.ai", "https://www.tryrocket.ai"].includes(window.location.origin)) {
+            void supabase.functions.invoke("rocket-app-view", {
+              body: { app_id: appResult.data.id },
+            }).catch(() => undefined);
+          }
+        }
         setLoading(false);
       },
     );
@@ -223,6 +233,14 @@ export default function PublicAppProfile() {
   }, [app]);
 
   useEffect(() => {
+    let canceled = false;
+    loadAppCardMetadata(similar.map((item) => item.id)).then((result) => {
+      if (!canceled) setSimilarMetadata(result);
+    });
+    return () => { canceled = true; };
+  }, [similar]);
+
+  useEffect(() => {
     if (!id || !user) {
       setSaved(false);
       return;
@@ -266,21 +284,7 @@ export default function PublicAppProfile() {
           <span aria-hidden="true">←</span>
           Back to Discover
         </Link>
-        {loading && (
-          <div
-            className="rocket-skeleton-surface mt-8 animate-pulse rounded-2xl p-4 sm:p-6"
-            aria-label="Loading app profile"
-          >
-            <div className="flex gap-5">
-              <div className="h-16 w-16 rounded-2xl bg-neutral-100" />
-              <div className="flex-1 space-y-3">
-                <div className="h-8 w-1/2 rounded bg-neutral-100" />
-                <div className="h-4 w-2/3 rounded bg-neutral-100" />
-              </div>
-            </div>
-            <div className="mt-8 h-12 w-40 rounded-xl bg-neutral-100" />
-          </div>
-        )}
+        {loading && <div role="status" aria-label="Loading app profile" aria-busy="true"><AppProfileContentSkeleton /></div>}
         {error && !loading && (
           <div
             role="alert"
@@ -342,7 +346,7 @@ export default function PublicAppProfile() {
                   saved={saved}
                   onChange={setSaved}
                 />
-                <AppPurchaseActions appId={app.id} showOpen={false} />
+                <AppPurchaseActions appId={app.id} showView={false} />
                 <button
                   type="button"
                   onClick={shareApp}
@@ -586,7 +590,7 @@ export default function PublicAppProfile() {
                 </p>
                 <div className="grid gap-x-8 sm:grid-cols-2">
                   {similar.map((item) => (
-                    <MarketplaceListRow key={item.id} app={item} />
+                    <MarketplaceListRow key={item.id} app={item} metadata={similarMetadata.get(item.id)} />
                   ))}
                 </div>
               </section>

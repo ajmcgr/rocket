@@ -1,7 +1,7 @@
 -- Rankings use observed public Launch votes, not Rocket sales, traffic or
 -- editorial endorsement. Only discoverable apps with a numeric vote snapshot
 -- qualify. The client shows exactly the first 20 rows in deterministic order.
-create view public.public_app_rankings with (security_invoker = true) as
+create or replace view public.public_app_rankings with (security_invoker = true) as
 with launch_evidence as (
   select distinct on (s.app_id) s.app_id, s.public_evidence
   from app_graph.app_sources s
@@ -19,7 +19,7 @@ join launch_evidence e on e.app_id = a.id;
 -- Only offer category leaderboards capable of showing a complete top 20.
 -- New categories still appear in the ordinary Discover category catalogue
 -- as soon as apps are submitted under them.
-create view public.public_ranking_categories with (security_invoker = true) as
+create or replace view public.public_ranking_categories with (security_invoker = true) as
 select category, count(*)::integer as app_count
 from public.public_app_rankings r
 cross join lateral pg_catalog.unnest(r.categories) category

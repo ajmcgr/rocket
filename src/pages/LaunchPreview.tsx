@@ -150,17 +150,15 @@ export default function LaunchPreview() {
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] pb-20 text-neutral-900">
       <SiteHeader />
-      <main className="mx-auto max-w-4xl px-5 pb-20 pt-12 sm:px-8 sm:pt-20">
-        <p className="text-sm font-semibold text-sky-800">
-          For vibe coders and developers
-        </p>
-        <h1 className="mt-3 font-display text-4xl leading-tight sm:text-6xl">
-          Submit your app.
-        </h1>
-        <p className="mt-4 max-w-2xl text-base text-neutral-600 sm:text-lg">
-          Show us where your app lives. We’ll find its public details first—no
-          account required to preview.
-        </p>
+      <main className="mx-auto max-w-4xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14">
+        <header>
+          <p className="text-sm font-semibold text-sky-800">For vibe coders and developers</p>
+          <h1 className="mt-3 font-display text-4xl sm:text-5xl">Submit your app.</h1>
+          <p className="mt-2 max-w-2xl text-neutral-600">
+            Show us where your app lives. We’ll find its public details first—no
+            account required to preview.
+          </p>
+        </header>
         <form
           onSubmit={submit}
           className="mt-9 rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_20px_60px_-45px_rgba(15,23,42,.5)] sm:p-8"

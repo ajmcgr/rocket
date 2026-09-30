@@ -71,6 +71,27 @@ const FAQS = [
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
 ];
 
+const GROW_PRODUCTS = [
+  {
+    name: "Launch",
+    description: "Launch your app and reach a community of vibe coders and early adopters.",
+    plans: ["Free listing · $0", "Pro · $39", "Grow · $199", "Pass · $99/year"],
+    href: "https://trylaunch.ai/pricing",
+  },
+  {
+    name: "Post",
+    description: "Plan and publish across social channels from one place.",
+    plans: ["Free · $0", "Pro · $19/month"],
+    href: "https://trypost.ai/pricing",
+  },
+  {
+    name: "Media",
+    description: "Find journalists and creators, build lists, and manage outreach.",
+    plans: ["Free AI credits", "Starter · $29/month", "Growth · $99/month", "Enterprise · custom"],
+    href: "https://trymedia.ai/pricing",
+  },
+] as const;
+
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -79,8 +100,8 @@ const Pricing = () => {
   const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
 
   useDocumentMeta({
-    title: "Rocket pricing — Buy with Rocket, Rocket ID and branding",
-    description: "See Rocket's 10% Buy with Rocket pilot fee, Rocket ID pricing, and optional branding plans.",
+    title: "Rocket pricing — apps, Create, Monetize and Grow",
+    description: "See free app listings, Rocket Create plans, Rocket ID and Buy with Rocket pricing, plus Grow products.",
     canonical: "https://tryrocket.ai/pricing",
   });
 
@@ -138,33 +159,36 @@ const Pricing = () => {
     <div className="min-h-screen bg-white text-neutral-900">
       <SiteHeader />
 
-      {/* Developer platform pricing */}
-      <section className="border-b border-neutral-200/60">
-        <div id="buy-with-rocket" className="mx-auto max-w-6xl scroll-mt-24 px-6 pt-24 pb-16">
+      <div className="mx-auto max-w-6xl px-6 pt-20 pb-10 sm:pt-24">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Rocket pricing</h1>
-          <p className="mt-5 max-w-2xl text-lg text-neutral-600">Rocket ID is free. When an eligible connected app sells through Buy with Rocket, Rocket takes a share of that purchase.</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-              <h2 className="text-2xl font-semibold tracking-tight">Buy with Rocket</h2>
-              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">10%</span><span className="text-neutral-600">Rocket platform fee</span></div>
-              <p className="mt-4 text-neutral-600">For payments processed through Buy with Rocket on an eligible, connected app. On a $100 purchase, Rocket's share is $10 and the app's share is $90 before Stripe processing fees and other applicable charges.</p>
-              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Test-mode pilot only. Production purchases and general developer onboarding are not available yet.</p>
+          <p className="mt-5 max-w-2xl text-lg text-neutral-600">Submit and manage your apps for free. Create, monetize, and grow with the products that fit your work.</p>
+      </div>
+
+      <section className="border-b border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 pb-20 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your apps</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Your Rocket listing and app workspace are free.</p>
+          <div className="mt-10 grid gap-5 text-left md:grid-cols-2">
+            <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+              <h3 className="text-2xl font-semibold tracking-tight">Your Apps</h3>
+              <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
+              <p className="mt-4 flex-1 text-neutral-600">See apps you own or claim, improve public profiles, and manage available trust connections.</p>
+              <Link to="/your-apps" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Open Your Apps →</Link>
             </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-              <h2 className="text-2xl font-semibold tracking-tight">Rocket ID</h2>
-              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">Free</span><span className="text-neutral-600">for identity</span></div>
-              <p className="mt-4 text-neutral-600">Rocket ID lets a connected app offer Rocket sign-in. There is no Rocket subscription or revenue-share fee for using identity alone. The 10% fee applies only to purchases processed through Buy with Rocket.</p>
-              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Integration is in a developer pilot. It is not available across every app listed on Rocket.</p>
+            <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+              <h3 className="text-2xl font-semibold tracking-tight">Submit your app</h3>
+              <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
+              <p className="mt-4 flex-1 text-neutral-600">Add an app to Rocket for discovery. Claiming and verification follow the existing ownership checks.</p>
+              <Link to="/submit" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Submit your app →</Link>
             </div>
           </div>
-          <p className="mt-5 text-sm text-neutral-500">Branding credits and plans below are separate from the Buy with Rocket fee.</p>
         </div>
       </section>
 
-      {/* Branding plans */}
+      {/* Create plans */}
       <section className="border-b border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 py-16 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Branding plans</h2>
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Create plans</h2>
           <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Free gives you 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG &amp; SVG downloads.</p>
           <div className="mt-8 inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 text-sm">
             <button
@@ -341,6 +365,54 @@ const Pricing = () => {
         </div>
       </section>
 
+      <section id="buy-with-rocket" className="scroll-mt-24 border-t border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="text-center">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Monetize plans</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Rocket ID is free. Buy with Rocket takes a share only when an eligible connected app sells through Rocket.</p>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+              <h3 className="text-2xl font-semibold tracking-tight">Buy with Rocket</h3>
+              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">10%</span><span className="text-neutral-600">Rocket platform fee</span></div>
+              <p className="mt-4 text-neutral-600">For payments processed through Buy with Rocket on an eligible, connected app. On a $100 purchase, Rocket's share is $10 and the app's share is $90 before Stripe processing fees and other applicable charges.</p>
+              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Test-mode pilot only. Production purchases and general developer onboarding are not available yet.</p>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+              <h3 className="text-2xl font-semibold tracking-tight">Rocket ID</h3>
+              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">Free</span><span className="text-neutral-600">for identity</span></div>
+              <p className="mt-4 text-neutral-600">Rocket ID lets a connected app offer Rocket sign-in. There is no Rocket subscription or revenue-share fee for using identity alone. The 10% fee applies only to purchases processed through Buy with Rocket.</p>
+              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Integration is in a developer pilot. It is not available across every app listed on Rocket.</p>
+            </div>
+          </div>
+          <p className="mt-5 text-sm text-neutral-500">Create credits and subscriptions are separate from the Buy with Rocket fee.</p>
+        </div>
+      </section>
+
+      <section className="border-t border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="text-center">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Grow pricing</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Launch, Post, and Media are separate products. Choose and pay on each product's own site.</p>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {GROW_PRODUCTS.map((product) => (
+              <div key={product.name} className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+                <h3 className="text-2xl font-semibold tracking-tight">{product.name}</h3>
+                <p className="mt-3 min-h-16 text-sm leading-relaxed text-neutral-600">{product.description}</p>
+                <ul className="mt-5 flex-1 space-y-2 border-t border-neutral-200 pt-5 text-sm text-neutral-700">
+                  {product.plans.map((plan) => <li key={plan}>{plan}</li>)}
+                </ul>
+                <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">
+                  View {product.name} pricing ↗
+                </a>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-center text-xs text-neutral-500">USD prices checked October 1, 2026. Plans and terms may change; confirm on each linked pricing page before purchasing.</p>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="border-t border-neutral-200/60 bg-neutral-50/60">
         <div className="mx-auto max-w-3xl px-6 py-20">
@@ -370,6 +442,21 @@ const Pricing = () => {
             <Button asChild size="lg" variant="outline">
               <Link to={user ? "/settings/billing" : "/signup?next=%2Fpricing%3Fbuy%3Dgrowth"}>Upgrade to Pro</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="text-center">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Community</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Meet other vibe coders and share what you're building.</p>
+          </div>
+          <div className="mx-auto mt-10 flex max-w-xl flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+            <h3 className="text-2xl font-semibold tracking-tight">Discord</h3>
+            <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
+            <p className="mt-4 flex-1 text-neutral-600">Join the Rocket community, ask questions, and connect with other builders.</p>
+            <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Join Discord ↗</a>
           </div>
         </div>
       </section>

@@ -34,7 +34,7 @@ const NewsletterCta = () => {
   };
 
   return (
-    <section aria-labelledby="newsletter-heading" className="border-t border-neutral-200 bg-white px-5 py-14 dark:border-neutral-800 dark:bg-neutral-950 sm:px-8 sm:py-20">
+    <section aria-labelledby="newsletter-heading" className="marketplace-newsletter border-t border-neutral-200 bg-white px-5 py-14 dark:border-neutral-800 dark:bg-neutral-950 sm:px-8 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
         <h2 id="newsletter-heading" className="text-3xl font-bold tracking-tight text-neutral-950 dark:text-white sm:text-4xl">
           Get the newsletter

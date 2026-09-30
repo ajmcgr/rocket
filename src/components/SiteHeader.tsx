@@ -128,12 +128,12 @@ export default function SiteHeader() {
 
   return (
     <>
-      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>footer,*:has(>.marketplace-sidebar)>header{margin-left:${sidebarWidth}px}}`}</style>
+      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>footer,*:has(>.marketplace-sidebar)>header,*:has(>.marketplace-sidebar)>.marketplace-newsletter{margin-left:${sidebarWidth}px}}`}</style>
       <aside className="marketplace-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] bg-[#f9fbfd] transition-[width] duration-200 lg:flex" style={{ width: sidebarWidth }}>
         <div className={`flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "px-4"}`}>
           {sidebarCompact ? (
             <Link to="/" aria-label="Rocket home" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100">
-              <img src="/favicon.png" alt="" className="h-9 w-9 object-contain" />
+              <img src="/rocket-sidebar-icon.png" alt="" className="h-9 w-9 object-contain" />
             </Link>
           ) : (
             <Logo size="md" className="max-w-[190px]" />

@@ -840,6 +840,7 @@ Deno.serve(async (req) => {
         const description = text(body.description, 2001);
         const category = text(body.category, 81);
         const pricing = text(body.pricing_display, 61);
+        const developerHandle = text(body.developer_handle, 31).replace(/^@/, "");
         if (
           displayName.length < 2 ||
           displayName.length > 120 ||
@@ -847,6 +848,7 @@ Deno.serve(async (req) => {
           description.length > 2000 ||
           category.length > 80 ||
           pricing.length > 60
+          || (developerHandle.length > 0 && !/^[A-Za-z0-9_]{2,30}$/.test(developerHandle))
         )
           throw new Error("Invalid presentation fields");
         const links = Array.isArray(body.public_links) ? body.public_links : [];
@@ -919,6 +921,7 @@ Deno.serve(async (req) => {
             category: category || null,
             logo_url: logoUrl,
             pricing_display: pricing || null,
+            developer_handle: developerHandle || null,
             public_links: safeLinks,
             updated_by: user.id,
             updated_at: new Date().toISOString(),

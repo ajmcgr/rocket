@@ -10,6 +10,12 @@ import alexAvatar from "@/assets/alex-macgregor.png.asset.json";
  * ------------------------------------------------------------------ */
 
 export const CATEGORIES = [
+  "App Development",
+  "Vibe Coding",
+  "Launch & Distribution",
+  "Growth",
+  "Monetization",
+  "App Discovery",
   "Branding",
   "Logo Design",
   "Icons",
@@ -30,6 +36,12 @@ const CATEGORY_RULES: { category: Category; keywords: string[]; weight?: number 
   { category: "Rocket Updates", keywords: ["changelog", "we shipped", "new in rocket", "release notes"], weight: 4 },
   { category: "Case Studies", keywords: ["case study", "teardown", "we analysed", "we analyzed", "before and after"], weight: 3 },
   { category: "Founder Stories", keywords: ["founder", "indie hacker", "solo founder", "my story", "bootstrapped"] },
+  { category: "Vibe Coding", keywords: ["vibe coding", "vibe-coded", "ai-assisted development", "ai coding"], weight: 2 },
+  { category: "Launch & Distribution", keywords: ["app launch", "launch checklist", "distribution", "launch channel", "submit your app"], weight: 2 },
+  { category: "Monetization", keywords: ["monetization", "monetisation", "pricing", "payments", "revenue"], weight: 2 },
+  { category: "Growth", keywords: ["retention", "activation", "growth", "first users", "user feedback"], weight: 2 },
+  { category: "App Discovery", keywords: ["app discovery", "app listing", "directory", "categories"], weight: 2 },
+  { category: "App Development", keywords: ["app development", "build an app", "ship an app", "features", "testing", "onboarding"] },
   { category: "Logo Design", keywords: ["logo", "logotype", "wordmark", "brandmark", "lockup", "monogram"], weight: 2 },
   { category: "Icons", keywords: ["icon", "app icon", "glyph", "favicon", "symbol"], weight: 2 },
   { category: "Brand Kits", keywords: ["brand kit", "brand book", "brand guidelines", "style guide", "asset pack"], weight: 2 },
@@ -42,9 +54,11 @@ const CATEGORY_RULES: { category: Category; keywords: string[]; weight?: number 
 ];
 
 const TAG_DICTIONARY = [
+  "app development", "vibe coding", "app discovery", "app listing", "onboarding",
+  "user feedback", "testing", "distribution", "monetization", "pricing", "retention",
   "logo", "logotype", "wordmark", "icon", "brand kit", "typography", "colour palette",
   "positioning", "naming", "tagline", "launch", "product hunt", "seo", "landing page",
-  "cold email", "pitch", "distribution", "founders", "copywriting", "identity",
+  "cold email", "pitch", "founders", "copywriting", "identity",
   "case study", "checklist", "growth", "social media", "brand book",
 ];
 
@@ -54,7 +68,7 @@ const AUTHORS = {
     name: "Alex MacGregor",
     role: "Founder, Rocket",
     avatar: alexAvatar.url,
-    bio: "Founder of Rocket. Previously built and branded a handful of products the hard way — hand-drawn logos, mismatched fonts, brand kits that never shipped. Now writing about how founders can build brands people remember.",
+    bio: "Founder of Rocket. Writing about how independent developers and vibe coders can build, launch, and grow useful apps.",
     socials: [
       { label: "X", href: "https://x.com/tryrocketai" },
       { label: "Instagram", href: "https://www.instagram.com/tryrocketai/" },
@@ -100,7 +114,7 @@ export const deriveCategory = (article: Article): Category => {
   const headline = `${article.title} ${article.excerpt}`.toLowerCase();
   const full = `${headline} ${article.body.slice(0, 4000)}`.toLowerCase();
 
-  let best: { category: Category; score: number } = { category: "Branding", score: 0 };
+  let best: { category: Category; score: number } = { category: "App Development", score: 0 };
   for (const rule of CATEGORY_RULES) {
     let score = 0;
     for (const keyword of rule.keywords) {

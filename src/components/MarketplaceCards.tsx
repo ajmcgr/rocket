@@ -7,22 +7,42 @@ import AppLogo from "./AppLogo";
 import SaveAppButton from "./SaveAppButton";
 import TrendArrow from "./TrendArrow";
 import AppPurchaseActions from "./AppPurchaseActions";
+import type { AppCardMetadata } from "@/lib/appCardMetadata";
 
 type App = Tables<"public_apps">;
-type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string; trend?: "up" | "down" };
+type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string; trend?: "up" | "down"; metadata?: AppCardMetadata; rank?: number };
 type SaveProps = { saved?: boolean; onSave?: (saved: boolean) => void };
 
-function AppCardIdentity({ app, rank }: { app: App; rank?: number }) {
+export function AppCardRating({ metadata, light = false }: { metadata?: AppCardMetadata; light?: boolean }) {
+  if (!metadata) return null;
+  if (!metadata.rating_count || metadata.average_rating == null)
+    return <span className={`block text-xs ${light ? "text-white/80" : "text-neutral-500"}`} aria-label="No ratings yet">☆ No ratings yet</span>;
+  return <span className={`block text-xs ${light ? "text-white" : "text-neutral-600"}`} aria-label={`${metadata.average_rating} out of 5 stars from ${metadata.rating_count} ratings`}>
+    <span className="text-amber-500" aria-hidden="true">★</span>{" "}{metadata.average_rating.toFixed(1)}{" "}
+    <span className={light ? "text-white/80" : "text-neutral-500"}>({metadata.rating_count.toLocaleString()})</span>
+  </span>;
+}
+
+function AppCardIdentity({ app, rank, metadata }: { app: App; rank?: number; metadata?: AppCardMetadata }) {
   return (
     <div className="flex min-w-0 items-start gap-3">
       <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-base font-semibold text-neutral-950">{app.name}</h3>
+        <AppCardRating metadata={metadata} />
         <p className="truncate text-xs text-neutral-500">{app.categories[0] || app.canonical_host}</p>
       </div>
       {rank !== undefined && <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-400">{String(rank).padStart(2, "0")}</span>}
     </div>
   );
+}
+
+export function AppCardByline({ metadata, light = false }: { metadata?: AppCardMetadata; light?: boolean }) {
+  if (!metadata) return null;
+  return <div className={`flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${light ? "text-white/85" : "text-neutral-500"}`}>
+    {metadata.developer_handle && <span className="truncate font-medium" title="Owner-provided developer handle">@{metadata.developer_handle}</span>}
+    <span title={`${metadata.save_count} saves`} aria-label={`${metadata.save_count} saves`}>🔖 {metadata.save_count.toLocaleString()}</span>
+  </div>;
 }
 
 function Artwork({
@@ -67,6 +87,7 @@ export function EditorialAppCard({
   app,
   media,
   eyebrow = "Explore",
+  metadata,
 }: BaseProps) {
   return (
     <article className="group relative min-h-[22rem] overflow-hidden rounded-[1.25rem] border border-neutral-200 bg-[#167ac6] text-white">
@@ -91,6 +112,7 @@ export function EditorialAppCard({
             <h3 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
               {app.name}
             </h3>
+            <AppCardRating metadata={metadata} light />
             <p className="mt-1 line-clamp-2 text-sm text-neutral-100">
               {app.tagline || app.description || app.canonical_host}
             </p>
@@ -100,6 +122,7 @@ export function EditorialAppCard({
           <span>{app.categories[0] || "App"}</span>
           <AppPurchaseActions appId={app.id} light />
         </div>
+        <AppCardByline metadata={metadata} light />
       </div>
     </article>
   );
@@ -112,6 +135,8 @@ export function StandardAppCard({
   onSave,
   eyebrow,
   trend,
+  metadata,
+  rank,
 }: BaseProps & SaveProps) {
   const hasCover = Boolean(coverMedia(media));
   return (
@@ -122,7 +147,8 @@ export function StandardAppCard({
       >
         {hasCover && <Artwork app={app} media={media} className="h-40 w-full sm:h-44" />}
         <div className="px-3 pb-3 pt-4 sm:px-4">
-          <AppCardIdentity app={app} />
+          <AppCardIdentity app={app} rank={rank} metadata={metadata} />
+          <div className="mt-2"><AppCardByline metadata={metadata} /></div>
           <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">
             {app.tagline || app.description || "Explore this app."}
           </p>
@@ -154,6 +180,7 @@ export function RankedAppRow({
   app,
   rank,
   eyebrow,
+  metadata,
 }: BaseProps & { rank: number }) {
   return (
     <article className="group flex min-h-20 min-w-0 flex-wrap items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70">
@@ -169,6 +196,7 @@ export function RankedAppRow({
         <strong className="block truncate text-sm font-semibold text-neutral-950">
           {app.name}
         </strong>
+        <AppCardRating metadata={metadata} />
         <span className="block truncate text-xs text-neutral-500">
           {app.tagline || app.canonical_host}
         </span>
@@ -176,6 +204,7 @@ export function RankedAppRow({
           {app.categories[0] || "App"}
           {eyebrow ? ` · ${eyebrow}` : ""}
         </span>
+        <AppCardByline metadata={metadata} />
       </Link>
       <AppPurchaseActions appId={app.id} />
     </article>
@@ -185,11 +214,13 @@ export function RankedAppRow({
 export function RisingAppCard({
   app,
   rank,
+  metadata,
 }: BaseProps & { rank: number }) {
   return (
     <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm">
       <Link to={`/apps/${app.id}`} className="focus-visible:outline-2 focus-visible:outline-[#167ac6]">
-      <AppCardIdentity app={app} rank={rank} />
+      <AppCardIdentity app={app} rank={rank} metadata={metadata} />
+      <div className="mt-2"><AppCardByline metadata={metadata} /></div>
       <span className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-600">
         {app.tagline || app.description || app.canonical_host}
       </span>
@@ -206,6 +237,7 @@ export function MarketplaceListRow({
   app,
   saved,
   onSave,
+  metadata,
 }: BaseProps & SaveProps) {
   return (
     <article className="flex min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3">
@@ -218,12 +250,14 @@ export function MarketplaceListRow({
           <strong className="block truncate text-sm font-semibold text-neutral-950">
             {app.name}
           </strong>
+          <AppCardRating metadata={metadata} />
           <span className="block truncate text-xs text-neutral-600">
             {app.tagline || app.description || app.canonical_host}
           </span>
           <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
             {app.categories[0] || "App"}
           </span>
+          <AppCardByline metadata={metadata} />
         </span>
       </Link>
       <div className="flex flex-wrap items-center gap-2">

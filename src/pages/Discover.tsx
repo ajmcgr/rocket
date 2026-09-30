@@ -10,6 +10,8 @@ import { signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import TrendArrow from "@/components/TrendArrow";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
+import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
+import { AppCardSkeleton, RankedAppRowSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import {
   StandardAppCard,
   RankedAppRow,
@@ -38,10 +40,10 @@ export default function Discover() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [rankingCategories, setRankingCategories] = useState<Tables<"public_ranking_categories">[]>([]);
   const [rankingCategoriesLoading, setRankingCategoriesLoading] = useState(true);
-  const [rankingVotes, setRankingVotes] = useState<Map<string, number>>(new Map());
-  const [rankingObservedAt, setRankingObservedAt] = useState<string | null>(null);
+  const [rankingViews, setRankingViews] = useState<Map<string, number>>(new Map());
   const [signals, setSignals] = useState<Map<string, AppSignal>>(new Map());
   const [media, setMedia] = useState<Map<string, PublicAppMedia[]>>(new Map());
+  const [cardMetadata, setCardMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const [count, setCount] = useState(0);
@@ -62,6 +64,7 @@ export default function Discover() {
   )
     ? params.get("view") === "rising" ? "rankings" : params.get("view")!
     : "all";
+  const pageTitle = view === "rankings" ? "Rankings" : view === "new" ? "New" : view === "categories" ? "Categories" : "Discover";
   const showOverview =
     !params.get("view") &&
     !search &&
@@ -75,7 +78,7 @@ export default function Discover() {
   }, [rawSearch]);
 
   useDocumentMeta({
-    title: "Discover apps | Rocket",
+    title: `${pageTitle} | Rocket`,
     description:
       "Discover apps worth using, including new software from vibe coders and developers. Browse by category, platform and launch date.",
     canonical: "https://tryrocket.ai/discover",
@@ -120,8 +123,9 @@ export default function Discover() {
         const eligibleCategory = rankingCategories.some((item) => item.category === category) ? category : "";
         let request = supabase
           .from("public_app_rankings")
-          .select("app_id,launch_net_votes,votes_observed_at")
-          .order("launch_net_votes", { ascending: false })
+          .select("app_id,rocket_view_count,last_viewed_at")
+          .order("rocket_view_count", { ascending: false })
+          .order("last_viewed_at", { ascending: false, nullsFirst: false })
           .order("launched_at", { ascending: false, nullsFirst: false })
           .order("app_id", { ascending: true })
           .limit(RANKING_SIZE);
@@ -136,8 +140,7 @@ export default function Discover() {
         const byId = new Map((appResult.data || []).map((app) => [app.id, app]));
         if (!canceled) {
           setApps(ids.map((id) => byId.get(id)).filter((app): app is App => Boolean(app)));
-          setRankingVotes(new Map((rankingRows || []).map((row) => [row.app_id, row.launch_net_votes])));
-          setRankingObservedAt((rankingRows || []).map((row) => row.votes_observed_at).filter((value): value is string => Boolean(value)).sort().at(-1) || null);
+          setRankingViews(new Map((rankingRows || []).map((row) => [row.app_id, row.rocket_view_count])));
           setSignals(new Map());
           setCount(ids.length);
           setMedia(new Map());
@@ -268,6 +271,14 @@ export default function Discover() {
     };
   }, [user, apps]);
 
+  useEffect(() => {
+    let canceled = false;
+    loadAppCardMetadata(apps.map((app) => app.id)).then((result) => {
+      if (!canceled) setCardMetadata(result);
+    });
+    return () => { canceled = true; };
+  }, [apps]);
+
   const change = (key: string, value: string) => {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
@@ -296,7 +307,7 @@ export default function Discover() {
       <SiteHeader />
       <main className="mx-auto max-w-[90rem] px-5 pb-20 pt-6 sm:px-8 sm:pt-8">
         <h1 className="text-3xl font-bold tracking-[-.045em] sm:text-4xl">
-          Discover
+          {pageTitle}
         </h1>
         <p className="mt-1 text-sm text-neutral-600">
           Apps worth using, from new arrivals to category rankings.
@@ -353,8 +364,8 @@ export default function Discover() {
         </nav>
         {view === "rankings" && (
           <section className="mt-6" aria-labelledby="ranking-categories-heading">
-            <h2 id="ranking-categories-heading" className="text-lg font-bold">Top 20 by Launch votes</h2>
-            <p className="mt-1 text-sm text-neutral-600">Public Launch vote totals, not verified users, revenue or a Rocket endorsement.{rankingObservedAt && !loading ? ` Latest observed ${new Date(rankingObservedAt).toLocaleDateString()}.` : ""}</p>
+            <h2 id="ranking-categories-heading" className="text-lg font-bold">Top 20 by Rocket views</h2>
+            <p className="mt-1 text-sm text-neutral-600">Visits to app profiles on Rocket since view tracking began. Repeat visits from the same browser/network to an app in a day count once; ties use the most recent view, then newer listings. Views are not verified users, revenue or a Rocket endorsement.</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Ranking categories">
               <button onClick={() => selectRankingCategory("")} aria-current={!activeRankingCategory ? "page" : undefined} className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium ${!activeRankingCategory ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-700 hover:bg-neutral-100"}`}>
                 All Apps
@@ -474,7 +485,7 @@ export default function Discover() {
                   ? `Top ${count} apps`
                 : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}
           </span>
-          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by public Launch votes" : "Public Launch activity"}</span>
+          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by Rocket app-profile views" : "Public Launch activity"}</span>
         </div>
         {error && (
           <div
@@ -552,19 +563,14 @@ export default function Discover() {
         )}
         {view !== "categories" && loading && (
           <div
-            className={`mt-4 grid gap-x-8 ${view === "new" ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}
+            className={`mt-4 grid gap-4 ${view === "new" ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}
             role="status"
             aria-label="Loading apps"
+            aria-busy="true"
           >
-            {Array.from({ length: view === "rankings" ? RANKING_SIZE : 6 }, (_, item) => item).map((item) => (
-              <div
-                key={item}
-                className={`rocket-skeleton-surface ${view === "new" ? "h-56" : "h-20"} animate-pulse border-b border-neutral-200 p-3`}
-              >
-                <div className="h-11 w-11 rounded-xl bg-neutral-200" />
-                <div className="mt-2 h-3 w-2/3 rounded bg-neutral-200" />
-              </div>
-            ))}
+            {Array.from({ length: view === "rankings" ? RANKING_SIZE : 6 }, (_, item) =>
+              view === "new" ? <AppCardSkeleton key={item} /> : <RankedAppRowSkeleton key={item} />
+            )}
           </div>
         )}
         {view !== "categories" &&
@@ -576,8 +582,9 @@ export default function Discover() {
                 <RankedAppRow
                   key={app.id}
                   app={app}
+                  metadata={cardMetadata.get(app.id)}
                   rank={index + 1}
-                  eyebrow={`${rankingVotes.get(app.id)?.toLocaleString() || "0"} Launch votes`}
+                  eyebrow={`${rankingViews.get(app.id)?.toLocaleString() || "0"} Rocket views`}
                 />
               ))}
             </div>
@@ -587,6 +594,7 @@ export default function Discover() {
                 <StandardAppCard
                   key={app.id}
                   app={app}
+                  metadata={cardMetadata.get(app.id)}
                   media={media.get(app.id)}
                   eyebrow={
                     signals.get(app.id)
@@ -612,15 +620,7 @@ export default function Discover() {
                 <MarketplaceListRow
                   key={app.id}
                   app={app}
-                  saved={savedIds.has(app.id)}
-                  onSave={(saved) =>
-                    setSavedIds((current) => {
-                      const next = new Set(current);
-                      if (saved) next.add(app.id);
-                      else next.delete(app.id);
-                      return next;
-                    })
-                  }
+                  metadata={cardMetadata.get(app.id)}
                 />
               ))}
             </div>

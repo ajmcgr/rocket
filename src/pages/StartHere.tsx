@@ -5,7 +5,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const steps = {
   people: [
-    { title: "Discover", body: "Search apps, browse categories, or explore New and Rankings. Rankings use public Launch votes, not verified customer growth or a Rocket endorsement." },
+    { title: "Discover", body: "Search apps, browse categories, or explore New and Rankings. Rankings use views of Rocket app profiles, not verified customer growth or a Rocket endorsement." },
     { title: "Decide", body: "Open an app profile for its description, website, source, and any evidence the owner has chosen to share. An indexed listing does not mean Rocket recommends the app." },
     { title: "Save and visit", body: "Save apps to revisit with your Rocket account. When you are ready, follow the website link to use the app on its own site." },
   ],

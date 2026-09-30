@@ -5,20 +5,20 @@ import { Link } from "@/lib/router-compat";
 export default function AppPurchaseActions({
   appId,
   light = false,
-  showOpen = true,
+  showView = true,
 }: {
   appId: string;
   light?: boolean;
-  showOpen?: boolean;
+  showView?: boolean;
 }) {
   return (
     <div className="flex shrink-0 items-center gap-2" aria-label="App actions">
-      {showOpen && (
+      {showView && (
         <Link
           to={`/apps/${appId}`}
-          className={`inline-flex min-h-10 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6] ${light ? "border-white/70 bg-white text-[#075985] hover:bg-neutral-100" : "border-[#167ac6] bg-[#167ac6] text-white hover:bg-[#1268aa]"}`}
+          className={`inline-flex min-h-10 items-center justify-center rounded-xl border bg-transparent px-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6] ${light ? "border-white/80 text-white hover:bg-white/10" : "border-[#167ac6] text-[#167ac6] hover:bg-[#167ac6]/10 dark:text-[#dcefff] dark:hover:bg-[#167ac6]/20"}`}
         >
-          Open
+          View
         </Link>
       )}
       <button

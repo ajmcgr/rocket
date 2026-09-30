@@ -8,6 +8,7 @@ describe("route pending state", () => {
     expect(html).toContain('aria-label="Loading page"');
     expect(html).toContain("rocket-skeleton-surface");
     expect(html).toContain("min-h-screen");
+    expect(html).not.toContain("min-h-screen motion-safe:animate-pulse");
     expect(html).not.toContain("Loading Rocket");
   });
 });

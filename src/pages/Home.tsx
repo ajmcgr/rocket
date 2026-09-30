@@ -29,17 +29,17 @@ export default function Home() {
       <main className="mx-auto max-w-[90rem] px-5 pb-20 sm:px-8">
         <DiscoveryPreview
           intro={
-            <section className="flex min-w-0 flex-col justify-center py-6 lg:py-10">
-              <h1 className="max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
+            <section className="flex min-w-0 flex-col items-center justify-center py-6 text-center lg:py-10">
+              <h1 className="mx-auto max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
                 The open app platform.
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
+              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
                 Find rising apps and new software from vibe coders and developers.
               </p>
               <form
                 onSubmit={search}
                 role="search"
-                className="mt-7 flex w-full max-w-xl gap-2 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-[0_14px_40px_-30px_rgba(15,23,42,.4)] focus-within:border-[#167ac6] focus-within:ring-2 focus-within:ring-[#167ac6]/20"
+                className="mx-auto mt-7 flex w-full max-w-xl gap-2 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-[0_14px_40px_-30px_rgba(15,23,42,.4)] focus-within:border-[#167ac6] focus-within:ring-2 focus-within:ring-[#167ac6]/20"
               >
                 <span className="my-auto ml-3 text-lg" aria-hidden="true">🔎</span>
                 <input
@@ -53,7 +53,7 @@ export default function Home() {
                   Search
                 </button>
               </form>
-              <div className="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+              <div className="mt-5 flex flex-wrap justify-center gap-3 text-sm font-semibold">
                 <Link
                   to="/discover"
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-white hover:bg-[#1268aa]"

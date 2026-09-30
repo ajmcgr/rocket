@@ -17,6 +17,7 @@ export default function EditAppProfile() {
   const [category, setCategory] = useState("");
   const [logo, setLogo] = useState("");
   const [pricing, setPricing] = useState("");
+  const [developerHandle, setDeveloperHandle] = useState("");
   const [links, setLinks] = useState("");
   const [media, setMedia] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,7 +39,7 @@ export default function EditAppProfile() {
         .maybeSingle(),
       supabase
         .from("public_app_presentation")
-        .select("pricing_display,public_links")
+        .select("pricing_display,public_links,developer_handle")
         .eq("app_id", id)
         .maybeSingle(),
       loadAppMedia([id], false),
@@ -55,6 +56,7 @@ export default function EditAppProfile() {
           setLogo(item.logo_url || "");
         }
         setPricing(presentation.data?.pricing_display || "");
+        setDeveloperHandle(presentation.data?.developer_handle || "");
         setLinks((presentation.data?.public_links || []).join("\n"));
         setMedia(
           (mediaResult.get(id) || [])
@@ -95,6 +97,7 @@ export default function EditAppProfile() {
           category,
           logo_url: logo,
           pricing_display: pricing,
+          developer_handle: developerHandle.replace(/^@/, ""),
           public_links: links
             .split("\n")
             .map((value) => value.trim())
@@ -225,6 +228,20 @@ export default function EditAppProfile() {
             <span className="mt-1 block text-xs text-neutral-500">
               Up to eight real screenshots, from your website or Rocket Storage.
               Launch images remain separately attributed.
+            </span>
+          </label>
+          <label className="block text-sm font-medium">
+            Public developer handle (optional)
+            <input
+              value={developerHandle}
+              onChange={(event) => setDeveloperHandle(event.target.value)}
+              maxLength={31}
+              pattern="@?[A-Za-z0-9_]{2,30}"
+              placeholder="@yourhandle"
+              className="mt-1 w-full rounded-lg border p-3"
+            />
+            <span className="mt-1 block text-xs text-neutral-500">
+              Shown on your app cards as an owner-provided handle. Leave blank to hide it.
             </span>
           </label>
           <label className="block text-sm font-medium">

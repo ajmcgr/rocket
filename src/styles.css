@@ -368,12 +368,21 @@ html.dark body {
 /* Loading surfaces follow the selected theme without changing content cards. */
 .rocket-skeleton-surface {
   background-color: #fff !important;
+  /* Never pulse the whole surface: opacity animation exposes the dark page
+     underneath and makes light-mode loading screens flash gray. */
+  animation: none !important;
 }
 html.dark .rocket-skeleton-surface {
   background-color: #000 !important;
 }
 html.dark .rocket-skeleton-surface .bg-neutral-100 {
   background-color: rgb(22 122 198 / 32%) !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rocket-skeleton-surface .bg-neutral-100,
+  .rocket-skeleton-surface .bg-neutral-200 {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 /* Surfaces (solid + translucent whites) */
@@ -479,6 +488,27 @@ html.dark .hover\:text-neutral-600:hover {
 html.dark .focus\:text-neutral-900:focus {
   color: hsl(40 30% 96%) !important;
 }
+html.dark a.text-neutral-500 {
+  color: #d6dce1 !important;
+}
+html.dark a.text-neutral-600,
+html.dark a.text-neutral-700 {
+  color: #e5e9ed !important;
+}
+html.dark a.text-sky-600,
+html.dark a.text-sky-700,
+html.dark a.text-sky-800,
+html.dark a.text-blue-700,
+html.dark a[class*="text-[#267cbb]"],
+html.dark a[class*="text-[#075985]"] {
+  color: #dcefff !important;
+}
+html.dark a.text-sky-600:hover,
+html.dark a.text-sky-700:hover,
+html.dark a.text-sky-800:hover,
+html.dark a.text-blue-700:hover {
+  color: #fff !important;
+}
 html.dark .placeholder\:text-neutral-400::placeholder,
 html.dark .placeholder\:text-neutral-500::placeholder {
   color: hsl(40 8% 42%) !important;
@@ -540,6 +570,15 @@ html.dark .marketplace-sidebar {
   background-color: #161c24 !important;
   border-color: #303a45 !important;
 }
+/* Navigation is interactive content, not muted supporting copy. */
+html.dark .marketplace-sidebar nav a,
+html.dark .marketplace-sidebar a[href="/settings"] {
+  color: #e8edf2 !important;
+}
+html.dark .marketplace-sidebar nav a:hover,
+html.dark .marketplace-sidebar nav a[aria-current="page"] {
+  color: #fff !important;
+}
 html.dark .marketplace-page [class*="border-[#e8edf2]"] {
   border-color: #303a45 !important;
 }
@@ -553,8 +592,16 @@ html.dark .marketplace-page [class*="bg-[#f1f4f7]"] {
 }
 html.dark .marketplace-page [class*="text-[#075985]"],
 html.dark .marketplace-page .text-sky-800,
-html.dark .marketplace-page .text-sky-700 {
-  color: #8dcdf2 !important;
+html.dark .marketplace-page .text-sky-700,
+html.dark a.text-sky-800,
+html.dark a.text-sky-700 {
+  color: #dcefff !important;
+}
+html.dark footer a:not([class*="bg-"]) {
+  color: #e5e9ed !important;
+}
+html.dark footer a:not([class*="bg-"]):hover {
+  color: #fff !important;
 }
 
 html.dark .ring-neutral-100 {
