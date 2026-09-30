@@ -474,7 +474,7 @@ const Projects = () => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white" align="start">
-              <DropdownMenuLabel className="text-[10px] uppercase text-neutral-500">Folders</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] normal-case text-neutral-500">Folders</DropdownMenuLabel>
               {folders.length === 0 ? <div className="px-2 py-2 text-xs text-neutral-500">No folders yet.</div> : folders.map((folder) => (
                 <DropdownMenuItem key={folder.id} onClick={() => bulkAssignUploadsToFolder(folder.id)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">
                   {folder.name}

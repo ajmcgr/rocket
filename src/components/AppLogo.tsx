@@ -7,7 +7,7 @@ type Props = {
   eager?: boolean;
 };
 
-/** A consistent frame for square icons, wide wordmarks, and missing artwork. */
+/** Show the source icon without adding a simulated app-tile background. */
 export default function AppLogo({
   name,
   src,
@@ -19,7 +19,7 @@ export default function AppLogo({
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200/80 bg-gradient-to-br from-white to-neutral-100 text-lg font-semibold text-neutral-500 ${className}`}
+      className={`flex shrink-0 items-center justify-center text-lg font-semibold text-neutral-500 ${className}`}
     >
       {showImage ? (
         <img
@@ -27,7 +27,7 @@ export default function AppLogo({
           alt=""
           loading={eager ? "eager" : "lazy"}
           onError={() => setFailedUrl(src!)}
-          className="h-full w-full object-contain p-1 [filter:drop-shadow(0_1px_1px_rgba(15,23,42,0.18))]"
+          className="h-full w-full object-contain"
         />
       ) : (
         <span aria-hidden="true">

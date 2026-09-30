@@ -44,7 +44,7 @@ const AcceptInvite = () => {
     }
   };
 
-  if (authLoading) return <div className="min-h-screen bg-white" />;
+  if (authLoading) return <div className="rocket-skeleton-surface min-h-screen p-8" role="status" aria-label="Loading invitation" aria-busy="true"><div className="mx-auto max-w-lg animate-pulse space-y-5"><div className="h-8 w-40 rounded bg-neutral-100" /><div className="h-48 rounded-2xl bg-neutral-100" /></div></div>;
 
   return (
     <div className="min-h-screen bg-white">

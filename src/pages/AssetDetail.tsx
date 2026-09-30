@@ -112,7 +112,7 @@ const AssetDetail = () => {
   }, [prevId, nextId, nav]);
 
   if (loading) return (
-    <div className="mx-auto max-w-5xl space-y-4 p-10">
+    <div className="rocket-skeleton-surface mx-auto max-w-5xl space-y-4 rounded-2xl p-10">
       <Skeleton className="h-6 w-32" />
       <Skeleton className="h-10 w-64" />
       <Skeleton className="aspect-video w-full" />
@@ -437,7 +437,7 @@ const AssetDetail = () => {
       )}
 
       <div className="mb-4">
-        <div className="text-xs uppercase tracking-wider text-neutral-500">{ASSET_TYPE_LABELS[asset.asset_type]}</div>
+        <div className="text-xs normal-case tracking-wider text-neutral-500">{ASSET_TYPE_LABELS[asset.asset_type]}</div>
         {editing ? (
           <input
             value={draftTitle}

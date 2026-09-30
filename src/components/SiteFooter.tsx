@@ -1,6 +1,7 @@
 import { Link } from "@/lib/router-compat";
 import { tools } from "@/content/tools";
-import { articles } from "@/content/articles";
+import { marketplaceComparisons } from "@/content/marketplaceComparisons";
+import NewsletterCta from "@/components/blog/NewsletterCta";
 
 const HEADER = "text-base font-semibold text-neutral-900";
 
@@ -17,15 +18,32 @@ const DiscordIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const SiteFooter = () => (
-  <footer className="bg-neutral-50 pb-20 lg:pb-0">
+  <>
+    <NewsletterCta />
+    <footer className="bg-neutral-50 pb-20 lg:pb-0">
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <div>
-          <div className={HEADER}>Company</div>
+          <div className={HEADER}>Resources</div>
           <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
+            <li>
+              <Link to="/start" className="hover:text-neutral-900">
+                Start here
+              </Link>
+            </li>
+            <li>
+              <Link to="/faq" className="hover:text-neutral-900">
+                FAQ
+              </Link>
+            </li>
             <li>
               <Link to="/about" className="hover:text-neutral-900">
                 About
+              </Link>
+            </li>
+            <li>
+              <Link to="/pricing" className="hover:text-neutral-900">
+                Pricing
               </Link>
             </li>
             <li>
@@ -44,13 +62,8 @@ const SiteFooter = () => (
               </Link>
             </li>
             <li>
-              <Link to="/discover" className="hover:text-neutral-900">
-                Discover apps
-              </Link>
-            </li>
-            <li>
-              <Link to="/pricing" className="hover:text-neutral-900">
-                Pricing
+              <Link to="/contact" className="hover:text-neutral-900">
+                Contact
               </Link>
             </li>
           </ul>
@@ -74,23 +87,6 @@ const SiteFooter = () => (
             <li>
               <Link to="/terms" className="hover:text-neutral-900">
                 Terms of Service
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <div className={HEADER}>Resources</div>
-          <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
-            {articles.slice(0, 10).map((a) => (
-              <li key={a.slug}>
-                <Link to={`/blog/${a.slug}`} className="hover:text-neutral-900">
-                  {a.title}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <Link to="/blog" className="font-semibold hover:text-neutral-900">
-                View All Resources →
               </Link>
             </li>
           </ul>
@@ -120,10 +116,11 @@ const SiteFooter = () => (
         </div>
         <div>
           <div className={HEADER}>Compare</div>
-          <ul className="mt-4 space-y-2.5 text-sm text-neutral-500">
-            {["Product Hunt", "Whop", "Gumroad", "G2"].map((name) => (
-              <li key={name}>{name}</li>
+          <ul className="mt-4 space-y-2.5 text-sm text-neutral-600">
+            {marketplaceComparisons.map((item) => (
+              <li key={item.slug}><Link to={`/compare/${item.slug}`} className="hover:text-neutral-900">Rocket vs {item.name}</Link></li>
             ))}
+            <li><Link to="/compare" className="font-semibold hover:text-neutral-900">All compared →</Link></li>
           </ul>
         </div>
         <div>
@@ -163,7 +160,8 @@ const SiteFooter = () => (
         .
       </div>
     </div>
-  </footer>
+    </footer>
+  </>
 );
 
 export default SiteFooter;

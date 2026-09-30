@@ -33,7 +33,7 @@ export function MobilePrimaryNav() {
     { label: "Discover", to: "/discover", Icon: Compass },
     { label: "Search", to: "/discover#search-apps", Icon: Search },
     { label: "Saved", to: "/saved-apps", Icon: Bookmark },
-    { label: "Launch", to: "/launch", Icon: Plus },
+    { label: "Submit", to: "/submit", Icon: Plus },
     { label: "Your Apps", to: "/your-apps", Icon: Layers3 },
     { label: "Account", to: "/settings", Icon: UserRound },
   ];
@@ -63,7 +63,7 @@ export function PublicMobileNav() {
     { label: "Discover", to: "/discover", Icon: Compass },
     { label: "Search", to: "/discover#search-apps", Icon: Search },
     { label: "Saved", to: "/saved-apps", Icon: Bookmark },
-    { label: "Launch", to: "/launch", Icon: Plus },
+    { label: "Submit", to: "/submit", Icon: Plus },
     { label: "Your Apps", to: "/your-apps", Icon: Layers3 },
     { label: "Account", to: "/login", Icon: UserRound },
   ];

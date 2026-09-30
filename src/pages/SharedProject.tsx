@@ -21,7 +21,7 @@ const SharedProject = () => {
   }, [token]);
 
   if (loading) return (
-    <div className="mx-auto max-w-7xl space-y-6 px-6 py-10">
+    <div className="rocket-skeleton-surface mx-auto max-w-7xl space-y-6 rounded-2xl px-6 py-10">
       <Skeleton className="h-8 w-64" />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}

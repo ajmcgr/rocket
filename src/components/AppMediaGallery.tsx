@@ -29,7 +29,7 @@ export default function AppMediaGallery({
     <section className="mt-8" aria-labelledby="gallery-title">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[.15em] text-sky-800">
+          <p className="text-xs font-semibold normal-case tracking-[.15em] text-sky-800">
             A closer look
           </p>
           <h2 id="gallery-title" className="mt-2 font-display text-3xl">

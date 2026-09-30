@@ -51,7 +51,7 @@ export default function BrandCategoryNav({
 
   return (
     <nav className="rounded-2xl border border-neutral-200 bg-white p-2">
-      <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+      <div className="px-2 py-1.5 text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
         Brand
       </div>
       <button

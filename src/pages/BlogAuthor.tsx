@@ -26,7 +26,7 @@ const BlogAuthor = () => {
           <div>
             <h1
               className="text-3xl font-medium tracking-tight sm:text-4xl"
-              style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+              style={{ fontFamily: "Inter, sans-serif" }}
             >
               {author.name}
             </h1>
@@ -43,7 +43,7 @@ const BlogAuthor = () => {
         </header>
 
         <section className="mt-12">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+          <h2 className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">
             {authored.length} article{authored.length === 1 ? "" : "s"}
           </h2>
           <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">

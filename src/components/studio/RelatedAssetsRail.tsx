@@ -4,7 +4,7 @@ import { categoryOf, CATEGORY_LABEL, type AssetCategory } from "@/lib/assetFamil
 function Thumb({ asset }: { asset: any }) {
   if (asset?.editor_state || asset?.image_url || asset?.thumbnail_url) return <AssetThumbnail asset={asset} />;
   return (
-    <div className="flex h-full w-full items-center justify-center bg-neutral-50 text-[10px] uppercase tracking-wider text-neutral-400">
+    <div className="flex h-full w-full items-center justify-center bg-neutral-50 text-[10px] normal-case tracking-wider text-neutral-400">
       {asset.asset_type}
     </div>
   );
@@ -30,7 +30,7 @@ export default function RelatedAssetsRail({
   }
   return (
     <div className="space-y-4">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+      <div className="text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
         Brand System
       </div>
       {ORDER.filter((c) => buckets.has(c)).map((c) => (

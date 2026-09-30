@@ -15,7 +15,7 @@ const startPath = (id: string) => `/signup?next=${encodeURIComponent(`/projects/
 const TemplateVisual = ({ template, compact = false }: { template: ReturnType<typeof publicTemplates>[number]; compact?: boolean }) => (
   <div className={`relative overflow-hidden rounded-2xl border border-neutral-200 ${compact ? "h-44" : "h-72"}`} style={{ background: template.colors[3] || "#F5F5F5" }}>
     <div className="absolute inset-x-6 top-6 flex items-center justify-between">
-      <span className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-600">{template.category}</span>
+      <span className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-semibold normal-case tracking-[0.14em] text-neutral-600">{template.category}</span>
       <div className="flex -space-x-1.5">{template.colors.slice(0, 4).map((color) => <span key={color} className="h-5 w-5 rounded-full border-2 border-white" style={{ backgroundColor: color }} />)}</div>
     </div>
     <div className="absolute inset-x-6 bottom-6 rounded-2xl bg-white p-5 shadow-xs ring-1 ring-black/5">
@@ -39,7 +39,7 @@ export const BrandTemplates = () => {
     <SiteHeader />
     <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
       <header className="max-w-3xl">
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Reusable brand directions</div>
+        <div className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">Reusable brand directions</div>
         <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-6xl">Brand templates built for real launch contexts.</h1>
         <p className="mt-5 text-lg leading-relaxed text-neutral-600">Each template is a usable starting direction—not a keyword page. See its audience, palette, typography, and voice, then start a Rocket project with those choices pre-filled.</p>
       </header>

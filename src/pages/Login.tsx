@@ -109,7 +109,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
             Continue with Google
           </Button>
 
-          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wider text-neutral-400">
+          <div className="my-6 flex items-center gap-3 text-xs normal-case tracking-wider text-neutral-400">
             <div className="h-px flex-1 bg-neutral-200" /> or <div className="h-px flex-1 bg-neutral-200" />
           </div>
 

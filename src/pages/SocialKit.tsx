@@ -140,7 +140,7 @@ export default function SocialKit() {
     if (preset.variant === "story") {
       return (
         <div className="flex h-full w-full flex-col items-center justify-between py-[10%]" style={{ background: brandColor }}>
-          <div className="text-[clamp(10px,2vw,18px)] uppercase tracking-[0.3em]" style={{ color: onBrandText, opacity: 0.7 }}>
+          <div className="text-[clamp(10px,2vw,18px)] normal-case tracking-[0.3em]" style={{ color: onBrandText, opacity: 0.7 }}>
             {tagline || "Introducing"}
           </div>
           <div className="flex h-[45%] w-[75%] items-center justify-center">
@@ -232,7 +232,7 @@ export default function SocialKit() {
               <div className="flex items-center justify-between gap-3 border-t border-neutral-100 px-4 py-3">
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-neutral-900">{preset.label}</div>
-                  <div className="text-[11px] uppercase tracking-wide text-neutral-500">
+                  <div className="text-[11px] normal-case tracking-wide text-neutral-500">
                     {preset.platform} · {preset.w}×{preset.h}
                   </div>
                 </div>

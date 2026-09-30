@@ -13,15 +13,15 @@ describe("platform primary navigation", () => {
     try {
       await act(async () => {
         root.render(
-          <MemoryRouter initialEntries={["/launch"]}>
+          <MemoryRouter initialEntries={["/submit"]}>
             <PrimaryNav />
             <MobilePrimaryNav />
           </MemoryRouter>,
         );
       });
       const expected = [
-        ["Discover", "Saved", "Your Apps", "Launch", "Create"],
-        ["Discover", "Search", "Saved", "Launch", "Your Apps", "Account"],
+        ["Discover", "Saved", "Your Apps", "Submit", "Create"],
+        ["Discover", "Search", "Saved", "Submit", "Your Apps", "Account"],
       ];
       [...container.querySelectorAll("nav")].forEach((nav, index) => {
         expect(
@@ -30,7 +30,7 @@ describe("platform primary navigation", () => {
           ),
         ).toEqual(expected[index]);
         expect(
-          nav.querySelector('a[href="/launch"]')?.getAttribute("aria-current"),
+          nav.querySelector('a[href="/submit"]')?.getAttribute("aria-current"),
         ).toBe("page");
       });
     } finally {
@@ -40,7 +40,7 @@ describe("platform primary navigation", () => {
     }
   });
 
-  it("keeps public mobile discovery and launch visible with auth return destinations", async () => {
+  it("keeps public mobile discovery and submission visible with auth return destinations", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -61,7 +61,7 @@ describe("platform primary navigation", () => {
         "Discover",
         "Search",
         "Saved",
-        "Launch",
+        "Submit",
         "Your Apps",
         "Account",
       ]);

@@ -1,54 +1,43 @@
 import { Link } from "@/lib/router-compat";
-import { ArrowRight, Scale } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { comparisons } from "@/content/comparisons";
+import { marketplaceComparisons } from "@/content/marketplaceComparisons";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
-const Compare = () => {
+export default function Compare() {
   useDocumentMeta({
-    title: "Compare AI logo and branding tools — Rocket",
-    description: "Founder-focused comparisons of Rocket and popular logo makers, icon generators and brand kit tools.",
+    title: "Compare Rocket with other software marketplaces",
+    description: "How Rocket's independent-app discovery differs from Product Hunt, Whop, Gumroad, and G2.",
     canonical: "https://tryrocket.ai/compare",
   });
 
-  return <div className="min-h-screen bg-white text-neutral-900">
-    <SiteHeader />
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <header className="text-center">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-700">
-          <Scale className="h-3.5 w-3.5 text-brand" /> Compare logo and branding tools
+  return (
+    <div className="marketplace-page min-h-screen bg-[#f7f9fc] text-neutral-950">
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-20">
+        <p className="text-sm font-semibold text-sky-800">Compare</p>
+        <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
+          Different places for different kinds of software discovery.
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-600">
+          Rocket helps you find and save independent web apps. Other platforms are stronger for launch-day conversation, digital-product checkout, or review-led B2B research. Choose the one that fits your job.
+        </p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {marketplaceComparisons.map((item) => (
+            <Link key={item.slug} to={`/compare/${item.slug}`} className="group rounded-2xl border border-neutral-200 bg-white p-6 transition hover:border-sky-400 hover:shadow-sm">
+              <p className="text-sm font-medium text-sky-800">{item.focus}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Rocket and {item.name}</h2>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-600">{item.summary}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sky-800">Read comparison <ArrowRight className="h-4 w-4" /></span>
+            </Link>
+          ))}
         </div>
-        <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">Rocket vs other branding tools</h1>
-        <p className="mt-4 text-lg text-neutral-600">
-          Quick founder-friendly breakdowns of the tools people compare Rocket against most often — logo makers, icon generators, brand kit builders, and full identity platforms.
+        <p className="mt-8 max-w-3xl text-sm leading-relaxed text-neutral-500">
+          These are product-positioning comparisons, not feature-parity or pricing claims. Rocket Login and Payments are available only for apps that have actually integrated them; an indexed app does not imply Rocket endorsement.
         </p>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-neutral-500">
-          Where Rocket stands out: a logo-first workflow that starts with a mark or wordmark (Wizard, Logo Designer, Icon Designer, 300+ templates), then turns it into a canonical Brand Kit with Logo/Icon Files, Social Icons, Palette, Fonts, and a Brand Book — all editable in a canvas editor with PNG/SVG/PDF/ZIP export.
-        </p>
-      </header>
-
-      <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {comparisons.map((comparison) => (
-          <Link
-            key={comparison.slug}
-            to={`/compare/${comparison.slug}`}
-            className="group rounded-2xl border border-neutral-200 bg-white p-6 transition hover:border-brand hover:shadow-md"
-          >
-            <div className="text-xs font-semibold uppercase tracking-wider text-neutral-400">#{comparison.rank}</div>
-            <h2 className="mt-3 text-lg font-semibold tracking-tight group-hover:text-brand">
-              Rocket vs {comparison.tool}
-            </h2>
-            <p className="mt-2 text-sm text-neutral-600">{comparison.bestFor}</p>
-            <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-neutral-900">
-              Read comparison <ArrowRight className="h-3.5 w-3.5" />
-            </div>
-          </Link>
-        ))}
-      </div>
-    </main>
-    <SiteFooter />
-  </div>;
-};
-
-export default Compare;
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}

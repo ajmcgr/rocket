@@ -4,17 +4,51 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { comparisons, getComparison } from "@/content/comparisons";
+import { getMarketplaceComparison, marketplaceComparisons } from "@/content/marketplaceComparisons";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const ComparisonDetail = () => {
   const { slug } = useParams();
+  const marketplace = slug ? getMarketplaceComparison(slug) : null;
   const comparison = slug ? getComparison(slug) : null;
 
   useDocumentMeta({
-    title: comparison ? `Rocket vs ${comparison.tool} — AI logo and brand tools compared` : "Comparison not found — Rocket",
-    description: comparison ? `Compare Rocket with ${comparison.tool} for logos, icons, Brand Kits, editing and exports.` : undefined,
-    canonical: comparison ? `https://tryrocket.ai/compare/${comparison.slug}` : undefined,
+    title: marketplace ? `Rocket vs ${marketplace.name} — Compare software discovery` : comparison ? `Rocket vs ${comparison.tool} — AI logo and brand tools compared` : "Comparison not found — Rocket",
+    description: marketplace ? `Compare Rocket and ${marketplace.name} for finding independent software.` : comparison ? `Compare Rocket with ${comparison.tool} for logos, icons, Brand Kits, editing and exports.` : undefined,
+    canonical: marketplace ? `https://tryrocket.ai/compare/${marketplace.slug}` : comparison ? `https://tryrocket.ai/compare/${comparison.slug}` : undefined,
   });
+
+  if (marketplace) return (
+    <div className="marketplace-page min-h-screen bg-[#f7f9fc] text-neutral-950">
+      <SiteHeader />
+      <main className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-20">
+        <Link to="/compare" className="text-sm font-medium text-sky-800 hover:underline">← All comparisons</Link>
+        <p className="mt-10 text-sm font-semibold text-sky-800">{marketplace.focus}</p>
+        <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-6xl">Rocket vs {marketplace.name}</h1>
+        <p className="mt-5 max-w-3xl text-lg leading-relaxed text-neutral-600">{marketplace.summary}</p>
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <section className="rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+            <h2 className="text-xl font-semibold">Choose {marketplace.name} when…</h2>
+            <p className="mt-3 leading-relaxed text-neutral-600">{marketplace.chooseThem}</p>
+          </section>
+          <section className="rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+            <h2 className="text-xl font-semibold">Choose Rocket when…</h2>
+            <p className="mt-3 leading-relaxed text-neutral-600">{marketplace.chooseRocket}</p>
+          </section>
+        </div>
+        <section className="mt-10 border-t border-neutral-200 pt-8">
+          <h2 className="text-2xl font-semibold">What Rocket offers today</h2>
+          <p className="mt-3 max-w-3xl leading-relaxed text-neutral-600">Search and browse independent apps, explore categories and evidence-based Rising or New sections, save listings, and submit or claim an app. Listing does not mean endorsement. Rocket Login and Payments work only where a developer has integrated them.</p>
+          <Link to="/discover" className="mt-6 inline-flex rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa]">Explore apps <ArrowRight className="ml-2 h-4 w-4" /></Link>
+        </section>
+        <p className="mt-12 text-sm text-neutral-500">Competitor description source: <a href={marketplace.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-900">{marketplace.sourceLabel}</a>. Product capabilities may change.</p>
+        <nav aria-label="Other comparisons" className="mt-10 flex flex-wrap gap-4 text-sm">
+          {marketplaceComparisons.filter((item) => item.slug !== marketplace.slug).map((item) => <Link key={item.slug} to={`/compare/${item.slug}`} className="font-medium text-sky-800 hover:underline">Rocket vs {item.name} →</Link>)}
+        </nav>
+      </main>
+      <SiteFooter />
+    </div>
+  );
 
   if (!comparison) {
     return (
@@ -53,7 +87,7 @@ const ComparisonDetail = () => {
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">{comparison.tool}</h2>
               <p className="mt-4 text-base leading-8 text-neutral-700">{comparison.description}</p>
               <div className="mt-6 rounded-2xl bg-neutral-50 p-5">
-                <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Best for</div>
+                <div className="text-xs font-semibold normal-case tracking-wider text-neutral-500">Best for</div>
                 <p className="mt-2 text-sm text-neutral-800">{comparison.bestFor}</p>
               </div>
             </section>

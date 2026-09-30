@@ -558,12 +558,12 @@ const Assets = () => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-white">
-              <DropdownMenuLabel className="text-[10px] uppercase text-neutral-500">Move {selected.size} designs to…</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] normal-case text-neutral-500">Move {selected.size} designs to…</DropdownMenuLabel>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">Project</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="w-56 bg-white">
-                    <DropdownMenuLabel className="text-[10px] uppercase text-neutral-500">Projects</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[10px] normal-case text-neutral-500">Projects</DropdownMenuLabel>
                     {projects.length === 0 ? <div className="px-2 py-2 text-xs text-neutral-500">No projects yet.</div> : projects.map((project) => (
                       <DropdownMenuItem key={project.id} onClick={() => bulkAssignToProject(project.id)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">
                         {project.name}
@@ -578,7 +578,7 @@ const Assets = () => {
                 <DropdownMenuSubTrigger className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">Folder</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="w-56 bg-white">
-                    <DropdownMenuLabel className="text-[10px] uppercase text-neutral-500">Folders</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[10px] normal-case text-neutral-500">Folders</DropdownMenuLabel>
                     {folders.length === 0 ? <div className="px-2 py-2 text-xs text-neutral-500">No folders yet.</div> : folders.map((folder) => (
                       <DropdownMenuItem key={folder.id} onClick={() => bulkAssignToFolder(folder.id)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">
                         {folder.name}
@@ -716,7 +716,7 @@ const Assets = () => {
                       </DropdownMenuSubTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuSubContent className="w-56 bg-white">
-                          <DropdownMenuLabel className="text-[10px] uppercase text-neutral-500">Projects</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[10px] normal-case text-neutral-500">Projects</DropdownMenuLabel>
                           {projects.length === 0 ? <div className="px-2 py-2 text-xs text-neutral-500">No projects yet.</div> : projects.map((project) => (
                             <DropdownMenuItem key={project.id} onClick={() => assignToProject(asset.id, project.id)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">
                               {project.name}{asset.project_id === project.id ? " ✓" : ""}
@@ -734,7 +734,7 @@ const Assets = () => {
                       </DropdownMenuSubTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuSubContent className="w-56 bg-white">
-                          <DropdownMenuLabel className="text-[10px] uppercase text-neutral-500">Folders</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[10px] normal-case text-neutral-500">Folders</DropdownMenuLabel>
                           {folders.length === 0 ? <div className="px-2 py-2 text-xs text-neutral-500">No folders yet.</div> : folders.map((folder) => (
                             <DropdownMenuItem key={folder.id} onClick={() => assignToFolder(asset, folder.id)} className="cursor-pointer focus:bg-neutral-100 focus:text-neutral-900">
                               {folder.name}{currentFolderId === folder.id ? " ✓" : ""}

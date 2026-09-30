@@ -8,7 +8,6 @@ import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
 import ArticleCover from "@/components/blog/ArticleCover";
 import InlineCta from "@/components/blog/InlineCta";
-import NewsletterCta from "@/components/blog/NewsletterCta";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -220,7 +219,7 @@ const BlogPost = () => {
           </div>
           <h1
             className="mt-6 text-4xl font-medium leading-[1.08] tracking-tight text-neutral-900 sm:text-5xl"
-            style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             {post.title}
           </h1>
@@ -288,7 +287,7 @@ const BlogPost = () => {
 
             {post.faq?.length ? (
               <section className="mt-14 border-t border-neutral-200 pt-10">
-                <h2 className="text-2xl font-medium tracking-tight" style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}>
+                <h2 className="text-2xl font-medium tracking-tight" style={{ fontFamily: "Inter, sans-serif" }}>
                   Frequently asked
                 </h2>
                 <dl className="mt-6 space-y-6">
@@ -308,12 +307,12 @@ const BlogPost = () => {
               className="mt-14 flex items-center justify-between gap-4 rounded-2xl border border-neutral-200 p-6 transition hover:border-neutral-900"
             >
               <span>
-                <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                <span className="block text-xs font-semibold normal-case tracking-[0.16em] text-neutral-400">
                   Part of the guide
                 </span>
                 <span
                   className="mt-2 block text-lg font-medium tracking-tight text-neutral-900"
-                  style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+                  style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {pillar.title}
                 </span>
@@ -354,7 +353,7 @@ const BlogPost = () => {
           {toc.length > 1 && (
             <aside className="hidden lg:block">
               <div className="sticky top-24">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">On this page</div>
+                <div className="text-xs font-semibold normal-case tracking-[0.16em] text-neutral-400">On this page</div>
                 <ul className="mt-4 space-y-2 border-l border-neutral-200">
                   {toc.map((item) => (
                     <li key={item.id} style={{ paddingLeft: item.level === 3 ? 24 : 14 }}>
@@ -387,7 +386,7 @@ const BlogPost = () => {
         {/* Related */}
         {related.length > 0 && (
           <section className="mt-20 border-t border-neutral-200 pt-12">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">You might also like</h2>
+            <h2 className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">You might also like</h2>
             <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((item) => (
                 <ArticleCard key={item.slug} post={item} compact />
@@ -396,9 +395,6 @@ const BlogPost = () => {
           </section>
         )}
 
-        <div className="mt-20">
-          <NewsletterCta compact />
-        </div>
 
         <p className="sr-only">{stripMarkdown(post.body).slice(0, 0)}</p>
       </main>

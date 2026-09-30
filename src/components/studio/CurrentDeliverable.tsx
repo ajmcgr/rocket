@@ -34,7 +34,7 @@ export default function CurrentDeliverable({
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+          <div className="text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
             Current Deliverable
           </div>
           <h2 className="mt-0.5 truncate text-xl font-semibold text-neutral-900">{title}</h2>

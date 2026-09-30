@@ -232,7 +232,7 @@ const OnboardingTour = () => {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand/10 text-brand">
               <Sparkles className="h-3.5 w-3.5" />
             </div>
-            <div className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+            <div className="text-[11px] font-medium normal-case tracking-wider text-neutral-500">
               Step {idx + 1} of {STEPS.length}
             </div>
           </div>

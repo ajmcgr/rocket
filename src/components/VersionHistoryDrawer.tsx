@@ -221,7 +221,7 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
                 <div className={`flex-1 overflow-hidden grid gap-3 ${compare ? "grid-cols-2" : "grid-cols-1"}`}>
                   {compare && showDiff && !currentSnap.image_url && !selected.snapshot.image_url ? (
                     <div className="col-span-2 flex flex-col overflow-hidden">
-                      <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-neutral-500">Diff · this version → current</div>
+                      <div className="mb-1 text-[10px] font-medium normal-case tracking-wider text-neutral-500">Diff · this version → current</div>
                       <div className="flex-1 overflow-hidden">
                         <DiffView before={selected.snapshot.content || ""} after={currentSnap.content || ""} />
                       </div>
@@ -229,12 +229,12 @@ const VersionHistoryDrawer = ({ open, onClose, asset, onRestored }: Props) => {
                   ) : (<>
                   {compare && (
                     <div className="flex flex-col overflow-hidden">
-                      <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-neutral-500">Current</div>
+                      <div className="mb-1 text-[10px] font-medium normal-case tracking-wider text-neutral-500">Current</div>
                       <div className="flex-1 overflow-hidden"><SnapshotView snap={currentSnap} fallbackTitle={asset.title} /></div>
                     </div>
                   )}
                   <div className="flex flex-col overflow-hidden">
-                    <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-neutral-500">{compare ? "This version" : selected.label || "Snapshot"}</div>
+                    <div className="mb-1 text-[10px] font-medium normal-case tracking-wider text-neutral-500">{compare ? "This version" : selected.label || "Snapshot"}</div>
                     <div className="flex-1 overflow-hidden"><SnapshotView snap={selected.snapshot} /></div>
                   </div>
                   </>)}

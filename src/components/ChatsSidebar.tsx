@@ -182,7 +182,7 @@ const ChatsSidebar = () => {
   function Section({ label, children }: { label: string; children: React.ReactNode }) {
     return (
       <div className="mb-3">
-        <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{label}</div>
+        <div className="px-2 pb-1 text-[10px] font-semibold normal-case tracking-wider text-neutral-400">{label}</div>
         <div className="flex flex-col">{children}</div>
       </div>
     );

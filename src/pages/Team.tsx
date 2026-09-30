@@ -113,7 +113,7 @@ const Team = () => {
     setMembers(prev => prev.filter(m => m.id !== memberId));
   };
 
-  if (loading) return <div className="flex items-center gap-2 py-16 text-neutral-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading team…</div>;
+  if (loading) return <div className="rocket-skeleton-surface min-h-[50vh] p-8" role="status" aria-label="Loading team" aria-busy="true"><div className="mx-auto max-w-4xl animate-pulse space-y-5"><div className="h-8 w-40 rounded bg-neutral-100" /><div className="h-36 rounded-2xl bg-neutral-100" /></div></div>;
   if (!workspaceId) return <p className="text-neutral-500">No active workspace.</p>;
 
   return (

@@ -355,7 +355,7 @@ export default function Brand() {
                   }
                   return (
                   <div key={v.key} className="flex flex-col gap-2">
-                    <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">{v.label}</div>
+                    <div className="text-[11px] font-medium normal-case tracking-wide text-neutral-500">{v.label}</div>
                     <div className={`relative overflow-hidden rounded-2xl ${v.border ? `border ${v.border}` : ""} shadow-[0_10px_40px_-20px_rgba(15,23,42,0.15)]`} style={{ backgroundColor: v.bg }}>
                     <div className="flex aspect-[16/9] items-center justify-center">
                       <AssetThumbnail
@@ -390,7 +390,7 @@ export default function Brand() {
                     >
                       <Download className="h-3.5 w-3.5" /> Download
                       {!subLoading && !isPro && (
-                        <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-foreground">PRO</span>
+                        <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-wide text-brand-foreground">PRO</span>
                       )}
                     </button>
                     </div>
@@ -403,7 +403,7 @@ export default function Brand() {
             <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
               {cards.map((v) => (
                 <div key={v.key} className="flex flex-col gap-2">
-                  <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">{v.label}</div>
+                  <div className="text-[11px] font-medium normal-case tracking-wide text-neutral-500">{v.label}</div>
                   <div
                     className={`relative overflow-hidden rounded-2xl ${v.border ? `border ${v.border}` : ""} shadow-[0_10px_40px_-20px_rgba(15,23,42,0.15)]`}
                     style={{ backgroundColor: v.bg }}
@@ -442,7 +442,7 @@ export default function Brand() {
                     >
                       <Download className="h-3.5 w-3.5" /> Download
                       {!subLoading && !isPro && (
-                        <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-foreground">PRO</span>
+                        <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-wide text-brand-foreground">PRO</span>
                       )}
                     </button>
                   </div>
@@ -456,7 +456,7 @@ export default function Brand() {
                 const isDark = v.bg !== "#FFFFFF";
                 return (
                   <div key={v.key} className="flex flex-col gap-2">
-                    <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">{v.label}</div>
+                    <div className="text-[11px] font-medium normal-case tracking-wide text-neutral-500">{v.label}</div>
                     <div
                       className={`relative overflow-hidden rounded-2xl ${v.border ? `border ${v.border}` : ""} shadow-[0_10px_40px_-20px_rgba(15,23,42,0.15)]`}
                       style={{ backgroundColor: v.bg }}
@@ -492,7 +492,7 @@ export default function Brand() {
                           )}
                           Download
                           {!subLoading && !isPro && (
-                            <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-foreground">PRO</span>
+                            <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-wide text-brand-foreground">PRO</span>
                           )}
                         </DropdownMenuTrigger>
                         <DropdownMenuContent

@@ -1,63 +1,83 @@
+import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
-const FAQS = [
-  { q: "What does Rocket generate?", a: "Rocket is a logo-first design tool. Start with logo directions — a logo mark, matching wordmark, icon, colours and typography — then refine your favourite in the editor and roll it into a Brand Kit. Each Brand Kit contains Logo/Icon Files, Social Icons, Palette, Fonts, and Brand Book." },
-  { q: "What are the main workflows?", a: "Four surfaces: Wizard (guided chat that generates logo directions from a URL or idea), Logo Designer & Icon Designer (batch generate marks and app icons in a chosen style), Templates (200+ ready-made logo and icon starters), and Saved (every design you star or open in the editor)." },
-  { q: "How does the Brand Kit work?", a: "Every Brand Kit is organised into five sections: Logo/Icon Files, Social Icons, Palette, Fonts, and Brand Book. Swap or remove any item; Remove sends it to Trash and you can restore within 30 days. Add extras from any saved design via 'Use in brand kit'. Starter can view and share Brand Kits; every download inside a Brand Kit — the full Brand Kit ZIP, individual logo variants (PNG/SVG/PDF), Social Icons, and Brand Book (PDF/PNG) — is a Pro feature." },
-  { q: "Can I edit designs like Canva?", a: "Yes. The editor supports multi-select (Shift-click + marquee), drag-resize, colour overlays for logos and images, image uploads with resize, layers on the right panel, Quick Edit for title/slogan/icon/layout/background, and export to PNG, SVG, PDF or ZIP." },
-  { q: "How long does a generation take?", a: "Most logo batches land in 30–60 seconds. Your chat history persists per project so you can scroll back and iterate on earlier prompts." },
-  { q: "Can I regenerate individual pieces?", a: "Yes. Every result has Edit, Save, Variants and Remix. Regenerating one design costs 1 credit; you can steer it with feedback like 'more minimal' or 'brighter'." },
-  { q: "What's a credit?", a: "Credits power every generation. Free includes 500 credits, Starter includes 500 credits/month, Pro includes 3,000/month, and Business includes 15,000/month. Top up anytime with credit packs — they never expire." },
-  { q: "How does sharing and export work?", a: "Every design opens in the editor via a shareable link (new tab). Saved designs export freely from the editor as PNG, SVG or PDF. Brand Kit downloads (full ZIP, logo variants, Social Icons, Brand Book) require Pro. Pro also adds password-protected share links and PDF/Markdown brand guidelines." },
-  { q: "What's included in Pro?", a: "3,000 credits/month, all Brand Kit downloads (full ZIP, logo variants, Social Icons, Brand Book PDF/PNG), workspaces & multi-seat, password-protected share links, brand guideline exports, and priority AI capacity. 7 days free, cancel anytime." },
-  { q: "Can I cancel anytime?", a: "Yes, from Settings → Manage Billing. You keep access until the end of the period." },
+const sections = [
+  {
+    title: "Discovering apps",
+    questions: [
+      { q: "What is Rocket?", a: "Rocket helps people discover independent apps worth using. You can search, browse categories, explore New and Rising, view app profiles, and save apps to revisit." },
+      { q: "Are all apps on Rocket reviewed or recommended?", a: "No. An indexed app is one Rocket knows about; listing does not equal endorsement. A Rocket Pick is an explicit editorial selection. Claims and verification describe specific evidence, not an overall quality guarantee." },
+      { q: "What does Rising mean?", a: "Rising highlights apps with notable public Launch activity. It does not claim verified customer growth, revenue, or Rocket endorsement." },
+      { q: "Can I use every listed app with my Rocket account?", a: "No. You can use your Rocket account for Rocket features such as saving apps. Only apps that have explicitly integrated Rocket identity support Continue with Rocket; other apps use their own sign-in." },
+      { q: "Can I buy every app through Rocket?", a: "No. Rocket payments are available only where a developer has integrated them for that app. Otherwise, pricing and payment happen on the app's own website." },
+      { q: "How do I save an app?", a: "Select Save on an app card or profile and sign in if prompted. Your saved apps are private to your Rocket account." },
+      { q: "How do I report an inaccurate or problematic listing?", a: "Use the report or correction option on the app profile where available, or send its URL and the issue through our contact form. We review reported information rather than automatically changing another owner's listing." },
+    ],
+  },
+  {
+    title: "Launching and managing an app",
+    questions: [
+      { q: "How do I add my app?", a: "Open Submit your app and paste its public URL. Rocket first looks for an existing canonical listing. You can review the result before signing in to continue a claim or submission." },
+      { q: "What if my app is already listed?", a: "Claim the existing app rather than creating a duplicate. If multiple records might match, Rocket asks you to resolve the ambiguity instead of guessing." },
+      { q: "Does claiming my app verify that I own it?", a: "Not by itself. A claim starts the ownership process. Domain verification uses a real DNS or website challenge before Rocket marks domain ownership as verified." },
+      { q: "Can I edit my app profile?", a: "Verified owners can manage supported public presentation details in Your Apps. Owner edits do not replace Rocket's source provenance, public evidence, user reviews, or verification history." },
+      { q: "Can I connect Rocket Login or payments?", a: "Supported developers can configure Rocket identity and payments for apps they own. These capabilities require a deliberate integration and are not turned on for every indexed app." },
+      { q: "Can I show traffic or revenue on my profile?", a: "Only supported, connected evidence can be shown as verified. Provider metrics are private by default, and owners choose supported public visibility. Availability and verification depend on the specific integration and account." },
+    ],
+  },
+  {
+    title: "Account, creative tools, and billing",
+    questions: [
+      { q: "Do I need an account to browse Rocket?", a: "No. Discovery and public app profiles are available without signing in. An account is needed to save apps, claim an app, manage a listing, or use account-based tools." },
+      { q: "What can I create on Rocket?", a: "Rocket also offers logo, icon, design, and Brand Kit tools. These are separate from browsing or claiming an app and may use credits or a paid plan." },
+      { q: "Where can I see pricing and manage billing?", a: "Current Rocket plans and credits are listed on Pricing. Signed-in users can manage their Rocket billing from Settings. An independent app's own subscription is separate unless it explicitly uses Rocket payments." },
+      { q: "Can I disconnect a provider or revoke an app?", a: "Supported provider connections and sharing controls live with the relevant app in Your Apps. You can view and revoke third-party app authorization from Connected Apps in your Rocket account." },
+      { q: "How do I get help?", a: "Send us a message through Contact. Include the relevant Rocket or app URL and a short description, but never send passwords, API keys, or payment-card details." },
+    ],
+  },
 ];
 
 const FAQ = () => {
   useDocumentMeta({
-    title: "Rocket FAQ — AI logo generation, Brand Kits and credits",
-    description: "Answers about Rocket's logo and icon workflows, Brand Kits, credits, editing, exports, sharing and billing.",
+    title: "Rocket FAQ — Discovery, app claims, verification, and accounts",
+    description: "Answers about discovering and saving independent apps, launching and claiming an app, verification, Rocket integrations, creative tools, and billing.",
     canonical: "https://tryrocket.ai/faq",
   });
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
+    <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <SiteHeader />
+      <main className="mx-auto max-w-3xl px-5 py-14 sm:px-8 sm:py-20">
+        <header className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Frequently asked questions</h1>
+          <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Clear answers about what Rocket does today.</p>
+        </header>
 
-      <section className="border-b border-neutral-200/60">
-        <div className="mx-auto max-w-3xl px-6 py-24">
-          <div className="text-center">
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Frequently asked</h1>
-            <p className="mt-3 text-neutral-600">Everything you wanted to know about Rocket.</p>
+        {sections.map((section) => (
+          <section key={section.title} className="mt-12">
+            <h2 className="text-2xl font-bold tracking-tight">{section.title}</h2>
+            <Accordion type="single" collapsible className="mt-5 space-y-3">
+              {section.questions.map(({ q, a }) => (
+                <AccordionItem key={q} value={q} className="rounded-xl border border-neutral-200 bg-white px-5 dark:border-neutral-800 dark:bg-neutral-900">
+                  <AccordionTrigger className="py-5 text-left font-semibold text-neutral-900 dark:text-white">{q}</AccordionTrigger>
+                  <AccordionContent className="pb-5 leading-7 text-neutral-600 dark:text-neutral-300">{a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
+        ))}
+
+        <div className="mt-12 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <p className="font-semibold">Still have a question?</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">Tell us what you need help with.</p>
           </div>
-          <Accordion type="single" collapsible className="mt-10 w-full space-y-4">
-            {FAQS.map((f, i) => (
-              <AccordionItem
-                key={i}
-                value={`item-${i}`}
-                className="rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:border-brand/30 data-[state=open]:ring-1 data-[state=open]:ring-brand data-[state=open]:shadow-lg data-[state=open]:shadow-brand/5"
-              >
-                <AccordionTrigger className="px-6 py-5 text-left text-lg font-semibold text-neutral-900">{f.q}</AccordionTrigger>
-                <AccordionContent className="px-6 pb-5 text-neutral-600 leading-relaxed">{f.a}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-          <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl border border-brand/10 bg-brand/5 p-6 sm:flex-row sm:items-center">
-            <div>
-              <p className="font-semibold text-neutral-900">Still have questions?</p>
-              <p className="text-sm text-neutral-500">We're here to help you build something great.</p>
-            </div>
-            <Button asChild>
-              <a href="mailto:alex@tryrocket.ai">Contact Support</a>
-            </Button>
-          </div>
+          <Link to="/contact" className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa] sm:mt-0">Contact Rocket</Link>
         </div>
-      </section>
-
+      </main>
       <SiteFooter />
     </div>
   );

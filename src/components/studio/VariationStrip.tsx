@@ -3,7 +3,7 @@ import AssetThumbnail from "@/components/AssetThumbnail";
 function Thumb({ asset }: { asset: any }) {
   if (asset?.editor_state || asset?.image_url || asset?.thumbnail_url) return <AssetThumbnail asset={asset} />;
   return (
-    <div className="flex h-full w-full items-center justify-center bg-neutral-50 text-[10px] uppercase tracking-wider text-neutral-400">
+    <div className="flex h-full w-full items-center justify-center bg-neutral-50 text-[10px] normal-case tracking-wider text-neutral-400">
       {asset.asset_type || "asset"}
     </div>
   );
@@ -24,7 +24,7 @@ export default function VariationStrip({
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-3">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+        <div className="text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
           Variations
         </div>
         <span className="text-[10px] text-neutral-400">{variations.length} in this direction</span>

@@ -273,7 +273,7 @@ const ProjectDetail = () => {
   const tabs: ("all" | WF)[] = ["all", "brand", "design", "launch", "promote", "other"];
 
   if (!project) return (
-    <div className="mx-auto max-w-7xl px-6 py-10">
+    <div className="rocket-skeleton-surface mx-auto max-w-7xl rounded-2xl px-6 py-10">
       <div className="h-8 w-1/3 animate-pulse rounded bg-neutral-100" />
       <AssetGridSkeleton />
     </div>
@@ -408,7 +408,7 @@ const ProjectDetail = () => {
       ) : assets.length === 0 ? (
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-            <div className="text-xs uppercase tracking-wider text-neutral-500">Get started</div>
+            <div className="text-xs normal-case tracking-wider text-neutral-500">Get started</div>
             <h2 className="mt-1 text-lg font-semibold">Your first brand kit in 4 steps</h2>
             <ol className="mt-4 space-y-3 text-sm">
               {[
@@ -443,7 +443,7 @@ const ProjectDetail = () => {
             </div>
           </div>
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-6">
-            <div className="text-xs uppercase tracking-wider text-neutral-500">Or</div>
+            <div className="text-xs normal-case tracking-wider text-neutral-500">Or</div>
             <h2 className="mt-1 text-lg font-semibold">Bring in existing work</h2>
             <p className="mt-1 text-sm text-neutral-500">Attach brand work you've already generated in Rocket to this project.</p>
             <button onClick={openPicker} className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm hover:bg-neutral-50"><Plus className="h-4 w-4" /> Add existing brand work</button>

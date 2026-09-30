@@ -165,7 +165,7 @@ const Pricing = () => {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Starter */}
             <div className="relative rounded-2xl border border-neutral-200 bg-white p-8">
-              <div className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Starter</div>
+              <div className="text-sm font-semibold normal-case tracking-wider text-neutral-500">Starter</div>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("starter").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("starter").suffix}</span>
@@ -194,7 +194,7 @@ const Pricing = () => {
               <div className="absolute -top-3 right-6 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white">
                 Most popular
               </div>
-              <div className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Pro</div>
+              <div className="text-sm font-semibold normal-case tracking-wider text-neutral-500">Pro</div>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("growth").display}</span>
                 <span className="text-neutral-500">{priceFor("growth").suffix}</span>
@@ -220,7 +220,7 @@ const Pricing = () => {
 
             {/* Business */}
             <div className="relative rounded-2xl border border-neutral-200 bg-white p-8">
-              <div className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Business</div>
+              <div className="text-sm font-semibold normal-case tracking-wider text-neutral-500">Business</div>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("business").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("business").suffix}</span>
@@ -301,7 +301,7 @@ const Pricing = () => {
                 disabled={loading === p.id}
                 className={`rounded-2xl border p-6 text-left transition hover:shadow-xs disabled:opacity-60 ${p.highlight ? "border-brand bg-brand/5 hover:bg-brand/10" : "border-neutral-200 bg-white hover:border-neutral-300"}`}
               >
-                <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">{p.note}</div>
+                <div className="text-xs font-semibold normal-case tracking-wider text-neutral-500">{p.note}</div>
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-4xl font-semibold tracking-tight">{p.price}</span>
                 </div>

@@ -1,5 +1,5 @@
 export const CardSkeleton = () => (
-  <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+  <div className="rocket-skeleton-surface overflow-hidden rounded-2xl border border-neutral-200">
     <div className="aspect-square w-full animate-pulse bg-neutral-100" />
     <div className="space-y-2 border-t border-neutral-100 p-3">
       <div className="h-3 w-3/4 animate-pulse rounded bg-neutral-100" />
@@ -9,7 +9,7 @@ export const CardSkeleton = () => (
 );
 
 export const ProjectCardSkeleton = () => (
-  <div className="rounded-2xl border border-neutral-200 bg-white p-5">
+  <div className="rocket-skeleton-surface rounded-2xl border border-neutral-200 p-5">
     <div className="flex items-start gap-3">
       <div className="h-10 w-10 animate-pulse rounded-lg bg-neutral-100" />
       <div className="flex-1 space-y-2">

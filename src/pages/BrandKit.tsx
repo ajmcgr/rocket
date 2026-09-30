@@ -32,7 +32,7 @@ const BrandKit = () => {
   }, [id]);
 
   if (loading) return (
-    <div className="mx-auto max-w-5xl space-y-4 p-10">
+    <div className="rocket-skeleton-surface mx-auto max-w-5xl space-y-4 rounded-2xl p-10">
       <Skeleton className="h-8 w-48" />
       <Skeleton className="h-48 w-full" />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -112,7 +112,7 @@ const BrandKit = () => {
 
       <div ref={sheetRef} className="mt-8 space-y-10 rounded-3xl border border-neutral-200 bg-white p-10">
         <header className="border-b border-neutral-200 pb-8">
-          <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Brand Kit</div>
+          <div className="text-xs normal-case tracking-[0.2em] text-neutral-500">Brand Kit</div>
           <h1 className="mt-2 text-5xl font-semibold tracking-tight">{project.name}</h1>
           {tagline && <p className="mt-3 text-lg text-neutral-600">"{tagline}"</p>}
           {project.description && !tagline && <p className="mt-3 text-lg text-neutral-600">{project.description}</p>}
@@ -120,7 +120,7 @@ const BrandKit = () => {
 
         {logos.length > 0 && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Logos</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Logos</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {logos.map(l => (
                 <div key={l.id} className="flex aspect-square items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
@@ -133,7 +133,7 @@ const BrandKit = () => {
 
         {logotypes.length > 0 && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Logotypes</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Logotypes</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {logotypes.map(l => (
                 <div key={l.id} className="flex aspect-[16/7] items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
@@ -146,7 +146,7 @@ const BrandKit = () => {
 
         {colors.length > 0 && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Colors</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Colors</h2>
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
               {colors.map(c => (
                 <div key={c} className="overflow-hidden rounded-xl border border-neutral-200">
@@ -160,7 +160,7 @@ const BrandKit = () => {
 
         {fonts.length > 0 && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Typography</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Typography</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {fonts.map(f => (
                 <div key={f} className="rounded-2xl border border-neutral-200 p-5">
@@ -175,14 +175,14 @@ const BrandKit = () => {
 
         {voice && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Voice</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Voice</h2>
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
               {voice.overview && <p className="text-sm leading-relaxed text-neutral-800">{voice.overview}</p>}
               {voice.pillars?.length ? (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {voice.pillars.map((p, i) => (
                     <div key={i} className="rounded-xl border border-neutral-200 bg-white p-4">
-                      <div className="text-[10px] uppercase tracking-wider text-brand">Pillar {i + 1}</div>
+                      <div className="text-[10px] normal-case tracking-wider text-brand">Pillar {i + 1}</div>
                       <div className="mt-1 font-semibold text-neutral-900">{p.name}</div>
                       <p className="mt-1 text-xs text-neutral-600">{p.description}</p>
                       {p.example && <p className="mt-2 border-l-2 border-brand/30 pl-2 text-xs italic text-neutral-700">"{p.example}"</p>}
@@ -196,18 +196,18 @@ const BrandKit = () => {
 
         {guidelines && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Guidelines</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Guidelines</h2>
             <div className="rounded-2xl border border-neutral-200 p-6 text-sm leading-relaxed text-neutral-800">
-              {guidelines.mission && <div className="mb-4"><div className="text-[10px] uppercase tracking-wider text-neutral-500">Mission</div><p className="mt-1">{guidelines.mission}</p></div>}
-              {guidelines.vision && <div className="mb-4"><div className="text-[10px] uppercase tracking-wider text-neutral-500">Vision</div><p className="mt-1">{guidelines.vision}</p></div>}
-              {guidelines.positioning && <div className="mb-4"><div className="text-[10px] uppercase tracking-wider text-neutral-500">Positioning</div><blockquote className="mt-1 border-l-4 border-brand pl-3 italic">{guidelines.positioning}</blockquote></div>}
+              {guidelines.mission && <div className="mb-4"><div className="text-[10px] normal-case tracking-wider text-neutral-500">Mission</div><p className="mt-1">{guidelines.mission}</p></div>}
+              {guidelines.vision && <div className="mb-4"><div className="text-[10px] normal-case tracking-wider text-neutral-500">Vision</div><p className="mt-1">{guidelines.vision}</p></div>}
+              {guidelines.positioning && <div className="mb-4"><div className="text-[10px] normal-case tracking-wider text-neutral-500">Positioning</div><blockquote className="mt-1 border-l-4 border-brand pl-3 italic">{guidelines.positioning}</blockquote></div>}
               {guidelines.values?.length ? (
-                <div className="mb-4"><div className="text-[10px] uppercase tracking-wider text-neutral-500">Values</div>
+                <div className="mb-4"><div className="text-[10px] normal-case tracking-wider text-neutral-500">Values</div>
                   <ul className="mt-1 grid gap-1 md:grid-cols-2">{guidelines.values.map((v, i) => <li key={i}><strong>{v.name}.</strong> {v.description}</li>)}</ul>
                 </div>
               ) : null}
               {guidelines.taglines?.length ? (
-                <div><div className="text-[10px] uppercase tracking-wider text-neutral-500">Taglines</div>
+                <div><div className="text-[10px] normal-case tracking-wider text-neutral-500">Taglines</div>
                   <ul className="mt-1 list-disc pl-5">{guidelines.taglines.slice(0, 6).map((t, i) => <li key={i}>"{t}"</li>)}</ul>
                 </div>
               ) : null}
@@ -217,7 +217,7 @@ const BrandKit = () => {
 
         {graphics.length > 0 && (
           <section>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Graphics</h2>
+            <h2 className="mb-4 text-sm font-semibold normal-case tracking-wider text-neutral-500">Graphics</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {graphics.map(g => (
                 <div key={g.id} className="overflow-hidden rounded-2xl border border-neutral-200">

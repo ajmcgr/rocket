@@ -247,7 +247,7 @@ export default function PublicAppProfile() {
         </Link>
         {loading && (
           <div
-            className="mt-8 animate-pulse p-2 sm:p-4"
+            className="rocket-skeleton-surface mt-8 animate-pulse rounded-2xl p-4 sm:p-6"
             aria-label="Loading app profile"
           >
             <div className="flex gap-5">
@@ -278,11 +278,11 @@ export default function PublicAppProfile() {
                 <AppLogo
                   name={app.name}
                   src={app.logo_url}
-                  className="h-20 w-20 shrink-0 rounded-2xl sm:h-24 sm:w-24"
+                  className="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
                   eager
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-sky-800">
+                  <p className="mb-2 text-xs font-semibold text-sky-800">
                     {app.categories[0] || "Independent app"}
                   </p>
                   <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
@@ -312,7 +312,7 @@ export default function PublicAppProfile() {
                   onClick={() =>
                     track("outbound_app_clicked", { app_id: app.id })
                   }
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#469DDA] px-5 py-3 text-sm font-semibold text-[#092237] hover:bg-[#80c3ec] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
                 >
                   Visit website <ExternalLink className="h-4 w-4" />
                 </a>
@@ -478,7 +478,7 @@ export default function PublicAppProfile() {
                   {traction.map((point) => (
                     <div
                       key={point.metric_type}
-                      className="border-l-2 border-[#469DDA] pl-4"
+                      className="border-l-2 border-[#167ac6] pl-4"
                     >
                       <p className="text-sm text-neutral-500">
                         {{
@@ -511,7 +511,7 @@ export default function PublicAppProfile() {
                   {revenue.map((point) => (
                     <div
                       key={point.currency}
-                      className="border-l-2 border-[#469DDA] pl-4"
+                      className="border-l-2 border-[#167ac6] pl-4"
                     >
                       <p className="text-sm text-neutral-500">
                         Subscription MRR · {point.currency.toUpperCase()}

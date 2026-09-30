@@ -186,7 +186,7 @@ export default function Studio() {
               <ArrowLeft className="h-3.5 w-3.5" /> Project
             </Link>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+              <div className="text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
                 Brand Studio
               </div>
               <h1 className="text-lg font-semibold text-neutral-900">{project.name}</h1>

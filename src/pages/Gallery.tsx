@@ -87,7 +87,7 @@ const Gallery = () => {
         <Link to="/" className="text-sm font-semibold tracking-tight">Rocket</Link>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="text-xs uppercase tracking-wider text-brand">Public gallery</div>
+        <div className="text-xs normal-case tracking-wider text-brand">Public gallery</div>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Brand kits built with Rocket</h1>
         <p className="mt-2 text-sm text-neutral-600">A curated stream of founder-made brand kits. Turn yours on from any project's share menu.</p>
 

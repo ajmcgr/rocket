@@ -103,7 +103,7 @@ const Notifications = () => {
                       <p className={`truncate text-sm ${n.read ? "font-medium text-neutral-700" : "font-semibold text-neutral-900"}`}>
                         {n.title}
                       </p>
-                      {!n.read && <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">New</span>}
+                      {!n.read && <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wider text-brand">New</span>}
                     </div>
                     {n.body && <p className="mt-0.5 text-sm text-neutral-600">{n.body}</p>}
                     <p className="mt-1 text-[11px] text-neutral-400">{fmtDate(n.createdAt)}</p>

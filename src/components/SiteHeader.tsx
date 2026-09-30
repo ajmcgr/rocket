@@ -17,6 +17,9 @@ import {
   ShieldCheck,
   Grid2X2,
   Menu,
+  Send,
+  PenLine,
+  Image,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -31,7 +34,6 @@ import {
 } from "./ui/dropdown-menu";
 import { MobilePrimaryNav, PublicMobileNav } from "./PrimaryNav";
 import ThemeToggle from "./ThemeToggle";
-import EcosystemSwitcher from "./EcosystemSwitcher";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", label: "English" },
@@ -62,19 +64,19 @@ const sections: { heading: string; items: NavItem[] }[] = [
     heading: "Your apps",
     items: [
       { label: "Your Apps", to: "/your-apps", icon: Layers3 },
-      { label: "Launch an app", to: "/launch", icon: Plus },
-    ],
-  },
-  {
-    heading: "Monetize",
-    items: [
-      { label: "Revenue in Your Apps", to: "/your-apps", icon: Wallet },
-      { label: "Rocket Identity", to: "/developer", icon: ShieldCheck },
+      { label: "Submit your app", to: "/submit", icon: Plus },
     ],
   },
   {
     heading: "Create",
     items: [{ label: "Create branding", to: "/create", icon: Sparkles }],
+  },
+  {
+    heading: "Monetize",
+    items: [
+      { label: "Revenue in your apps", to: "/your-apps", icon: Wallet },
+      { label: "Rocket Identity", to: "/developer", icon: ShieldCheck },
+    ],
   },
 ];
 export default function SiteHeader() {
@@ -116,10 +118,10 @@ export default function SiteHeader() {
 
   const navItem = ({ label, to, icon: Icon }: NavItem) => {
     const active =
-      (label !== "Revenue in Your Apps" && pathname + locationSearch === to) ||
+      (label !== "Revenue in your apps" && pathname + locationSearch === to) ||
       (to === "/discover" && pathname === "/discover" && !locationSearch) ||
       (to === "/saved-apps" && pathname === "/saved-apps") ||
-      (to === "/launch" && pathname === "/launch") ||
+      (to === "/submit" && pathname === "/submit") ||
       (to === "/create" && pathname === "/create") ||
       (to === "/developer" && pathname.startsWith("/developer"));
     return (
@@ -143,44 +145,36 @@ export default function SiteHeader() {
           <Logo size="md" />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-5">
-          <div className="mt-3">
-            <EcosystemSwitcher compact />
-          </div>
-          <nav aria-label="Marketplace" className="mt-4 space-y-4">
-            {sections.slice(0, 3).map((section) => (
+          <nav aria-label="Marketplace" className="mt-5 space-y-4">
+            {sections.map((section) => (
               <div key={section.heading}>
-                <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">
+                <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">
                   {section.heading}
                 </p>
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
             <div>
-              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">
+              <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">
                 Grow
               </p>
               {[
-                ["Launch", "https://trylaunch.ai"],
-                ["Post", "https://trypost.ai"],
-                ["Media", "https://trymedia.ai"],
-              ].map(([label, href]) => (
+                { label: "Launch", href: "https://trylaunch.ai", icon: Send },
+                { label: "Post", href: "https://trypost.ai", icon: PenLine },
+                { label: "Media", href: "https://trymedia.ai", icon: Image },
+              ].map(({ label, href, icon: Icon }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex min-h-9 items-center justify-between rounded-xl px-3 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
+                  className="flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
                 >
-                  {label}
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                  <span>{label}</span>
+                  <ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" />
                 </a>
               ))}
-            </div>
-            <div>
-              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">
-                Create
-              </p>
-              {sections[3].items.map(navItem)}
             </div>
           </nav>
         </div>
@@ -206,7 +200,7 @@ export default function SiteHeader() {
           <form
             onSubmit={submitSearch}
             role="search"
-            className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#469DDA] sm:flex"
+            className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#167ac6] sm:flex"
           >
             <Search
               className="mr-2 h-4 w-4 shrink-0 text-neutral-500"
@@ -266,7 +260,7 @@ export default function SiteHeader() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="Account menu"
-                  className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#469DDA]"
+                  className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#167ac6]"
                 >
                   <Avatar className="h-9 w-9 border border-neutral-200">
                     {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
@@ -304,7 +298,7 @@ export default function SiteHeader() {
                 </Link>
                 <Link
                   to="/signup"
-                  className="hidden rounded-lg bg-[#469DDA] px-4 py-2.5 text-sm font-semibold text-[#092237] hover:bg-[#80c3ec] sm:block"
+                  className="hidden rounded-lg bg-[#167ac6] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1268aa] sm:block"
                 >
                   Sign up
                 </Link>

@@ -129,9 +129,10 @@ export default function EditAppProfile() {
         evidence remain separate.
       </p>
       {loading && (
-        <p role="status" className="mt-8">
-          Loading app…
-        </p>
+        <div role="status" aria-label="Loading app profile" className="rocket-skeleton-surface mt-8 animate-pulse rounded-2xl p-6">
+          <div className="h-6 w-1/2 rounded bg-neutral-100" />
+          <div className="mt-4 h-4 w-3/4 rounded bg-neutral-100" />
+        </div>
       )}
       {error && (
         <p

@@ -120,7 +120,7 @@ export default function AddApp() {
   };
 
   return <main className="mx-auto max-w-3xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-16">
-    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold tracking-[0.14em] text-sky-800">ROCKET LAUNCH</p><h1 className="mt-3 font-display text-4xl sm:text-5xl">Launch your app.</h1></div><Link to="/your-apps" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">Your Apps</Link></div>
+    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold tracking-[0.14em] text-sky-800">Rocket submission</p><h1 className="mt-3 font-display text-4xl sm:text-5xl">Submit your app.</h1></div><Link to="/your-apps" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">Your Apps</Link></div>
     {!appId && <form onSubmit={submit} className="mt-8 rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.35)] sm:p-9">
       <label htmlFor="app-url" className="block font-display text-2xl text-neutral-950 sm:text-3xl">Already launched somewhere?<span className="block">Paste the URL.</span></label>
       <input id="app-url" type="text" inputMode="url" required value={url} onChange={(event) => setUrl(event.target.value)}
@@ -130,7 +130,7 @@ export default function AddApp() {
       </button>
       <p className="mt-5 text-sm leading-relaxed text-neutral-600">Website · Launch · GitHub · Hacker News</p><p className="mt-1 text-sm text-neutral-500">You can review the match before claiming your app.</p>
     </form>}
-    {resolvingApp && <div role="status" aria-label="Loading app" className="mt-7 h-44 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-6"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /></div>}
+    {resolvingApp && <div role="status" aria-label="Loading app" className="rocket-skeleton-surface mt-7 h-44 animate-pulse rounded-[1.5rem] border border-neutral-200 p-6"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /></div>}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {success && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{success}</p>}
     {job?.status === "needs_review" && <div className="mt-6 rounded-xl border bg-white p-6">

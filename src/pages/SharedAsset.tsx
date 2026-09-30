@@ -70,7 +70,7 @@ const SharedAsset = () => {
 
   if (loading)
     return (
-      <div className="mx-auto max-w-3xl space-y-4 p-10">
+      <div className="rocket-skeleton-surface mx-auto max-w-3xl space-y-4 rounded-2xl p-10">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="aspect-video w-full" />
         <Skeleton className="h-4 w-3/4" />
@@ -138,7 +138,7 @@ const SharedAsset = () => {
         <Link to="/" className="text-sm font-semibold tracking-tight">Rocket</Link>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-12">
-        <div className="text-xs uppercase tracking-wider text-neutral-500">{String(asset.asset_type || "").replace(/_/g, " ")}</div>
+        <div className="text-xs normal-case tracking-wider text-neutral-500">{String(asset.asset_type || "").replace(/_/g, " ")}</div>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-neutral-900">{asset.title}</h1>
 
         {asset?.meta?.brand_context && (

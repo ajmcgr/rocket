@@ -29,7 +29,7 @@ const ArticleCard = ({ post, query = "", className, compact = false }: Props) =>
             "mt-3 font-medium leading-snug tracking-tight text-neutral-900 transition-colors duration-200 group-hover:text-brand",
             compact ? "text-lg" : "text-xl",
           )}
-          style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+          style={{ fontFamily: "Inter, sans-serif" }}
         >
           <Highlight text={post.title} query={query} />
         </h3>

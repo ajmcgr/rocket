@@ -109,7 +109,7 @@ export default function BrandLayout() {
             {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Download
             {!subLoading && !isPro && (
-              <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Pro</span>
+              <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-white">Pro</span>
             )}
           </button>
         </div>

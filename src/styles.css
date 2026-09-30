@@ -55,8 +55,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-display: "Reckless", serif;
-  --font-serif: "Reckless", ui-serif, Georgia, serif;
+  --font-display: "Inter", sans-serif;
+  --font-serif: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -90,12 +90,12 @@
   --popover: hsl(30 10% 8%);
   --popover-foreground: hsl(40 30% 95%);
 
-  /* Brand blue (#1676e3) */
-  --brand: hsl(212 82% 49%);
+  /* Rocket blue */
+  --brand: #167ac6;
   --brand-foreground: hsl(0 0% 100%);
-  --brand-hover: hsl(212 82% 42%);
+  --brand-hover: #1268aa;
 
-  --primary: hsl(212 82% 49%);
+  --primary: #167ac6;
   --primary-foreground: hsl(0 0% 100%);
 
   --secondary: hsl(30 10% 12%);
@@ -115,6 +115,7 @@
   --ring: hsl(40 70% 55%);
 
   --radius: 0.75rem;
+  --rocket-button-radius: var(--radius-lg);
 
   --gold: hsl(40 70% 55%);
   --gold-glow: hsl(40 80% 65%);
@@ -130,28 +131,15 @@
   --sidebar-ring: hsl(40 70% 55%);
 }
 
-/* Reckless @font-face — was inlined in index.html <head>; preload links for the
-   font files remain in __root.tsx head() to keep first-paint fast. */
-@font-face {
-  font-family: "Reckless";
-  src: url("/fonts/Reckless-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-@font-face {
-  font-family: "Reckless";
-  src: url("/fonts/Reckless-Medium.otf") format("opentype");
-  font-weight: 500 600;
-  font-style: normal;
-  font-display: block;
-}
-@font-face {
-  font-family: "Reckless";
-  src: url("/fonts/Reckless-Bold.ttf") format("truetype");
-  font-weight: 700 900;
-  font-style: normal;
-  font-display: block;
+/* Match action corners to the header's rounded-lg controls. Keep icon-only
+   buttons, selection controls, and full-card links in their intended shapes. */
+button:not([aria-label]):not([role="switch"]):not([role="radio"]):not([role="checkbox"]),
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a[class*="inline-flex"][class*="rounded-"],
+a[class*="inline-block"][class*="rounded-"] {
+  border-radius: var(--rocket-button-radius) !important;
 }
 
 /* Tailwind v3 `container` config port: centered, 2rem padding, 1400px cap. */
@@ -178,8 +166,7 @@
 
   h1,
   h2 {
-    font-family: "Reckless", serif;
-    font-weight: 400;
+    font-family: "Inter", sans-serif;
   }
   .marketplace-page h1,
   .marketplace-page h2 {
@@ -196,8 +183,7 @@
   }
   .app-shell h1,
   footer h1 {
-    font-family: "Reckless", serif;
-    font-weight: 400;
+    font-family: "Inter", sans-serif;
   }
 }
 
@@ -377,6 +363,17 @@ html.dark {
 html.dark body {
   background-color: #0f0e0c;
   color: hsl(40 30% 95%);
+}
+
+/* Loading surfaces follow the selected theme without changing content cards. */
+.rocket-skeleton-surface {
+  background-color: #fff !important;
+}
+html.dark .rocket-skeleton-surface {
+  background-color: #000 !important;
+}
+html.dark .rocket-skeleton-surface .bg-neutral-100 {
+  background-color: #171717 !important;
 }
 
 /* Surfaces (solid + translucent whites) */
@@ -579,4 +576,63 @@ html:not(.dark) .logo-dark {
 }
 html.dark .logo-dark {
   filter: brightness(0) invert(1);
+}
+
+/* Abstract category art: distinct gradients, never simulated product screenshots. */
+.rocket-category-card {
+  color: #14202c;
+  border: 1px solid rgba(20, 32, 44, 0.08);
+  background-size: cover;
+}
+.rocket-category-ocean {
+  background: radial-gradient(circle at 92% 7%, #60d7f0 0, transparent 43%), linear-gradient(130deg, #d3efff 0%, #a8c7f5 100%);
+}
+.rocket-category-orchid {
+  background: radial-gradient(circle at 10% 3%, #f4a8ea 0, transparent 47%), linear-gradient(135deg, #e1d8ff 0%, #c0bbf8 100%);
+}
+.rocket-category-citrus {
+  background: radial-gradient(circle at 90% 0%, #fff1a1 0, transparent 48%), linear-gradient(130deg, #d7f3c9 0%, #a8dfc2 100%);
+}
+.rocket-category-sunset {
+  background: radial-gradient(circle at 100% 10%, #ff9e9a 0, transparent 47%), linear-gradient(125deg, #ffe6b9 0%, #f6b5ad 100%);
+}
+.rocket-category-lagoon {
+  background: radial-gradient(circle at 15% 0%, #8ce4db 0, transparent 49%), linear-gradient(135deg, #c5f2eb 0%, #9dcbe4 100%);
+}
+.rocket-category-coral {
+  background: radial-gradient(circle at 85% 3%, #ffd4a0 0, transparent 45%), linear-gradient(125deg, #ffd4dd 0%, #eab8d7 100%);
+}
+.rocket-category-lime {
+  background: radial-gradient(circle at 0% 0%, #f9ed89 0, transparent 47%), linear-gradient(130deg, #e0f6a8 0%, #c0e2a9 100%);
+}
+.rocket-category-indigo {
+  background: radial-gradient(circle at 95% 0%, #98bcff 0, transparent 46%), linear-gradient(130deg, #d8ddff 0%, #c4b6e7 100%);
+}
+html.dark .rocket-category-card {
+  color: #f9fbff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+html.dark .rocket-category-ocean {
+  background: radial-gradient(circle at 92% 7%, #127496 0, transparent 48%), linear-gradient(130deg, #153c65 0%, #12283d 100%);
+}
+html.dark .rocket-category-orchid {
+  background: radial-gradient(circle at 10% 3%, #86447c 0, transparent 49%), linear-gradient(135deg, #49346f 0%, #262746 100%);
+}
+html.dark .rocket-category-citrus {
+  background: radial-gradient(circle at 90% 0%, #777c2f 0, transparent 50%), linear-gradient(130deg, #285c48 0%, #203b35 100%);
+}
+html.dark .rocket-category-sunset {
+  background: radial-gradient(circle at 100% 10%, #a94e53 0, transparent 49%), linear-gradient(125deg, #855230 0%, #402a3b 100%);
+}
+html.dark .rocket-category-lagoon {
+  background: radial-gradient(circle at 15% 0%, #267c77 0, transparent 50%), linear-gradient(135deg, #1b5269 0%, #25354b 100%);
+}
+html.dark .rocket-category-coral {
+  background: radial-gradient(circle at 85% 3%, #9b6140 0, transparent 48%), linear-gradient(125deg, #743a5a 0%, #3e2b42 100%);
+}
+html.dark .rocket-category-lime {
+  background: radial-gradient(circle at 0% 0%, #798433 0, transparent 50%), linear-gradient(130deg, #47602d 0%, #2a3e32 100%);
+}
+html.dark .rocket-category-indigo {
+  background: radial-gradient(circle at 95% 0%, #4b65aa 0, transparent 48%), linear-gradient(130deg, #3c3b79 0%, #292c4d 100%);
 }

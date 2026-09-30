@@ -197,7 +197,7 @@ const Insights = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-2 flex justify-between text-[10px] uppercase tracking-wider text-neutral-400">
+            <div className="mt-2 flex justify-between text-[10px] normal-case tracking-wider text-neutral-400">
               <span>{daily[0]?.key}</span>
               <span>{daily[daily.length - 1]?.key}</span>
             </div>
@@ -290,7 +290,7 @@ const Insights = () => {
 
 const Stat = ({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: number; hint?: string }) => (
   <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-neutral-500">{icon}<span>{label}</span></div>
+    <div className="flex items-center gap-2 text-xs font-medium normal-case tracking-wider text-neutral-500">{icon}<span>{label}</span></div>
     <div className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">{value.toLocaleString()}</div>
     {hint && <div className="mt-0.5 text-xs text-neutral-500">{hint}</div>}
   </div>

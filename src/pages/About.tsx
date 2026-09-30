@@ -1,55 +1,57 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { Link } from "@/lib/router-compat";
 import alexAvatar from "@/assets/alex-macgregor.png.asset.json";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const About = () => {
   useDocumentMeta({
-    title: "About Rocket — AI brand studio for founders",
-    description: "Learn why Rocket helps founders turn raw ideas into coordinated logos, icons and complete Brand Kits.",
+    title: "About Rocket — Discover independent apps worth using",
+    description: "Rocket helps people discover independent apps and gives builders a place to launch, build trust, connect, and grow.",
     canonical: "https://tryrocket.ai/about",
   });
 
-  return <div className="min-h-screen bg-white text-neutral-900">
+  return <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
     <SiteHeader />
-    <main className="mx-auto max-w-3xl px-6 py-20">
-      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">About Rocket</h1>
-      <p className="mt-8 text-lg leading-relaxed text-neutral-700">
-        Rocket is a logo-first AI brand studio where founders turn raw ideas into memorable, launch-ready brands.
-      </p>
-      <p className="mt-6 font-semibold text-neutral-900">Hello there!</p>
-      <p className="mt-4 text-lg leading-relaxed text-neutral-700">
-        We believe the future of software is being built by founders who use AI to ship at a speed that was impossible just a few years ago. Our mission is to help these builders create distinctive visual identities so their products look as considered as the software behind them.
-      </p>
-      <p className="mt-4 text-lg leading-relaxed text-neutral-700">
-        Founders drop in a URL or describe an idea and Rocket generates coordinated logo directions, a wordmark, icon, colours and typography. They can refine a favourite direction in the editor and turn it into a complete Brand Kit with practical files, social assets and guidelines.
-      </p>
-      <p className="mt-4 text-lg leading-relaxed text-neutral-700">
-        Whether you're shipping your first AI tool or your tenth product, Rocket helps you move from an unbranded idea to an identity you can use across your website, product and launch channels.
-      </p>
+    <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">
+      <article className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-6 py-10 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-12 sm:py-14">
+        <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl">About Rocket</h1>
 
-      <div className="mt-16">
-        <img
-          src={alexAvatar.url}
-          alt="Alex MacGregor"
-          className="h-32 w-32 rounded-none object-cover"
-        />
-        <h3 className="mt-5 text-xl font-bold text-neutral-900">Alex MacGregor</h3>
-        <p className="text-xl font-bold text-neutral-900">Founder, Rocket</p>
-        <p className="mt-3">
-          <a
-            href="https://x.com/alexmacgregor__"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 text-brand underline underline-offset-4"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 fill-current">
-              <path d="M18.244 2H21.5l-7.5 8.57L22.5 22h-6.86l-5.37-6.62L4.1 22H.84l8.04-9.19L.5 2h7.02l4.86 6.06L18.244 2Zm-2.4 18h1.9L7.27 4H5.25l10.594 16Z" />
-            </svg>
+        <div className="mt-10 space-y-6 text-base leading-8 text-neutral-700 dark:text-neutral-300 sm:text-lg">
+          <p>Rocket is a place to discover independent apps worth using.</p>
+          <p className="font-semibold text-neutral-950 dark:text-white">Hello there!</p>
+          <p>
+            Independent builders are making remarkable software. We want to make it easier for people to find those apps, understand what they do, and decide which ones are worth their time.
+          </p>
+          <p>
+            For builders, Rocket is a place to bring an app into the open, tell its story, and build a relationship with the people who use it. Here is what you can do today:
+          </p>
+
+          <div className="space-y-4 border-l-2 border-[#167ac6] pl-5">
+            <p><strong className="text-neutral-950 dark:text-white">Submit</strong><br />Add your app to Rocket.</p>
+            <p><strong className="text-neutral-950 dark:text-white">Verify</strong><br />Build trust with details you choose to share.</p>
+            <p><strong className="text-neutral-950 dark:text-white">Connect</strong><br />Use Rocket identity and payment integrations where supported.</p>
+            <p><strong className="text-neutral-950 dark:text-white">Grow</strong><br />Help more people discover your app.</p>
+          </div>
+
+          <p>
+            Rocket is still growing. Not every listed app is claimed or connected, and a listing is not an endorsement. We will keep making discovery more useful and giving independent developers better ways to earn trust.
+          </p>
+        </div>
+
+        <Link to="/submit" className="mt-8 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#167ac6] px-5 text-sm font-semibold text-white transition hover:bg-[#1268aa]">
+          Submit your app
+        </Link>
+
+        <div className="mt-14 border-t border-neutral-200 pt-8 dark:border-neutral-800">
+          <img src={alexAvatar.url} alt="Alex MacGregor" className="h-20 w-20 rounded-full object-cover" />
+          <p className="mt-4 font-semibold text-neutral-950 dark:text-white">Alex MacGregor</p>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">Founder, Rocket</p>
+          <a href="https://x.com/alexmacgregor__" target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium text-[#267cbb] underline underline-offset-4 dark:text-[#80c7f4]">
             Follow me on X
           </a>
-        </p>
-      </div>
+        </div>
+      </article>
     </main>
     <SiteFooter />
   </div>;

@@ -6,7 +6,7 @@ import { assetHref, assetOpenLabel, isBrandAsset } from "@/lib/assetExperience";
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-neutral-400">{label}</div>
+      <div className="text-[10px] normal-case tracking-wider text-neutral-400">{label}</div>
       <div className={`mt-0.5 truncate ${mono ? "font-mono text-[11px]" : ""} text-neutral-800`}>
         {value}
       </div>
@@ -17,7 +17,7 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
 export default function RightInspector({ asset }: { asset: any | null }) {
   return (
     <aside className="hidden w-[280px] shrink-0 border-l border-neutral-200 bg-white p-4 lg:block">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+      <div className="text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
         Properties
       </div>
       {!asset ? (
@@ -44,7 +44,7 @@ export default function RightInspector({ asset }: { asset: any | null }) {
             </div>
           )}
           <div className="pt-3">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+            <div className="mb-1 text-[10px] font-semibold normal-case tracking-[0.18em] text-neutral-500">
               Layers
             </div>
             <p className="rounded-lg bg-neutral-50 p-2.5 text-[11px] text-neutral-500">

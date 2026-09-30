@@ -2,7 +2,6 @@ import { Link, useParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
-import NewsletterCta from "@/components/blog/NewsletterCta";
 import { PILLARS, getPillar, pillarPosts, SITE_URL } from "@/content/blogMeta";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -19,10 +18,10 @@ export const ResourcesHub = () => {
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-14 sm:pt-20">
         <header className="max-w-3xl">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Resources</div>
+          <div className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">Resources</div>
           <h1
             className="mt-5 text-4xl font-medium leading-[1.05] tracking-tight sm:text-6xl"
-            style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             Everything a founder needs to build a brand.
           </h1>
@@ -38,10 +37,10 @@ export const ResourcesHub = () => {
               to={`/resources/${pillar.slug}`}
               className="group rounded-3xl border border-neutral-200 p-8 transition hover:border-neutral-900"
             >
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">{pillar.kicker}</div>
+              <div className="text-xs font-semibold normal-case tracking-[0.16em] text-neutral-400">{pillar.kicker}</div>
               <h2
                 className="mt-4 text-2xl font-medium tracking-tight text-neutral-900 group-hover:text-brand"
-                style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {pillar.title}
               </h2>
@@ -51,9 +50,6 @@ export const ResourcesHub = () => {
           ))}
         </div>
 
-        <div className="mt-20">
-          <NewsletterCta />
-        </div>
       </main>
       <SiteFooter />
     </div>
@@ -110,10 +106,10 @@ export const PillarPage = () => {
           </ol>
         </nav>
         <header className="mt-8">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">{pillar.kicker}</div>
+          <div className="text-xs font-semibold normal-case tracking-[0.16em] text-neutral-400">{pillar.kicker}</div>
           <h1
             className="mt-4 text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl"
-            style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             {pillar.title}
           </h1>
@@ -123,7 +119,7 @@ export const PillarPage = () => {
         <div className="mt-12 space-y-10">
           {pillar.sections.map((section) => (
             <section key={section.heading}>
-              <h2 className="text-2xl font-medium tracking-tight" style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}>
+              <h2 className="text-2xl font-medium tracking-tight" style={{ fontFamily: "Inter, sans-serif" }}>
                 {section.heading}
               </h2>
               <p className="mt-3 text-base leading-[1.8] text-neutral-700">{section.body}</p>
@@ -133,7 +129,7 @@ export const PillarPage = () => {
 
         {related.length > 0 && (
           <section className="mt-16 border-t border-neutral-200 pt-12">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">In this guide</h2>
+            <h2 className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">In this guide</h2>
             <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2">
               {related.map((post) => (
                 <ArticleCard key={post.slug} post={post} compact />
@@ -142,9 +138,6 @@ export const PillarPage = () => {
           </section>
         )}
 
-        <div className="mt-16">
-          <NewsletterCta compact />
-        </div>
       </main>
       <SiteFooter />
     </div>

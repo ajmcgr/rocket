@@ -35,8 +35,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [user, authConfirmed]);
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-white text-sm text-neutral-500" aria-busy="true">
-      Loading your account…
+    <div className="rocket-skeleton-surface min-h-screen px-6 py-16" role="status" aria-label="Loading your account" aria-busy="true">
+      <div className="mx-auto max-w-4xl animate-pulse space-y-5"><div className="h-10 w-40 rounded bg-neutral-100" /><div className="h-44 rounded-2xl bg-neutral-100" /></div>
     </div>
   );
   if (!user) {
@@ -48,8 +48,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   unauthenticatedReturnTo.current = null;
   if (verified === null) return (
-    <div className="flex min-h-screen items-center justify-center bg-white text-sm text-neutral-500" aria-busy="true">
-      Checking your account…
+    <div className="rocket-skeleton-surface min-h-screen px-6 py-16" role="status" aria-label="Checking your account" aria-busy="true">
+      <div className="mx-auto max-w-4xl animate-pulse space-y-5"><div className="h-10 w-40 rounded bg-neutral-100" /><div className="h-44 rounded-2xl bg-neutral-100" /></div>
     </div>
   );
   if (!verified) return <Navigate to={`/verify-email?email=${encodeURIComponent(user.email || "")}`} replace />;

@@ -28,8 +28,8 @@ export default function MyApps() {
     <main className="mx-auto max-w-4xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-14">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold tracking-[0.14em] text-sky-800">
-            YOUR SOFTWARE
+          <p className="text-sm font-semibold text-sky-800">
+            Your software
           </p>
           <h1 className="mt-3 font-display text-4xl sm:text-5xl">Your Apps</h1>
           <p className="mt-2 text-neutral-600">
@@ -37,10 +37,10 @@ export default function MyApps() {
           </p>
         </div>
         <Link
-          to="/launch"
+          to="/submit"
           className="inline-flex min-h-11 items-center rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:bg-neutral-700"
         >
-          Launch an app
+          Submit your app
         </Link>
       </div>
       {loading && (
@@ -52,7 +52,7 @@ export default function MyApps() {
           {[0, 1].map((item) => (
             <div
               key={item}
-              className="h-36 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-5"
+              className="rocket-skeleton-surface h-36 animate-pulse rounded-[1.5rem] border border-neutral-200 p-5"
             >
               <div className="h-14 w-14 rounded-2xl bg-neutral-100" />
             </div>
@@ -79,10 +79,10 @@ export default function MyApps() {
             what you have built.
           </p>
           <Link
-            to="/launch"
+            to="/submit"
             className="mt-3 inline-block font-medium text-sky-700"
           >
-            Launch your first app
+            Submit your first app
           </Link>
         </div>
       )}

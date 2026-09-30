@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AiInfoRouteImport } from './routes/ai-info'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -26,6 +27,8 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as StartRouteImport } from './routes/start'
+import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
@@ -132,6 +135,11 @@ const BrandKitRoute = BrandKitRouteImport.update({
   path: '/brand-kit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DiscoverRoute = DiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
@@ -190,6 +198,16 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StartRoute = StartRouteImport.update({
+  id: '/start',
+  path: '/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubmitRoute = SubmitRouteImport.update({
+  id: '/submit',
+  path: '/submit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -605,6 +623,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/contact': typeof ContactRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -617,6 +636,8 @@ export interface FileRoutesByFullPath {
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/start': typeof StartRoute
+  '/submit': typeof SubmitRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
   '/dashboard': typeof AppDashboardRoute
@@ -704,6 +725,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/contact': typeof ContactRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -716,6 +738,8 @@ export interface FileRoutesByTo {
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/start': typeof StartRoute
+  '/submit': typeof SubmitRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
   '/dashboard': typeof AppDashboardRoute
@@ -803,6 +827,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/contact': typeof ContactRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -815,6 +840,8 @@ export interface FileRoutesById {
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/start': typeof StartRoute
+  '/submit': typeof SubmitRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -904,6 +931,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/contact'
     | '/discover'
     | '/faq'
     | '/forgot-password'
@@ -916,6 +944,8 @@ export interface FileRouteTypes {
     | '/reserve'
     | '/reset-password'
     | '/signup'
+    | '/start'
+    | '/submit'
     | '/verify-email'
     | '/account'
     | '/dashboard'
@@ -1003,6 +1033,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/contact'
     | '/discover'
     | '/faq'
     | '/forgot-password'
@@ -1015,6 +1046,8 @@ export interface FileRouteTypes {
     | '/reserve'
     | '/reset-password'
     | '/signup'
+    | '/start'
+    | '/submit'
     | '/verify-email'
     | '/account'
     | '/dashboard'
@@ -1101,6 +1134,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/contact'
     | '/discover'
     | '/faq'
     | '/forgot-password'
@@ -1113,6 +1147,8 @@ export interface FileRouteTypes {
     | '/reserve'
     | '/reset-password'
     | '/signup'
+    | '/start'
+    | '/submit'
     | '/verify-email'
     | '/_app/account'
     | '/_app/dashboard'
@@ -1202,6 +1238,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AiInfoRoute: typeof AiInfoRoute
   BrandKitRoute: typeof BrandKitRoute
+  ContactRoute: typeof ContactRoute
   DiscoverRoute: typeof DiscoverRoute
   FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -1214,6 +1251,8 @@ export interface RootRouteChildren {
   ReserveRoute: typeof ReserveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  StartRoute: typeof StartRoute
+  SubmitRoute: typeof SubmitRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AppsIdRoute: typeof AppsIdRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1270,6 +1309,13 @@ declare module '@tanstack/react-router' {
       path: '/brand-kit'
       fullPath: '/brand-kit'
       preLoaderRoute: typeof BrandKitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/discover': {
@@ -1354,6 +1400,20 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/start': {
+      id: '/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof StartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/submit': {
+      id: '/submit'
+      path: '/submit'
+      fullPath: '/submit'
+      preLoaderRoute: typeof SubmitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -2084,6 +2144,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AiInfoRoute: AiInfoRoute,
   BrandKitRoute: BrandKitRoute,
+  ContactRoute: ContactRoute,
   DiscoverRoute: DiscoverRoute,
   FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -2096,6 +2157,8 @@ const rootRouteChildren: RootRouteChildren = {
   ReserveRoute: ReserveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  StartRoute: StartRoute,
+  SubmitRoute: SubmitRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AppsIdRoute: AppsIdRoute,
   AuthCallbackRoute: AuthCallbackRoute,

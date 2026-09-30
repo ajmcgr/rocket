@@ -523,7 +523,7 @@ export default function BrandGuidelines() {
           {busyPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           Download PDF
           {!subLoading && !isPro && (
-            <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Pro</span>
+            <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-white">Pro</span>
           )}
         </button>
         <button
@@ -534,7 +534,7 @@ export default function BrandGuidelines() {
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           Download PNG
           {!subLoading && !isPro && (
-            <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Pro</span>
+            <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-white">Pro</span>
           )}
         </button>
       </div>
@@ -551,13 +551,13 @@ export default function BrandGuidelines() {
             {/* Header */}
             <div className="flex items-start justify-between border-b border-neutral-200 pb-6">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">Brand Book</div>
+                <div className="text-[10px] normal-case tracking-[0.3em] text-neutral-500">Brand Book</div>
                 <div className="mt-2 text-3xl font-semibold tracking-tight text-neutral-900">{brandName}</div>
                 {project?.tagline ? (
                   <div className="mt-1 text-sm text-neutral-500">{project.tagline}</div>
                 ) : null}
               </div>
-              <div className="text-right text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+              <div className="text-right text-[10px] normal-case tracking-[0.2em] text-neutral-400">
                 v1.0<br />
                 {new Date().toLocaleDateString(undefined, { month: "short", year: "numeric" })}
               </div>
@@ -565,7 +565,7 @@ export default function BrandGuidelines() {
 
             {/* Logo showcase */}
             <section className="mt-8">
-              <div className="mb-3 text-[10px] uppercase tracking-[0.3em] text-neutral-500">Logo</div>
+              <div className="mb-3 text-[10px] normal-case tracking-[0.3em] text-neutral-500">Logo</div>
               {primaryAsset ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-200 bg-white px-6">
@@ -597,14 +597,14 @@ export default function BrandGuidelines() {
 
             {/* Palette */}
             <section className="mt-8">
-              <div className="mb-3 text-[10px] uppercase tracking-[0.3em] text-neutral-500">Color palette</div>
+              <div className="mb-3 text-[10px] normal-case tracking-[0.3em] text-neutral-500">Color palette</div>
               <div className="grid grid-cols-4 gap-3">
                 {palette.map((c) => (
                   <div key={c.name} className="overflow-hidden rounded-xl border border-neutral-200">
                     <div className="h-16 w-full" style={{ background: c.hex }} />
                     <div className="px-2 py-1.5">
                       <div className="text-[11px] font-semibold text-neutral-900">{c.name}</div>
-                      <div className="text-[10px] uppercase tracking-wide text-neutral-500">{c.hex}</div>
+                      <div className="text-[10px] normal-case tracking-wide text-neutral-500">{c.hex}</div>
                     </div>
                   </div>
                 ))}
@@ -613,7 +613,7 @@ export default function BrandGuidelines() {
 
             {/* Typography */}
             <section className="mt-8">
-              <div className="mb-3 text-[10px] uppercase tracking-[0.3em] text-neutral-500">Typography</div>
+              <div className="mb-3 text-[10px] normal-case tracking-[0.3em] text-neutral-500">Typography</div>
               <div className="space-y-3">
                 <div className="rounded-xl border border-neutral-200 p-5">
                   <div className="flex items-baseline justify-between">
@@ -623,7 +623,7 @@ export default function BrandGuidelines() {
                     >
                       {primaryFont}
                     </div>
-                    <div className="text-[10px] uppercase tracking-wide text-neutral-500">
+                    <div className="text-[10px] normal-case tracking-wide text-neutral-500">
                       Primary · {primaryFontMeta?.category || "sans"}
                     </div>
                   </div>
@@ -643,7 +643,7 @@ export default function BrandGuidelines() {
                       >
                         {secondaryFont}
                       </div>
-                      <div className="text-[10px] uppercase tracking-wide text-neutral-500">
+                      <div className="text-[10px] normal-case tracking-wide text-neutral-500">
                         Secondary · {secondaryFontMeta?.category || "sans"}
                       </div>
                     </div>
@@ -656,7 +656,7 @@ export default function BrandGuidelines() {
             </section>
 
             {/* Footer */}
-            <div className="mt-10 flex items-center justify-between border-t border-neutral-200 pt-4 text-[10px] uppercase tracking-[0.3em] text-neutral-400">
+            <div className="mt-10 flex items-center justify-between border-t border-neutral-200 pt-4 text-[10px] normal-case tracking-[0.3em] text-neutral-400">
               <span>{brandName} · Brand Book</span>
               <span>Made with Rocket</span>
             </div>

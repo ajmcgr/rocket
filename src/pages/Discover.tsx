@@ -315,7 +315,7 @@ export default function Discover() {
                 change("view", key);
               }}
               aria-current={view === key ? "page" : undefined}
-              className={`shrink-0 border-b-2 px-0 pb-3 pt-1 text-sm font-medium ${view === key ? "border-[#469DDA] text-[#075985]" : "border-transparent text-neutral-600 hover:text-neutral-950"}`}
+              className={`shrink-0 border-b-2 px-0 pb-3 pt-1 text-sm font-medium ${view === key ? "border-[#167ac6] text-[#075985]" : "border-transparent text-neutral-600 hover:text-neutral-950"}`}
             >
               {label}
             </button>
@@ -329,7 +329,7 @@ export default function Discover() {
             <button
               onClick={() => change("category", "")}
               aria-current={!category ? "page" : undefined}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${!category ? "bg-[#469DDA] text-[#092237]" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${!category ? "bg-[#167ac6] text-white" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
             >
               All categories
             </button>
@@ -343,7 +343,7 @@ export default function Discover() {
                   change("category", item.category);
                 }}
                 aria-current={category === item.category ? "page" : undefined}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${category === item.category ? "bg-[#469DDA] text-[#092237]" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${category === item.category ? "bg-[#167ac6] text-white" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
               >
                 {item.category}
               </button>
@@ -447,7 +447,7 @@ export default function Discover() {
             {[0, 1, 2].map((item) => (
               <div
                 key={item}
-                className="h-40 animate-pulse rounded-2xl border border-neutral-200 bg-white p-5"
+                className="rocket-skeleton-surface h-40 animate-pulse rounded-2xl border border-neutral-200 p-5"
               >
                 <div className="h-5 w-2/3 rounded bg-neutral-100" />
                 <div className="mt-6 h-3 w-full rounded bg-neutral-100" />
@@ -499,7 +499,7 @@ export default function Discover() {
             {[0, 1, 2, 3, 4, 5].map((item) => (
               <div
                 key={item}
-                className={`${view === "new" ? "h-56" : "h-20"} animate-pulse border-b border-neutral-200 py-3`}
+                className={`rocket-skeleton-surface ${view === "new" ? "h-56" : "h-20"} animate-pulse border-b border-neutral-200 p-3`}
               >
                 <div className="h-11 w-11 rounded-xl bg-neutral-200" />
                 <div className="mt-2 h-3 w-2/3 rounded bg-neutral-200" />

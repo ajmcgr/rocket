@@ -57,9 +57,9 @@ export default function BrandContextStrip({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-brand">Brand context</span>
+            <span className="text-[10px] font-semibold normal-case tracking-wider text-brand">Brand context</span>
             {rich && (
-              <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-emerald-700">
+              <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-medium normal-case tracking-wider text-emerald-700">
                 Analyzed
               </span>
             )}
@@ -123,7 +123,7 @@ export default function BrandContextStrip({
               )}
               {ctx.competitors?.length ? (
                 <div className="mt-1 rounded-md border border-amber-100 bg-amber-50/60 px-2 py-1.5">
-                  <div className="mb-0.5 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-amber-700">
+                  <div className="mb-0.5 flex items-center gap-1 text-[9px] font-semibold normal-case tracking-wider text-amber-700">
                     Don't sound like
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -143,7 +143,7 @@ export default function BrandContextStrip({
           )}
           {!compact && ctx.voice && (ctx.voice.tone || ctx.voice.traits?.length || ctx.voice.doNotSay?.length) && (
             <div className="mt-2 rounded-md border border-neutral-100 bg-white/60 p-2 text-[10px]">
-              <div className="mb-1 font-semibold uppercase tracking-wider text-neutral-500">Voice</div>
+              <div className="mb-1 font-semibold normal-case tracking-wider text-neutral-500">Voice</div>
               {ctx.voice.tone && <div className="text-neutral-700">{ctx.voice.tone}</div>}
               {ctx.voice.traits?.length ? (
                 <div className="mt-1 flex flex-wrap gap-1">

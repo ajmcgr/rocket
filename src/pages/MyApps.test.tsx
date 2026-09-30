@@ -24,7 +24,7 @@ describe("Your Apps next actions", () => {
     const { container, cleanup } = await render(false);
     try {
       expect(container.textContent).toContain("Prove this app is yours");
-      expect(container.querySelector('a[href="/launch?app=app-1"]')).not.toBeNull();
+      expect(container.querySelector('a[href="/apps/add?app=app-1"]')).not.toBeNull();
       expect(container.textContent).not.toContain("Domain verified");
       expect(container.textContent).not.toContain("Connect analytics");
     } finally { await cleanup(); }

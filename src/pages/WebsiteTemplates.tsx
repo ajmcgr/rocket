@@ -60,7 +60,7 @@ const TEMPLATES: Template[] = [
           </div>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <div className="text-[10px] font-medium uppercase tracking-widest" style={{ color: brandColor }}>Now in beta</div>
+          <div className="text-[10px] font-medium normal-case tracking-widest" style={{ color: brandColor }}>Now in beta</div>
           <h1 className="mt-2 text-3xl font-semibold leading-tight">{tagline || `Ship ${brandName} faster.`}</h1>
           <p className="mt-2 max-w-md text-xs text-neutral-500">A modern platform to help teams build, launch, and grow — beautifully.</p>
           <div className="mt-4 flex gap-2">
@@ -83,7 +83,7 @@ const TEMPLATES: Template[] = [
         </div>
         <div className="flex flex-1 items-center justify-center px-10">
           <div className="max-w-md">
-            <div className="text-[10px] uppercase tracking-widest text-white/50">{brandName}</div>
+            <div className="text-[10px] normal-case tracking-widest text-white/50">{brandName}</div>
             <h1 className="mt-2 text-3xl font-semibold leading-tight">{tagline || "The operating system for modern brands."}</h1>
             <p className="mt-2 text-xs text-white/60">Design, ship and evolve — all in one place.</p>
             <div className="mt-4 flex gap-2">
@@ -133,7 +133,7 @@ const TEMPLATES: Template[] = [
               { name: "Team", price: "$49" },
             ].map((p) => (
               <div key={p.name} className={`rounded-xl border p-3 text-center ${p.highlight ? "border-transparent text-white" : "border-neutral-200"}`} style={p.highlight ? { backgroundColor: brandColor } : {}}>
-                <div className="text-[10px] font-medium uppercase tracking-wide opacity-80">{p.name}</div>
+                <div className="text-[10px] font-medium normal-case tracking-wide opacity-80">{p.name}</div>
                 <div className="mt-1 text-lg font-semibold">{p.price}</div>
                 <div className="mt-1 text-[10px] opacity-70">per month</div>
               </div>
@@ -157,7 +157,7 @@ const TEMPLATES: Template[] = [
         </div>
         <div className="flex flex-1 items-center px-8">
           <div className="max-w-md">
-            <div className="text-[10px] uppercase tracking-widest" style={{ color: brandColor }}>{brandName}</div>
+            <div className="text-[10px] normal-case tracking-widest" style={{ color: brandColor }}>{brandName}</div>
             <h1 className="mt-2 text-3xl font-semibold leading-tight">{tagline || "Independent design & strategy."}</h1>
             <p className="mt-2 text-xs text-neutral-500">Selected work with startups, studios and creators.</p>
           </div>

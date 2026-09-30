@@ -94,7 +94,7 @@ export default function BrandFromAssetMenu({ asset, className, onAssigned, label
           Create new brand kit from this
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-neutral-400">Add to existing</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-[11px] normal-case tracking-wide text-neutral-400">Add to existing</DropdownMenuLabel>
         {loading ? (
           <DropdownMenuItem disabled><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Loading…</DropdownMenuItem>
         ) : brands.length === 0 ? (

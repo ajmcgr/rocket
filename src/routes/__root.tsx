@@ -23,7 +23,7 @@ const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&
 
 const SITE_TITLE = "Rocket — Discover independent apps worth using";
 const SITE_DESCRIPTION =
-  "Discover independent apps worth using. Explore what's rising, save your favorites, and launch your own app on Rocket.";
+  "Discover independent apps worth using. Explore what's rising, save your favorites, and submit your own app to Rocket.";
 const SOCIAL_IMAGE =
   "https://tryrocket.ai/__l5e/assets-v1/0903ee88-5f0b-4c82-b73a-ca1eb9454294/social-sharing-card.png";
 type GoogleTranslateWindow = Window & {
@@ -67,22 +67,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           crossOrigin: "anonymous",
         },
         {
-          rel: "preload",
-          href: "/fonts/Reckless-Regular.ttf",
-          as: "font",
-          type: "font/ttf",
-          crossOrigin: "anonymous",
-        },
-        {
-          rel: "preload",
-          href: "/fonts/Reckless-Medium.otf",
-          as: "font",
-          type: "font/otf",
-          crossOrigin: "anonymous",
-        },
-        {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
         },
       ],
       scripts: [

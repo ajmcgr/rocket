@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@/lib/router-compat";
+import { ArrowRight, Bookmark, Grid2X2, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import {
   EditorialAppCard,
-  RankedAppRow,
+  RisingAppCard,
   StandardAppCard,
 } from "./MarketplaceCards";
 
@@ -13,6 +14,42 @@ type App = Tables<"public_apps">;
 type Signal = Tables<"public_app_intelligence">;
 type Category = Tables<"public_app_categories">;
 type Preview = { app: App; signal: Signal };
+const categoryGradients = [
+  "rocket-category-ocean",
+  "rocket-category-orchid",
+  "rocket-category-citrus",
+  "rocket-category-sunset",
+  "rocket-category-lagoon",
+  "rocket-category-coral",
+  "rocket-category-lime",
+  "rocket-category-indigo",
+] as const;
+
+function SectionHeading({ id, title, description, href, action, Icon }: {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  action: string;
+  Icon: LucideIcon;
+}) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-neutral-200 pb-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-800">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 id={id} className="text-2xl font-bold tracking-tight text-neutral-950 sm:text-3xl">{title}</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-neutral-600">{description}</p>
+        </div>
+      </div>
+      <Link to={href} className="inline-flex items-center gap-1.5 pb-0.5 text-sm font-semibold text-sky-800 hover:underline">
+        {action} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    </div>
+  );
+}
 
 export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [rising, setRising] = useState<Preview[]>([]);
@@ -86,7 +123,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
       <div
         role="status"
         aria-label="Finding apps worth exploring"
-        className="mt-6 h-24 animate-pulse rounded-xl bg-neutral-100"
+        className="rocket-skeleton-surface mt-6 h-24 animate-pulse rounded-xl"
       />
     );
   if (loading)
@@ -96,7 +133,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         <div
           role="status"
           aria-label="Finding apps worth exploring"
-          className="mt-5 h-20 animate-pulse rounded-xl bg-neutral-100"
+          className="rocket-skeleton-surface mt-5 h-20 animate-pulse rounded-xl"
         />
       </div>
     );
@@ -138,137 +175,69 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         ) : (
           <div className="pt-6 lg:pt-10">
             <div className="max-w-4xl">{intro}</div>
-            {categories.length > 0 && (
-              <nav
-                aria-label="Popular categories"
-                className="mt-4 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none]"
-              >
-                {categories.slice(0, 8).map((item) => (
-                  <Link
-                    key={item.category}
-                    to={`/discover?view=all&category=${encodeURIComponent(item.category)}`}
-                    className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-[#eaf5fc]"
-                  >
-                    {item.category}
-                  </Link>
-                ))}
-              </nav>
-            )}
           </div>
         );
       })()}
-      {rising.length > 0 && (
-        <section className="mt-8 sm:mt-10" aria-labelledby="rising-heading">
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[.16em] text-sky-800">
-                Observed on Launch
-              </p>
-              <h2
-                id="rising-heading"
-                className="mt-2 text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl"
-              >
-                Rising right now
-              </h2>
-              <p className="mt-1 text-sm text-neutral-600">
-                Public Launch activity, not verified customer growth or a Rocket
-                endorsement.
-              </p>
-            </div>
-            <Link
-              to="/discover?view=rising"
-              className="text-sm font-semibold text-sky-800 hover:underline"
-            >
-              See all Rising
-            </Link>
-          </div>
-          <div className="grid gap-x-8 md:grid-cols-2">
+      <section className="mt-10 sm:mt-12" aria-labelledby="rising-heading">
+        <SectionHeading id="rising-heading" title="Rising" description="Apps with notable public Launch activity. This is not verified customer growth or a Rocket endorsement." href="/discover?view=rising" action="See all Rising" Icon={TrendingUp} />
+        {rising.length > 0 ? (
+          <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5">
             {rising.map(({ app }, index) => (
-              <RankedAppRow
-                key={app.id}
-                app={app}
-                rank={index + 1}
-                eyebrow="Launch activity"
-              />
+              <div key={app.id} className="w-[min(72vw,18rem)] shrink-0 snap-start sm:w-auto">
+                <RisingAppCard app={app} rank={index + 1} />
+              </div>
             ))}
           </div>
-        </section>
-      )}
-      {fresh.length > 0 && (
-        <section className="mt-10 sm:mt-12" aria-labelledby="new-heading">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[.16em] text-sky-800">
-                New arrivals
-              </p>
-              <h2
-                id="new-heading"
-                className="mt-2 text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl"
-              >
-                New with Launch activity
-              </h2>
-            </div>
-            <Link
-              to="/discover?view=new"
-              className="text-sm font-semibold text-sky-800 hover:underline"
-            >
-              See all New
-            </Link>
-          </div>
-          <div className="flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
+        ) : <p className="text-sm text-neutral-500">No Rising apps are available right now.</p>}
+      </section>
+      <section className="mt-12 sm:mt-16" aria-labelledby="new-heading">
+        <SectionHeading id="new-heading" title="New" description="Recently listed independent apps with public Launch activity." href="/discover?view=new" action="See all New" Icon={Sparkles} />
+        {fresh.length > 0 ? (
+          <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
             {fresh.map(({ app }) => (
-              <div
-                key={app.id}
-                className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto"
-              >
+              <div key={app.id} className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto">
                 <StandardAppCard app={app} media={media.get(app.id)} />
               </div>
             ))}
           </div>
-        </section>
-      )}
-      {categories.length > 0 && (
-        <section className="mt-12" aria-labelledby="categories-heading">
-          <div className="mb-6 flex items-end justify-between">
-            <h2
-              id="categories-heading"
-              className="text-3xl font-bold tracking-tight text-neutral-950"
-            >
-              Find your corner of the web
-            </h2>
-            <Link
-              to="/discover?view=categories"
-              className="text-sm font-semibold text-sky-800 hover:underline"
-            >
-              All categories
-            </Link>
-          </div>
-          <div className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((item) => (
+        ) : <p className="text-sm text-neutral-500">No new apps with Launch activity are available right now.</p>}
+      </section>
+      <section className="mt-12 sm:mt-16" aria-labelledby="categories-heading">
+        <SectionHeading id="categories-heading" title="Categories" description="Browse independent apps by what you want to do." href="/discover?view=categories" action="All categories" Icon={Grid2X2} />
+        {categories.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((item, index) => (
               <Link
                 key={item.category}
                 to={`/discover?view=all&category=${encodeURIComponent(item.category)}`}
-                className="group flex min-h-20 items-end justify-between border-b border-neutral-200 px-2 py-4 transition hover:text-[#075985]"
+                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} group flex min-h-44 items-end justify-between gap-3 rounded-2xl p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6] sm:p-6`}
               >
-                <span>
-                  <strong className="block text-xl font-semibold tracking-tight text-neutral-950">
+                <span className="min-w-0">
+                  <strong className="block text-xl font-bold leading-tight tracking-tight sm:text-2xl">
                     {item.category}
                   </strong>
-                  <span className="text-xs text-neutral-600">
+                  <span className="mt-2 block text-sm opacity-75">
                     {item.app_count.toLocaleString()} apps
                   </span>
                 </span>
                 <span
                   aria-hidden="true"
-                  className="text-lg transition group-hover:translate-x-1"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-white/25 text-lg transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 >
                   ↗
                 </span>
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        ) : <p className="text-sm text-neutral-500">Categories are unavailable right now.</p>}
+      </section>
+      <section className="mt-12 sm:mt-16" aria-labelledby="saved-heading">
+        <SectionHeading id="saved-heading" title="Saved" description="Keep the independent apps you want to try in one place." href="/saved-apps" action="Open Saved" Icon={Bookmark} />
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-5 sm:px-7">
+          <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">Save an app from its profile or a Discover card, then return to it whenever you’re ready.</p>
+          <Link to="/saved-apps" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa]">View saved apps <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+        </div>
+      </section>
     </>
   );
 }

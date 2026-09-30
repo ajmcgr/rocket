@@ -213,7 +213,7 @@ const ProjectWizard = () => {
           )}
 
           <div>
-            <label className="text-xs font-medium uppercase tracking-wider text-neutral-500">Website (optional)</label>
+            <label className="text-xs font-medium normal-case tracking-wider text-neutral-500">Website (optional)</label>
             <div className="mt-1.5 flex gap-2">
               <Input value={ctx.url} onChange={e => { setF("url", e.target.value); setScraped(null); }} placeholder="https://trylaunch.ai" />
               <Button type="button" variant="outline" onClick={analyzeBrand} disabled={!ctx.url.trim() || !isUrl(ctx.url) || scraping} className="shrink-0">
@@ -224,11 +224,11 @@ const ProjectWizard = () => {
           </div>
 
           <div>
-            <label className="text-xs font-medium uppercase tracking-wider text-neutral-500">Brand / project name</label>
+            <label className="text-xs font-medium normal-case tracking-wider text-neutral-500">Brand / project name</label>
             <Input value={ctx.name} onChange={e => setF("name", e.target.value)} placeholder="TryLaunch" className="mt-1.5" />
           </div>
           <div>
-            <label className="text-xs font-medium uppercase tracking-wider text-neutral-500">One-line description</label>
+            <label className="text-xs font-medium normal-case tracking-wider text-neutral-500">One-line description</label>
             <Input value={ctx.description} onChange={e => setF("description", e.target.value)} placeholder="The fastest way to launch a SaaS product" className="mt-1.5" />
           </div>
           <Button onClick={() => setStep(1)} disabled={!ctx.name.trim() || !ctx.description.trim()} className="w-full">
@@ -241,7 +241,7 @@ const ProjectWizard = () => {
         <div className="mt-8 space-y-6">
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">Who & how it feels</h1>
           <div>
-            <label className="text-xs font-medium uppercase tracking-wider text-neutral-500">Primary audience</label>
+            <label className="text-xs font-medium normal-case tracking-wider text-neutral-500">Primary audience</label>
             <div className="mt-2 flex flex-wrap gap-2">
               {AUDIENCES.map(a => (
                 <button key={a} onClick={() => setF("audience", a)} className={`rounded-full border px-3 py-1.5 text-sm ${ctx.audience === a ? "border-brand bg-brand text-brand-foreground" : "border-neutral-200 hover:bg-neutral-50"}`}>{a}</button>
@@ -249,7 +249,7 @@ const ProjectWizard = () => {
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium uppercase tracking-wider text-neutral-500">Tone</label>
+            <label className="text-xs font-medium normal-case tracking-wider text-neutral-500">Tone</label>
             <div className="mt-2 flex flex-wrap gap-2">
               {TONES.map(t => (
                 <button key={t} onClick={() => setF("tone", t)} className={`rounded-full border px-3 py-1.5 text-sm ${ctx.tone === t ? "border-brand bg-brand text-brand-foreground" : "border-neutral-200 hover:bg-neutral-50"}`}>{t}</button>

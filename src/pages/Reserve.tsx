@@ -50,7 +50,7 @@ const Reserve = () => {
           />
           <h1
             className="animate-fade-in-up-delay-1 text-5xl font-medium leading-[1.05] tracking-tight text-cream text-glow sm:text-6xl md:text-7xl"
-            style={{ fontFamily: "Reckless, serif" }}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             Make Your Product a Brand
           </h1>

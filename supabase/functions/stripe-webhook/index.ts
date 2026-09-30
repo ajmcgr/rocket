@@ -43,7 +43,7 @@ function planName(plan: PaidPlan): string {
 // Centered logo, soft outer bg, white card, divider, headline, body, blue CTA, muted footer.
 
 const BRAND = {
-  blue: "#008BC2",
+  blue: "#167ac6",
   ink: "#0A0A0A",
   text: "#1F2937",
   muted: "#9CA3AF",

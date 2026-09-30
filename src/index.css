@@ -2,9 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Reckless @font-face declarations are inlined in index.html <head>
-   so they're parsed before this stylesheet — eliminates the flash of
-   fallback serif on initial paint. */
+/* Display and body typography both use Inter. */
 
 @layer base {
   :root {
@@ -17,12 +15,12 @@
     --popover: 30 10% 8%;
     --popover-foreground: 40 30% 95%;
 
-    /* Brand blue (#1676e3) */
-    --brand: 212 82% 49%;
+    /* Rocket blue */
+    --brand: 205 67% 56%;
     --brand-foreground: 0 0% 100%;
-    --brand-hover: 212 82% 42%;
+    --brand-hover: 205 67% 43%;
 
-    --primary: 212 82% 49%;
+    --primary: 205 67% 56%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 30 10% 12%;
@@ -72,8 +70,7 @@
   }
 
   h1, h2 {
-    font-family: 'Reckless', serif;
-    font-weight: 400;
+    font-family: 'Inter', sans-serif;
   }
   footer h1, footer h2 {
     font-family: 'Inter', sans-serif;
@@ -82,8 +79,7 @@
     font-family: 'Inter', sans-serif;
   }
   .app-shell h1, footer h1 {
-    font-family: 'Reckless', serif;
-    font-weight: 400;
+    font-family: 'Inter', sans-serif;
   }
 }
 

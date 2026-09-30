@@ -85,7 +85,7 @@ function BrandKitPreview({ brand }: { brand: any }) {
 
   return (
     <>
-      {state !== "loaded" && <div className="absolute inset-0 animate-pulse bg-neutral-100" aria-label="Loading brand preview" />}
+      {state !== "loaded" && <div className="rocket-skeleton-surface absolute inset-0 animate-pulse" aria-label="Loading brand preview" />}
       <img
         key={`${source}-${attempt}`}
         src={source}
@@ -442,7 +442,7 @@ export default function BrandHub() {
         {loading ? (
           <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-2xl border border-neutral-200 bg-white">
+              <div key={i} className="rocket-skeleton-surface animate-pulse rounded-2xl border border-neutral-200">
                 <div className="aspect-square rounded-t-2xl bg-neutral-100" />
                 <div className="p-4"><div className="h-3.5 w-2/3 rounded bg-neutral-100" /></div>
               </div>
@@ -632,7 +632,7 @@ export default function BrandHub() {
               <Sparkles className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Your style</p>
+              <p className="text-xs font-semibold normal-case tracking-wider text-neutral-500">Your style</p>
               <p className="truncate text-sm font-medium text-neutral-900">{selectedStyle.title || "Untitled design"}</p>
             </div>
             <Link to={assetHref(selectedStyle)} className="ml-1 shrink-0 text-sm font-medium text-neutral-600 hover:text-neutral-900">Change</Link>
@@ -643,7 +643,7 @@ export default function BrandHub() {
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Your style</p>
+              <p className="text-xs font-semibold normal-case tracking-wider text-neutral-500">Your style</p>
               <p className="text-sm text-neutral-600">Choose a design you like to guide future work.</p>
             </div>
             <Link to="/designs" className="ml-1 shrink-0 text-sm font-medium text-neutral-600 hover:text-neutral-900">Choose</Link>

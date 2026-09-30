@@ -6,7 +6,6 @@ import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
 import ArticleCover from "@/components/blog/ArticleCover";
 import Highlight from "@/components/blog/Highlight";
-import NewsletterCta from "@/components/blog/NewsletterCta";
 import { Button } from "@/components/ui/button";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { useEnsureBlogImages } from "@/hooks/useBlogImages";
@@ -78,12 +77,12 @@ const Blog = () => {
 
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-14 sm:pt-20">
         <header className="max-w-3xl">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+          <div className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">
             The Rocket Blog
           </div>
           <h1
             className="mt-5 text-4xl font-medium leading-[1.05] tracking-tight text-neutral-900 sm:text-6xl"
-            style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             Ideas for independent app builders.
           </h1>
@@ -95,8 +94,8 @@ const Blog = () => {
             <Link to="/discover" className="text-[#075985] hover:underline">
               Explore apps →
             </Link>
-            <Link to="/launch" className="text-[#075985] hover:underline">
-              Launch your app →
+            <Link to="/submit" className="text-[#075985] hover:underline">
+              Submit your app →
             </Link>
           </div>
         </header>
@@ -176,7 +175,7 @@ const Blog = () => {
                 </div>
                 <h2
                   className="mt-5 text-3xl font-medium leading-[1.1] tracking-tight text-neutral-900 transition-colors group-hover:text-brand sm:text-[2.6rem]"
-                  style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+                  style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {featured.title}
                 </h2>
@@ -194,7 +193,7 @@ const Blog = () => {
         {/* Grid */}
         <section className="mt-16 border-t border-neutral-200 pt-12">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+            <h2 className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">
               {searching
                 ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}`
                 : category === "All"
@@ -237,7 +236,7 @@ const Blog = () => {
 
         {/* Pillar guides */}
         <section className="mt-20 border-t border-neutral-200 pt-12">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+          <h2 className="text-xs font-semibold normal-case tracking-[0.2em] text-neutral-500">
             Start here
           </h2>
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -247,12 +246,12 @@ const Blog = () => {
                 to={`/resources/${pillar.slug}`}
                 className="group rounded-2xl border border-neutral-200 p-6 transition hover:border-neutral-900"
               >
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                <div className="text-xs font-semibold normal-case tracking-[0.16em] text-neutral-400">
                   {pillar.kicker}
                 </div>
                 <div
                   className="mt-3 text-xl font-medium tracking-tight text-neutral-900"
-                  style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
+                  style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {pillar.title}
                 </div>
@@ -264,9 +263,6 @@ const Blog = () => {
           </div>
         </section>
 
-        <div className="mt-20">
-          <NewsletterCta />
-        </div>
       </main>
       <SiteFooter />
     </div>

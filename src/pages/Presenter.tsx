@@ -224,7 +224,7 @@ export default function Presenter() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
-  if (loading) return <div className="grid min-h-screen place-items-center bg-neutral-950 text-sm text-neutral-400">Loading…</div>;
+  if (loading) return <div className="rocket-skeleton-surface min-h-screen p-10" role="status" aria-label="Loading presentation" aria-busy="true"><div className="mx-auto max-w-5xl animate-pulse space-y-6"><div className="h-8 w-1/3 rounded bg-neutral-100" /><div className="aspect-video rounded-2xl bg-neutral-100" /></div></div>;
   if (!asset) return <div className="grid min-h-screen place-items-center bg-neutral-950 text-sm text-neutral-400">Presentation not found.</div>;
   if (!data) return (
     <div className="grid min-h-screen place-items-center bg-neutral-950 p-10 text-center text-sm text-neutral-400">
@@ -415,7 +415,7 @@ export default function Presenter() {
           {!isFullscreen && notesOpen && (
             <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white/85">
               <div className="mb-2 flex items-center justify-between">
-                <div className="text-[11px] uppercase tracking-widest text-white/50">Presenter notes · Slide {idx + 1}</div>
+                <div className="text-[11px] normal-case tracking-widest text-white/50">Presenter notes · Slide {idx + 1}</div>
                 <div className="text-[11px] text-white/40">Press N to toggle</div>
               </div>
               <div className="text-base font-medium text-white">{slide?.title}</div>

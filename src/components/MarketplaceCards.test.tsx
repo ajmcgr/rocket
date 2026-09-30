@@ -16,7 +16,7 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
-  it("keeps no-media New cards compact and Rising as a ranked row", async () => {
+  it("shows an unframed icon when media is unavailable and Rising as a ranked row", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     window.scrollTo = vi.fn();
     const container = document.createElement("div");
@@ -33,7 +33,8 @@ describe("marketplace content treatments", () => {
       });
       const card = container.querySelector("article");
       expect(card?.querySelectorAll("img")).toHaveLength(1);
-      expect(card?.querySelector(".h-28")).not.toBeNull();
+      expect(card?.querySelector(".h-28")).toBeNull();
+      expect(card?.outerHTML).not.toContain("bg-[#f1f4f7]");
       expect(container.textContent).toContain("1Sample app");
       expect(container.textContent).toContain("Productivity · Launch activity");
     } finally {

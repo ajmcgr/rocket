@@ -391,7 +391,7 @@ export default function SocialIcons() {
             {busy === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Download all
             {!subLoading && !isPro && (
-              <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide">PRO</span>
+              <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-wide">PRO</span>
             )}
           </button>
         ) : null}
@@ -422,7 +422,7 @@ export default function SocialIcons() {
                     const isCanvas = isCanvasAsset(asset) && !isBrandLogotype;
             return (
               <section key={asset.id}>
-                <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-neutral-500">
+                <h2 className="mb-4 text-sm font-medium normal-case tracking-wide text-neutral-500">
                   {assetLabel(asset)}
                 </h2>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -440,7 +440,7 @@ export default function SocialIcons() {
                       : null;
                     return (
                       <div key={v.key} className="flex flex-col gap-2">
-                        <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                        <div className="text-[11px] font-medium normal-case tracking-wide text-neutral-500">
                           {v.label}
                         </div>
                         <div

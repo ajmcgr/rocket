@@ -19,7 +19,7 @@ export default function EcosystemSwitcher({
         className="flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-left transition hover:border-sky-300"
       >
         <span>
-          <span className="block text-xs font-bold uppercase tracking-[.15em] text-sky-700">
+          <span className="block text-xs font-bold normal-case tracking-[.15em] text-sky-700">
             Rocket
           </span>
           {!compact && (

@@ -144,7 +144,7 @@ const UseCaseVisual = ({ kind, accent }: { kind: string; accent: string }) => {
         <div key={c} className="flex flex-col gap-2 rounded-xl bg-white p-2.5 ring-1 ring-neutral-200/70">
           <div className="flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${accent}`} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">{c}</span>
+            <span className="text-[10px] font-semibold normal-case tracking-wider text-neutral-500">{c}</span>
           </div>
           {Array.from({ length: 3 - (k === 2 ? 1 : 0) }).map((_, j) => (
             <div key={j} className="rounded-lg bg-neutral-50 p-2 ring-1 ring-neutral-100">
@@ -439,7 +439,7 @@ const Index = () => {
           <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Starter */}
             <div className="relative rounded-2xl border border-neutral-200 bg-white p-8">
-              <div className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Starter</div>
+              <div className="text-sm font-semibold normal-case tracking-wider text-neutral-500">Starter</div>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("starter").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("starter").suffix}</span>
@@ -468,7 +468,7 @@ const Index = () => {
               <div className="absolute -top-3 right-6 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white">
                 Most popular
               </div>
-              <div className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Pro</div>
+              <div className="text-sm font-semibold normal-case tracking-wider text-neutral-500">Pro</div>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("growth").display}</span>
                 <span className="text-neutral-500">{priceFor("growth").suffix}</span>
@@ -494,7 +494,7 @@ const Index = () => {
 
             {/* Business */}
             <div className="relative rounded-2xl border border-neutral-200 bg-white p-8">
-              <div className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Business</div>
+              <div className="text-sm font-semibold normal-case tracking-wider text-neutral-500">Business</div>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("business").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("business").suffix}</span>
@@ -544,7 +544,7 @@ const Index = () => {
                   disabled={loading === p.id}
                   className={`rounded-2xl border p-6 text-left transition hover:shadow-xs disabled:opacity-60 ${p.highlight ? "border-brand bg-brand/5 hover:bg-brand/10" : "border-neutral-200 bg-white hover:border-neutral-300"}`}
                 >
-                  <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">{p.note}</div>
+                  <div className="text-xs font-semibold normal-case tracking-wider text-neutral-500">{p.note}</div>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-4xl font-semibold tracking-tight">{p.price}</span>
                   </div>

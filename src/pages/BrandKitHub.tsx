@@ -341,7 +341,7 @@ const BrandKitHub = () => {
   };
 
   if (loading) return (
-    <div className="mx-auto max-w-7xl space-y-6 px-6 py-10">
+    <div className="rocket-skeleton-surface mx-auto max-w-7xl space-y-6 rounded-2xl px-6 py-10">
       <Skeleton className="h-8 w-64" />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
@@ -367,7 +367,7 @@ const BrandKitHub = () => {
             >
               {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download
               {!subLoading && !isPro && (
-                <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Pro</span>
+                <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-white">Pro</span>
               )}
             </button>
           ) : (
@@ -385,7 +385,7 @@ const BrandKitHub = () => {
       </div>
 
       <header className="mt-4">
-        <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Brand kit downloads</div>
+        <div className="text-xs normal-case tracking-[0.2em] text-neutral-500">Brand kit downloads</div>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{project.name}</h1>
         <p className="mt-2 max-w-2xl text-sm text-neutral-600">Everything for this brand, ready to organise, refine, share, or download.</p>
       </header>

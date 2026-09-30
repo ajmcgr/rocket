@@ -113,7 +113,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
         <div className="grid aspect-square w-full grid-cols-2 grid-rows-2 overflow-hidden">
           {swatches.slice(0, 4).map((hex, i) => (
             <div key={i} className="flex items-end justify-start p-2" style={{ backgroundColor: hex }}>
-              <span className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-[9px] uppercase text-neutral-800">{hex}</span>
+              <span className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-[9px] normal-case text-neutral-800">{hex}</span>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const body = f?.body_font || "system-ui";
     return (
       <div className="flex aspect-square w-full flex-col justify-center gap-2 bg-gradient-to-br from-neutral-50 to-neutral-100 p-5">
-        <div className="text-[10px] uppercase tracking-wider text-neutral-400">Aa</div>
+        <div className="text-[10px] normal-case tracking-wider text-neutral-400">Aa</div>
         <div className="text-3xl leading-tight text-neutral-900" style={{ fontFamily: `'${heading}', serif` }}>{heading}</div>
         <div className="mt-1 text-xs text-neutral-600" style={{ fontFamily: `'${body}', system-ui, sans-serif` }}>The quick brown fox · {body}</div>
       </div>
@@ -137,7 +137,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const pillars = v?.pillars?.slice(0, 3) || [];
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-brand/5 to-neutral-50 p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-brand">Voice</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-brand">Voice</div>
         {pillars.length ? (
           <div className="space-y-1.5">
             {pillars.map((p, i) => (
@@ -147,7 +147,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
         ) : (
           <div className="text-sm italic text-neutral-600 line-clamp-4">{v?.overview || "Brand voice"}</div>
         )}
-        <div className="text-[9px] uppercase tracking-wider text-neutral-400">Tone · Pillars · Do/Don't</div>
+        <div className="text-[9px] normal-case tracking-wider text-neutral-400">Tone · Pillars · Do/Don't</div>
       </div>
     );
   }
@@ -156,12 +156,12 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const tagline = g?.taglines?.[0] || g?.elevator_pitch?.one_sentence;
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-neutral-900 to-neutral-700 p-4 text-white">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Brand Book</div>
+        <div className="text-[10px] font-semibold normal-case tracking-[0.2em] text-white/60">Brand Book</div>
         <div className="space-y-1">
           <div className="text-lg font-semibold leading-tight line-clamp-2">{g?.brand_name || asset.title}</div>
           {tagline && <div className="text-[11px] italic text-white/70 line-clamp-3">"{tagline}"</div>}
         </div>
-        <div className="flex gap-1 text-[9px] uppercase tracking-wider text-white/50">
+        <div className="flex gap-1 text-[9px] normal-case tracking-wider text-white/50">
           {g?.mission && <span>Mission</span>}
           {g?.vision && <span>· Vision</span>}
           {g?.values?.length ? <span>· Values</span> : null}
@@ -173,7 +173,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const l = tryJson<LaunchCopyData>(asset.content || "");
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-brand/10 via-white to-neutral-50 p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-brand">Launch Copy</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-brand">Launch Copy</div>
         <div className="space-y-1.5">
           {l?.hero?.headline && <div className="text-base font-semibold leading-tight text-neutral-900 line-clamp-2">{l.hero.headline}</div>}
           {l?.hero?.subheadline && <div className="text-[11px] text-neutral-600 line-clamp-2">{l.hero.subheadline}</div>}
@@ -189,13 +189,13 @@ function AssetCardThumb({ asset }: { asset: any }) {
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-orange-50 to-white p-4">
         <div className="flex items-center gap-1.5">
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">P</div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-orange-600">Product Hunt</div>
+          <div className="text-[10px] font-semibold normal-case tracking-wider text-orange-600">Product Hunt</div>
         </div>
         <div className="space-y-1">
           {p?.tagline && <div className="text-sm font-semibold leading-tight text-neutral-900 line-clamp-2">{p.tagline}</div>}
           {p?.short_description && <div className="text-[11px] text-neutral-600 line-clamp-3">{p.short_description}</div>}
         </div>
-        <div className="text-[9px] uppercase tracking-wider text-neutral-400">Tagline · Comment · FAQ</div>
+        <div className="text-[9px] normal-case tracking-wider text-neutral-400">Tagline · Comment · FAQ</div>
       </div>
     );
   }
@@ -207,11 +207,11 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const platform = post?.platform || lib?.categories?.[0]?.posts?.[0]?.platform || "Social";
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-white p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">{platform}</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-neutral-500">{platform}</div>
         <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-[11px] leading-snug text-neutral-800 line-clamp-6">
           {sample || "Social post"}
         </div>
-        <div className="text-[9px] uppercase tracking-wider text-neutral-400">Post</div>
+        <div className="text-[9px] normal-case tracking-wider text-neutral-400">Post</div>
       </div>
     );
   }
@@ -220,12 +220,12 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const sample = b?.short || b?.x_bio || b?.linkedin_headline || b?.medium;
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-neutral-50 to-white p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Founder Bio</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-neutral-500">Founder Bio</div>
         <div className="flex items-start gap-2">
           <div className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-br from-brand to-brand/60" />
           <div className="text-[11px] leading-snug text-neutral-700 line-clamp-5">{sample || "Bio"}</div>
         </div>
-        <div className="text-[9px] uppercase tracking-wider text-neutral-400">X · LinkedIn · Press</div>
+        <div className="text-[9px] normal-case tracking-wider text-neutral-400">X · LinkedIn · Press</div>
       </div>
     );
   }
@@ -234,7 +234,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const slides = d?.slides?.slice(0, 3) || [];
     return (
       <div className="flex aspect-square w-full flex-col justify-center gap-2 bg-neutral-100 p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Deck · {d?.slides?.length || 0} slides</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-neutral-500">Deck · {d?.slides?.length || 0} slides</div>
         <div className="space-y-1.5">
           {slides.map((s, i) => (
             <div key={i} className="flex aspect-[16/9] w-full items-center justify-center rounded border border-neutral-200 bg-white px-2 text-center">
@@ -250,7 +250,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
     const groups = t?.groups?.slice(0, 3) || [];
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-neutral-50 to-white p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Templates</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-neutral-500">Templates</div>
         <div className="space-y-1">
           {groups.map((g, i) => (
             <div key={i} className="flex items-center justify-between rounded-md bg-neutral-100 px-2 py-1 text-[10px] text-neutral-700">
@@ -259,7 +259,7 @@ function AssetCardThumb({ asset }: { asset: any }) {
             </div>
           ))}
         </div>
-        <div className="text-[9px] uppercase tracking-wider text-neutral-400">Library</div>
+        <div className="text-[9px] normal-case tracking-wider text-neutral-400">Library</div>
       </div>
     );
   }
@@ -268,14 +268,14 @@ function AssetCardThumb({ asset }: { asset: any }) {
   if (snippet) {
     return (
       <div className="flex aspect-square w-full flex-col justify-between bg-gradient-to-br from-neutral-50 to-white p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">{at.replace(/_/g, " ")}</div>
+        <div className="text-[10px] font-semibold normal-case tracking-wider text-neutral-500">{at.replace(/_/g, " ")}</div>
         <div className="text-[11px] leading-snug text-neutral-700 line-clamp-6">{snippet}</div>
       </div>
     );
   }
   return (
     <div className="flex aspect-square w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 p-4 text-center">
-      <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">{at.replace(/_/g, " ")}</span>
+      <span className="text-xs font-medium normal-case tracking-wider text-neutral-500">{at.replace(/_/g, " ")}</span>
     </div>
   );
 }

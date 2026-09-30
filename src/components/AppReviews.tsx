@@ -121,7 +121,7 @@ export default function AppReviews({
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[.15em] text-sky-800">
+          <p className="text-xs font-semibold normal-case tracking-[.15em] text-sky-800">
             From Rocket members
           </p>
           <h2 id="reviews-title" className="mt-2 font-display text-3xl">

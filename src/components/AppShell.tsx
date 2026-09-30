@@ -21,7 +21,6 @@ import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { MobilePrimaryNav } from "./PrimaryNav";
-import EcosystemSwitcher from "./EcosystemSwitcher";
 import LanguageSelector from "./LanguageSelector";
 import ThemeToggle from "./ThemeToggle";
 import {
@@ -38,6 +37,11 @@ import {
   Share2,
   PanelLeftClose,
   PanelLeftOpen,
+  Send,
+  PenLine,
+  Image,
+  Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -110,7 +114,7 @@ const AppShell = () => {
       label: "Your apps",
       items: [
         { label: "Your Apps", to: "/your-apps", icon: Layers3 },
-        { label: "Launch an app", to: "/launch", icon: Plus },
+        { label: "Submit your app", to: "/submit", icon: Plus },
       ],
     },
     {
@@ -118,6 +122,13 @@ const AppShell = () => {
       items: [
         { label: "Brand Studio", to: "/create", icon: Palette },
         { label: "Saved Designs", to: "/saved", icon: Bookmark },
+      ],
+    },
+    {
+      label: "Monetize",
+      items: [
+        { label: "Revenue in your apps", to: "/your-apps", icon: Wallet },
+        { label: "Rocket Identity", to: "/developer", icon: ShieldCheck },
       ],
     },
   ];
@@ -234,16 +245,11 @@ const AppShell = () => {
           {!collapsed && <span>Collapse</span>}
         </button>
 
-        {!collapsed && (
-          <div className="mb-5">
-            <EcosystemSwitcher />
-          </div>
-        )}
         <nav className="flex flex-col gap-4" aria-label="Primary">
           {sections.map((section) => (
             <div key={section.label}>
               {!collapsed && (
-                <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[.17em] text-neutral-400">
+                <p className="mb-2 px-3 text-xs font-semibold text-neutral-500">
                   {section.label}
                 </p>
               )}
@@ -279,23 +285,24 @@ const AppShell = () => {
           ))}
           {!collapsed && (
             <div className="border-t border-neutral-200 pt-4">
-              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[.17em] text-neutral-400">
+              <p className="mb-2 px-3 text-xs font-semibold text-neutral-500">
                 Grow
               </p>
               {[
-                ["Launch", "https://trylaunch.ai"],
-                ["Post", "https://trypost.ai"],
-                ["Media", "https://trymedia.ai"],
-              ].map(([label, href]) => (
+                { label: "Launch", href: "https://trylaunch.ai", icon: Send },
+                { label: "Post", href: "https://trypost.ai", icon: PenLine },
+                { label: "Media", href: "https://trymedia.ai", icon: Image },
+              ].map(({ label, href, icon: Icon }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 items-center justify-between rounded-xl px-3 text-sm text-neutral-700 hover:bg-neutral-100"
+                  className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
                 >
+                  <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
                   <span>{label}</span>
-                  <ExternalLink className="h-3.5 w-3.5 text-neutral-400" />
+                  <ExternalLink className="ml-auto h-3.5 w-3.5 text-neutral-400" />
                 </a>
               ))}
             </div>

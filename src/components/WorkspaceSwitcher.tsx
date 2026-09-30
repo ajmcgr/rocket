@@ -94,7 +94,7 @@ const WorkspaceSwitcher = () => {
         <ChevronDown className="h-3 w-3 shrink-0 text-neutral-500" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-64 rounded-xl border border-neutral-200 bg-white p-2 shadow-lg">
-        <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Workspaces</div>
+        <div className="px-2 py-1 text-[11px] font-semibold normal-case tracking-wide text-neutral-500">Workspaces</div>
         {workspaces.length === 0 && !loading ? (
           <div className="px-2 py-2 text-sm text-neutral-500">No workspaces yet.</div>
         ) : null}
@@ -120,7 +120,7 @@ const WorkspaceSwitcher = () => {
         >
           {isPro ? <Plus className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4 text-neutral-400" />}
           <span className="flex-1">New workspace</span>
-          {!isPro && <span className="ml-2 rounded bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">Pro</span>}
+          {!isPro && <span className="ml-2 rounded bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-wide text-brand">Pro</span>}
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900">
           <Link to="/settings/team"><Users className="mr-2 h-4 w-4" /> Manage team</Link>

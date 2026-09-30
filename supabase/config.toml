@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.send-email]
 verify_jwt = true
 
+[functions.contact-request]
+verify_jwt = false
+
 [functions.free-tool]
 verify_jwt = false
 

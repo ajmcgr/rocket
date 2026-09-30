@@ -6,6 +6,14 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import AppLogo from "@/components/AppLogo";
 import { track } from "@/lib/analytics";
+import { Code2, ExternalLink, Globe2, Newspaper, Rocket, type LucideIcon } from "lucide-react";
+
+const supportedSources: { name: string; detail: string; Icon: LucideIcon }[] = [
+  { name: "App websites", detail: "A public page for your app", Icon: Globe2 },
+  { name: "Launch", detail: "A trylaunch.ai product page", Icon: Rocket },
+  { name: "GitHub", detail: "A public repository URL", Icon: Code2 },
+  { name: "Hacker News", detail: "A public story or Show HN item", Icon: Newspaper },
+];
 
 const STORAGE_KEY = "rocket:launch-preview-v1";
 type Preview = {
@@ -108,7 +116,7 @@ export default function LaunchPreview() {
         const pending = { ...candidate, claimAfterAuth: true };
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
         setPreview(pending);
-        navigate(`/login?next=${encodeURIComponent("/launch")}`);
+        navigate(`/login?next=${encodeURIComponent("/submit")}`);
         return;
       }
       if (consumed.current) return;
@@ -144,11 +152,11 @@ export default function LaunchPreview() {
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] pb-20 text-neutral-900">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-12 sm:px-8 sm:pt-20">
-        <p className="text-xs font-bold uppercase tracking-[.17em] text-sky-800">
+        <p className="text-xs font-bold normal-case tracking-[.17em] text-sky-800">
           For independent developers
         </p>
         <h1 className="mt-3 font-display text-4xl leading-tight sm:text-6xl">
-          Launch your app.
+          Submit your app.
         </h1>
         <p className="mt-4 max-w-2xl text-base text-neutral-600 sm:text-lg">
           Show us where your app lives. We’ll find its public details first—no
@@ -234,6 +242,28 @@ export default function LaunchPreview() {
             </div>
           )}
         </form>
+        <section className="mt-8" aria-labelledby="submit-supported-sources">
+          <h2 id="submit-supported-sources" className="text-xl font-semibold tracking-tight sm:text-2xl">URLs Rocket can preview</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
+            Paste a specific app page, not a directory homepage. Public pages must be accessible and include enough information to identify the app.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {supportedSources.map(({ name, detail, Icon }) => (
+              <div key={name} className="flex items-start gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf5fc] text-[#176f9f]">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div><h3 className="text-sm font-semibold">{name}</h3><p className="mt-1 text-xs leading-5 text-neutral-600">{detail}</p></div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-xs leading-5 text-neutral-500">
+            Product Hunt, Apple App Store, and Google Play listing URLs are not supported yet. Paste the app’s own website URL instead. Other public directory pages may work when they expose that website, but Rocket does not guarantee directory-specific imports.
+          </p>
+          <a href="https://launchdirectories.com/free-startup-directories" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-sky-800 hover:underline">
+            Browse external directories (not Rocket integrations) <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+          </a>
+        </section>
         {error && (
           <div
             role="alert"
@@ -253,7 +283,7 @@ export default function LaunchPreview() {
         )}
         {preview && (
           <section className="mt-8 overflow-hidden rounded-[1.75rem] border border-neutral-200 bg-white p-6 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[.15em] text-sky-800">
+            <p className="text-xs font-semibold normal-case tracking-[.15em] text-sky-800">
               {preview.outcome === "existing"
                 ? "Already on Rocket"
                 : preview.outcome === "ambiguous"
