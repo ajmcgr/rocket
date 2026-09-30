@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "./Logo";
@@ -29,6 +29,16 @@ export type AppShellOutletContext = {
   setHeaderCenter: (node: ReactNode | null) => void;
   setHeaderActions: (node: ReactNode | null) => void;
 };
+
+// React Router's <Outlet context> has no TanStack equivalent; the header slots
+// now travel through a React context instead.
+const AppShellContext = createContext<AppShellOutletContext | null>(null);
+
+export function useAppShell(): AppShellOutletContext {
+  const ctx = useContext(AppShellContext);
+  if (!ctx) throw new Error("useAppShell must be used within AppShell");
+  return ctx;
+}
 
 const AppShell = () => {
   const { user, signOut } = useAuth();
