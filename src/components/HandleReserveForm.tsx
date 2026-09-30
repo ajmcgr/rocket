@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowRight, Check, Loader2, Sparkles, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase as _sb } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 const supabase = _sb as any;
 

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Download, Copy, GitBranch, History, Wand2, ExternalLink } from "lucide-react";
 import AssetVisual, { hasVisualRenderer } from "@/components/visuals/AssetVisual";
 import { assetHref, assetOpenLabel, isBrandAsset } from "@/lib/assetExperience";

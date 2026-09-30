@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import AppJourney, { type MyApp } from "@/components/AppJourney";
 import AppLogo from "@/components/AppLogo";

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { assetHref, isBrandAsset } from "@/lib/assetExperience";
 import { designSearchText, rankDesignsByRelevance, rankProjectsByRelevance } from "@/lib/searchRelevance";
 import {

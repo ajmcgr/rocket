@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Zap, Loader2, ArrowRight, X } from "lucide-react";
 import { useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";

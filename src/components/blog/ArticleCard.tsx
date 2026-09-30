@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import ArticleCover from "./ArticleCover";
 import Highlight from "./Highlight";
 import { formatDate, type BlogPost } from "@/content/blogMeta";

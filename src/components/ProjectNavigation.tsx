@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink } from "@/lib/router-compat";
 
 type ProjectSection = "brand" | "designs" | "templates" | "downloads" | "settings";
 

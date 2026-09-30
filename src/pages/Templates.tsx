@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { toast } from "@/hooks/use-toast";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import {

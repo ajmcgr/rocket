@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Bell, CheckCheck, Trash2, Sparkles, Download, CreditCard, FolderOpen, Info, X } from "lucide-react";
 import { useNotifications, type NotificationKind } from "@/contexts/NotificationsContext";
 

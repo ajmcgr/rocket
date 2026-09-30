@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ArrowRight, Bookmark, Layers3, LayoutTemplate, Palette, PenTool, Shapes, Sparkles, Wand2, type LucideIcon } from "lucide-react";
 
 const tools: { title: string; description: string; to: string; icon: LucideIcon }[] = [

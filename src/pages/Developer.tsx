@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "@/lib/router-compat";
 import { Check, ChevronLeft, Copy, KeyRound, Loader2, Plus, ShieldCheck } from "lucide-react";
 import { supabase as _supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";

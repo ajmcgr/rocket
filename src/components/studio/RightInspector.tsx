@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ExternalLink, Info } from "lucide-react";
 import { categoryOf, CATEGORY_LABEL } from "@/lib/assetFamily";
 import { assetHref, assetOpenLabel, isBrandAsset } from "@/lib/assetExperience";

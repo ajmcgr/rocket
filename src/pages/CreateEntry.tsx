@@ -1,4 +1,4 @@
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "@/lib/router-compat";
 import Generate from "./Generate";
 import CreateHub from "./CreateHub";
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, NavLink, Outlet, useParams } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useParams } from "@/lib/router-compat";
 import {
   Image as ImageIcon,
   BookOpen,
@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { downloadCompleteBrandKit } from "@/lib/brandKitDownload";
 import { sendBrandKitEmail } from "@/lib/kitEmails";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 
 const supabase = _sb as any;
 

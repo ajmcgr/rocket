@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { tryJson, type PresentationData } from "@/lib/assetSchemas";
 import ScaledSlide, { SlideStage } from "@/components/slides/ScaledSlide";

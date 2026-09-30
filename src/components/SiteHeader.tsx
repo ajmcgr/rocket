@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import Logo from "./Logo";
 import { Button } from "./ui/button";
 import { Check, ChevronDown } from "lucide-react";

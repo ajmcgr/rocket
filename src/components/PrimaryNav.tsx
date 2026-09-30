@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "@/lib/router-compat";
 import { Compass, LogIn, Plus } from "lucide-react";
 import { destinations } from "./primaryDestinations";
 
