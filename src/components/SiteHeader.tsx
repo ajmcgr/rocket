@@ -79,6 +79,7 @@ const SiteHeader = () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <ThemeToggle />
           {loading ? (
             <div className="h-8 w-8 rounded-full bg-neutral-100" />
           ) : user ? (
