@@ -13,7 +13,14 @@ import {
   Navigate as TSNavigate,
   Outlet as TSOutlet,
 } from "@tanstack/react-router";
-import { useMemo, useCallback, forwardRef, type ComponentProps, type ReactNode } from "react";
+import {
+  useMemo,
+  useCallback,
+  forwardRef,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 // ---------- shared URL parsing ----------
 
@@ -153,6 +160,47 @@ export function Navigate({ to, replace, state }: { to: string; replace?: boolean
 
 export const Outlet = TSOutlet;
 
-// ---------- NavLink (minimal) ----------
+// ---------- NavLink (react-router-dom compat: active state, `end`, function className/style) ----------
 
-export const NavLink = Link;
+export type NavLinkRenderProps = { isActive: boolean; isPending: boolean };
+
+export type NavLinkProps = Omit<LinkProps, "className" | "style" | "children"> & {
+  end?: boolean;
+  caseSensitive?: boolean;
+  className?: string | ((props: NavLinkRenderProps) => string | undefined);
+  style?: CSSProperties | ((props: NavLinkRenderProps) => CSSProperties | undefined);
+  children?: ReactNode | ((props: NavLinkRenderProps) => ReactNode);
+};
+
+export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink(
+  { to, end, caseSensitive, className, style, children, ...rest },
+  ref,
+) {
+  const { pathname } = useLocation();
+  const rawTarget = parseTo(to).pathname;
+  const target = rawTarget === "." ? pathname : rawTarget;
+  const normalize = (value: string) => {
+    const stripped = value.length > 1 && value.endsWith("/") ? value.slice(0, -1) : value;
+    return caseSensitive ? stripped : stripped.toLowerCase();
+  };
+  const current = normalize(pathname);
+  const targetPath = normalize(target);
+  const isActive = end
+    ? current === targetPath
+    : current === targetPath ||
+      (targetPath !== "/" && current.startsWith(`${targetPath}/`)) ||
+      (targetPath === "/" && current === "/");
+  const renderProps: NavLinkRenderProps = { isActive, isPending: false };
+  return (
+    <Link
+      ref={ref}
+      to={to}
+      aria-current={isActive ? "page" : undefined}
+      className={typeof className === "function" ? className(renderProps) : className}
+      style={typeof style === "function" ? style(renderProps) : style}
+      {...rest}
+    >
+      {typeof children === "function" ? children(renderProps) : children}
+    </Link>
+  );
+});
