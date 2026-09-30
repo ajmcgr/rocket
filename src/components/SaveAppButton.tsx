@@ -1,4 +1,3 @@
-import { Bookmark } from "lucide-react";
 import { useNavigate } from "@/lib/router-compat";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +33,6 @@ export default function SaveAppButton({ appId, saved, onChange }: Props) {
     aria-pressed={saved} disabled={busy} onClick={toggle}
     title={error ? "Could not update Saved Apps. Try again." : saved ? "Remove from Saved Apps" : "Save app"}
     className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${saved ? "border-sky-300 bg-sky-50 text-sky-700" : "border-neutral-200 bg-white text-neutral-700 hover:border-sky-300 hover:text-sky-700"}`}>
-    <Bookmark className="h-4 w-4" fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save"}
+    <span aria-hidden="true">{saved ? "🔖" : "📑"}</span>{saved ? "Saved" : "Save"}
   </button>;
 }

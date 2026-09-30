@@ -44,7 +44,7 @@ function planName(plan: PaidPlan): string {
 
 const BRAND = {
   blue: "#167ac6",
-  ink: "#0A0A0A",
+  ink: "#167ac6",
   text: "#1F2937",
   muted: "#9CA3AF",
   border: "#E5E7EB",

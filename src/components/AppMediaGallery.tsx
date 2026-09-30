@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ExternalLink, Play } from "lucide-react";
 import { optimizedMediaUrl, type PublicAppMedia } from "@/lib/appMedia";
 
 export default function AppMediaGallery({
@@ -29,10 +28,7 @@ export default function AppMediaGallery({
     <section className="mt-8" aria-labelledby="gallery-title">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold normal-case tracking-[.15em] text-sky-800">
-            A closer look
-          </p>
-          <h2 id="gallery-title" className="mt-2 font-display text-3xl">
+          <h2 id="gallery-title" className="text-xl font-semibold tracking-tight">
             See {name} in action
           </h2>
         </div>
@@ -67,7 +63,7 @@ export default function AppMediaGallery({
                 className="h-64 w-full object-contain sm:h-80"
               />
               <span className="absolute bottom-3 right-3 rounded-full bg-white/90 p-2 text-neutral-800 opacity-0 transition group-hover:opacity-100">
-                <ExternalLink className="h-4 w-4" />
+                <span aria-hidden="true">↗️</span>
               </span>
             </a>
           ))}
@@ -83,9 +79,9 @@ export default function AppMediaGallery({
               rel="noopener noreferrer nofollow"
               className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium hover:border-sky-300"
             >
-              <Play className="h-4 w-4" />
+              <span aria-hidden="true">▶️</span>
               Watch product video {index + 1}
-              <ExternalLink className="h-3 w-3" />
+              <span aria-hidden="true">↗️</span>
             </a>
           ))}
         </div>

@@ -321,7 +321,7 @@ const Pricing = () => {
           <div className="text-center">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Frequently asked</h2>
           </div>
-          <Accordion type="single" collapsible className="mt-10 w-full space-y-3">
+          <Accordion type="multiple" defaultValue={FAQS.map((_, i) => `item-${i}`)} className="mt-10 w-full space-y-3">
             {FAQS.map((f, i) => (
               <AccordionItem key={i} value={`item-${i}`} className="rounded-2xl border border-neutral-200 bg-white">
                 <AccordionTrigger className="px-6 py-5 text-left text-base font-semibold text-neutral-900">{f.q}</AccordionTrigger>

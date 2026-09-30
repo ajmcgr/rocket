@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowUpRight } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import type { PublicAppMedia } from "@/lib/appMedia";
 import { coverMedia, optimizedMediaUrl } from "@/lib/appMedia";
@@ -57,7 +56,7 @@ export function EditorialAppCard({
   return (
     <Link
       to={`/apps/${app.id}`}
-      className="group relative block min-h-[22rem] overflow-hidden rounded-[1.25rem] bg-neutral-950 text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
+      className="group relative block min-h-[22rem] overflow-hidden rounded-[1.25rem] bg-[#167ac6] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
     >
       <Artwork
         app={app}
@@ -65,7 +64,7 @@ export function EditorialAppCard({
         priority
         className="absolute inset-0 h-full w-full opacity-75 transition duration-500 group-hover:scale-[1.03]"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/55 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#167ac6] via-[#167ac6]/60 to-transparent" />
       <div className="relative flex min-h-[22rem] flex-col justify-end p-6 sm:p-8">
         <span className="text-xs font-semibold text-sky-200">
           {eyebrow}
@@ -86,8 +85,8 @@ export function EditorialAppCard({
           </div>
         </div>
         <div className="mt-6 flex items-center justify-between text-xs text-neutral-200">
-          <span>{app.categories[0] || "Independent app"}</span>
-          <ArrowUpRight className="h-5 w-5" />
+          <span>{app.categories[0] || "App"}</span>
+          <span className="text-lg" aria-hidden="true">↗️</span>
         </div>
       </div>
     </Link>
@@ -122,7 +121,7 @@ export function StandardAppCard({
             </div>
           </div>
           <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">
-            {app.tagline || app.description || "Explore this independent app."}
+            {app.tagline || app.description || "Explore this app."}
           </p>
           {eyebrow && (
             <p className="mt-3 text-xs font-medium text-sky-800">{eyebrow}</p>
@@ -169,11 +168,11 @@ export function RankedAppRow({
           {app.tagline || app.canonical_host}
         </span>
         <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
-          {app.categories[0] || "Independent app"}
+          {app.categories[0] || "App"}
           {eyebrow ? ` · ${eyebrow}` : ""}
         </span>
       </span>
-      <ArrowUpRight className="h-4 w-4 shrink-0 text-neutral-400 group-hover:text-[#075985]" />
+      <span className="shrink-0 text-base" aria-hidden="true">↗️</span>
     </Link>
   );
 }
@@ -196,8 +195,8 @@ export function RisingAppCard({
         {app.tagline || app.description || app.canonical_host}
       </span>
       <span className="mt-auto flex items-center justify-between gap-2 pt-5 text-xs text-neutral-500">
-        <span className="truncate">{app.categories[0] || "Independent app"}</span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 transition group-hover:text-[#075985]" aria-hidden="true" />
+        <span className="truncate">{app.categories[0] || "App"}</span>
+        <span className="shrink-0 text-base" aria-hidden="true">↗️</span>
       </span>
     </Link>
   );
@@ -223,7 +222,7 @@ export function MarketplaceListRow({
             {app.tagline || app.description || app.canonical_host}
           </span>
           <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
-            {app.categories[0] || "Independent app"}
+            {app.categories[0] || "App"}
           </span>
         </span>
       </Link>

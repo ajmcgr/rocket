@@ -26,7 +26,7 @@ describe("platform primary navigation", () => {
       [...container.querySelectorAll("nav")].forEach((nav, index) => {
         expect(
           [...nav.querySelectorAll("a")].map((link) =>
-            link.textContent?.trim(),
+            link.getAttribute("aria-label") || link.textContent?.trim(),
           ),
         ).toEqual(expected[index]);
         expect(
@@ -55,7 +55,7 @@ describe("platform primary navigation", () => {
       });
       expect(
         [...container.querySelectorAll("nav a")].map((link) =>
-          link.textContent?.trim(),
+          link.getAttribute("aria-label") || link.textContent?.trim(),
         ),
       ).toEqual([
         "Discover",

@@ -2,24 +2,22 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "@/lib/router-compat";
 import {
   Bookmark,
-  Check,
-  ChevronDown,
   Compass,
   ExternalLink,
   Layers3,
   LogIn,
   Plus,
-  Search,
   Settings,
   Sparkles,
+  Flame,
   TrendingUp,
   Wallet,
   ShieldCheck,
   Grid2X2,
-  Menu,
+  PanelLeftClose,
   Send,
   PenLine,
-  Image,
+  Database,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -55,7 +53,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "Discover", to: "/discover", icon: Compass },
       { label: "Rising", to: "/discover?view=rising", icon: TrendingUp },
-      { label: "New", to: "/discover?view=new", icon: Sparkles },
+      { label: "New", to: "/discover?view=new", icon: Flame },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
       { label: "Saved", to: "/saved-apps", icon: Bookmark },
     ],
@@ -69,19 +67,20 @@ const sections: { heading: string; items: NavItem[] }[] = [
   },
   {
     heading: "Create",
-    items: [{ label: "Create branding", to: "/create", icon: Sparkles }],
+    items: [{ label: "Logos/Icons", to: "/create", icon: Sparkles }],
   },
   {
     heading: "Monetize",
     items: [
-      { label: "Revenue in your apps", to: "/your-apps", icon: Wallet },
-      { label: "Rocket Identity", to: "/developer", icon: ShieldCheck },
+      { label: "App revenue", to: "/your-apps", icon: Wallet },
+      { label: "Rocket ID", to: "/developer", icon: ShieldCheck },
     ],
   },
 ];
 export default function SiteHeader() {
   const [lang, setLang] = useState(LANGUAGES[0]);
   const [search, setSearch] = useState("");
+  const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
@@ -94,6 +93,19 @@ export default function SiteHeader() {
     const found = LANGUAGES.find((item) => item.code === code);
     if (found) setLang(found);
   }, []);
+
+  useEffect(() => {
+    setSidebarCompact(window.localStorage.getItem("rocket:marketplace-sidebar-compact") === "1");
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarCompact((current) => {
+      window.localStorage.setItem("rocket:marketplace-sidebar-compact", current ? "0" : "1");
+      return !current;
+    });
+  };
+
+  const sidebarWidth = sidebarCompact ? 68 : 240;
 
   const setLanguage = (item: (typeof LANGUAGES)[number]) => {
     setLang(item);
@@ -118,7 +130,7 @@ export default function SiteHeader() {
 
   const navItem = ({ label, to, icon: Icon }: NavItem) => {
     const active =
-      (label !== "Revenue in your apps" && pathname + locationSearch === to) ||
+      (label !== "App revenue" && pathname + locationSearch === to) ||
       (to === "/discover" && pathname === "/discover" && !locationSearch) ||
       (to === "/saved-apps" && pathname === "/saved-apps") ||
       (to === "/submit" && pathname === "/submit") ||
@@ -128,71 +140,85 @@ export default function SiteHeader() {
       <Link
         key={label}
         to={to}
+        title={sidebarCompact ? label : undefined}
+        aria-label={sidebarCompact ? label : undefined}
         aria-current={active ? "page" : undefined}
-        className={`flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${active ? "bg-[#eaf5fc] text-[#075985]" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
+        className={`flex min-h-9 items-center gap-3 rounded-lg text-sm font-medium transition-colors ${sidebarCompact ? "justify-center px-0" : "px-3"} ${active ? "bg-[#eaf5fc] text-[#075985]" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
       >
         <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-        <span>{label}</span>
+        {!sidebarCompact && <span>{label}</span>}
       </Link>
     );
   };
 
   return (
     <>
-      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>footer{margin-left:240px}}`}</style>
-      <aside className="marketplace-sidebar fixed inset-y-0 left-0 z-50 hidden w-60 flex-col border-r border-[#e8edf2] bg-[#f9fbfd] lg:flex">
-        <div className="flex h-17 items-center border-b border-[#e8edf2] px-5">
-          <Logo size="md" />
+      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>footer,*:has(>.marketplace-sidebar)>header{margin-left:${sidebarWidth}px}}`}</style>
+      <aside className="marketplace-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] bg-[#f9fbfd] transition-[width] duration-200 lg:flex" style={{ width: sidebarWidth }}>
+        <div className={`flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "justify-between px-3"}`}>
+          {sidebarCompact ? (
+            <button type="button" onClick={toggleSidebar} aria-label="Expand sidebar" title="Expand sidebar" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
+              <img src="/favicon.png" alt="" className="h-8 w-8 object-contain" />
+            </button>
+          ) : (
+            <>
+              <Link to="/" aria-label="Rocket home" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100">
+                <img src="/favicon.png" alt="" className="h-8 w-8 object-contain" />
+              </Link>
+              <button type="button" onClick={toggleSidebar} aria-label="Collapse sidebar" title="Collapse sidebar" className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
+                <PanelLeftClose className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-5">
+        <div className={`min-h-0 flex-1 overflow-y-auto pb-5 ${sidebarCompact ? "px-2" : "px-3"}`}>
           <nav aria-label="Marketplace" className="mt-5 space-y-4">
             {sections.map((section) => (
               <div key={section.heading}>
-                <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">
-                  {section.heading}
-                </p>
+                {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">{section.heading}</p>}
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
             <div>
-              <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">
-                Grow
-              </p>
+              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">Grow</p>}
               {[
                 { label: "Launch", href: "https://trylaunch.ai", icon: Send },
                 { label: "Post", href: "https://trypost.ai", icon: PenLine },
-                { label: "Media", href: "https://trymedia.ai", icon: Image },
+                { label: "Media", href: "https://trymedia.ai", icon: Database },
               ].map(({ label, href, icon: Icon }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
+                  title={sidebarCompact ? label : undefined}
+                  aria-label={sidebarCompact ? `${label} (opens in a new tab)` : undefined}
+                  className={`flex min-h-9 items-center gap-3 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                  <span>{label}</span>
-                  <ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" />
+                  {!sidebarCompact && <><span>{label}</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
                 </a>
               ))}
             </div>
           </nav>
         </div>
-        <div className="border-t border-[#e8edf2] px-3 py-3">
+        <div className={`border-t border-[#e8edf2] py-3 ${sidebarCompact ? "px-2" : "px-3"}`}>
           <Link
             to={user ? "/settings" : "/login"}
-            className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-neutral-600 hover:bg-neutral-100"
+            title={sidebarCompact ? (user ? "Settings" : "Sign in") : undefined}
+            aria-label={sidebarCompact ? (user ? "Settings" : "Sign in") : undefined}
+            className={`flex min-h-10 items-center gap-3 rounded-xl text-sm text-neutral-600 hover:bg-neutral-100 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
           >
             {user ? (
               <Settings className="h-[18px] w-[18px]" />
             ) : (
               <LogIn className="h-[18px] w-[18px]" />
             )}
-            {user ? "Settings" : "Sign in"}
+            {!sidebarCompact && (user ? "Settings" : "Sign in")}
           </Link>
         </div>
       </aside>
-      <header className="sticky top-0 z-40 border-b border-[#e8edf2] bg-white/95 backdrop-blur-sm lg:ml-60">
+      <header className="sticky top-0 z-40 border-b border-[#e8edf2] bg-white/95 backdrop-blur-sm lg:transition-[margin-left] lg:duration-200">
         <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:gap-6 lg:px-8">
           <div className="lg:hidden">
             <Logo size="md" />
@@ -202,10 +228,7 @@ export default function SiteHeader() {
             role="search"
             className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#167ac6] sm:flex"
           >
-            <Search
-              className="mr-2 h-4 w-4 shrink-0 text-neutral-500"
-              aria-hidden="true"
-            />
+            <span className="mr-2 text-base" aria-hidden="true">🔎</span>
             <input
               aria-label="Search apps and categories"
               placeholder="Search apps, categories..."
@@ -223,15 +246,15 @@ export default function SiteHeader() {
               aria-label="Search apps"
               className="rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 sm:hidden"
             >
-              <Search className="h-5 w-5" />
+              <span className="text-xl" aria-hidden="true">🔎</span>
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Choose language"
-                className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-neutral-600 hover:bg-neutral-100"
               >
-                <span aria-hidden="true">{lang.flag}</span>
-                <ChevronDown className="h-3 w-3" />
+                <span className="inline-flex h-6 w-6 items-center justify-center text-[22px] leading-none" aria-hidden="true">{lang.flag}</span>
+                <span className="text-xs leading-none" aria-hidden="true">🔽</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
@@ -244,7 +267,7 @@ export default function SiteHeader() {
                     className="gap-2"
                   >
                     {item.code === lang.code ? (
-                      <Check className="h-4 w-4" />
+                      <span className="w-4" aria-hidden="true">✅</span>
                     ) : (
                       <span className="w-4" />
                     )}
@@ -309,7 +332,7 @@ export default function SiteHeader() {
                 aria-label="More navigation"
                 className="rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 lg:hidden"
               >
-                <Menu className="h-5 w-5" />
+                <span className="text-xl" aria-hidden="true">☰</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60 bg-white">
                 <DropdownMenuItem asChild>
