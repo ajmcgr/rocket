@@ -361,3 +361,91 @@ body {
     bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* -------------------- Dark mode --------------------
+ * The app hardcodes light utilities (bg-white, text-neutral-*) in most
+ * components, so `.dark` remaps those compiled utility classes directly.
+ * Toggle = ThemeToggle (header) persisting to localStorage("theme"); the
+ * pre-hydration script in __root.tsx re-applies the class before paint. */
+html.dark {
+  color-scheme: dark;
+}
+html.dark body {
+  background-color: #0f0e0c;
+  color: hsl(40 30% 95%);
+}
+
+/* Surfaces (solid + translucent whites) */
+html.dark .bg-white { background-color: hsl(30 10% 6%) !important; }
+html.dark .bg-white\/95 { background-color: hsl(30 10% 6% / 0.95) !important; }
+html.dark .bg-white\/90,
+html.dark .bg-white\/88 { background-color: hsl(30 10% 6% / 0.9) !important; }
+html.dark .bg-white\/80,
+html.dark .bg-white\/75 { background-color: hsl(30 10% 6% / 0.8) !important; }
+html.dark .bg-white\/70,
+html.dark .bg-white\/60 { background-color: hsl(30 10% 6% / 0.7) !important; }
+html.dark .hover\:bg-white:hover { background-color: hsl(30 10% 6%) !important; }
+
+html.dark .bg-neutral-50 { background-color: hsl(30 9% 9%) !important; }
+html.dark .bg-neutral-50\/70,
+html.dark .bg-neutral-50\/60,
+html.dark .bg-neutral-50\/50 { background-color: hsl(30 9% 9% / 0.7) !important; }
+html.dark .bg-neutral-100 { background-color: hsl(30 8% 12%) !important; }
+html.dark .bg-neutral-100\/70 { background-color: hsl(30 8% 12% / 0.7) !important; }
+html.dark .bg-neutral-200 { background-color: hsl(30 8% 16%) !important; }
+html.dark .bg-neutral-900 { background-color: hsl(30 6% 22%) !important; }
+
+html.dark .hover\:bg-neutral-50:hover { background-color: hsl(30 9% 9%) !important; }
+html.dark .hover\:bg-neutral-100:hover { background-color: hsl(30 8% 13%) !important; }
+html.dark .hover\:bg-neutral-200:hover { background-color: hsl(30 8% 16%) !important; }
+html.dark .hover\:bg-neutral-900:hover { background-color: hsl(30 6% 25%) !important; }
+html.dark .hover\:bg-neutral-800:hover { background-color: hsl(30 6% 27%) !important; }
+html.dark .hover\:bg-neutral-700:hover { background-color: hsl(30 6% 30%) !important; }
+html.dark .focus\:bg-neutral-50:focus { background-color: hsl(30 9% 9%) !important; }
+html.dark .focus\:bg-neutral-100:focus { background-color: hsl(30 8% 13%) !important; }
+
+/* Text (warm dark scale) */
+html.dark .text-neutral-900 { color: hsl(40 30% 95%) !important; }
+html.dark .text-neutral-800 { color: hsl(40 20% 87%) !important; }
+html.dark .text-neutral-700 { color: hsl(40 15% 77%) !important; }
+html.dark .text-neutral-600 { color: hsl(40 10% 65%) !important; }
+html.dark .text-neutral-500 { color: hsl(40 10% 55%) !important; }
+html.dark .text-neutral-400 { color: hsl(40 8% 44%) !important; }
+html.dark .text-neutral-300 { color: hsl(40 8% 36%) !important; }
+html.dark .hover\:text-neutral-950:hover,
+html.dark .hover\:text-neutral-900:hover,
+html.dark .hover\:text-neutral-800:hover { color: hsl(40 30% 96%) !important; }
+html.dark .hover\:text-neutral-700:hover,
+html.dark .hover\:text-neutral-600:hover { color: hsl(40 15% 78%) !important; }
+html.dark .focus\:text-neutral-900:focus { color: hsl(40 30% 96%) !important; }
+html.dark .placeholder\:text-neutral-400::placeholder,
+html.dark .placeholder\:text-neutral-500::placeholder { color: hsl(40 8% 42%) !important; }
+
+/* Borders + dividers */
+html.dark .border-neutral-100 { border-color: hsl(40 12% 16%) !important; }
+html.dark .border-neutral-200 { border-color: hsl(40 12% 20%) !important; }
+html.dark .border-neutral-200\/90,
+html.dark .border-neutral-200\/80 { border-color: hsl(40 12% 20% / 0.9) !important; }
+html.dark .border-neutral-200\/70,
+html.dark .border-neutral-200\/60 { border-color: hsl(40 12% 20% / 0.7) !important; }
+html.dark .border-neutral-300 { border-color: hsl(40 12% 26%) !important; }
+html.dark .divide-neutral-100 > :not([hidden]) ~ :not([hidden]) { border-color: hsl(40 12% 16%) !important; }
+html.dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { border-color: hsl(40 12% 20%) !important; }
+
+/* Gradient stops */
+html.dark .from-white { --tw-gradient-from: hsl(30 10% 6%) !important; }
+html.dark .from-neutral-50 { --tw-gradient-from: hsl(30 9% 9%) !important; }
+html.dark .to-neutral-100 { --tw-gradient-to: hsl(30 8% 12%) !important; }
+
+/* Hardcoded hex page backgrounds */
+html.dark .bg-\[\#f7f9fc\],
+html.dark .bg-\[\#f5f7fb\],
+html.dark .bg-\[\#f6f8fb\],
+html.dark .bg-\[\#faf7f2\] { background-color: hsl(30 10% 6%) !important; }
+
+html.dark .text-neutral-950 { color: hsl(40 30% 96%) !important; }
+html.dark .hover\:text-neutral-950:hover { color: hsl(40 30% 96%) !important; }
+
+html.dark .ring-neutral-100 { --tw-ring-color: hsl(40 12% 16%) !important; }
+html.dark .ring-neutral-200 { --tw-ring-color: hsl(40 12% 20%) !important; }
+html.dark .ring-neutral-300 { --tw-ring-color: hsl(40 12% 26%) !important; }

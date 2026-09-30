@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MobilePrimaryNav, PrimaryNav, PublicMobileNav } from "./PrimaryNav";
+import ThemeToggle from "./ThemeToggle";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", label: "English" },
@@ -79,6 +80,7 @@ const SiteHeader = () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <ThemeToggle />
           {loading ? (
             <div className="h-8 w-8 rounded-full bg-neutral-100" />
           ) : user ? (

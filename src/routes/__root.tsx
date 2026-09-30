@@ -59,6 +59,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
     scripts: [
+      // Re-apply the stored theme before first paint to avoid a light flash.
+      { children: 'try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}' },
       { children: extensionErrorSuppression },
       { src: "https://www.googletagmanager.com/gtag/js?id=G-0SNE7T7S79", async: true },
       {
@@ -80,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
