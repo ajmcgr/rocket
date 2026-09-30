@@ -1,0 +1,363 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition — ported from the pre-migration src/index.css +
+ * tailwind.config.ts (Tailwind v3 → v4).
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-hover: var(--brand-hover);
+  --color-gold: var(--gold);
+  --color-gold-glow: var(--gold-glow);
+  --color-cream: var(--cream);
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Reckless", serif;
+  --font-serif: "Reckless", ui-serif, Georgia, serif;
+  --font-body: "Inter", sans-serif;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+:root {
+  --background: hsl(30 10% 5%);
+  --foreground: hsl(40 30% 95%);
+
+  --card: hsl(30 10% 8%);
+  --card-foreground: hsl(40 30% 95%);
+
+  --popover: hsl(30 10% 8%);
+  --popover-foreground: hsl(40 30% 95%);
+
+  /* Brand blue (#1676e3) */
+  --brand: hsl(212 82% 49%);
+  --brand-foreground: hsl(0 0% 100%);
+  --brand-hover: hsl(212 82% 42%);
+
+  --primary: hsl(212 82% 49%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(30 10% 12%);
+  --secondary-foreground: hsl(40 30% 90%);
+
+  --muted: hsl(30 10% 15%);
+  --muted-foreground: hsl(40 10% 60%);
+
+  --accent: hsl(40 70% 55%);
+  --accent-foreground: hsl(30 10% 5%);
+
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(40 30% 95%);
+
+  --border: hsl(40 15% 20%);
+  --input: hsl(40 15% 20%);
+  --ring: hsl(40 70% 55%);
+
+  --radius: 0.75rem;
+
+  --gold: hsl(40 70% 55%);
+  --gold-glow: hsl(40 80% 65%);
+  --cream: hsl(40 30% 95%);
+
+  --sidebar-background: hsl(30 10% 5%);
+  --sidebar-foreground: hsl(40 30% 95%);
+  --sidebar-primary: hsl(40 70% 55%);
+  --sidebar-primary-foreground: hsl(30 10% 5%);
+  --sidebar-accent: hsl(30 10% 12%);
+  --sidebar-accent-foreground: hsl(40 30% 95%);
+  --sidebar-border: hsl(40 15% 20%);
+  --sidebar-ring: hsl(40 70% 55%);
+}
+
+/* Reckless @font-face — was inlined in index.html <head>; preload links for the
+   font files remain in __root.tsx head() to keep first-paint fast. */
+@font-face {
+  font-family: "Reckless";
+  src: url("/fonts/Reckless-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Reckless";
+  src: url("/fonts/Reckless-Medium.otf") format("opentype");
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Reckless";
+  src: url("/fonts/Reckless-Bold.ttf") format("truetype");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Tailwind v3 `container` config port: centered, 2rem padding, 1400px cap. */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  width: 100%;
+  max-width: 1400px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: "Inter", sans-serif;
+    color-scheme: light;
+    -webkit-font-smoothing: auto;
+    -moz-osx-font-smoothing: auto;
+  }
+
+  h1,
+  h2 {
+    font-family: "Reckless", serif;
+    font-weight: 400;
+  }
+  footer h1,
+  footer h2 {
+    font-family: "Inter", sans-serif;
+  }
+  .app-shell h2,
+  .app-shell h3,
+  .app-shell h4 {
+    font-family: "Inter", sans-serif;
+  }
+  .app-shell h1,
+  footer h1 {
+    font-family: "Reckless", serif;
+    font-weight: 400;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow:
+      0 0 40px hsl(40 70% 55% / 0.3),
+      0 0 80px hsl(40 70% 55% / 0.1);
+  }
+
+  .text-glow-sm {
+    text-shadow: 0 0 20px hsl(40 70% 55% / 0.2);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 1s ease-out forwards;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fade-in-up 1s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fade-in-up 1s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-3 {
+  animation: fade-in-up 1s ease-out 0.6s forwards;
+  opacity: 0;
+}
+
+@keyframes fluid-gradient {
+  0% {
+    background-position:
+      0% 50%,
+      100% 0%,
+      50% 100%,
+      0% 0%;
+  }
+  25% {
+    background-position:
+      50% 100%,
+      0% 50%,
+      100% 50%,
+      50% 50%;
+  }
+  50% {
+    background-position:
+      100% 50%,
+      50% 100%,
+      0% 0%,
+      100% 100%;
+  }
+  75% {
+    background-position:
+      50% 0%,
+      100% 50%,
+      50% 50%,
+      50% 50%;
+  }
+  100% {
+    background-position:
+      0% 50%,
+      100% 0%,
+      50% 100%,
+      0% 0%;
+  }
+}
+
+.animate-fluid-gradient {
+  animation: fluid-gradient 24s ease-in-out infinite;
+}
+
+/* -------------------- Slide typography (1920x1080 canvas) -------------------- */
+.slide-content {
+  --slide-title-lg: 104px;
+  --slide-title: 88px;
+  --slide-subtitle: 52px;
+  --slide-body-lg: 40px;
+  --slide-body: 32px;
+  --slide-caption: 24px;
+  --slide-kicker: 22px;
+  --slide-chrome: 20px;
+}
+.slide-content .slide-title-lg {
+  font-size: var(--slide-title-lg);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.slide-content .slide-title {
+  font-size: var(--slide-title);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.slide-content .slide-subtitle {
+  font-size: var(--slide-subtitle);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.slide-content .slide-body-lg {
+  font-size: var(--slide-body-lg);
+  line-height: 1.22;
+}
+.slide-content .slide-body {
+  font-size: var(--slide-body);
+  line-height: 1.28;
+}
+.slide-content .slide-caption {
+  font-size: var(--slide-caption);
+  line-height: 1.25;
+}
+.slide-content .slide-kicker {
+  font-size: var(--slide-kicker);
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.slide-content .slide-chrome,
+.slide-content .slide-badge,
+.slide-content .slide-footer,
+.slide-content .slide-page {
+  font-size: var(--slide-chrome);
+  line-height: 1.15;
+}
+.slide-content .slide-badge,
+.slide-content .slide-page {
+  white-space: nowrap;
+}
+
+/* Hide Google Translate banner/frame and prevent body offset (was inline in index.html) */
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+div#goog-gt- {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+  position: static !important;
+}
+.skiptranslate > iframe {
+  display: none !important;
+}
+
+/* Keep the support launcher clear of the mobile primary navigation. */
+@media (max-width: 1023px) {
+  #crisp-chatbox [role="button"][aria-label="Open chat"] {
+    bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+  }
+}
