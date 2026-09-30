@@ -24,7 +24,7 @@ for (let offset = 0; ; offset += 1000) {
   if (page.length < 1000) break;
 }
 
-const sitemapPath = [".output/public/sitemap.xml", "dist/sitemap.xml"].find(existsSync);
+const sitemapPath = [".output/public/sitemap.xml", "dist/client/sitemap.xml", "dist/public/sitemap.xml", "dist/sitemap.xml"].find(existsSync);
 if (!sitemapPath) throw new Error("Built public sitemap was not found");
 const sitemap = readFileSync(sitemapPath, "utf8");
 if (!sitemap.includes("</urlset>")) throw new Error("Built sitemap is not a URL set");
