@@ -54,7 +54,7 @@ const IconDesigner = () => {
         <div className="mb-4 flex h-14 w-14 items-center justify-center text-[#1676e3]">
           <Shapes className="h-10 w-10" strokeWidth={1.6} />
         </div>
-        <span className="rounded-full bg-[#1676e3] px-4 py-1.5 text-sm font-medium text-white shadow-sm">
+        <span className="rounded-full bg-[#1676e3] px-4 py-1.5 text-sm font-medium text-white shadow-xs">
           Icon Designer
         </span>
 
@@ -65,7 +65,7 @@ const IconDesigner = () => {
               key={ex}
               type="button"
               onClick={() => { setPrompt(ex); go(ex); }}
-              className="rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50"
+              className="rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 shadow-xs transition hover:border-neutral-300 hover:bg-neutral-50"
             >
               {ex}
             </button>
@@ -127,7 +127,7 @@ const IconDesigner = () => {
           <button
             type="submit"
             disabled={!prompt.trim()}
-            className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0d5ec5] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0d5ec5] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" /> Generate
           </button>

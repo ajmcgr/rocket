@@ -433,7 +433,7 @@ export default function BrandHub() {
                 description: "Click ‘Use in brand kit’ on any saved logo to create a new brand.",
               });
             }}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-white shadow-xs hover:opacity-90"
           >
             <Plus className="h-4 w-4" /> New Brand
           </Link>
@@ -534,12 +534,12 @@ export default function BrandHub() {
               {selectedProject && (
                 <Link
                   to={`/projects/${selectedProject.id}/hub`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-50"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 shadow-xs hover:bg-neutral-50"
                 >
                   <Download className="h-4 w-4" /> Download
                 </Link>
               )}
-              <Link to={createOnBrandHref} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand-hover">
+              <Link to={createOnBrandHref} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
                 <Sparkles className="h-4 w-4" /> Create on-brand
               </Link>
             </>
@@ -548,7 +548,7 @@ export default function BrandHub() {
       </div>
 
       {choosingDirection && (
-        <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/25 bg-brand/5 px-5 py-5 shadow-sm">
+        <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/25 bg-brand/5 px-5 py-5 shadow-xs">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground">
               <Sparkles className="h-5 w-5" />
@@ -576,7 +576,7 @@ export default function BrandHub() {
               type="button"
               onClick={() => void completeBrandKit()}
               disabled={completingKit}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand-hover disabled:opacity-60"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover disabled:opacity-60"
             >
               {completingKit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {completingKit ? kitProgress || "Completing your brand kit…" : "Complete your brand kit"}
@@ -584,7 +584,7 @@ export default function BrandHub() {
           ) : (
             <Link
               to={`/projects/${selectedProject.id}/hub`}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand-hover"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover"
             >
               <Download className="h-4 w-4" /> Download
             </Link>
@@ -609,7 +609,7 @@ export default function BrandHub() {
                 <Link
                   key={project.id}
                   to={`/brands?project=${project.id}`}
-                  className={`group rounded-2xl border p-4 transition ${isActive ? "border-brand bg-brand/5 shadow-sm" : "border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm"}`}
+                  className={`group rounded-2xl border p-4 transition ${isActive ? "border-brand bg-brand/5 shadow-xs" : "border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-xs"}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -625,7 +625,7 @@ export default function BrandHub() {
         </section>
       )}
 
-      {!showKitSetup && <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+      {!showKitSetup && <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-4 shadow-xs">
         {selectedStyle ? (
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">

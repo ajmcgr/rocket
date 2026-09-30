@@ -466,7 +466,7 @@ export default function SocialIcons() {
                           <button
                             onClick={() => handleDownload(asset, v)}
                             disabled={busy === bkey}
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm transition ${
+                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-xs transition ${
                               isDark ? "bg-white/95 text-neutral-900 hover:bg-white" : "bg-neutral-900 text-white hover:bg-neutral-800"
                             } disabled:opacity-60`}
                           >

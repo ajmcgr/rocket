@@ -397,7 +397,7 @@ const BrandKitHub = () => {
       <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           to={`/projects/${id}/logo-files`}
-          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
             <FileImage className="h-5 w-5" />
@@ -410,7 +410,7 @@ const BrandKitHub = () => {
         </Link>
         <Link
           to={`/projects/${id}/websites`}
-          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
             <Globe className="h-5 w-5" />
@@ -423,7 +423,7 @@ const BrandKitHub = () => {
         </Link>
         <Link
           to={`/projects/${id}/palettes`}
-          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
             <Palette className="h-5 w-5" />
@@ -436,7 +436,7 @@ const BrandKitHub = () => {
         </Link>
         <Link
           to={`/projects/${id}/fonts`}
-          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
             <TypeIcon className="h-5 w-5" />
@@ -449,7 +449,7 @@ const BrandKitHub = () => {
         </Link>
         <Link
           to={`/projects/${id}/social`}
-          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
             <Megaphone className="h-5 w-5" />
@@ -462,7 +462,7 @@ const BrandKitHub = () => {
         </Link>
         <Link
           to={`/projects/${id}/guidelines`}
-          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          className="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs transition hover:border-neutral-300 hover:shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
             <BookOpen className="h-5 w-5" />
@@ -475,7 +475,7 @@ const BrandKitHub = () => {
         </Link>
       </section>
 
-      <section className="mt-8 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <section className="mt-8 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xs">
         <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">

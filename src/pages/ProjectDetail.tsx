@@ -290,7 +290,7 @@ const ProjectDetail = () => {
         <ProjectNavigation projectId={id!} active="settings" />
       </div>
       <form
-        className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+        className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-xs"
         onSubmit={(event) => { event.preventDefault(); void saveProjectSettings(); }}
       >
         <div className="max-w-xl">

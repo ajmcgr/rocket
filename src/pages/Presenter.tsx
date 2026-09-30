@@ -458,7 +458,7 @@ export default function Presenter() {
 
       {/* Grid overlay */}
       {gridOpen && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-neutral-950/95 backdrop-blur">
+        <div className="fixed inset-0 z-50 overflow-auto bg-neutral-950/95 backdrop-blur-sm">
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-neutral-950/80 px-6 py-4">
             <div className="flex items-center gap-3">
               <div className="text-sm font-medium text-white">All slides · {total}</div>
@@ -509,7 +509,7 @@ export default function Presenter() {
                   </div>
                 </button>
                 <div
-                  className="absolute left-2 top-2 cursor-grab rounded-md bg-black/60 p-1 text-white/70 opacity-0 backdrop-blur transition group-hover:opacity-100"
+                  className="absolute left-2 top-2 cursor-grab rounded-md bg-black/60 p-1 text-white/70 opacity-0 backdrop-blur-sm transition group-hover:opacity-100"
                   title="Drag to reorder"
                 >
                   <GripVertical className="h-3.5 w-3.5" />
@@ -518,7 +518,7 @@ export default function Presenter() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); duplicateSlide(i); }}
-                    className="rounded-md bg-black/60 p-1 text-white/80 backdrop-blur hover:bg-black/80"
+                    className="rounded-md bg-black/60 p-1 text-white/80 backdrop-blur-sm hover:bg-black/80"
                     title="Duplicate slide"
                   >
                     <Copy className="h-3.5 w-3.5" />
@@ -529,7 +529,7 @@ export default function Presenter() {
                       e.stopPropagation();
                       if (confirm(`Delete slide ${i + 1}?`)) deleteSlide(i);
                     }}
-                    className="rounded-md bg-black/60 p-1 text-red-300 backdrop-blur hover:bg-red-500/30"
+                    className="rounded-md bg-black/60 p-1 text-red-300 backdrop-blur-sm hover:bg-red-500/30"
                     title="Delete slide"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -543,7 +543,7 @@ export default function Presenter() {
 
       {helpOpen && (
         <div
-          className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4 backdrop-blur"
+          className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
           onClick={() => setHelpOpen(false)}
         >
           <div

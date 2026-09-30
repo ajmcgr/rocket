@@ -40,7 +40,7 @@ const ResetPassword = () => {
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
             <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
             <p className="mt-1.5 text-sm text-neutral-500">Choose a strong password you'll remember.</p>
             {!token ? (

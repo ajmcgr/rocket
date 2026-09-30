@@ -553,7 +553,7 @@ const AssetDetail = () => {
             <div className="relative">
               <button
                 onClick={startEdit}
-                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/90 px-2.5 py-1 text-xs text-neutral-600 backdrop-blur hover:bg-neutral-50"
+                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/90 px-2.5 py-1 text-xs text-neutral-600 backdrop-blur-sm hover:bg-neutral-50"
                 title="Edit source"
               >
                 <Pencil className="h-3.5 w-3.5" /> Edit

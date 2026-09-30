@@ -479,7 +479,7 @@ const Assets = () => {
           >
             <Trash2 className="h-4 w-4" />
           </Link>
-          <Link to="/logos" className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand-hover">
+          <Link to="/logos" className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand-hover">
             <Plus className="h-4 w-4" /> New Design
           </Link>
         </div>
@@ -638,7 +638,7 @@ const Assets = () => {
                 {selectMode && (
                   <button
                     onClick={(e) => { e.preventDefault(); toggleSelect(asset.id); }}
-                    className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-sm"
+                    className="absolute left-2 top-2 z-10 rounded-md bg-white/95 p-1 shadow-xs"
                     aria-label="Select"
                   >
                     {isSelected ? <CheckSquare className="h-4 w-4 text-brand" /> : <Square className="h-4 w-4 text-neutral-500" />}

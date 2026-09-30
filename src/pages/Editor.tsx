@@ -2586,7 +2586,7 @@ const Editor = () => {
               max={200}
               step={5}
               onValueChange={([value]) => setZoomAtViewportCenter(value ?? 100)}
-              className="w-28 [&_.bg-primary]:bg-neutral-400 [&_.bg-secondary]:bg-neutral-200 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-neutral-300 [&_[role=slider]]:bg-white [&_[role=slider]]:shadow-sm"
+              className="w-28 [&_.bg-primary]:bg-neutral-400 [&_.bg-secondary]:bg-neutral-200 [&_[role=slider]]:h-4 [&_[role=slider]]:w-4 [&_[role=slider]]:border-neutral-300 [&_[role=slider]]:bg-white [&_[role=slider]]:shadow-xs"
             />
             <button
               type="button"
@@ -2628,7 +2628,7 @@ const Editor = () => {
             toggleQe={toggleQe}
             onClose={() => setShowQuickEdit(false)}
           />
-          <div className="rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-sm">
+          <div className="rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-xs">
             <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">Layers</p>
             <div className="max-h-[14rem] overflow-y-auto pr-1">
               {els.length === 0 && <p className="text-xs text-neutral-400">No layers yet.</p>}
@@ -2653,12 +2653,12 @@ const Editor = () => {
             </div>
           </div>
           {!selected && (
-            <div className="rounded-[24px] border border-neutral-200 bg-white/90 p-4 text-xs text-neutral-400 shadow-sm">
+            <div className="rounded-[24px] border border-neutral-200 bg-white/90 p-4 text-xs text-neutral-400 shadow-xs">
               Select a layer to edit its properties.
             </div>
           )}
           {selected && (
-            <div className="space-y-3 rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-sm">
+            <div className="space-y-3 rounded-[24px] border border-white/80 bg-white/90 p-4 shadow-xs">
           <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Selected</p>
@@ -2827,7 +2827,7 @@ export default Editor;
 
 function QeSection({ id, label, tone, open, onToggle, children }: { id: string; label: string; tone: string; open: boolean; onToggle: () => void; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/80 bg-white/95 shadow-sm">
+    <div className="rounded-2xl border border-white/80 bg-white/95 shadow-xs">
       <button
         type="button"
         onClick={onToggle}
@@ -2918,7 +2918,7 @@ function QuickEditPanel({ els, fonts, bg, setBg, touchAutosave, update, setEls, 
   };
 
   return (
-    <section className="rounded-[24px] border border-white/80 bg-white/90 p-3 shadow-sm">
+    <section className="rounded-[24px] border border-white/80 bg-white/90 p-3 shadow-xs">
       <p className="mb-2 px-1 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">Quick Edit</p>
       <div className="space-y-2">
         <QeSection id="title" label="Title" tone="bg-[#6C7BF4]" open={!!qeOpen.title} onToggle={() => toggleQe("title")}>

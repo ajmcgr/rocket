@@ -84,7 +84,7 @@ const SharedAsset = () => {
           <Link to="/" className="text-sm font-semibold tracking-tight">Rocket</Link>
         </header>
         <main className="mx-auto grid max-w-md place-items-center px-6 py-24">
-          <form onSubmit={submitPassword} className="w-full space-y-5 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <form onSubmit={submitPassword} className="w-full space-y-5 rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
             <div className="flex items-center gap-2">
               <div className="grid h-9 w-9 place-items-center rounded-full bg-neutral-900 text-white">
                 <Lock className="h-4 w-4" />

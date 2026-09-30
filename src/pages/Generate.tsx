@@ -1028,7 +1028,7 @@ const Generate = () => {
             </div>
             {/* Composer pinned to bottom */}
             <form onSubmit={submit} className="mt-3">
-              <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
+              <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-xs">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}

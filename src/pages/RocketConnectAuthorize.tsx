@@ -48,7 +48,7 @@ export default function RocketConnectAuthorize() {
   if (authLoading || (!details && !error)) return <main className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-neutral-500" /></main>;
   if (error) return <main className="grid min-h-screen place-items-center p-6"><section className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-7 text-center"><h1 className="text-xl font-semibold">Connection unavailable</h1><p className="mt-2 text-sm text-neutral-600">{error}</p></section></main>;
 
-  return <main className="grid min-h-screen place-items-center bg-neutral-50 p-5"><section className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-7 shadow-sm">
+  return <main className="grid min-h-screen place-items-center bg-neutral-50 p-5"><section className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-7 shadow-xs">
     <div className="flex items-center gap-3"><div className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-sky-50 text-sky-600">{details?.client.icon_url ? <img src={details.client.icon_url} className="h-full w-full object-cover" alt="" /> : <ShieldCheck className="h-5 w-5" />}</div><div><p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Continue with Rocket</p><h1 className="text-lg font-semibold">{details?.client.name}</h1></div></div>
     <p className="mt-6 text-sm text-neutral-700"><span className="font-medium">{details?.client.name}</span> is asking to:</p>
     <ul className="mt-3 space-y-2">{details?.scopes.map((scope) => <li key={scope} className="flex items-center gap-2 text-sm text-neutral-600"><ShieldCheck className="h-4 w-4 text-emerald-600" />{scopeLabel[scope] || scope}</li>)}</ul>

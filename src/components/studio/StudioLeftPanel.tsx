@@ -163,7 +163,7 @@ export default function StudioLeftPanel({
                 </div>
                 <button
                   onClick={() => togglePin(t.id)}
-                  className="absolute -right-2 -top-2 hidden rounded-full border border-neutral-200 bg-white p-1 text-neutral-500 shadow-sm group-hover:block"
+                  className="absolute -right-2 -top-2 hidden rounded-full border border-neutral-200 bg-white p-1 text-neutral-500 shadow-xs group-hover:block"
                   title={pins.includes(t.id) ? "Unpin" : "Pin"}
                 >
                   {pins.includes(t.id) ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}

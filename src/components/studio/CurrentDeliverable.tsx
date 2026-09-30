@@ -82,7 +82,7 @@ export default function CurrentDeliverable({
           )}
         </div>
       </div>
-      <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
+      <div className="rounded-2xl border border-neutral-200 bg-white p-2 shadow-xs">
         {hasVisualRenderer(asset) ? (
           <div className="min-h-[420px]">
             <AssetVisual asset={asset} />
