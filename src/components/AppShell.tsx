@@ -194,7 +194,14 @@ const AppShell = () => {
         onCreateShareLink={async () => (typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai")}
       />
       <main className="w-full">
-        <Outlet context={{ setHeaderLeft, setHeaderCenter, setHeaderActions }} />
+        <AppShellContext.Provider
+          value={useMemo(
+            () => ({ setHeaderLeft, setHeaderCenter, setHeaderActions }),
+            [setHeaderLeft, setHeaderCenter, setHeaderActions],
+          )}
+        >
+          <Outlet />
+        </AppShellContext.Provider>
       </main>
       </div>
       <MobilePrimaryNav />
