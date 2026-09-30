@@ -100,7 +100,7 @@ export default function Home() {
               Go beyond the usual apps.
             </h2>
           </div>
-          <div className="mt-9 grid gap-3 md:grid-cols-3">
+          <div className="mt-9 grid gap-6 md:grid-cols-3">
             {[
               {
                 label: "Discover",
@@ -118,14 +118,11 @@ export default function Home() {
                 copy: "Add your own app and help people find it.",
               },
             ].map(({ label, Icon, copy }) => (
-              <div
-                key={label}
-                className="rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_14px_42px_-34px_rgba(15,23,42,0.35)] sm:p-7"
-              >
+              <div key={label} className="border-t border-neutral-200 pt-5">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-800">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <h3 className="mt-7 font-display text-2xl text-neutral-950">
+                <h3 className="mt-5 font-display text-2xl text-neutral-950">
                   {label}
                 </h3>
                 <p className="mt-2 max-w-xs text-sm leading-relaxed text-neutral-600">

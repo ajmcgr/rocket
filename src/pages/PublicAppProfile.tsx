@@ -21,7 +21,7 @@ import { track } from "@/lib/analytics";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import AppMediaGallery from "@/components/AppMediaGallery";
 import AppReviews from "@/components/AppReviews";
-import { StandardAppCard } from "@/components/MarketplaceCards";
+import { MarketplaceListRow } from "@/components/MarketplaceCards";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -237,7 +237,7 @@ export default function PublicAppProfile() {
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-8 sm:pt-10">
+      <main className="mx-auto max-w-6xl px-5 pb-20 pt-6 sm:px-8 sm:pt-8">
         <Link
           to="/discover"
           className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-sky-700"
@@ -247,7 +247,7 @@ export default function PublicAppProfile() {
         </Link>
         {loading && (
           <div
-            className="mt-8 animate-pulse rounded-2xl border border-neutral-200 bg-white p-6 sm:p-9"
+            className="mt-8 animate-pulse p-2 sm:p-4"
             aria-label="Loading app profile"
           >
             <div className="flex gap-5">
@@ -273,12 +273,12 @@ export default function PublicAppProfile() {
         )}
         {app && !loading && !error && (
           <>
-            <div className="mt-7 overflow-hidden rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_24px_70px_-55px_rgba(15,23,42,.5)] sm:p-9">
+            <div className="mt-7 border-b border-neutral-200 pb-6 sm:pb-8">
               <div className="flex items-start gap-4 sm:gap-6">
                 <AppLogo
                   name={app.name}
                   src={app.logo_url}
-                  className="h-20 w-20 shrink-0 rounded-[1.5rem] shadow-sm sm:h-28 sm:w-28"
+                  className="h-20 w-20 shrink-0 rounded-2xl sm:h-24 sm:w-24"
                   eager
                 />
                 <div className="min-w-0 flex-1">
@@ -321,7 +321,7 @@ export default function PublicAppProfile() {
                   saved={saved}
                   onChange={setSaved}
                 />
-                <span className="w-full text-sm text-neutral-500 sm:w-auto">
+                <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
                   {app.canonical_host}
                 </span>
               </div>
@@ -334,7 +334,7 @@ export default function PublicAppProfile() {
             </div>
             <AppMediaGallery name={app.name} media={media} />
             {signals.length > 0 && (
-              <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <section className="mt-8 pb-2">
                 <h2 className="text-lg font-semibold">Why it’s interesting</h2>
                 <div className="mt-4 space-y-4">
                   {signals.map((signal) => (
@@ -366,15 +366,15 @@ export default function PublicAppProfile() {
                 <p className="mb-5 text-sm text-neutral-600">
                   Related by category, tags and platform—not a paid placement.
                 </p>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-x-8 sm:grid-cols-2">
                   {similar.map((item) => (
-                    <StandardAppCard key={item.id} app={item} />
+                    <MarketplaceListRow key={item.id} app={item} />
                   ))}
                 </div>
               </section>
             )}
             {trustLabels(trust).length > 0 && (
-              <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <section className="mt-8 border-t border-neutral-200 pt-6">
                 <h2 className="text-lg font-semibold">Trust</h2>
                 <div className="mt-4">
                   <AppTrustBadges trust={trust} />
@@ -391,7 +391,7 @@ export default function PublicAppProfile() {
                 ) : null}
               </section>
             )}
-            <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+            <section className="mt-8 border-t border-neutral-200 pt-6">
               <h2 className="text-lg font-semibold">About</h2>
               {app.description && (
                 <>
@@ -472,13 +472,13 @@ export default function PublicAppProfile() {
               )}
             </section>
             {traction.length > 0 && (
-              <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <section className="mt-8 border-t border-neutral-200 pt-6">
                 <h2 className="text-lg font-semibold">Traffic</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {traction.map((point) => (
                     <div
                       key={point.metric_type}
-                      className="rounded-xl border p-4"
+                      className="border-l-2 border-[#469DDA] pl-4"
                     >
                       <p className="text-sm text-neutral-500">
                         {{
@@ -505,11 +505,14 @@ export default function PublicAppProfile() {
               </section>
             )}
             {revenue.length > 0 && (
-              <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <section className="mt-8 border-t border-neutral-200 pt-6">
                 <h2 className="text-lg font-semibold">Subscription revenue</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {revenue.map((point) => (
-                    <div key={point.currency} className="rounded-xl border p-4">
+                    <div
+                      key={point.currency}
+                      className="border-l-2 border-[#469DDA] pl-4"
+                    >
                       <p className="text-sm text-neutral-500">
                         Subscription MRR · {point.currency.toUpperCase()}
                       </p>
@@ -533,7 +536,7 @@ export default function PublicAppProfile() {
               </section>
             )}
             {sources.length > 0 && (
-              <details className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8">
+              <details className="mt-10 border-t border-neutral-200 pt-6">
                 <summary className="cursor-pointer text-lg font-semibold">
                   How we know
                 </summary>

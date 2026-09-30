@@ -23,8 +23,8 @@ function Artwork({
     <div className={`overflow-hidden bg-[#f2f5f8] ${className}`}>
       {cover && !failed ? (
         <img
-          src={optimizedMediaUrl(cover.source_url, 720, 440, "cover")}
-          srcSet={`${optimizedMediaUrl(cover.source_url, 480, 300, "cover")} 480w, ${optimizedMediaUrl(cover.source_url, 720, 440, "cover")} 720w, ${optimizedMediaUrl(cover.source_url, 1200, 750, "cover")} 1200w`}
+          src={optimizedMediaUrl(cover.source_url, 720, 440, "contain")}
+          srcSet={`${optimizedMediaUrl(cover.source_url, 480, 300, "contain")} 480w, ${optimizedMediaUrl(cover.source_url, 720, 440, "contain")} 720w, ${optimizedMediaUrl(cover.source_url, 1200, 750, "contain")} 1200w`}
           sizes={
             priority
               ? "(min-width: 1024px) 50vw, 100vw"
@@ -33,7 +33,7 @@ function Artwork({
           alt={`Product image for ${app.name}`}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain"
           onError={() => setFailed(true)}
         />
       ) : (
@@ -41,7 +41,7 @@ function Artwork({
           <AppLogo
             name={app.name}
             src={app.logo_url}
-            className="h-24 w-24 border border-neutral-200 bg-white shadow-sm"
+            className="h-20 w-20 border border-neutral-200 bg-white"
           />
         </div>
       )}
@@ -57,7 +57,7 @@ export function EditorialAppCard({
   return (
     <Link
       to={`/apps/${app.id}`}
-      className="group relative block min-h-[22rem] overflow-hidden rounded-[1.75rem] bg-neutral-950 text-white shadow-[0_25px_70px_-45px_rgba(15,23,42,.75)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
+      className="group relative block min-h-[22rem] overflow-hidden rounded-[1.25rem] bg-neutral-950 text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
     >
       <Artwork
         app={app}
@@ -101,16 +101,27 @@ export function StandardAppCard({
   onSave,
   eyebrow,
 }: BaseProps & SaveProps) {
+  const hasCover = Boolean(coverMedia(media));
   return (
-    <article className="group flex min-w-0 flex-col overflow-hidden rounded-[1.5rem] border border-neutral-200 bg-white shadow-[0_16px_40px_-34px_rgba(15,23,42,.4)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_50px_-30px_rgba(15,23,42,.3)]">
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-xl bg-white transition hover:bg-neutral-50">
       <Link
         to={`/apps/${app.id}`}
         className="min-w-0 focus-visible:outline-2 focus-visible:outline-sky-500"
       >
-        <Artwork app={app} media={media} className="h-44 w-full sm:h-48" />
-        <div className="p-5">
+        <Artwork
+          app={app}
+          media={media}
+          className={`${hasCover ? "h-40 sm:h-44" : "h-28"} w-full`}
+        />
+        <div className="px-3 pb-3 pt-4 sm:px-4">
           <div className="flex items-start gap-3">
-            <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+            {hasCover && (
+              <AppLogo
+                name={app.name}
+                src={app.logo_url}
+                className="h-12 w-12"
+              />
+            )}
             <div className="min-w-0 flex-1">
               <h3 className="truncate text-lg font-semibold text-neutral-950">
                 {app.name}
@@ -120,7 +131,7 @@ export function StandardAppCard({
               </p>
             </div>
           </div>
-          <p className="mt-4 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">
+          <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">
             {app.tagline || app.description || "Explore this independent app."}
           </p>
           {eyebrow && (
@@ -128,7 +139,7 @@ export function StandardAppCard({
           )}
         </div>
       </Link>
-      <div className="mt-auto flex items-center justify-between border-t border-neutral-100 px-5 py-3 text-xs text-neutral-500">
+      <div className="mt-auto flex items-center justify-between px-3 pb-3 text-xs text-neutral-500 sm:px-4">
         <span className="truncate">{app.canonical_host}</span>
         {onSave && (
           <SaveAppButton
@@ -150,28 +161,64 @@ export function RankedAppRow({
   return (
     <Link
       to={`/apps/${app.id}`}
-      className="group flex min-h-40 min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-[#469DDA] hover:shadow-sm focus-visible:outline-2 focus-visible:outline-[#469DDA]"
+      className="group flex min-h-20 min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70 focus-visible:outline-2 focus-visible:outline-[#469DDA]"
     >
-      <div className="flex w-full items-start justify-between">
-        <span className="text-xs font-semibold text-neutral-400">
-          {rank.toString().padStart(2, "0")}
-        </span>
-        <ArrowUpRight className="h-4 w-4 text-neutral-400 group-hover:text-[#075985]" />
-      </div>
+      <span className="w-5 shrink-0 text-sm font-semibold tabular-nums text-neutral-400">
+        {rank}
+      </span>
       <AppLogo
         name={app.name}
         src={app.logo_url}
-        className="mt-2 h-12 w-12 border border-neutral-100 bg-white"
+        className="h-11 w-11 border border-neutral-100 bg-white"
       />
-      <strong className="mt-3 block w-full truncate text-sm font-semibold text-neutral-950">
-        {app.name}
-      </strong>
-      <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">
-        {app.tagline || app.categories[0] || app.canonical_host}
+      <span className="min-w-0 flex-1">
+        <strong className="block truncate text-sm font-semibold text-neutral-950">
+          {app.name}
+        </strong>
+        <span className="block truncate text-xs text-neutral-500">
+          {app.tagline || app.canonical_host}
+        </span>
+        <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
+          {app.categories[0] || "Independent app"}
+          {eyebrow ? ` · ${eyebrow}` : ""}
+        </span>
       </span>
-      <span className="mt-auto pt-3 text-[11px] font-medium text-[#075985]">
-        {eyebrow}
-      </span>
+      <ArrowUpRight className="h-4 w-4 shrink-0 text-neutral-400 group-hover:text-[#075985]" />
     </Link>
+  );
+}
+
+export function MarketplaceListRow({
+  app,
+  saved,
+  onSave,
+}: BaseProps & SaveProps) {
+  return (
+    <article className="flex min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3">
+      <Link
+        to={`/apps/${app.id}`}
+        className="flex min-w-0 flex-1 items-center gap-3 focus-visible:outline-2 focus-visible:outline-[#469DDA]"
+      >
+        <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+        <span className="min-w-0 flex-1">
+          <strong className="block truncate text-sm font-semibold text-neutral-950">
+            {app.name}
+          </strong>
+          <span className="block truncate text-xs text-neutral-600">
+            {app.tagline || app.description || app.canonical_host}
+          </span>
+          <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
+            {app.categories[0] || "Independent app"}
+          </span>
+        </span>
+      </Link>
+      {onSave && (
+        <SaveAppButton
+          appId={app.id}
+          saved={Boolean(saved)}
+          onChange={onSave}
+        />
+      )}
+    </article>
   );
 }

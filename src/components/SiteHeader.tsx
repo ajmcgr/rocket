@@ -77,14 +77,6 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [{ label: "Create branding", to: "/create", icon: Sparkles }],
   },
 ];
-const categories = [
-  ["Productivity", "Productivity"],
-  ["AI", "AI Agents"],
-  ["Design", "Design & Creative"],
-  ["Marketing", "Marketing & Sales"],
-  ["Development", "Engineering & Development"],
-];
-
 export default function SiteHeader() {
   const [lang, setLang] = useState(LANGUAGES[0]);
   const [search, setSearch] = useState("");
@@ -135,7 +127,7 @@ export default function SiteHeader() {
         key={label}
         to={to}
         aria-current={active ? "page" : undefined}
-        className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-[#eaf5fc] text-[#075985]" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
+        className={`flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${active ? "bg-[#eaf5fc] text-[#075985]" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
       >
         <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
         <span>{label}</span>
@@ -151,35 +143,16 @@ export default function SiteHeader() {
           <Logo size="md" />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-5">
-          <div className="mt-4">
+          <div className="mt-3">
             <EcosystemSwitcher compact />
           </div>
-          <nav aria-label="Marketplace" className="mt-5 space-y-5">
+          <nav aria-label="Marketplace" className="mt-4 space-y-4">
             {sections.slice(0, 3).map((section) => (
               <div key={section.heading}>
                 <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">
                   {section.heading}
                 </p>
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
-                {section.heading === "Discover" && (
-                  <div className="mt-2 space-y-0.5 border-t border-neutral-200 pt-2">
-                    {categories.map(([label, category]) => (
-                      <Link
-                        key={category}
-                        to={`/discover?view=all&category=${encodeURIComponent(category)}`}
-                        className="flex min-h-8 items-center px-3 text-xs text-neutral-500 hover:text-[#075985]"
-                      >
-                        {label}
-                      </Link>
-                    ))}
-                    <Link
-                      to="/discover?view=categories"
-                      className="flex min-h-8 items-center px-3 text-xs font-medium text-[#075985]"
-                    >
-                      More categories
-                    </Link>
-                  </div>
-                )}
               </div>
             ))}
             <div>
@@ -194,6 +167,8 @@ export default function SiteHeader() {
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex min-h-9 items-center justify-between rounded-xl px-3 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
                 >
                   {label}
@@ -248,23 +223,6 @@ export default function SiteHeader() {
               ↵
             </kbd>
           </form>
-          <nav
-            aria-label="Rocket ecosystem"
-            className="ml-auto hidden items-center gap-5 text-xs font-medium text-neutral-500 xl:flex"
-          >
-            <Link to="/" className="text-[#075985]">
-              Rocket
-            </Link>
-            <a href="https://trylaunch.ai" className="hover:text-neutral-900">
-              Launch ↗
-            </a>
-            <a href="https://trypost.ai" className="hover:text-neutral-900">
-              Post ↗
-            </a>
-            <a href="https://trymedia.ai" className="hover:text-neutral-900">
-              Media ↗
-            </a>
-          </nav>
           <div className="ml-auto flex shrink-0 items-center gap-2 xl:ml-0">
             <Link
               to="/discover"

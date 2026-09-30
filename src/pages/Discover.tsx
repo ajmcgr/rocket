@@ -10,7 +10,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
-import { StandardAppCard, RankedAppRow } from "@/components/MarketplaceCards";
+import {
+  StandardAppCard,
+  RankedAppRow,
+  MarketplaceListRow,
+} from "@/components/MarketplaceCards";
 import { track } from "@/lib/analytics";
 
 type App = Tables<"public_apps">;
@@ -257,20 +261,16 @@ export default function Discover() {
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
       <SiteHeader />
-      <main className="mx-auto max-w-[90rem] px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#075985]">
-          Rocket Discover
-        </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-[-.045em] sm:text-5xl">
-          Discover independent apps worth using.
+      <main className="mx-auto max-w-[90rem] px-5 pb-20 pt-6 sm:px-8 sm:pt-8">
+        <h1 className="text-3xl font-bold tracking-[-.045em] sm:text-4xl">
+          Discover
         </h1>
-        <p className="mt-3 max-w-2xl text-neutral-600">
-          Explore what is rising, find something new, or search the full
-          catalogue.
+        <p className="mt-1 text-sm text-neutral-600">
+          Independent apps worth using, from new arrivals to rising finds.
         </p>
         <form
           role="search"
-          className="mt-8 flex w-full max-w-3xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-[0_14px_42px_-28px_rgba(15,23,42,0.3)] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200"
+          className="mt-5 flex w-full max-w-3xl gap-2 rounded-xl border border-neutral-200 bg-white p-1.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200"
           onSubmit={(event) => {
             event.preventDefault();
             track("discovery_search", {
@@ -298,7 +298,7 @@ export default function Discover() {
         </form>
         <nav
           aria-label="Discover sections"
-          className="mt-7 flex flex-wrap gap-2"
+          className="mt-5 flex gap-5 overflow-x-auto border-b border-neutral-200 [scrollbar-width:none]"
         >
           {(
             [
@@ -315,16 +315,45 @@ export default function Discover() {
                 change("view", key);
               }}
               aria-current={view === key ? "page" : undefined}
-              className={`rounded-full px-4 py-2 text-sm ${view === key ? "bg-neutral-900 text-white" : "border border-neutral-200 bg-white text-neutral-700 hover:border-sky-300"}`}
+              className={`shrink-0 border-b-2 px-0 pb-3 pt-1 text-sm font-medium ${view === key ? "border-[#469DDA] text-[#075985]" : "border-transparent text-neutral-600 hover:text-neutral-950"}`}
             >
               {label}
             </button>
           ))}
         </nav>
+        {categories.length > 0 && (
+          <nav
+            aria-label="Browse categories"
+            className="mt-3 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none]"
+          >
+            <button
+              onClick={() => change("category", "")}
+              aria-current={!category ? "page" : undefined}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${!category ? "bg-[#469DDA] text-[#092237]" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
+            >
+              All categories
+            </button>
+            {categories.slice(0, 12).map((item) => (
+              <button
+                key={item.category}
+                onClick={() => {
+                  track("discovery_category_selected", {
+                    category: item.category,
+                  });
+                  change("category", item.category);
+                }}
+                aria-current={category === item.category ? "page" : undefined}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${category === item.category ? "bg-[#469DDA] text-[#092237]" : "bg-white text-neutral-600 hover:text-neutral-950"}`}
+              >
+                {item.category}
+              </button>
+            ))}
+          </nav>
+        )}
         {showOverview && <DiscoveryPreview />}
         {view === "all" && (
           <details
-            className="mt-9 rounded-xl border border-neutral-200 bg-white p-4"
+            className="mt-6 border-b border-neutral-200 pb-4"
             open={Boolean(
               search || category || platform || source || params.get("sort"),
             )}
@@ -384,7 +413,7 @@ export default function Discover() {
             </div>
           </details>
         )}
-        <div className="mt-9 flex items-center justify-between text-sm text-neutral-500">
+        <div className="mt-6 flex items-center justify-between text-sm text-neutral-500">
           <span>
             {loading || (view === "categories" && categoriesLoading)
               ? "Loading apps…"
@@ -463,18 +492,17 @@ export default function Discover() {
         )}
         {view !== "categories" && loading && (
           <div
-            className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            className={`mt-4 grid gap-x-8 ${view === "new" ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}
             role="status"
             aria-label="Loading apps"
           >
             {[0, 1, 2, 3, 4, 5].map((item) => (
               <div
                 key={item}
-                className="h-60 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-5"
+                className={`${view === "new" ? "h-56" : "h-20"} animate-pulse border-b border-neutral-200 py-3`}
               >
-                <div className="h-14 w-14 rounded-2xl bg-neutral-100" />
-                <div className="mt-6 h-4 w-2/3 rounded bg-neutral-100" />
-                <div className="mt-3 h-3 w-4/5 rounded bg-neutral-100" />
+                <div className="h-11 w-11 rounded-xl bg-neutral-200" />
+                <div className="mt-2 h-3 w-2/3 rounded bg-neutral-200" />
               </div>
             ))}
           </div>
@@ -483,7 +511,7 @@ export default function Discover() {
           !loading &&
           !error &&
           (view === "rising" ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-3 grid gap-x-7 sm:grid-cols-2">
               {apps.map((app, index) => (
                 <RankedAppRow
                   key={app.id}
@@ -497,7 +525,7 @@ export default function Discover() {
                 />
               ))}
             </div>
-          ) : (
+          ) : view === "new" ? (
             <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {apps.map((app) => (
                 <StandardAppCard
@@ -509,6 +537,24 @@ export default function Discover() {
                       ? signalLabel(signals.get(app.id)!)
                       : undefined
                   }
+                  saved={savedIds.has(app.id)}
+                  onSave={(saved) =>
+                    setSavedIds((current) => {
+                      const next = new Set(current);
+                      if (saved) next.add(app.id);
+                      else next.delete(app.id);
+                      return next;
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 grid min-w-0 gap-x-8 md:grid-cols-2">
+              {apps.map((app) => (
+                <MarketplaceListRow
+                  key={app.id}
+                  app={app}
                   saved={savedIds.has(app.id)}
                   onSave={(saved) =>
                     setSavedIds((current) => {

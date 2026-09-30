@@ -81,18 +81,24 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
       active = false;
     };
   }, []);
+  if (loading && !intro)
+    return (
+      <div
+        role="status"
+        aria-label="Finding apps worth exploring"
+        className="mt-6 h-24 animate-pulse rounded-xl bg-neutral-100"
+      />
+    );
   if (loading)
     return (
-      <>
-        <div className="grid items-stretch gap-6 pt-8 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:pt-12">
-          {intro}
-          <div
-            role="status"
-            aria-label="Finding apps worth exploring"
-            className="min-h-[22rem] animate-pulse rounded-[1.75rem] bg-neutral-200"
-          />
-        </div>
-      </>
+      <div className="pt-6 lg:pt-10">
+        {intro}
+        <div
+          role="status"
+          aria-label="Finding apps worth exploring"
+          className="mt-5 h-20 animate-pulse rounded-xl bg-neutral-100"
+        />
+      </div>
     );
   if (failed)
     return (
@@ -116,60 +122,44 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           coverMedia(media.get(app.id)),
         );
         if (!intro) return null;
-        return (
-          <div className="grid items-stretch gap-6 pt-8 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:pt-12">
+        return visual ? (
+          <div className="grid items-stretch gap-6 pt-6 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:pt-10">
             {intro}
-            {visual ? (
-              <EditorialAppCard
-                app={visual.app}
-                media={media.get(visual.app.id)}
-                eyebrow={
-                  rising.some(({ app }) => app.id === visual.app.id)
-                    ? "Rising on Launch"
-                    : "New with Launch activity"
-                }
-              />
-            ) : categories.length > 0 ? (
-              <section
-                className="flex flex-col rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_24px_70px_-55px_rgba(15,23,42,.5)] sm:p-8"
-                aria-labelledby="browse-interests"
+            <EditorialAppCard
+              app={visual.app}
+              media={media.get(visual.app.id)}
+              eyebrow={
+                rising.some(({ app }) => app.id === visual.app.id)
+                  ? "Rising on Launch"
+                  : "New with Launch activity"
+              }
+            />
+          </div>
+        ) : (
+          <div className="pt-6 lg:pt-10">
+            <div className="max-w-4xl">{intro}</div>
+            {categories.length > 0 && (
+              <nav
+                aria-label="Popular categories"
+                className="mt-4 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none]"
               >
-                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#075985]">
-                  Explore the catalogue
-                </p>
-                <h2
-                  id="browse-interests"
-                  className="mt-3 text-3xl font-bold tracking-tight text-neutral-950"
-                >
-                  Find your next useful app.
-                </h2>
-                <p className="mt-2 text-sm text-neutral-600">
-                  Browse real apps by what you want to do.
-                </p>
-                <div className="mt-6 grid gap-2 sm:grid-cols-2">
-                  {categories.slice(0, 6).map((item) => (
-                    <Link
-                      key={item.category}
-                      to={`/discover?view=all&category=${encodeURIComponent(item.category)}`}
-                      className="flex min-h-20 flex-col justify-center rounded-xl border border-neutral-200 bg-[#f7f9fb] px-4 transition hover:border-[#469DDA] hover:bg-[#eaf5fc]"
-                    >
-                      <span className="font-semibold text-neutral-900">
-                        {item.category}
-                      </span>
-                      <span className="mt-1 text-xs text-neutral-500">
-                        {item.app_count.toLocaleString()} apps
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ) : null}
+                {categories.slice(0, 8).map((item) => (
+                  <Link
+                    key={item.category}
+                    to={`/discover?view=all&category=${encodeURIComponent(item.category)}`}
+                    className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-[#eaf5fc]"
+                  >
+                    {item.category}
+                  </Link>
+                ))}
+              </nav>
+            )}
           </div>
         );
       })()}
       {rising.length > 0 && (
-        <section className="mt-10 sm:mt-14" aria-labelledby="rising-heading">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <section className="mt-8 sm:mt-10" aria-labelledby="rising-heading">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[.16em] text-sky-800">
                 Observed on Launch
@@ -192,7 +182,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
               See all Rising
             </Link>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-x-8 md:grid-cols-2">
             {rising.map(({ app }, index) => (
               <RankedAppRow
                 key={app.id}
@@ -205,8 +195,8 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         </section>
       )}
       {fresh.length > 0 && (
-        <section className="mt-14" aria-labelledby="new-heading">
-          <div className="mb-6 flex items-end justify-between gap-3">
+        <section className="mt-10 sm:mt-12" aria-labelledby="new-heading">
+          <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[.16em] text-sky-800">
                 New arrivals
@@ -225,19 +215,20 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
               See all New
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
             {fresh.map(({ app }) => (
-              <StandardAppCard
+              <div
                 key={app.id}
-                app={app}
-                media={media.get(app.id)}
-              />
+                className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto"
+              >
+                <StandardAppCard app={app} media={media.get(app.id)} />
+              </div>
             ))}
           </div>
         </section>
       )}
       {categories.length > 0 && (
-        <section className="mt-14" aria-labelledby="categories-heading">
+        <section className="mt-12" aria-labelledby="categories-heading">
           <div className="mb-6 flex items-end justify-between">
             <h2
               id="categories-heading"
@@ -252,12 +243,12 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
               All categories
             </Link>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((item, index) => (
+          <div className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((item) => (
               <Link
                 key={item.category}
                 to={`/discover?view=all&category=${encodeURIComponent(item.category)}`}
-                className={`group flex min-h-28 items-end justify-between rounded-2xl border border-neutral-200 p-5 transition hover:-translate-y-0.5 hover:border-sky-300 ${["bg-[#dcecf7]", "bg-[#eeeaf7]", "bg-[#e7efe8]", "bg-[#f3ebdf]"][index % 4]}`}
+                className="group flex min-h-20 items-end justify-between border-b border-neutral-200 px-2 py-4 transition hover:text-[#075985]"
               >
                 <span>
                   <strong className="block text-xl font-semibold tracking-tight text-neutral-950">

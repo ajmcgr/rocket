@@ -577,3 +577,6 @@ html.dark .logo-light {
 html:not(.dark) .logo-dark {
   display: none !important;
 }
+html.dark .logo-dark {
+  filter: brightness(0) invert(1);
+}

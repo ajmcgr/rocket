@@ -116,7 +116,7 @@ export default function AppReviews({
   };
   return (
     <section
-      className="mt-8 rounded-[1.75rem] border border-neutral-200 bg-white p-6 sm:p-8"
+      className="mt-8 border-t border-neutral-200 pt-7"
       aria-labelledby="reviews-title"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
