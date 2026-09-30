@@ -151,7 +151,7 @@ const AppShell = () => {
               <NavLink
                 key={item.label}
                 to={item.to}
-                className={() => sidebarItemClass({ isActive: item.matches(pathname) })}
+                className={sidebarItemClass({ isActive: item.matches(pathname) })}
                 aria-label={item.label}
                 title={item.label}
               >
@@ -164,7 +164,7 @@ const AppShell = () => {
         <div className="mt-auto flex flex-col gap-1">
           <NavLink
             to="/settings/profile"
-            className={sidebarItemClass}
+            className={sidebarItemClass({ isActive: pathname.startsWith("/settings") })}
             aria-label="Settings"
             title="Settings"
           >
