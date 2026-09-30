@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { safeReturnPath } from "@/lib/navigation";
 import { track } from "@/lib/analytics";
 
-const AUTH_CALLBACK_URL = `${window.location.origin}/auth/callback`;
+const AUTH_CALLBACK_URL =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/auth/callback`
+    : "https://tryrocket.ai/auth/callback";
 
 const Login = ({ mode = "login" as "login" | "signup" }) => {
   const [email, setEmail] = useState("");
