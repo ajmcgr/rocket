@@ -24,6 +24,7 @@ export function useDocumentMeta(opts: { title?: string; description?: string; im
         document.head.appendChild(canonical);
       }
       canonical.href = opts.canonical;
+      upsertMeta('meta[property="og:url"]', { property: "og:url", content: opts.canonical });
     }
     if (opts.description) {
       upsertMeta('meta[name="description"]', { name: "description", content: opts.description });

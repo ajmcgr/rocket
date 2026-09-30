@@ -45,7 +45,10 @@ export default function PublicAppProfile() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  useDocumentMeta({ title: app ? `${app.name} | Rocket Discover` : "App profile | Rocket", description: app?.tagline || "Explore a public app listed on Rocket.", canonical: id ? `https://tryrocket.ai/apps/${id}` : undefined });
+  useDocumentMeta({ title: app ? `${app.name} | Rocket Discover` : "App profile | Rocket",
+    description: app?.tagline || (app?.description ? descriptionSummary(app.description).slice(0, 180) : "Explore a public app listed on Rocket."),
+    canonical: id ? `https://tryrocket.ai/apps/${id}` : undefined,
+    image: app?.logo_url && /^https:\/\//i.test(app.logo_url) ? app.logo_url : undefined });
 
   useEffect(() => {
     let canceled = false;
