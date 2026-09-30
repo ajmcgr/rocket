@@ -10,15 +10,16 @@ let pending: Promise<CreditCost[]> | null = null;
 export function fetchCreditCosts(): Promise<CreditCost[]> {
   if (cached) return Promise.resolve(cached);
   if (pending) return pending;
-  pending = supabase
+  const next: Promise<CreditCost[]> = supabase
     .from("credit_costs")
     .select("asset_type, label, credits, category")
     .then(({ data }: any) => {
       cached = (data || []) as CreditCost[];
       pending = null;
-      return cached;
+      return cached as CreditCost[];
     });
-  return pending;
+  pending = next;
+  return next;
 }
 
 export function useCreditCosts() {

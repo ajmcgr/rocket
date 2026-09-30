@@ -21,7 +21,6 @@ import appCss from "../styles.css?url";
 // throw unhandled rejections unrelated to the app; swallow those before hydration.
 const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&r.stack)||"")+" "+((r&&r.message)||String(r||""));return /chrome-extension:\\/\\/|moz-extension:\\/\\/|safari-web-extension:\\/\\/|MetaMask/i.test(t)};window.addEventListener("unhandledrejection",function(e){if(isExt(e.reason))e.preventDefault()});window.addEventListener("error",function(e){if(isExt(e.error)||/-extension:\\/\\//.test(e.filename||""))e.preventDefault()});})();`;
 
-const googleTranslateInit = `function googleTranslateElementInit(){new google.translate.TranslateElement({pageLanguage:'en',includedLanguages:'en,de,fr,es,it,pt,nl,pl,tr,ja',autoDisplay:false},'google_translate_element');}`;
 
 const SITE_TITLE = "Rocket — One account for every app";
 const SITE_DESCRIPTION =
@@ -86,11 +85,9 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
-        <div id="google_translate_element" style={{ display: "none" }} />
-        <script dangerouslySetInnerHTML={{ __html: googleTranslateInit }} />
-        <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" />
+        <div id="google_translate_element" style={{ display: "none" }} suppressHydrationWarning />
         <Scripts />
       </body>
     </html>
@@ -99,6 +96,26 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Google Translate mutates the DOM (body styles + widget markup); loading it
+  // before hydration causes a mismatch on every page, so defer it until after.
+  useEffect(() => {
+    if (document.getElementById("google-translate-loader")) return;
+    (window as any).googleTranslateElementInit = () => {
+      new (window as any).google.translate.TranslateElement(
+        {
+          pageLanguage: "en",
+          includedLanguages: "en,de,fr,es,it,pt,nl,pl,tr,ja",
+          autoDisplay: false,
+        },
+        "google_translate_element",
+      );
+    };
+    const s = document.createElement("script");
+    s.id = "google-translate-loader";
+    s.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    s.async = true;
+    document.head.appendChild(s);
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

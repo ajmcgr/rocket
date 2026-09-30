@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { ArrowLeft, ExternalLink, Download, Loader2 } from "lucide-react";
 import { supabase as _sb } from "@/integrations/supabase/client";

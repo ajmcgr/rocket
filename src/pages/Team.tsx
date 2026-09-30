@@ -90,7 +90,7 @@ const Team = () => {
   const revokeInvite = async (id: string) => {
     if (!confirm("Revoke this invite?")) return;
     const { error } = await sb.from("workspace_invites").delete().eq("id", id);
-    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Failed", description: error.message, variant: "destructive" }); return; }
     setInvites(prev => prev.filter(i => i.id !== id));
   };
 
@@ -101,15 +101,15 @@ const Team = () => {
 
   const updateRole = async (memberId: string, role: Role) => {
     const { error } = await sb.from("workspace_members").update({ role }).eq("id", memberId);
-    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Failed", description: error.message, variant: "destructive" }); return; }
     setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
   };
 
   const removeMember = async (memberId: string, memberUserId: string) => {
-    if (memberUserId === user?.id) return toast({ title: "You can't remove yourself here." });
+    if (memberUserId === user?.id) { toast({ title: "You can't remove yourself here." }); return; }
     if (!confirm("Remove this member?")) return;
     const { error } = await sb.from("workspace_members").delete().eq("id", memberId);
-    if (error) return toast({ title: "Failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Failed", description: error.message, variant: "destructive" }); return; }
     setMembers(prev => prev.filter(m => m.id !== memberId));
   };
 

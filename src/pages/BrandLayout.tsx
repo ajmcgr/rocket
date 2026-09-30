@@ -59,7 +59,7 @@ export default function BrandLayout() {
     setSavingName(true);
     const { error } = await supabase.from("projects").update({ name }).eq("id", projectId);
     setSavingName(false);
-    if (error) return toast({ title: "Rename failed", description: error.message, variant: "destructive" });
+    if (error) { toast({ title: "Rename failed", description: error.message, variant: "destructive" }); return; }
     setProject((p: any) => ({ ...(p || {}), name }));
     setRenaming(false);
   };

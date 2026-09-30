@@ -17,7 +17,10 @@ export default function RocketConnectAuthorize() {
   const [details, setDetails] = useState<ConnectDetails | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const request = useMemo(() => Object.fromEntries(new URLSearchParams(window.location.search)), []);
+  const request = useMemo(
+    () => (typeof window === "undefined" ? {} : Object.fromEntries(new URLSearchParams(window.location.search))),
+    [],
+  );
 
   useEffect(() => {
     if (authLoading) return;
