@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowRight, Bookmark, Grid2X2, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
@@ -25,19 +24,19 @@ const categoryGradients = [
   "rocket-category-indigo",
 ] as const;
 
-function SectionHeading({ id, title, description, href, action, Icon }: {
+function SectionHeading({ id, title, description, href, action, emoji }: {
   id: string;
   title: string;
   description: string;
   href: string;
   action: string;
-  Icon: LucideIcon;
+  emoji: string;
 }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-neutral-200 pb-4">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-800">
-          <Icon className="h-5 w-5" aria-hidden="true" />
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-xl" aria-hidden="true">
+          {emoji}
         </span>
         <div>
           <h2 id={id} className="text-2xl font-bold tracking-tight text-neutral-950 sm:text-3xl">{title}</h2>
@@ -45,7 +44,7 @@ function SectionHeading({ id, title, description, href, action, Icon }: {
         </div>
       </div>
       <Link to={href} className="inline-flex items-center gap-1.5 pb-0.5 text-sm font-semibold text-sky-800 hover:underline">
-        {action} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        {action} <span aria-hidden="true">➡️</span>
       </Link>
     </div>
   );
@@ -179,7 +178,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         );
       })()}
       <section className="mt-10 sm:mt-12" aria-labelledby="rising-heading">
-        <SectionHeading id="rising-heading" title="Rising" description="Apps with notable public Launch activity. This is not verified customer growth or a Rocket endorsement." href="/discover?view=rising" action="See all Rising" Icon={TrendingUp} />
+        <SectionHeading id="rising-heading" title="Rising" description="Apps with notable public Launch activity. This is not verified customer growth or a Rocket endorsement." href="/discover?view=rising" action="See all Rising" emoji="📈" />
         {rising.length > 0 ? (
           <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5">
             {rising.map(({ app }, index) => (
@@ -191,7 +190,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         ) : <p className="text-sm text-neutral-500">No Rising apps are available right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="new-heading">
-        <SectionHeading id="new-heading" title="New" description="Recently listed independent apps with public Launch activity." href="/discover?view=new" action="See all New" Icon={Sparkles} />
+        <SectionHeading id="new-heading" title="New" description="Recently listed apps with public Launch activity." href="/discover?view=new" action="See all New" emoji="✨" />
         {fresh.length > 0 ? (
           <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
             {fresh.map(({ app }) => (
@@ -203,7 +202,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         ) : <p className="text-sm text-neutral-500">No new apps with Launch activity are available right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="categories-heading">
-        <SectionHeading id="categories-heading" title="Categories" description="Browse independent apps by what you want to do." href="/discover?view=categories" action="All categories" Icon={Grid2X2} />
+        <SectionHeading id="categories-heading" title="Categories" description="Browse apps by what you want to do." href="/discover?view=categories" action="All categories" emoji="🗂️" />
         {categories.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((item, index) => (
@@ -232,10 +231,10 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         ) : <p className="text-sm text-neutral-500">Categories are unavailable right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="saved-heading">
-        <SectionHeading id="saved-heading" title="Saved" description="Keep the independent apps you want to try in one place." href="/saved-apps" action="Open Saved" Icon={Bookmark} />
+        <SectionHeading id="saved-heading" title="Saved" description="Keep the apps you want to try in one place." href="/saved-apps" action="Open Saved" emoji="🔖" />
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-5 sm:px-7">
           <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">Save an app from its profile or a Discover card, then return to it whenever you’re ready.</p>
-          <Link to="/saved-apps" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa]">View saved apps <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          <Link to="/saved-apps" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa]">View saved apps <span aria-hidden="true">➡️</span></Link>
         </div>
       </section>
     </>

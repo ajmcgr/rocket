@@ -355,8 +355,8 @@ body {
 /* -------------------- Dark mode --------------------
  * The app hardcodes light utilities (bg-white, text-neutral-*) in most
  * components, so `.dark` remaps those compiled utility classes directly.
- * Toggle = ThemeToggle (header) persisting to localStorage("theme"); the
- * pre-hydration script in __root.tsx re-applies the class before paint. */
+ * ThemeToggle stores light, dark, or system in localStorage("theme"); the
+ * pre-hydration script in __root.tsx applies the resolved class before paint. */
 html.dark {
   color-scheme: dark;
 }
@@ -373,7 +373,7 @@ html.dark .rocket-skeleton-surface {
   background-color: #000 !important;
 }
 html.dark .rocket-skeleton-surface .bg-neutral-100 {
-  background-color: #171717 !important;
+  background-color: rgb(22 122 198 / 32%) !important;
 }
 
 /* Surfaces (solid + translucent whites) */
@@ -635,4 +635,15 @@ html.dark .rocket-category-lime {
 }
 html.dark .rocket-category-indigo {
   background: radial-gradient(circle at 95% 0%, #4b65aa 0, transparent 48%), linear-gradient(130deg, #3c3b79 0%, #292c4d 100%);
+}
+
+/* Keep actionable controls on the Rocket palette, including older screens. */
+:is(button, a, [role="button"]).bg-neutral-900,
+:is(button, a, [role="button"]).bg-black {
+  background-color: #167ac6 !important;
+  color: #fff !important;
+}
+:is(button, a, [role="button"]).bg-neutral-900:hover,
+:is(button, a, [role="button"]).bg-black:hover {
+  background-color: #1268aa !important;
 }

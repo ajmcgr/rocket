@@ -58,7 +58,7 @@ describe("signed-out Launch preview", () => {
         );
       });
       expect(container.textContent).toContain("Submit your app.");
-      expect(container.textContent).toContain("URLs Rocket can preview");
+      expect(container.textContent).toContain("URLs Rocket can use to submit apps");
       expect(container.textContent).toContain("Product Hunt, Apple App Store, and Google Play listing URLs are not supported yet.");
       const input = container.querySelector<HTMLInputElement>("#launch-url")!;
       await act(async () => {

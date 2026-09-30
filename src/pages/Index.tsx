@@ -566,7 +566,7 @@ const Index = () => {
             <h2 className="text-3xl font-medium tracking-tight sm:text-4xl">Frequently asked</h2>
             <p className="mt-3 text-neutral-600">Everything you wanted to know about Rocket.</p>
           </div>
-          <Accordion type="single" collapsible className="mt-10 w-full space-y-4">
+          <Accordion type="multiple" defaultValue={FAQS.map((_, i) => `item-${i}`)} className="mt-10 w-full space-y-4">
             {FAQS.map((f, i) => (
               <AccordionItem
                 key={i}

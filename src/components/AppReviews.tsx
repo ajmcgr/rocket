@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "@/lib/router-compat";
@@ -121,16 +120,13 @@ export default function AppReviews({
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold normal-case tracking-[.15em] text-sky-800">
-            From Rocket members
-          </p>
-          <h2 id="reviews-title" className="mt-2 font-display text-3xl">
+          <h2 id="reviews-title" className="text-xl font-semibold tracking-tight">
             Reviews
           </h2>
         </div>
         {summary && (
           <div className="flex items-center gap-2 text-sm">
-            <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+            <span className="text-lg" aria-hidden="true">⭐</span>
             <strong className="text-xl">{summary.average_rating}</strong>
             <span className="text-neutral-500">
               from {summary.rating_count}{" "}

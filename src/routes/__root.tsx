@@ -72,10 +72,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         },
       ],
       scripts: [
-        // Re-apply the stored theme before first paint to avoid a light flash.
+        // Apply the saved preference (or system theme) before first paint.
         {
           children:
-            'try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}',
+            'try{var theme=localStorage.getItem("theme");document.documentElement.classList.toggle("dark",theme==="dark"||(theme!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))}catch(e){}',
         },
         { children: extensionErrorSuppression },
         {

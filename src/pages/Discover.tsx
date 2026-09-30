@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
-import { Search } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -81,7 +80,7 @@ export default function Discover() {
   useDocumentMeta({
     title: "Discover apps | Rocket",
     description:
-      "Discover independent apps worth using. Browse real products by category, platform and launch date.",
+      "Discover apps worth using, including new software from vibe coders and developers. Browse by category, platform and launch date.",
     canonical: "https://tryrocket.ai/discover",
   });
 
@@ -266,7 +265,7 @@ export default function Discover() {
           Discover
         </h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Independent apps worth using, from new arrivals to rising finds.
+          Apps worth using, from new arrivals to rising finds.
         </p>
         <form
           role="search"
@@ -280,10 +279,7 @@ export default function Discover() {
             change("q", safeSearch(query));
           }}
         >
-          <Search
-            className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400"
-            aria-hidden="true"
-          />
+          <span className="my-auto ml-3 text-lg" aria-hidden="true">🔎</span>
           <input
             id="search-apps"
             aria-label="Search apps"
@@ -292,13 +288,13 @@ export default function Discover() {
             placeholder="Search apps, tools, or ideas"
             className="min-w-0 flex-1 bg-transparent px-1 text-base outline-hidden"
           />
-          <button className="min-h-11 rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white hover:bg-neutral-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500">
+          <button className="min-h-11 rounded-xl bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500">
             Search
           </button>
         </form>
         <nav
           aria-label="Discover sections"
-          className="mt-5 flex gap-5 overflow-x-auto border-b border-neutral-200 [scrollbar-width:none]"
+          className="mt-5 flex gap-2 overflow-x-auto border-b border-neutral-200 pb-3 [scrollbar-width:none]"
         >
           {(
             [
@@ -315,7 +311,7 @@ export default function Discover() {
                 change("view", key);
               }}
               aria-current={view === key ? "page" : undefined}
-              className={`shrink-0 border-b-2 px-0 pb-3 pt-1 text-sm font-medium ${view === key ? "border-[#167ac6] text-[#075985]" : "border-transparent text-neutral-600 hover:text-neutral-950"}`}
+              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${view === key ? "bg-[#167ac6] text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
             >
               {label}
             </button>
@@ -354,9 +350,7 @@ export default function Discover() {
         {view === "all" && (
           <details
             className="mt-6 border-b border-neutral-200 pb-4"
-            open={Boolean(
-              search || category || platform || source || params.get("sort"),
-            )}
+            open
           >
             <summary className="cursor-pointer text-sm font-semibold text-neutral-700">
               Filters and sorting

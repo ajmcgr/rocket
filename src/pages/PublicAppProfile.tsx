@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "@/lib/router-compat";
-import { ArrowLeft, ExternalLink } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -84,8 +83,28 @@ export default function PublicAppProfile() {
     public_links: string[];
   } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [shareStatus, setShareStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const shareApp = async () => {
+    if (!app) return;
+    const url = `https://tryrocket.ai/apps/${app.id}`;
+    setShareStatus("");
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: app.name, url });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareStatus("Link copied");
+    } catch {
+      setShareStatus("Could not copy the link");
+    }
+  };
   useDocumentMeta({
     title: app ? `${app.name} | Rocket Discover` : "App profile | Rocket",
     description:
@@ -242,7 +261,7 @@ export default function PublicAppProfile() {
           to="/discover"
           className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-sky-700"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <span aria-hidden="true">⬅️</span>
           Back to Discover
         </Link>
         {loading && (
@@ -283,7 +302,7 @@ export default function PublicAppProfile() {
                 />
                 <div className="min-w-0 flex-1">
                   <p className="mb-2 text-xs font-semibold text-sky-800">
-                    {app.categories[0] || "Independent app"}
+                    {app.categories[0] || "App"}
                   </p>
                   <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
                     {app.name}
@@ -314,13 +333,21 @@ export default function PublicAppProfile() {
                   }
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
                 >
-                  Visit website <ExternalLink className="h-4 w-4" />
+                  Visit website <span aria-hidden="true">↗️</span>
                 </a>
                 <SaveAppButton
                   appId={app.id}
                   saved={saved}
                   onChange={setSaved}
                 />
+                <button
+                  type="button"
+                  onClick={shareApp}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-sky-300 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+                >
+                  <span aria-hidden="true">📤</span> Share
+                </button>
+                {shareStatus && <span role="status" className="text-sm text-neutral-600">{shareStatus}</span>}
                 <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
                   {app.canonical_host}
                 </span>
@@ -335,7 +362,7 @@ export default function PublicAppProfile() {
             <AppMediaGallery name={app.name} media={media} />
             {signals.length > 0 && (
               <section className="mt-8 pb-2">
-                <h2 className="text-lg font-semibold">Why it’s interesting</h2>
+                <h2 className="text-xl font-semibold tracking-tight">Why it’s interesting</h2>
                 <div className="mt-4 space-y-4">
                   {signals.map((signal) => (
                     <div key={signal.signal_type}>
@@ -355,27 +382,9 @@ export default function PublicAppProfile() {
               </section>
             )}
             <AppReviews appId={app.id} onSummary={setReviewSummary} />
-            {similar.length > 0 && (
-              <section className="mt-10" aria-labelledby="similar-apps">
-                <h2
-                  id="similar-apps"
-                  className="mb-2 text-3xl font-bold tracking-tight"
-                >
-                  Similar apps
-                </h2>
-                <p className="mb-5 text-sm text-neutral-600">
-                  Related by category, tags and platform—not a paid placement.
-                </p>
-                <div className="grid gap-x-8 sm:grid-cols-2">
-                  {similar.map((item) => (
-                    <MarketplaceListRow key={item.id} app={item} />
-                  ))}
-                </div>
-              </section>
-            )}
             {trustLabels(trust).length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-lg font-semibold">Trust</h2>
+                <h2 className="text-xl font-semibold tracking-tight">Trust</h2>
                 <div className="mt-4">
                   <AppTrustBadges trust={trust} />
                 </div>
@@ -392,7 +401,7 @@ export default function PublicAppProfile() {
               </section>
             )}
             <section className="mt-8 border-t border-neutral-200 pt-6">
-              <h2 className="text-lg font-semibold">About</h2>
+              <h2 className="text-xl font-semibold tracking-tight">About</h2>
               {app.description && (
                 <>
                   <p className="mt-4 max-w-3xl whitespace-pre-wrap text-neutral-700">
@@ -400,7 +409,7 @@ export default function PublicAppProfile() {
                   </p>
                   {descriptionSummary(app.description) !==
                     app.description.trim() && (
-                    <details className="mt-3 text-sm">
+                    <details open className="mt-3 text-sm">
                       <summary className="cursor-pointer font-medium text-sky-700">
                         Read full description
                       </summary>
@@ -473,7 +482,7 @@ export default function PublicAppProfile() {
             </section>
             {traction.length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-lg font-semibold">Traffic</h2>
+                <h2 className="text-xl font-semibold tracking-tight">Traffic</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {traction.map((point) => (
                     <div
@@ -506,7 +515,7 @@ export default function PublicAppProfile() {
             )}
             {revenue.length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-lg font-semibold">Subscription revenue</h2>
+                <h2 className="text-xl font-semibold tracking-tight">Subscription revenue</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {revenue.map((point) => (
                     <div
@@ -536,8 +545,8 @@ export default function PublicAppProfile() {
               </section>
             )}
             {sources.length > 0 && (
-              <details className="mt-10 border-t border-neutral-200 pt-6">
-                <summary className="cursor-pointer text-lg font-semibold">
+              <details open className="mt-10 border-t border-neutral-200 pt-6">
+                <summary className="cursor-pointer text-xl font-semibold tracking-tight">
                   How we know
                 </summary>
                 <p className="mt-3 text-sm text-neutral-600">
@@ -557,12 +566,27 @@ export default function PublicAppProfile() {
                         rel="noopener noreferrer nofollow"
                         className="inline-flex items-center gap-1 text-sky-700 hover:underline"
                       >
-                        View source <ExternalLink className="h-3 w-3" />
+                        View source <span aria-hidden="true">↗️</span>
                       </a>
                     </li>
                   ))}
                 </ul>
               </details>
+            )}
+            {similar.length > 0 && (
+              <section className="mt-10 border-t border-neutral-200 pt-6" aria-labelledby="similar-apps">
+                <h2 id="similar-apps" className="text-xl font-semibold tracking-tight">
+                  Similar apps
+                </h2>
+                <p className="mt-2 mb-5 text-sm text-neutral-600">
+                  Related by category, tags and platform—not a paid placement.
+                </p>
+                <div className="grid gap-x-8 sm:grid-cols-2">
+                  {similar.map((item) => (
+                    <MarketplaceListRow key={item.id} app={item} />
+                  ))}
+                </div>
+              </section>
             )}
           </>
         )}

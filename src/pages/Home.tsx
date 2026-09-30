@@ -1,13 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@/lib/router-compat";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Link2,
-  Search,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
@@ -18,9 +10,9 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   useDocumentMeta({
-    title: "Rocket — Discover independent apps worth using",
+    title: "Rocket — Discover apps worth using",
     description:
-      "Find rising apps and new software from independent developers.",
+      "Find rising apps and new software from vibe coders and developers.",
     canonical: "https://tryrocket.ai/",
   });
 
@@ -42,20 +34,17 @@ export default function Home() {
                 Discover
               </p>
               <h1 className="mt-4 max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
-                Discover independent apps worth using.
+                Discover apps worth using.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
-                Find rising apps and new software from independent developers.
+                Find rising apps and new software from vibe coders and developers.
               </p>
               <form
                 onSubmit={search}
                 role="search"
                 className="mt-7 flex w-full max-w-xl gap-2 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-[0_14px_40px_-30px_rgba(15,23,42,.4)] focus-within:border-[#167ac6] focus-within:ring-2 focus-within:ring-[#167ac6]/20"
               >
-                <Search
-                  className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400"
-                  aria-hidden="true"
-                />
+                <span className="my-auto ml-3 text-lg" aria-hidden="true">🔎</span>
                 <input
                   aria-label="Search apps"
                   placeholder="Search apps..."
@@ -63,7 +52,7 @@ export default function Home() {
                   onChange={(event) => setQuery(event.target.value)}
                   className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none sm:text-base"
                 />
-                <button className="min-h-11 rounded-lg bg-neutral-950 px-4 text-sm font-semibold text-white hover:bg-neutral-800">
+                <button className="min-h-11 rounded-lg bg-[#167ac6] px-4 text-sm font-semibold text-white hover:bg-[#1268aa]">
                   Search
                 </button>
               </form>
@@ -72,7 +61,7 @@ export default function Home() {
                   to="/discover"
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-white hover:bg-[#1268aa]"
                 >
-                  Explore apps <ArrowRight className="h-4 w-4" />
+                  Explore apps <span aria-hidden="true">➡️</span>
                 </Link>
                 <Link
                   to="/submit"
@@ -85,12 +74,12 @@ export default function Home() {
           }
         />
         <section
-          className="mt-20 overflow-hidden rounded-[2rem] bg-neutral-950 p-7 text-white sm:mt-24 sm:p-12"
+          className="mt-20 overflow-hidden rounded-[2rem] bg-[#167ac6] p-7 text-white sm:mt-24 sm:p-12"
           aria-labelledby="developer-heading"
         >
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold text-sky-300">
-              Built for independent software
+            <p className="text-sm font-semibold text-white/85">
+              Built for vibe coders
             </p>
             <h2
               id="developer-heading"
@@ -107,27 +96,27 @@ export default function Home() {
             {[
               {
                 label: "Submit",
-                Icon: Sparkles,
+                emoji: "🚀",
                 copy: "Add your app to Rocket.",
               },
               {
                 label: "Verify",
-                Icon: BadgeCheck,
+                emoji: "✅",
                 copy: "Build trust with details you choose to share.",
               },
               {
                 label: "Connect",
-                Icon: Link2,
+                emoji: "🔗",
                 copy: "Use Rocket identity and payment integrations where supported.",
               },
               {
                 label: "Grow",
-                Icon: TrendingUp,
+                emoji: "📈",
                 copy: "Help more people discover your app.",
               },
-            ].map(({ label, Icon, copy }) => (
+            ].map(({ label, emoji, copy }) => (
               <div key={label}>
-                <Icon className="h-5 w-5 text-sky-300" aria-hidden="true" />
+                <span className="text-xl" aria-hidden="true">{emoji}</span>
                 <h3 className="mt-4 text-base font-semibold">{label}</h3>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-300">
                   {copy}
@@ -139,7 +128,7 @@ export default function Home() {
             to="/submit"
             className="mt-9 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-300"
           >
-            Submit your app <ArrowRight className="h-4 w-4" />
+            Submit your app <span aria-hidden="true">➡️</span>
           </Link>
         </section>
       </main>

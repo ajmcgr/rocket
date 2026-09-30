@@ -59,7 +59,7 @@ const FAQ = () => {
         {sections.map((section) => (
           <section key={section.title} className="mt-12">
             <h2 className="text-2xl font-bold tracking-tight">{section.title}</h2>
-            <Accordion type="single" collapsible className="mt-5 space-y-3">
+            <Accordion type="multiple" defaultValue={section.questions.map(({ q }) => q)} className="mt-5 space-y-3">
               {section.questions.map(({ q, a }) => (
                 <AccordionItem key={q} value={q} className="rounded-xl border border-neutral-200 bg-white px-5 dark:border-neutral-800 dark:bg-neutral-900">
                   <AccordionTrigger className="py-5 text-left font-semibold text-neutral-900 dark:text-white">{q}</AccordionTrigger>
