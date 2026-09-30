@@ -436,3 +436,16 @@ html.dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { border-color: 
 html.dark .from-white { --tw-gradient-from: hsl(30 10% 6%) !important; }
 html.dark .from-neutral-50 { --tw-gradient-from: hsl(30 9% 9%) !important; }
 html.dark .to-neutral-100 { --tw-gradient-to: hsl(30 8% 12%) !important; }
+
+/* Hardcoded hex page backgrounds */
+html.dark .bg-\[\#f7f9fc\],
+html.dark .bg-\[\#f5f7fb\],
+html.dark .bg-\[\#f6f8fb\],
+html.dark .bg-\[\#faf7f2\] { background-color: hsl(30 10% 6%) !important; }
+
+html.dark .text-neutral-950 { color: hsl(40 30% 96%) !important; }
+html.dark .hover\:text-neutral-950:hover { color: hsl(40 30% 96%) !important; }
+
+html.dark .ring-neutral-100 { --tw-ring-color: hsl(40 12% 16%) !important; }
+html.dark .ring-neutral-200 { --tw-ring-color: hsl(40 12% 20%) !important; }
+html.dark .ring-neutral-300 { --tw-ring-color: hsl(40 12% 26%) !important; }
