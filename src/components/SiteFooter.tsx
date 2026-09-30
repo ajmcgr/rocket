@@ -1,8 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import { tools } from "@/content/tools";
 import { articles } from "@/content/articles";
-import { comparisons } from "@/content/comparisons";
-
 
 const HEADER = "text-base font-semibold text-neutral-900";
 
@@ -21,71 +19,140 @@ const DiscordIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const SiteFooter = () => (
   <footer className="bg-neutral-50 pb-20 lg:pb-0">
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-6">
+      <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-5">
         <div>
           <div className={HEADER}>Company</div>
-            <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
-            <li><Link to="/about" className="hover:text-neutral-900">About</Link></li>
-            <li><Link to="/blog" className="hover:text-neutral-900">Blog</Link></li>
-            <li><Link to="/brand-kit" className="hover:text-neutral-900">Brand Kit</Link></li>
-            <li><Link to="/ai-info" className="hover:text-neutral-900">AI Info</Link></li>
-            <li><Link to="/discover" className="hover:text-neutral-900">Discover apps</Link></li>
-            <li><Link to="/pricing" className="hover:text-neutral-900">Pricing</Link></li>
+          <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
+            <li>
+              <Link to="/about" className="hover:text-neutral-900">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link to="/blog" className="hover:text-neutral-900">
+                Blog
+              </Link>
+            </li>
+            <li>
+              <Link to="/brand-kit" className="hover:text-neutral-900">
+                Brand Kit
+              </Link>
+            </li>
+            <li>
+              <Link to="/ai-info" className="hover:text-neutral-900">
+                AI Info
+              </Link>
+            </li>
+            <li>
+              <Link to="/discover" className="hover:text-neutral-900">
+                Discover apps
+              </Link>
+            </li>
+            <li>
+              <Link to="/pricing" className="hover:text-neutral-900">
+                Pricing
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
           <div className={HEADER}>Support</div>
           <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
-            <li><a href="mailto:alex@tryrocket.ai" className="hover:text-neutral-900">Support</a></li>
-            <li><Link to="/privacy" className="hover:text-neutral-900">Privacy Policy</Link></li>
-            <li><Link to="/terms" className="hover:text-neutral-900">Terms of Service</Link></li>
+            <li>
+              <a
+                href="mailto:alex@tryrocket.ai"
+                className="hover:text-neutral-900"
+              >
+                Support
+              </a>
+            </li>
+            <li>
+              <Link to="/privacy" className="hover:text-neutral-900">
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms" className="hover:text-neutral-900">
+                Terms of Service
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
           <div className={HEADER}>Resources</div>
           <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
             {articles.slice(0, 10).map((a) => (
-              <li key={a.slug}><Link to={`/blog/${a.slug}`} className="hover:text-neutral-900">{a.title}</Link></li>
+              <li key={a.slug}>
+                <Link to={`/blog/${a.slug}`} className="hover:text-neutral-900">
+                  {a.title}
+                </Link>
+              </li>
             ))}
-            <li><Link to="/blog" className="font-semibold hover:text-neutral-900">View All Resources →</Link></li>
+            <li>
+              <Link to="/blog" className="font-semibold hover:text-neutral-900">
+                View All Resources →
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
           <div className={HEADER}>Free tools</div>
           <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
             {tools.slice(0, 10).map((t) => (
-              <li key={t.slug}><Link to={`/tools/${t.slug}`} className="hover:text-neutral-900">{t.name}</Link></li>
-            ))}
-            <li><Link to="/tools" className="font-semibold hover:text-neutral-900">All tools →</Link></li>
-          </ul>
-        </div>
-        <div>
-          <div className={HEADER}>Compare</div>
-          <ul className="mt-4 space-y-2.5 text-sm font-normal text-neutral-600">
-            {comparisons.map((comparison) => (
-              <li key={comparison.slug}>
-                <Link to={`/compare/${comparison.slug}`} className="hover:text-neutral-900">
-                  {`Rocket vs ${comparison.tool}`}
+              <li key={t.slug}>
+                <Link
+                  to={`/tools/${t.slug}`}
+                  className="hover:text-neutral-900"
+                >
+                  {t.name}
                 </Link>
               </li>
             ))}
-            <li><Link to="/compare" className="font-semibold hover:text-neutral-900">View All →</Link></li>
+            <li>
+              <Link
+                to="/tools"
+                className="font-semibold hover:text-neutral-900"
+              >
+                All tools →
+              </Link>
+            </li>
           </ul>
         </div>
         <div>
           <div className={HEADER}>Connect</div>
           <div className="mt-4 flex items-center gap-3">
-            <a href="https://x.com/tryrocketai" target="_blank" rel="noreferrer" aria-label="X" className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900">
+            <a
+              href="https://x.com/tryrocketai"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="X"
+              className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900"
+            >
               <XIcon className="h-4 w-4" />
             </a>
-            <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noreferrer" aria-label="Discord" className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900">
+            <a
+              href="https://discord.gg/aSkXPHhTjJ"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Discord"
+              className="grid h-10 w-10 place-items-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:border-neutral-900 hover:text-neutral-900"
+            >
               <DiscordIcon className="h-4 w-4" />
             </a>
           </div>
         </div>
       </div>
       <div className="mt-12 pt-6 text-center text-xs text-neutral-500">
-        Copyright © 2026 Works App, Inc. Built with 🫶🏻 by <a href="http://x.com/alexmacgregor__/" target="_blank" rel="noreferrer" className="hover:text-neutral-900">Alex</a>.
+        Copyright © 2026 Works App, Inc. Built with 🫶🏻 by{" "}
+        <a
+          href="http://x.com/alexmacgregor__/"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-neutral-900"
+        >
+          Alex
+        </a>
+        .
       </div>
     </div>
   </footer>

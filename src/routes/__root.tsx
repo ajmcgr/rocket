@@ -21,64 +21,102 @@ import appCss from "../styles.css?url";
 // throw unhandled rejections unrelated to the app; swallow those before hydration.
 const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&r.stack)||"")+" "+((r&&r.message)||String(r||""));return /chrome-extension:\\/\\/|moz-extension:\\/\\/|safari-web-extension:\\/\\/|MetaMask/i.test(t)};window.addEventListener("unhandledrejection",function(e){if(isExt(e.reason))e.preventDefault()});window.addEventListener("error",function(e){if(isExt(e.error)||/-extension:\\/\\//.test(e.filename||""))e.preventDefault()});})();`;
 
-
-const SITE_TITLE = "Rocket — One account for every app";
+const SITE_TITLE = "Rocket — Discover independent apps worth using";
 const SITE_DESCRIPTION =
   "Discover independent apps worth using. Explore what's rising, save your favorites, and launch your own app on Rocket.";
 const SOCIAL_IMAGE =
   "https://tryrocket.ai/__l5e/assets-v1/0903ee88-5f0b-4c82-b73a-ca1eb9454294/social-sharing-card.png";
+type GoogleTranslateWindow = Window & {
+  googleTranslateElementInit?: () => void;
+  google?: {
+    translate?: {
+      TranslateElement: new (
+        options: Record<string, unknown>,
+        elementId: string,
+      ) => unknown;
+    };
+  };
+};
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      { title: SITE_TITLE },
-      { name: "description", content: SITE_DESCRIPTION },
-      { name: "author", content: "Rocket" },
-      { property: "og:type", content: "website" },
-      { property: "og:title", content: SITE_TITLE },
-      { property: "og:description", content: SITE_DESCRIPTION },
-      { property: "og:image", content: SOCIAL_IMAGE },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@tryrocketai" },
-      { name: "twitter:title", content: SITE_TITLE },
-      { name: "twitter:description", content: SITE_DESCRIPTION },
-      { name: "twitter:image", content: SOCIAL_IMAGE },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "preload", href: "/fonts/Reckless-Regular.ttf", as: "font", type: "font/ttf", crossOrigin: "anonymous" },
-      { rel: "preload", href: "/fonts/Reckless-Medium.otf", as: "font", type: "font/otf", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap",
-      },
-    ],
-    scripts: [
-      // Re-apply the stored theme before first paint to avoid a light flash.
-      { children: 'try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}' },
-      { children: extensionErrorSuppression },
-      { src: "https://www.googletagmanager.com/gtag/js?id=G-0SNE7T7S79", async: true },
-      {
-        children:
-          "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-0SNE7T7S79');",
-      },
-      { src: "https://analytics.ahrefs.com/analytics.js", "data-key": "0nkhN8ICog83HQJg7HLlXA", async: true },
-      {
-        children:
-          'window.$crisp=[];window.CRISP_WEBSITE_ID="3630204c-84d4-4805-a7aa-074ba31a7c12";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
-      },
-    ],
-  }),
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: () => <NotFound />,
-  errorComponent: RootErrorComponent,
-});
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    head: () => ({
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+        { title: SITE_TITLE },
+        { name: "description", content: SITE_DESCRIPTION },
+        { name: "author", content: "Rocket" },
+        { property: "og:type", content: "website" },
+        { property: "og:title", content: SITE_TITLE },
+        { property: "og:description", content: SITE_DESCRIPTION },
+        { property: "og:image", content: SOCIAL_IMAGE },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:site", content: "@tryrocketai" },
+        { name: "twitter:title", content: SITE_TITLE },
+        { name: "twitter:description", content: SITE_DESCRIPTION },
+        { name: "twitter:image", content: SOCIAL_IMAGE },
+      ],
+      links: [
+        { rel: "stylesheet", href: appCss },
+        { rel: "icon", type: "image/png", href: "/favicon.png" },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossOrigin: "anonymous",
+        },
+        {
+          rel: "preload",
+          href: "/fonts/Reckless-Regular.ttf",
+          as: "font",
+          type: "font/ttf",
+          crossOrigin: "anonymous",
+        },
+        {
+          rel: "preload",
+          href: "/fonts/Reckless-Medium.otf",
+          as: "font",
+          type: "font/otf",
+          crossOrigin: "anonymous",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap",
+        },
+      ],
+      scripts: [
+        // Re-apply the stored theme before first paint to avoid a light flash.
+        {
+          children:
+            'try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}',
+        },
+        { children: extensionErrorSuppression },
+        {
+          src: "https://www.googletagmanager.com/gtag/js?id=G-0SNE7T7S79",
+          async: true,
+        },
+        {
+          children:
+            "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-0SNE7T7S79');",
+        },
+        {
+          src: "https://analytics.ahrefs.com/analytics.js",
+          "data-key": "0nkhN8ICog83HQJg7HLlXA",
+          async: true,
+        },
+        {
+          children:
+            'window.$crisp=[];window.CRISP_WEBSITE_ID="3630204c-84d4-4805-a7aa-074ba31a7c12";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
+        },
+      ],
+    }),
+    shellComponent: RootShell,
+    component: RootComponent,
+    notFoundComponent: () => <NotFound />,
+    errorComponent: RootErrorComponent,
+  },
+);
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -88,7 +126,11 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         {children}
-        <div id="google_translate_element" style={{ display: "none" }} suppressHydrationWarning />
+        <div
+          id="google_translate_element"
+          style={{ display: "none" }}
+          suppressHydrationWarning
+        />
         <Scripts />
       </body>
     </html>
@@ -101,8 +143,10 @@ function RootComponent() {
   // before hydration causes a mismatch on every page, so defer it until after.
   useEffect(() => {
     if (document.getElementById("google-translate-loader")) return;
-    (window as any).googleTranslateElementInit = () => {
-      new (window as any).google.translate.TranslateElement(
+    const translateWindow = window as GoogleTranslateWindow;
+    translateWindow.googleTranslateElementInit = () => {
+      if (!translateWindow.google?.translate?.TranslateElement) return;
+      new translateWindow.google.translate.TranslateElement(
         {
           pageLanguage: "en",
           includedLanguages: "en,de,fr,es,it,pt,nl,pl,tr,ja",
@@ -113,7 +157,8 @@ function RootComponent() {
     };
     const s = document.createElement("script");
     s.id = "google-translate-loader";
-    s.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    s.src =
+      "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
     s.async = true;
     document.head.appendChild(s);
   }, []);
@@ -133,7 +178,13 @@ function RootComponent() {
   );
 }
 
-function RootErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function RootErrorComponent({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
   const router = useRouter();
   useEffect(() => {
     console.error(error);

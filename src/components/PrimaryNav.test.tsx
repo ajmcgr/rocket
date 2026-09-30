@@ -11,11 +11,24 @@ describe("platform primary navigation", () => {
     document.body.appendChild(container);
     const root = createRoot(container);
     try {
-      await act(async () => { root.render(<MemoryRouter initialEntries={["/launch"]}><PrimaryNav /><MobilePrimaryNav /></MemoryRouter>); });
+      await act(async () => {
+        root.render(
+          <MemoryRouter initialEntries={["/launch"]}>
+            <PrimaryNav />
+            <MobilePrimaryNav />
+          </MemoryRouter>,
+        );
+      });
       const expected = ["Discover", "Saved", "Your Apps", "Launch", "Create"];
       for (const nav of container.querySelectorAll("nav")) {
-        expect([...nav.querySelectorAll("a")].map((link) => link.textContent?.trim())).toEqual(expected);
-        expect(nav.querySelector('a[href="/launch"]')?.getAttribute("aria-current")).toBe("page");
+        expect(
+          [...nav.querySelectorAll("a")].map((link) =>
+            link.textContent?.trim(),
+          ),
+        ).toEqual(expected);
+        expect(
+          nav.querySelector('a[href="/launch"]')?.getAttribute("aria-current"),
+        ).toBe("page");
       }
     } finally {
       await act(async () => root.unmount());
@@ -30,9 +43,23 @@ describe("platform primary navigation", () => {
     document.body.appendChild(container);
     const root = createRoot(container);
     try {
-      await act(async () => { root.render(<MemoryRouter initialEntries={["/discover"]}><PublicMobileNav /></MemoryRouter>); });
-      expect([...container.querySelectorAll("nav a")].map((link) => link.textContent?.trim())).toEqual(["Discover", "Launch", "Sign in"]);
-      expect(container.querySelector('a[href="/discover"]')?.getAttribute("aria-current")).toBe("page");
+      await act(async () => {
+        root.render(
+          <MemoryRouter initialEntries={["/discover"]}>
+            <PublicMobileNav />
+          </MemoryRouter>,
+        );
+      });
+      expect(
+        [...container.querySelectorAll("nav a")].map((link) =>
+          link.textContent?.trim(),
+        ),
+      ).toEqual(["Discover", "Saved", "Launch", "Sign in"]);
+      expect(
+        container
+          .querySelector('a[href="/discover"]')
+          ?.getAttribute("aria-current"),
+      ).toBe("page");
     } finally {
       await act(async () => root.unmount());
       container.remove();

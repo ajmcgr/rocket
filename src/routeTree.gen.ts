@@ -19,6 +19,7 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MediaKitRouteImport } from './routes/media-kit'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -33,7 +34,6 @@ import { Route as AppFilesRouteImport } from './routes/_app/files'
 import { Route as AppGenerateRouteImport } from './routes/_app/generate'
 import { Route as AppIconsRouteImport } from './routes/_app/icons'
 import { Route as AppInsightsRouteImport } from './routes/_app/insights'
-import { Route as AppLaunchRouteImport } from './routes/_app/launch'
 import { Route as AppLogosRouteImport } from './routes/_app/logos'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppPresentRouteImport } from './routes/_app/present'
@@ -97,6 +97,7 @@ import { Route as AppBrandsIdPaletteRouteImport } from './routes/_app/brands.$id
 import { Route as AppBrandsIdSocialIconsRouteImport } from './routes/_app/brands.$id.social-icons'
 import { Route as AppDeveloperAppsClientIdRouteImport } from './routes/_app/developer.apps.$clientId'
 import { Route as AppMyAppsIdAnalyticsRouteImport } from './routes/_app/my-apps.$id.analytics'
+import { Route as AppMyAppsIdEditRouteImport } from './routes/_app/my-apps.$id.edit'
 import { Route as AppMyAppsIdRevenueRouteImport } from './routes/_app/my-apps.$id.revenue'
 import { Route as AppProjectsIdBrandKitRouteImport } from './routes/_app/projects.$id_.brand-kit'
 import { Route as AppProjectsIdFontsRouteImport } from './routes/_app/projects.$id_.fonts'
@@ -154,6 +155,11 @@ const GalleryRoute = GalleryRouteImport.update({
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchRoute = LaunchRouteImport.update({
+  id: '/launch',
+  path: '/launch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -224,11 +230,6 @@ const AppIconsRoute = AppIconsRouteImport.update({
 const AppInsightsRoute = AppInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLaunchRoute = AppLaunchRouteImport.update({
-  id: '/launch',
-  path: '/launch',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLogosRoute = AppLogosRouteImport.update({
@@ -548,6 +549,11 @@ const AppMyAppsIdAnalyticsRoute = AppMyAppsIdAnalyticsRouteImport.update({
   path: '/my-apps/$id/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMyAppsIdEditRoute = AppMyAppsIdEditRouteImport.update({
+  id: '/my-apps/$id/edit',
+  path: '/my-apps/$id/edit',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMyAppsIdRevenueRoute = AppMyAppsIdRevenueRouteImport.update({
   id: '/my-apps/$id/revenue',
   path: '/my-apps/$id/revenue',
@@ -604,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/join': typeof JoinRoute
+  '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
   '/pricing': typeof PricingRoute
@@ -618,7 +625,6 @@ export interface FileRoutesByFullPath {
   '/generate': typeof AppGenerateRoute
   '/icons': typeof AppIconsRoute
   '/insights': typeof AppInsightsRoute
-  '/launch': typeof AppLaunchRoute
   '/logos': typeof AppLogosRoute
   '/notifications': typeof AppNotificationsRoute
   '/present': typeof AppPresentRoute
@@ -681,6 +687,7 @@ export interface FileRoutesByFullPath {
   '/brands/$id/social-icons': typeof AppBrandsIdSocialIconsRoute
   '/developer/apps/$clientId': typeof AppDeveloperAppsClientIdRoute
   '/my-apps/$id/analytics': typeof AppMyAppsIdAnalyticsRoute
+  '/my-apps/$id/edit': typeof AppMyAppsIdEditRoute
   '/my-apps/$id/revenue': typeof AppMyAppsIdRevenueRoute
   '/projects/$id/brand-kit': typeof AppProjectsIdBrandKitRoute
   '/projects/$id/fonts': typeof AppProjectsIdFontsRoute
@@ -702,6 +709,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/join': typeof JoinRoute
+  '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
   '/pricing': typeof PricingRoute
@@ -716,7 +724,6 @@ export interface FileRoutesByTo {
   '/generate': typeof AppGenerateRoute
   '/icons': typeof AppIconsRoute
   '/insights': typeof AppInsightsRoute
-  '/launch': typeof AppLaunchRoute
   '/logos': typeof AppLogosRoute
   '/notifications': typeof AppNotificationsRoute
   '/present': typeof AppPresentRoute
@@ -777,6 +784,7 @@ export interface FileRoutesByTo {
   '/brands/$id/social-icons': typeof AppBrandsIdSocialIconsRoute
   '/developer/apps/$clientId': typeof AppDeveloperAppsClientIdRoute
   '/my-apps/$id/analytics': typeof AppMyAppsIdAnalyticsRoute
+  '/my-apps/$id/edit': typeof AppMyAppsIdEditRoute
   '/my-apps/$id/revenue': typeof AppMyAppsIdRevenueRoute
   '/projects/$id/brand-kit': typeof AppProjectsIdBrandKitRoute
   '/projects/$id/fonts': typeof AppProjectsIdFontsRoute
@@ -800,6 +808,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/join': typeof JoinRoute
+  '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
   '/pricing': typeof PricingRoute
@@ -814,7 +823,6 @@ export interface FileRoutesById {
   '/_app/generate': typeof AppGenerateRoute
   '/_app/icons': typeof AppIconsRoute
   '/_app/insights': typeof AppInsightsRoute
-  '/_app/launch': typeof AppLaunchRoute
   '/_app/logos': typeof AppLogosRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/present': typeof AppPresentRoute
@@ -877,6 +885,7 @@ export interface FileRoutesById {
   '/_app/brands/$id/social-icons': typeof AppBrandsIdSocialIconsRoute
   '/_app/developer/apps/$clientId': typeof AppDeveloperAppsClientIdRoute
   '/_app/my-apps/$id/analytics': typeof AppMyAppsIdAnalyticsRoute
+  '/_app/my-apps/$id/edit': typeof AppMyAppsIdEditRoute
   '/_app/my-apps/$id/revenue': typeof AppMyAppsIdRevenueRoute
   '/_app/projects/$id_/brand-kit': typeof AppProjectsIdBrandKitRoute
   '/_app/projects/$id_/fonts': typeof AppProjectsIdFontsRoute
@@ -900,6 +909,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/gallery'
     | '/join'
+    | '/launch'
     | '/login'
     | '/media-kit'
     | '/pricing'
@@ -914,7 +924,6 @@ export interface FileRouteTypes {
     | '/generate'
     | '/icons'
     | '/insights'
-    | '/launch'
     | '/logos'
     | '/notifications'
     | '/present'
@@ -977,6 +986,7 @@ export interface FileRouteTypes {
     | '/brands/$id/social-icons'
     | '/developer/apps/$clientId'
     | '/my-apps/$id/analytics'
+    | '/my-apps/$id/edit'
     | '/my-apps/$id/revenue'
     | '/projects/$id/brand-kit'
     | '/projects/$id/fonts'
@@ -998,6 +1008,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/gallery'
     | '/join'
+    | '/launch'
     | '/login'
     | '/media-kit'
     | '/pricing'
@@ -1012,7 +1023,6 @@ export interface FileRouteTypes {
     | '/generate'
     | '/icons'
     | '/insights'
-    | '/launch'
     | '/logos'
     | '/notifications'
     | '/present'
@@ -1073,6 +1083,7 @@ export interface FileRouteTypes {
     | '/brands/$id/social-icons'
     | '/developer/apps/$clientId'
     | '/my-apps/$id/analytics'
+    | '/my-apps/$id/edit'
     | '/my-apps/$id/revenue'
     | '/projects/$id/brand-kit'
     | '/projects/$id/fonts'
@@ -1095,6 +1106,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/gallery'
     | '/join'
+    | '/launch'
     | '/login'
     | '/media-kit'
     | '/pricing'
@@ -1109,7 +1121,6 @@ export interface FileRouteTypes {
     | '/_app/generate'
     | '/_app/icons'
     | '/_app/insights'
-    | '/_app/launch'
     | '/_app/logos'
     | '/_app/notifications'
     | '/_app/present'
@@ -1172,6 +1183,7 @@ export interface FileRouteTypes {
     | '/_app/brands/$id/social-icons'
     | '/_app/developer/apps/$clientId'
     | '/_app/my-apps/$id/analytics'
+    | '/_app/my-apps/$id/edit'
     | '/_app/my-apps/$id/revenue'
     | '/_app/projects/$id_/brand-kit'
     | '/_app/projects/$id_/fonts'
@@ -1195,6 +1207,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GalleryRoute: typeof GalleryRoute
   JoinRoute: typeof JoinRoute
+  LaunchRoute: typeof LaunchRoute
   LoginRoute: typeof LoginRoute
   MediaKitRoute: typeof MediaKitRoute
   PricingRoute: typeof PricingRoute
@@ -1294,6 +1307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/launch': {
+      id: '/launch'
+      path: '/launch'
+      fullPath: '/launch'
+      preLoaderRoute: typeof LaunchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -1390,13 +1410,6 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof AppInsightsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/launch': {
-      id: '/_app/launch'
-      path: '/launch'
-      fullPath: '/launch'
-      preLoaderRoute: typeof AppLaunchRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/logos': {
@@ -1840,6 +1853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMyAppsIdAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/my-apps/$id/edit': {
+      id: '/_app/my-apps/$id/edit'
+      path: '/my-apps/$id/edit'
+      fullPath: '/my-apps/$id/edit'
+      preLoaderRoute: typeof AppMyAppsIdEditRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/my-apps/$id/revenue': {
       id: '/_app/my-apps/$id/revenue'
       path: '/my-apps/$id/revenue'
@@ -1958,7 +1978,6 @@ interface AppRouteChildren {
   AppGenerateRoute: typeof AppGenerateRoute
   AppIconsRoute: typeof AppIconsRoute
   AppInsightsRoute: typeof AppInsightsRoute
-  AppLaunchRoute: typeof AppLaunchRoute
   AppLogosRoute: typeof AppLogosRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPresentRoute: typeof AppPresentRoute
@@ -1992,6 +2011,7 @@ interface AppRouteChildren {
   AppStudioIndexRoute: typeof AppStudioIndexRoute
   AppDeveloperAppsClientIdRoute: typeof AppDeveloperAppsClientIdRoute
   AppMyAppsIdAnalyticsRoute: typeof AppMyAppsIdAnalyticsRoute
+  AppMyAppsIdEditRoute: typeof AppMyAppsIdEditRoute
   AppMyAppsIdRevenueRoute: typeof AppMyAppsIdRevenueRoute
   AppProjectsIdBrandKitRoute: typeof AppProjectsIdBrandKitRoute
   AppProjectsIdFontsRoute: typeof AppProjectsIdFontsRoute
@@ -2011,7 +2031,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppGenerateRoute: AppGenerateRoute,
   AppIconsRoute: AppIconsRoute,
   AppInsightsRoute: AppInsightsRoute,
-  AppLaunchRoute: AppLaunchRoute,
   AppLogosRoute: AppLogosRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPresentRoute: AppPresentRoute,
@@ -2045,6 +2064,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStudioIndexRoute: AppStudioIndexRoute,
   AppDeveloperAppsClientIdRoute: AppDeveloperAppsClientIdRoute,
   AppMyAppsIdAnalyticsRoute: AppMyAppsIdAnalyticsRoute,
+  AppMyAppsIdEditRoute: AppMyAppsIdEditRoute,
   AppMyAppsIdRevenueRoute: AppMyAppsIdRevenueRoute,
   AppProjectsIdBrandKitRoute: AppProjectsIdBrandKitRoute,
   AppProjectsIdFontsRoute: AppProjectsIdFontsRoute,
@@ -2069,6 +2089,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   GalleryRoute: GalleryRoute,
   JoinRoute: JoinRoute,
+  LaunchRoute: LaunchRoute,
   LoginRoute: LoginRoute,
   MediaKitRoute: MediaKitRoute,
   PricingRoute: PricingRoute,

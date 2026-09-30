@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, ArrowRight, Sparkles } from "lucide-react";
@@ -16,7 +22,7 @@ const STORAGE_KEY = "rocket.onboarding.v2";
 const STEPS: Step[] = [
   {
     title: "Welcome to Rocket",
-    body: "One account for every app. Discover independent apps worth using, or launch your own.",
+    body: "Discover independent apps worth using, save your favorites, or launch your own.",
     placement: "center",
     cta: "Start tour",
   },
@@ -55,7 +61,8 @@ const OnboardingTour = () => {
     const key = `${STORAGE_KEY}.${user.id}`;
     if (localStorage.getItem(key)) return;
     const createdAt = new Date(user.created_at || 0).getTime();
-    const isNew = createdAt > 0 && Date.now() - createdAt < 7 * 24 * 60 * 60 * 1000;
+    const isNew =
+      createdAt > 0 && Date.now() - createdAt < 7 * 24 * 60 * 60 * 1000;
     if (!isNew) {
       // Mark older accounts as seen so the tour doesn't pop up retroactively.
       localStorage.setItem(key, "1");
@@ -67,7 +74,10 @@ const OnboardingTour = () => {
 
   // Allow programmatic re-launch
   useEffect(() => {
-    const h = () => { setIdx(0); setOpen(true); };
+    const h = () => {
+      setIdx(0);
+      setOpen(true);
+    };
     window.addEventListener("rocket:start-tour", h);
     return () => window.removeEventListener("rocket:start-tour", h);
   }, []);
@@ -83,7 +93,8 @@ const OnboardingTour = () => {
     const update = () => {
       const box = el.getBoundingClientRect();
       setTipSize((prev) =>
-        Math.abs(prev.height - box.height) < 1 && Math.abs(prev.width - box.width) < 1
+        Math.abs(prev.height - box.height) < 1 &&
+        Math.abs(prev.width - box.width) < 1
           ? prev
           : { width: box.width, height: box.height },
       );
@@ -95,7 +106,10 @@ const OnboardingTour = () => {
   }, [open, idx]);
 
   const measure = useCallback(() => {
-    if (!step?.selector) { setRect(null); return; }
+    if (!step?.selector) {
+      setRect(null);
+      return;
+    }
     const el = document.querySelector(step.selector) as HTMLElement | null;
     if (el) setRect(el.getBoundingClientRect());
     else setRect(null);
@@ -108,7 +122,11 @@ const OnboardingTour = () => {
     ro.observe(document.body);
     window.addEventListener("scroll", measure, true);
     window.addEventListener("resize", measure);
-    return () => { ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("resize", measure); };
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", measure, true);
+      window.removeEventListener("resize", measure);
+    };
   }, [open, measure]);
 
   const finish = () => {
@@ -130,26 +148,42 @@ const OnboardingTour = () => {
     let top = rect.bottom + PAD;
     if (top + height + margin > window.innerHeight) {
       const above = rect.top - PAD - height;
-      top = above >= margin ? above : Math.max(margin, window.innerHeight - height - margin);
+      top =
+        above >= margin
+          ? above
+          : Math.max(margin, window.innerHeight - height - margin);
     }
     const left = Math.min(
       window.innerWidth - width - margin,
       Math.max(margin, rect.left + rect.width / 2 - width / 2),
     );
-    return { top, left, maxHeight: window.innerHeight - margin * 2, overflowY: "auto" };
+    return {
+      top,
+      left,
+      maxHeight: window.innerHeight - margin * 2,
+      overflowY: "auto",
+    };
   })();
 
   const next = () => {
     if (last) {
       finish();
       nav("/discover");
-    } else setIdx(i => i + 1);
+    } else setIdx((i) => i + 1);
   };
 
   return (
-    <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Onboarding tour">
+    <div
+      className="fixed inset-0 z-[100]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Onboarding tour"
+    >
       {/* Overlay with cut-out using SVG mask */}
-      <svg className="absolute inset-0 h-full w-full pointer-events-auto" onClick={finish}>
+      <svg
+        className="absolute inset-0 h-full w-full pointer-events-auto"
+        onClick={finish}
+      >
         <defs>
           <mask id="tour-mask">
             <rect width="100%" height="100%" fill="white" />
@@ -165,14 +199,24 @@ const OnboardingTour = () => {
             )}
           </mask>
         </defs>
-        <rect width="100%" height="100%" fill="rgba(15,23,42,0.55)" mask="url(#tour-mask)" />
+        <rect
+          width="100%"
+          height="100%"
+          fill="rgba(15,23,42,0.55)"
+          mask="url(#tour-mask)"
+        />
       </svg>
 
       {/* Highlight ring */}
       {rect && step.placement !== "center" && (
         <div
           className="pointer-events-none absolute rounded-xl ring-2 ring-white/90 ring-offset-2 ring-offset-transparent shadow-[0_0_0_4px_rgba(255,255,255,0.15)] transition-all"
-          style={{ top: rect.top - PAD, left: rect.left - PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }}
+          style={{
+            top: rect.top - PAD,
+            left: rect.left - PAD,
+            width: rect.width + PAD * 2,
+            height: rect.height + PAD * 2,
+          }}
         />
       )}
 
@@ -192,26 +236,43 @@ const OnboardingTour = () => {
               Step {idx + 1} of {STEPS.length}
             </div>
           </div>
-          <button onClick={finish} aria-label="Skip tour" className="rounded-md p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700">
+          <button
+            onClick={finish}
+            aria-label="Skip tour"
+            className="rounded-md p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h3 className="mt-3 text-base font-semibold tracking-tight text-neutral-900">{step.title}</h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{step.body}</p>
+        <h3 className="mt-3 text-base font-semibold tracking-tight text-neutral-900">
+          {step.title}
+        </h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+          {step.body}
+        </p>
 
         <div className="mt-4 flex items-center gap-1.5">
           {STEPS.map((_, i) => (
-            <span key={i} className={`h-1 rounded-full transition-all ${i === idx ? "w-5 bg-neutral-900" : i < idx ? "w-1.5 bg-neutral-400" : "w-1.5 bg-neutral-200"}`} />
+            <span
+              key={i}
+              className={`h-1 rounded-full transition-all ${i === idx ? "w-5 bg-neutral-900" : i < idx ? "w-1.5 bg-neutral-400" : "w-1.5 bg-neutral-200"}`}
+            />
           ))}
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <button onClick={finish} className="text-xs font-medium text-neutral-500 hover:text-neutral-800">
+          <button
+            onClick={finish}
+            className="text-xs font-medium text-neutral-500 hover:text-neutral-800"
+          >
             Skip
           </button>
           <div className="flex items-center gap-2">
             {idx > 0 && !last && (
-              <button onClick={() => setIdx(i => Math.max(0, i - 1))} className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100">
+              <button
+                onClick={() => setIdx((i) => Math.max(0, i - 1))}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              >
                 Back
               </button>
             )}

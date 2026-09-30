@@ -85,7 +85,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.rocket-apps]
-verify_jwt = true
+verify_jwt = false # The preview action is anonymous; all mutating actions verify the user in code.
 
 [functions.rocket-ga4]
 verify_jwt = false
