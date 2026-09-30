@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useLocation } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const unauthenticatedReturnTo = useRef<string | null>(null);
 
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider || "email";
   const isOAuth = provider !== "email";
@@ -39,9 +40,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     </div>
   );
   if (!user) {
-    const from = location.pathname + location.search;
+    // Keep the original protected destination stable while Navigate is unmounting.
+    // Otherwise an intermediate /login location can be nested into next repeatedly.
+    const from = unauthenticatedReturnTo.current ?? (location.pathname + location.search);
+    unauthenticatedReturnTo.current = from;
     return <Navigate to={`/login?next=${encodeURIComponent(from)}`} state={{ from }} replace />;
   }
+  unauthenticatedReturnTo.current = null;
   if (verified === null) return (
     <div className="flex min-h-screen items-center justify-center bg-white text-sm text-neutral-500" aria-busy="true">
       Checking your account…
