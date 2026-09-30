@@ -25,7 +25,22 @@ export type AnalyticsEvent =
   | "tour_started"
   | "tour_completed"
   | "organic_template_view"
-  | "organic_template_cta";
+  | "organic_template_cta"
+  | "discovery_search"
+  | "discovery_view_selected"
+  | "discovery_category_selected"
+  | "app_profile_viewed"
+  | "outbound_app_clicked"
+  | "app_saved"
+  | "app_unsaved"
+  | "launch_started"
+  | "launch_url_submitted"
+  | "launch_existing_app_resolved"
+  | "launch_new_app_created"
+  | "app_claim_started"
+  | "app_claim_completed"
+  | "app_verification_started"
+  | "app_verification_completed";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;

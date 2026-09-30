@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 type Props = { appId: string; saved: boolean; onChange: (saved: boolean) => void };
 
@@ -25,7 +26,7 @@ export default function SaveAppButton({ appId, saved, onChange }: Props) {
       ? await supabase.from("saved_apps").delete().eq("user_id", user.id).eq("app_id", appId)
       : await supabase.from("saved_apps").insert({ user_id: user.id, app_id: appId });
     if (result.error && !(result.error.code === "23505" && !saved)) setError(true);
-    else onChange(!saved);
+    else { onChange(!saved); track(saved ? "app_unsaved" : "app_saved", { app_id: appId }); }
     setBusy(false);
   };
 

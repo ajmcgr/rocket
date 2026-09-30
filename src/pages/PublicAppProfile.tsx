@@ -13,6 +13,7 @@ import AppTrustBadges from "@/components/AppTrustBadges";
 import AppLogo from "@/components/AppLogo";
 import type { AppTrust } from "@/lib/appTrust";
 import { trustLabels } from "@/lib/appTrust";
+import { track } from "@/lib/analytics";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -66,6 +67,7 @@ export default function PublicAppProfile() {
       setSignals(signalResult.data || []);
       setTrust(trustResult.data);
       setError(Boolean(appResult.error || sourceResult.error || tractionResult.error || revenueResult.error || signalResult.error || !appResult.data));
+      if (appResult.data && !appResult.error) track("app_profile_viewed", { app_id: appResult.data.id });
       setLoading(false);
     });
     return () => { canceled = true; };
@@ -77,7 +79,10 @@ export default function PublicAppProfile() {
     const run = async () => {
       if (saveAfterAuth) {
         const result = await supabase.from("saved_apps").insert({ user_id: user.id, app_id: id });
-        if (!canceled && (!result.error || result.error.code === "23505")) setSaved(true);
+        if (!canceled && (!result.error || result.error.code === "23505")) {
+          setSaved(true);
+          if (!result.error) track("app_saved", { app_id: id, after_auth: true });
+        }
         if (!canceled) setSearchParams({}, { replace: true });
       } else {
         const { data } = await supabase.from("saved_apps").select("app_id").eq("user_id", user.id).eq("app_id", id).maybeSingle();
@@ -96,7 +101,7 @@ export default function PublicAppProfile() {
       {app && !loading && !error && <>
         <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-9">
           <div className="flex items-start gap-4 sm:gap-5"><AppLogo name={app.name} src={app.logo_url} className="h-16 w-16 shrink-0 sm:h-20 sm:w-20" eager /><div className="min-w-0 flex-1"><h1 className="font-display text-3xl leading-tight sm:text-4xl">{app.name}</h1><p className="mt-2 max-w-2xl text-neutral-600">{app.tagline || (app.description ? descriptionSummary(app.description) : app.canonical_host)}</p></div></div>
-          <div className="mt-7 flex flex-wrap items-center gap-3"><a href={app.website_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-700 px-5 py-3 text-sm font-medium text-white hover:bg-sky-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Visit website <ExternalLink className="h-4 w-4" /></a><SaveAppButton appId={app.id} saved={saved} onChange={setSaved} /><span className="w-full text-sm text-neutral-500 sm:w-auto">{app.canonical_host}</span></div>
+          <div className="mt-7 flex flex-wrap items-center gap-3"><a href={app.website_url} target="_blank" rel="noopener noreferrer nofollow" onClick={() => track("outbound_app_clicked", { app_id: app.id })} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-700 px-5 py-3 text-sm font-medium text-white hover:bg-sky-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Visit website <ExternalLink className="h-4 w-4" /></a><SaveAppButton appId={app.id} saved={saved} onChange={setSaved} /><span className="w-full text-sm text-neutral-500 sm:w-auto">{app.canonical_host}</span></div>
         </div>
         {signals.length > 0 && <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Why it’s interesting</h2><div className="mt-4 space-y-4">{signals.map((signal) => <div key={signal.signal_type}><p className="font-medium text-sky-700">{signalLabel(signal)}</p><p className="mt-1 text-sm text-neutral-700">{signalExplanation(signal)}</p></div>)}</div><p className="mt-4 text-xs text-neutral-500">Public Launch activity is not verified traffic, revenue, or a Rocket recommendation.</p></section>}
         {trustLabels(trust).length > 0 && <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8"><h2 className="text-lg font-semibold">Trust</h2>

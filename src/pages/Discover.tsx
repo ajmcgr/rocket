@@ -13,6 +13,7 @@ import AppTrustBadges from "@/components/AppTrustBadges";
 import type { AppTrust } from "@/lib/appTrust";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
 import AppLogo from "@/components/AppLogo";
+import { track } from "@/lib/analytics";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -65,14 +66,14 @@ export default function Discover() {
       if (view === "categories") { setApps([]); setTrust(new Map()); setCount(0); setLoading(false); return; }
       if (view === "rising" || view === "new") {
         const { data: signalRows, count: total, error: signalError } = await supabase
-          .from("public_app_intelligence").select("*", { count: "exact" })
+          .from("public_discoverable_app_intelligence").select("*", { count: "exact" })
           .eq("signal_type", view === "rising" ? "rising" : "new_interesting")
           .order("percentile_rank", { ascending: false }).order("net_votes", { ascending: false })
           .order("app_id", { ascending: true }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
         if (signalError) throw signalError;
         const ids = (signalRows || []).map((row) => row.app_id);
         const [appResult, trustResult] = ids.length ? await Promise.all([
-          supabase.from("public_apps").select("*").in("id", ids),
+          supabase.from("public_discoverable_apps").select("*").in("id", ids),
           supabase.from("public_app_trust").select("*").in("app_id", ids),
         ]) : [{ data: [] as App[], error: null }, { data: [] as AppTrust[], error: null }];
         if (appResult.error) throw appResult.error;
@@ -84,7 +85,7 @@ export default function Discover() {
           setCount(total || 0);
         }
       } else {
-        let request = supabase.from("public_apps").select("*", { count: "exact" });
+        let request = supabase.from(search ? "public_apps" : "public_discoverable_apps").select("*", { count: "exact" });
         if (search) request = request.or(`name.ilike.%${search}%,tagline.ilike.%${search}%,description.ilike.%${search}%`);
         if (category) request = request.contains("categories", [category]);
         if (platform) request = request.contains("platforms", [platform]);
@@ -136,21 +137,21 @@ export default function Discover() {
       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Rocket Discover</p>
       <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">Discover independent apps worth using.</h1>
       <p className="mt-3 max-w-2xl text-neutral-600">Explore what is rising, find something new, or search the full catalogue.</p>
-      <form role="search" className="mt-8 flex w-full max-w-3xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-[0_14px_42px_-28px_rgba(15,23,42,0.3)] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200" onSubmit={(event) => { event.preventDefault(); change("q", safeSearch(query)); }}>
+      <form role="search" className="mt-8 flex w-full max-w-3xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-[0_14px_42px_-28px_rgba(15,23,42,0.3)] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200" onSubmit={(event) => { event.preventDefault(); track("discovery_search", { source: "discover", has_query: Boolean(safeSearch(query)) }); change("q", safeSearch(query)); }}>
         <Search className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400" aria-hidden="true" />
         <input aria-label="Search apps" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps, tools, or ideas" className="min-w-0 flex-1 bg-transparent px-1 text-base outline-none" />
         <button className="min-h-11 rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">Search</button>
       </form>
       <nav aria-label="Discover sections" className="mt-7 flex flex-wrap gap-2">
         {([ ["rising", "Rising"], ["new", "New"], ["categories", "Categories"], ["all", "All Apps"] ] as const).map(([key, label]) =>
-          <button key={key} onClick={() => change("view", key)} aria-current={view === key ? "page" : undefined}
+          <button key={key} onClick={() => { track("discovery_view_selected", { view: key }); change("view", key); }} aria-current={view === key ? "page" : undefined}
             className={`rounded-full px-4 py-2 text-sm ${view === key ? "bg-neutral-900 text-white" : "border border-neutral-200 bg-white text-neutral-700 hover:border-sky-300"}`}>{label}</button>)}
       </nav>
       {showOverview && <DiscoveryPreview />}
       {view === "all" && <details className="mt-9 rounded-xl border border-neutral-200 bg-white p-4" open={Boolean(search || category || platform || source || params.get("sort"))}>
         <summary className="cursor-pointer text-sm font-semibold text-neutral-700">Filters and sorting</summary>
       <div className="mt-4 flex flex-wrap gap-3">
-        <select aria-label="Category" value={category} onChange={(event) => change("category", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All categories</option>{categories.map((item) => <option key={item.category} value={item.category}>{item.category} ({item.app_count})</option>)}</select>
+        <select aria-label="Category" value={category} onChange={(event) => { track("discovery_category_selected", { category: event.target.value || "all" }); change("category", event.target.value); }} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All categories</option>{categories.map((item) => <option key={item.category} value={item.category}>{item.category} ({item.app_count})</option>)}</select>
         <select aria-label="Platform" value={platform} onChange={(event) => change("platform", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All platforms</option><option value="web">Web</option><option value="ios">iOS</option><option value="android">Android</option><option value="hardware">Hardware</option></select>
         <select aria-label="Source" value={source} onChange={(event) => change("source", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="">All sources</option><option value="launch">Launch</option></select>
         <select aria-label="Order" value={sort} onChange={(event) => change("sort", event.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"><option value="launched">Newest launches</option><option value="discovered">Recently discovered</option></select>
@@ -161,7 +162,7 @@ export default function Discover() {
       {!loading && !error && view !== "categories" && apps.length === 0 && <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-600">{view === "all" ? "No apps match these filters." : "No apps currently meet this evidence threshold. Browse all apps instead."}</div>}
       {view === "categories" && !loading && categoriesLoading && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading categories">{[0, 1, 2].map((item) => <div key={item} className="h-40 animate-pulse rounded-2xl border border-neutral-200 bg-white p-5"><div className="h-5 w-2/3 rounded bg-neutral-100" /><div className="mt-6 h-3 w-full rounded bg-neutral-100" /></div>)}</div>}
       {view === "categories" && !loading && !categoriesLoading && !error && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{categorySignals.map((item) =>
-        <button key={item.category} onClick={() => { const next = new URLSearchParams(params); next.set("view", "all"); next.set("category", item.category); next.delete("page"); setParams(next); }}
+        <button key={item.category} onClick={() => { track("discovery_category_selected", { category: item.category }); const next = new URLSearchParams(params); next.set("view", "all"); next.set("category", item.category); next.delete("page"); setParams(next); }}
           className="rounded-2xl border border-neutral-200 bg-white p-5 text-left hover:border-sky-300">
           <h2 className="font-semibold">{item.category}</h2>
           <p className="mt-3 text-sm text-neutral-700">{item.recent_launches} Launch products in the last 30 days vs {item.previous_launches} in the preceding 30 days.</p>
@@ -169,8 +170,8 @@ export default function Discover() {
           <p className="mt-3 text-xs text-neutral-500">Observed founder activity, not customer demand · Updated {formatDate(item.calculated_at)}</p>
         </button>)}</div>}
       {view !== "categories" && loading && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading apps">{[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-60 animate-pulse rounded-[1.5rem] border border-neutral-200 bg-white p-5"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /><div className="mt-6 h-4 w-2/3 rounded bg-neutral-100" /><div className="mt-3 h-3 w-4/5 rounded bg-neutral-100" /></div>)}</div>}
-      {view !== "categories" && !loading && !error && <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {apps.map((app) => <article key={app.id} className="group flex min-h-60 flex-col rounded-[1.5rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_36px_-34px_rgba(15,23,42,0.4)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]">
+      {view !== "categories" && !loading && !error && <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {apps.map((app) => <article key={app.id} className="group flex min-w-0 min-h-60 flex-col rounded-[1.5rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_36px_-34px_rgba(15,23,42,0.4)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]">
           <Link to={`/apps/${app.id}`} className="flex flex-1 flex-col rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500" aria-label={`View ${app.name}`}>
             <div className="flex items-start gap-3"><AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" /><div className="min-w-0 flex-1"><h2 className="line-clamp-1 text-base font-semibold text-neutral-950 group-hover:text-sky-800">{app.name}</h2><p className="truncate text-sm text-neutral-500">{app.canonical_host}</p></div><ArrowRight className="h-4 w-4 text-neutral-400 transition group-hover:text-sky-800" aria-hidden="true" /></div>
             <p className="mt-4 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">{app.tagline || app.description || "Explore this app."}</p>

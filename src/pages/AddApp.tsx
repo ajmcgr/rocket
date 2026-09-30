@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
+import { track } from "@/lib/analytics";
 
 type FoundApp = { id: string; name: string; description?: string | null; website_url: string; logo_url?: string | null; categories?: string[]; claim_state?: string };
 type Job = { id: string; status: string; app_id?: string | null; error?: string | null; result?: Record<string, unknown> };
 type Challenge = { status: string; claim_id?: string; challenge_id?: string; method?: string; host?: string; value?: string; token?: string; expires_at?: string; reason?: string };
+const isSharedStoreUrl = (websiteUrl: string) => {
+  try { return ["apps.apple.com", "play.google.com"].includes(new URL(websiteUrl).hostname.toLowerCase()); }
+  catch { return false; }
+};
 
 function friendlyError(message: string) {
   if (/^Only ordinary public HTTP\(S\) websites are supported/i.test(message)) return "Only ordinary public HTTP(S) websites are supported. Try a different URL.";
@@ -41,6 +46,8 @@ export default function AddApp() {
   const [success, setSuccess] = useState("");
   const [resolvingApp, setResolvingApp] = useState(Boolean(appId));
 
+  useEffect(() => { track("launch_started", { existing_app_link: Boolean(appId) }); }, [appId]);
+
   useEffect(() => {
     if (!appId) { setResolvingApp(false); return; }
     setResolvingApp(true);
@@ -67,9 +74,12 @@ export default function AddApp() {
     setSuccess("");
     setBusy(true);
     try {
+      track("launch_url_submitted", { source: "launch" });
       const next = await call("submit", { url });
       setJob(next);
       if (next.app_id) {
+        if (next.result?.outcome === "existing") track("launch_existing_app_resolved", { app_id: next.app_id });
+        if (next.result?.outcome === "new") track("launch_new_app_created", { app_id: next.app_id });
         const found = await supabase.from("public_apps").select("id,name,description,website_url,logo_url,categories,claim_state")
           .eq("id", next.app_id).maybeSingle();
         setApp(found.data || { id: next.app_id, name: String(next.result?.name || "New app"),
@@ -83,7 +93,12 @@ export default function AddApp() {
   const startClaim = async (method: "dns_txt" | "https_well_known" | "manual_review") => {
     if (!app) return;
     setBusy(true); setError(""); setSuccess("");
-    try { setChallenge(await call("claim", { app_id: app.id, method })); }
+    try {
+      const result = await call("claim", { app_id: app.id, method });
+      setChallenge(result);
+      track("app_claim_started", { app_id: app.id, method });
+      if (result.challenge_id) track("app_verification_started", { app_id: app.id, method });
+    }
     catch (cause) { setError(friendlyError((cause as Error).message)); }
     finally { setBusy(false); }
   };
@@ -92,7 +107,11 @@ export default function AddApp() {
     setBusy(true); setError("");
     try {
       const result = await call("verify", { challenge_id: challenge.challenge_id, token: challenge.token });
-      if (result.outcome === "verified") { setSuccess("Domain verified. This app is now in Your Apps."); setChallenge(null); }
+      if (result.outcome === "verified") {
+        track("app_verification_completed", { app_id: app?.id, method: challenge.method });
+        track("app_claim_completed", { app_id: app?.id, method: challenge.method });
+        setSuccess("Domain verified. This app is now in Your Apps."); setChallenge(null);
+      }
       else setError("Ownership needs manual review.");
     } catch (cause) { setError(friendlyError((cause as Error).message)); }
     finally { setBusy(false); }
@@ -126,11 +145,14 @@ export default function AddApp() {
         <h3 className="font-semibold">{app.claim_state === "domain_verified" ? "Already claimed" : "Verify this app"}</h3>
         <p className="mt-1 text-sm text-neutral-600">{app.claim_state === "domain_verified"
           ? "This app already has a verified claimant. If you believe you own it, request ownership review; Rocket will not transfer it automatically."
-          : "A Rocket login alone does not prove ownership. Verify control of the app’s website."}</p>
+          : isSharedStoreUrl(app.website_url)
+            ? "Apple and Google own this store domain, so its DNS or website file cannot prove you own this app. Request a review or add your own app website URL."
+            : "A Rocket login alone does not prove ownership. Verify control of the app’s website."}</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          {app.claim_state !== "domain_verified" && <><button disabled={busy} onClick={() => startClaim("dns_txt")} className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Verify domain (DNS)</button>
+          {app.claim_state !== "domain_verified" && <>{!isSharedStoreUrl(app.website_url) && <><button disabled={busy} onClick={() => startClaim("dns_txt")} className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Verify domain (DNS)</button>
           <button disabled={busy} onClick={() => startClaim("https_well_known")} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Use website file</button></>}
           <button disabled={busy} onClick={() => startClaim("manual_review")} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Request manual review</button>
+          </>}
         </div>
       </div>
       {challenge?.status === "review" && <p className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">{challenge.reason}</p>}

@@ -164,18 +164,21 @@ async function claim(userId: string, appId: string, method: string) {
   const hostname = publicApp.data?.canonical_host ||
     (typeof ownWebsite === "string" ? parsePublicUrl(ownWebsite).hostname.replace(/^www\./, "") : "");
   if (!hostname) throw new Error("This submission has no verifiable website");
+  const sharedStoreHost = hostname === "apps.apple.com" || hostname === "play.google.com";
   if (owner.data && !owner.data.revoked_at && owner.data.user_id === userId)
     return { status: "verified", reason: "You already own this app." };
   const conflict = owner.data && !owner.data.revoked_at && owner.data.user_id !== userId;
   const current = await admin.from("app_claims").select("id,status").eq("app_id",appId).eq("user_id",userId).eq("method",method).maybeSingle();
   if (current.error) throw current.error;
   if (current.data?.status === "verified") return { status: "verified", reason: "This claim is already verified." };
-  const status = conflict || method === "manual_review" ? "review" : "pending";
+  const status = conflict || method === "manual_review" || sharedStoreHost ? "review" : "pending";
   const inserted = await admin.from("app_claims").upsert({ app_id: appId, user_id: userId,
     method, status, review_reason: conflict ? "Existing owner conflict" : null },
     { onConflict: "app_id,user_id,method" }).select("*").single();
   if (inserted.error) throw inserted.error;
-  if (status === "review") return { claim_id: inserted.data.id, status, reason: conflict ? "This app has already been claimed. Ownership review is required." : "Manual review requested." };
+  if (status === "review") return { claim_id: inserted.data.id, status, reason: conflict
+    ? "This app has already been claimed. Ownership review is required."
+    : sharedStoreHost ? "Apple and Google own this store domain. Add your own app website or request ownership review." : "Manual review requested." };
   await admin.from("app_verification_challenges").update({ status: "expired" }).eq("claim_id", inserted.data.id).eq("status", "pending");
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const token = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

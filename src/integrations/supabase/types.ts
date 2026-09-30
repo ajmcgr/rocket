@@ -55,6 +55,13 @@ export type Database = {
           source_updated_at: string; calculated_at: string; calculation_version: number }
         Relationships: []
       }
+      public_discoverable_app_intelligence: {
+        Row: { app_id: string; signal_type: string; evidence_source: string; net_votes: number;
+          age_band: string; cohort_category: string | null; cohort_size: number;
+          percentile_rank: number; category_median_votes: number | null;
+          source_updated_at: string; calculated_at: string; calculation_version: number }
+        Relationships: []
+      }
       public_category_intelligence: {
         Row: { category: string; recent_launches: number; previous_launches: number;
           launch_volume_change_pct: number | null; median_recent_votes: number | null;
@@ -63,6 +70,16 @@ export type Database = {
         Relationships: []
       }
       public_apps: {
+        Row: {
+          id: string; name: string; tagline: string | null; description: string | null;
+          website_url: string; canonical_host: string; logo_url: string | null;
+          categories: string[]; tags: string[]; platforms: string[];
+          launched_at: string | null; discovered_at: string;
+          launch_url: string | null; claim_state: string;
+        }
+        Relationships: []
+      }
+      public_discoverable_apps: {
         Row: {
           id: string; name: string; tagline: string | null; description: string | null;
           website_url: string; canonical_host: string; logo_url: string | null;

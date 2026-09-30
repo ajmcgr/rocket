@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import { track } from "@/lib/analytics";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -14,6 +15,7 @@ export default function Home() {
   const search = (event: FormEvent) => {
     event.preventDefault();
     const term = query.trim();
+    track("discovery_search", { source: "homepage", has_query: Boolean(term) });
     navigate(term ? `/discover?q=${encodeURIComponent(term)}` : "/discover");
   };
 

@@ -3,7 +3,7 @@ import type { Tables } from "@/integrations/supabase/types";
 export type AppSignal = Tables<"public_app_intelligence">;
 
 export function signalLabel(signal: AppSignal) {
-  return signal.signal_type === "rising" ? "Rising on Launch" : "New & interesting on Launch";
+  return signal.signal_type === "rising" ? "Rising on Launch" : "New with Launch activity";
 }
 
 export function signalExplanation(signal: AppSignal) {

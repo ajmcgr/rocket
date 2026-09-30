@@ -22,14 +22,14 @@ export default function DiscoveryPreview() {
     let active = true;
     const load = async () => {
       const [risingResult, newResult, categoryResult] = await Promise.all([
-        supabase.from("public_app_intelligence").select("*").eq("signal_type", "rising").order("percentile_rank", { ascending: false }).order("net_votes", { ascending: false }).limit(4),
-        supabase.from("public_app_intelligence").select("*").eq("signal_type", "new_interesting").order("percentile_rank", { ascending: false }).order("net_votes", { ascending: false }).limit(4),
+        supabase.from("public_discoverable_app_intelligence").select("*").eq("signal_type", "rising").order("percentile_rank", { ascending: false }).order("net_votes", { ascending: false }).limit(4),
+        supabase.from("public_discoverable_app_intelligence").select("*").eq("signal_type", "new_interesting").order("percentile_rank", { ascending: false }).order("net_votes", { ascending: false }).limit(4),
         supabase.from("public_app_categories").select("category,app_count").order("app_count", { ascending: false }).limit(6),
       ]);
       const risingSignals = risingResult.data || [];
       const newSignals = newResult.data || [];
       const ids = [...new Set([...risingSignals, ...newSignals].map((signal) => signal.app_id))];
-      const appResult = ids.length ? await supabase.from("public_apps").select("*").in("id", ids) : { data: [] as App[] };
+      const appResult = ids.length ? await supabase.from("public_discoverable_apps").select("*").in("id", ids) : { data: [] as App[] };
       if (!active) return;
       const apps = new Map((appResult.data || []).map((app) => [app.id, app]));
       const mapRows = (signals: Signal[]) => signals.flatMap((signal) => {
@@ -57,7 +57,7 @@ export default function DiscoveryPreview() {
   if (failed) return <div role="status" className="mt-12 rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-600">Apps could not be loaded right now. <Link to="/discover" className="font-semibold text-sky-800 hover:underline">Open Discover</Link></div>;
   return <>
     {section("Rising", rising, "rising")}
-    {section("New & interesting", fresh, "new")}
+    {section("New with Launch activity", fresh, "new")}
     {categories.length > 0 && <section className="mt-12"><div className="mb-5 flex items-end justify-between"><h2 className="font-display text-2xl text-neutral-950 sm:text-3xl">Explore categories</h2><Link to="/discover?view=categories" className="text-sm font-semibold text-sky-700 hover:underline">All categories</Link></div><div className="flex flex-wrap gap-2">{categories.map((item) => <Link key={item.category} to={`/discover?view=all&category=${encodeURIComponent(item.category)}`} className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-700 transition hover:border-sky-300 hover:text-sky-700">{item.category}</Link>)}</div></section>}
   </>;
 }
