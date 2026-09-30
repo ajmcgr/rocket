@@ -35,53 +35,56 @@ export default function Home() {
   return (
     <div className="marketplace-page min-h-screen bg-[#f7f9fc] pb-16 text-neutral-900 lg:pb-0">
       <SiteHeader />
-      <main className="mx-auto max-w-7xl px-5 pb-20 sm:px-8">
-        <section className="mx-auto max-w-5xl pb-7 pt-14 text-center sm:pt-20 lg:pt-24">
-          <p className="text-sm font-semibold tracking-[0.15em] text-sky-800">
-            THE INDEPENDENT WEB, WELL CURATED
-          </p>
-          <h1 className="mt-5 font-display text-[clamp(2.8rem,7vw,5.8rem)] leading-[1.04] tracking-[-0.035em] text-neutral-950">
-            Discover independent apps worth using.
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
-            Find rising apps and new software from independent developers.
-          </p>
-          <form
-            onSubmit={search}
-            role="search"
-            className="mx-auto mt-8 flex w-full max-w-2xl gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-[0_16px_50px_-26px_rgba(15,23,42,0.35)] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200"
-          >
-            <Search
-              className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400"
-              aria-hidden="true"
-            />
-            <input
-              aria-label="Search apps"
-              placeholder="Search apps..."
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="min-w-0 flex-1 bg-transparent px-1 text-base outline-hidden"
-            />
-            <button className="min-h-11 rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500">
-              Search
-            </button>
-          </form>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-sm font-semibold">
-            <Link
-              to="/discover"
-              className="inline-flex min-h-11 items-center gap-1 text-sky-800 hover:underline"
-            >
-              Explore apps <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/launch"
-              className="inline-flex min-h-11 items-center text-neutral-700 hover:underline"
-            >
-              Launch your app
-            </Link>
-          </div>
-        </section>
-        <DiscoveryPreview />
+      <main className="mx-auto max-w-[90rem] px-5 pb-20 sm:px-8">
+        <DiscoveryPreview
+          intro={
+            <section className="flex min-w-0 flex-col justify-center py-6 lg:py-10">
+              <p className="text-xs font-bold uppercase tracking-[.17em] text-[#075985]">
+                Discover independent apps
+              </p>
+              <h1 className="mt-4 max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
+                Discover independent apps worth using.
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
+                Find rising apps and new software from independent developers.
+              </p>
+              <form
+                onSubmit={search}
+                role="search"
+                className="mt-7 flex w-full max-w-xl gap-2 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-[0_14px_40px_-30px_rgba(15,23,42,.4)] focus-within:border-[#469DDA] focus-within:ring-2 focus-within:ring-[#469DDA]/20"
+              >
+                <Search
+                  className="my-auto ml-3 h-5 w-5 shrink-0 text-neutral-400"
+                  aria-hidden="true"
+                />
+                <input
+                  aria-label="Search apps"
+                  placeholder="Search apps..."
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none sm:text-base"
+                />
+                <button className="min-h-11 rounded-lg bg-neutral-950 px-4 text-sm font-semibold text-white hover:bg-neutral-800">
+                  Search
+                </button>
+              </form>
+              <div className="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+                <Link
+                  to="/discover"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#469DDA] px-5 text-[#092237] hover:bg-[#80c3ec]"
+                >
+                  Explore apps <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/launch"
+                  className="inline-flex min-h-11 items-center rounded-xl border border-neutral-200 bg-white px-5 text-neutral-800 hover:bg-neutral-50"
+                >
+                  Launch your app
+                </Link>
+              </div>
+            </section>
+          }
+        />
         <section
           className="mt-20 border-t border-neutral-200 pt-16 sm:mt-24 sm:pt-20"
           aria-labelledby="platform-heading"

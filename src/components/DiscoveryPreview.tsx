@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
+import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import {
   EditorialAppCard,
   RankedAppRow,
@@ -14,7 +14,7 @@ type Signal = Tables<"public_app_intelligence">;
 type Category = Tables<"public_app_categories">;
 type Preview = { app: App; signal: Signal };
 
-export default function DiscoveryPreview() {
+export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [rising, setRising] = useState<Preview[]>([]);
   const [fresh, setFresh] = useState<Preview[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -83,18 +83,16 @@ export default function DiscoveryPreview() {
   }, []);
   if (loading)
     return (
-      <div
-        className="mt-12 grid gap-4 md:grid-cols-2"
-        role="status"
-        aria-label="Finding apps worth exploring"
-      >
-        {[0, 1].map((n) => (
+      <>
+        <div className="grid items-stretch gap-6 pt-8 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:pt-12">
+          {intro}
           <div
-            key={n}
-            className="h-80 animate-pulse rounded-[1.75rem] bg-neutral-200"
+            role="status"
+            aria-label="Finding apps worth exploring"
+            className="min-h-[22rem] animate-pulse rounded-[1.75rem] bg-neutral-200"
           />
-        ))}
-      </div>
+        </div>
+      </>
     );
   if (failed)
     return (
@@ -113,8 +111,64 @@ export default function DiscoveryPreview() {
     );
   return (
     <>
+      {(() => {
+        const visual = [...rising, ...fresh].find(({ app }) =>
+          coverMedia(media.get(app.id)),
+        );
+        if (!intro) return null;
+        return (
+          <div className="grid items-stretch gap-6 pt-8 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:pt-12">
+            {intro}
+            {visual ? (
+              <EditorialAppCard
+                app={visual.app}
+                media={media.get(visual.app.id)}
+                eyebrow={
+                  rising.some(({ app }) => app.id === visual.app.id)
+                    ? "Rising on Launch"
+                    : "New with Launch activity"
+                }
+              />
+            ) : categories.length > 0 ? (
+              <section
+                className="flex flex-col rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_24px_70px_-55px_rgba(15,23,42,.5)] sm:p-8"
+                aria-labelledby="browse-interests"
+              >
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#075985]">
+                  Explore the catalogue
+                </p>
+                <h2
+                  id="browse-interests"
+                  className="mt-3 text-3xl font-bold tracking-tight text-neutral-950"
+                >
+                  Find your next useful app.
+                </h2>
+                <p className="mt-2 text-sm text-neutral-600">
+                  Browse real apps by what you want to do.
+                </p>
+                <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                  {categories.slice(0, 6).map((item) => (
+                    <Link
+                      key={item.category}
+                      to={`/discover?view=all&category=${encodeURIComponent(item.category)}`}
+                      className="flex min-h-20 flex-col justify-center rounded-xl border border-neutral-200 bg-[#f7f9fb] px-4 transition hover:border-[#469DDA] hover:bg-[#eaf5fc]"
+                    >
+                      <span className="font-semibold text-neutral-900">
+                        {item.category}
+                      </span>
+                      <span className="mt-1 text-xs text-neutral-500">
+                        {item.app_count.toLocaleString()} apps
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        );
+      })()}
       {rising.length > 0 && (
-        <section className="mt-12 sm:mt-16" aria-labelledby="rising-heading">
+        <section className="mt-10 sm:mt-14" aria-labelledby="rising-heading">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[.16em] text-sky-800">
@@ -122,7 +176,7 @@ export default function DiscoveryPreview() {
               </p>
               <h2
                 id="rising-heading"
-                className="mt-2 font-display text-3xl text-neutral-950 sm:text-4xl"
+                className="mt-2 text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl"
               >
                 Rising right now
               </h2>
@@ -138,22 +192,15 @@ export default function DiscoveryPreview() {
               See all Rising
             </Link>
           </div>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
-            <EditorialAppCard
-              app={rising[0].app}
-              media={media.get(rising[0].app.id)}
-              eyebrow="Rising on Launch"
-            />
-            <div className="grid gap-3">
-              {rising.slice(1).map(({ app }, index) => (
-                <RankedAppRow
-                  key={app.id}
-                  app={app}
-                  rank={index + 2}
-                  eyebrow="Rising"
-                />
-              ))}
-            </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {rising.map(({ app }, index) => (
+              <RankedAppRow
+                key={app.id}
+                app={app}
+                rank={index + 1}
+                eyebrow="Launch activity"
+              />
+            ))}
           </div>
         </section>
       )}
@@ -166,7 +213,7 @@ export default function DiscoveryPreview() {
               </p>
               <h2
                 id="new-heading"
-                className="mt-2 font-display text-3xl text-neutral-950 sm:text-4xl"
+                className="mt-2 text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl"
               >
                 New with Launch activity
               </h2>
@@ -194,7 +241,7 @@ export default function DiscoveryPreview() {
           <div className="mb-6 flex items-end justify-between">
             <h2
               id="categories-heading"
-              className="font-display text-3xl text-neutral-950"
+              className="text-3xl font-bold tracking-tight text-neutral-950"
             >
               Find your corner of the web
             </h2>
@@ -213,7 +260,7 @@ export default function DiscoveryPreview() {
                 className={`group flex min-h-28 items-end justify-between rounded-2xl border border-neutral-200 p-5 transition hover:-translate-y-0.5 hover:border-sky-300 ${["bg-[#dcecf7]", "bg-[#eeeaf7]", "bg-[#e7efe8]", "bg-[#f3ebdf]"][index % 4]}`}
               >
                 <span>
-                  <strong className="block font-display text-xl text-neutral-950">
+                  <strong className="block text-xl font-semibold tracking-tight text-neutral-950">
                     {item.category}
                   </strong>
                   <span className="text-xs text-neutral-600">

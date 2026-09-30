@@ -237,7 +237,7 @@ export default function PublicAppProfile() {
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
       <SiteHeader />
-      <main className="mx-auto max-w-5xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14">
+      <main className="mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-8 sm:pt-10">
         <Link
           to="/discover"
           className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-sky-700"
@@ -273,7 +273,7 @@ export default function PublicAppProfile() {
         )}
         {app && !loading && !error && (
           <>
-            <div className="mt-8 overflow-hidden rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_24px_70px_-55px_rgba(15,23,42,.5)] sm:p-9">
+            <div className="mt-7 overflow-hidden rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_24px_70px_-55px_rgba(15,23,42,.5)] sm:p-9">
               <div className="flex items-start gap-4 sm:gap-6">
                 <AppLogo
                   name={app.name}
@@ -285,7 +285,7 @@ export default function PublicAppProfile() {
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-sky-800">
                     {app.categories[0] || "Independent app"}
                   </p>
-                  <h1 className="font-display text-3xl leading-tight sm:text-5xl">
+                  <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
                     {app.name}
                   </h1>
                   <p className="mt-2 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
@@ -312,7 +312,7 @@ export default function PublicAppProfile() {
                   onClick={() =>
                     track("outbound_app_clicked", { app_id: app.id })
                   }
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-700 px-5 py-3 text-sm font-medium text-white hover:bg-sky-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#469DDA] px-5 py-3 text-sm font-semibold text-[#092237] hover:bg-[#80c3ec] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
                 >
                   Visit website <ExternalLink className="h-4 w-4" />
                 </a>
@@ -352,6 +352,25 @@ export default function PublicAppProfile() {
                   Public Launch activity is not verified traffic, revenue, or a
                   Rocket recommendation.
                 </p>
+              </section>
+            )}
+            <AppReviews appId={app.id} onSummary={setReviewSummary} />
+            {similar.length > 0 && (
+              <section className="mt-10" aria-labelledby="similar-apps">
+                <h2
+                  id="similar-apps"
+                  className="mb-2 text-3xl font-bold tracking-tight"
+                >
+                  Similar apps
+                </h2>
+                <p className="mb-5 text-sm text-neutral-600">
+                  Related by category, tags and platform—not a paid placement.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {similar.map((item) => (
+                    <StandardAppCard key={item.id} app={item} />
+                  ))}
+                </div>
               </section>
             )}
             {trustLabels(trust).length > 0 && (
@@ -509,22 +528,6 @@ export default function PublicAppProfile() {
                         {new Date(point.observed_at).toLocaleString()}
                       </p>
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-            <AppReviews appId={app.id} onSummary={setReviewSummary} />
-            {similar.length > 0 && (
-              <section className="mt-10" aria-labelledby="similar-apps">
-                <h2 id="similar-apps" className="mb-5 font-display text-3xl">
-                  Similar apps
-                </h2>
-                <p className="mb-5 text-sm text-neutral-600">
-                  Related by category, tags and platform—not a paid placement.
-                </p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {similar.map((item) => (
-                    <StandardAppCard key={item.id} app={item} />
                   ))}
                 </div>
               </section>

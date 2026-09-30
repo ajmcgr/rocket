@@ -257,11 +257,11 @@ export default function Discover() {
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
       <SiteHeader />
-      <main className="mx-auto max-w-7xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
+      <main className="mx-auto max-w-[90rem] px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#075985]">
           Rocket Discover
         </p>
-        <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
+        <h1 className="mt-3 text-4xl font-bold tracking-[-.045em] sm:text-5xl">
           Discover independent apps worth using.
         </h1>
         <p className="mt-3 max-w-2xl text-neutral-600">
@@ -285,6 +285,7 @@ export default function Discover() {
             aria-hidden="true"
           />
           <input
+            id="search-apps"
             aria-label="Search apps"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -482,7 +483,7 @@ export default function Discover() {
           !loading &&
           !error &&
           (view === "rising" ? (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {apps.map((app, index) => (
                 <RankedAppRow
                   key={app.id}

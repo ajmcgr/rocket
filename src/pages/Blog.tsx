@@ -29,9 +29,9 @@ const Blog = () => {
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   useDocumentMeta({
-    title: "Rocket Blog — Branding playbooks for founders",
+    title: "Rocket Blog — Ideas for independent app builders",
     description:
-      "Guides, teardowns, and playbooks on logos, icons, brand kits, typography, and colour — written for founders building brands people remember.",
+      "Practical ideas on launching, growing, monetizing, and branding independent software.",
     canonical: `${SITE_URL}/blog`,
   });
 
@@ -41,7 +41,10 @@ const Blog = () => {
   useEnsureBlogImages(posts);
 
   const filtered = useMemo(() => {
-    const scoped = category === "All" ? posts : posts.filter((post) => post.category === category);
+    const scoped =
+      category === "All"
+        ? posts
+        : posts.filter((post) => post.category === category);
     return searchPosts(query, scoped);
   }, [query, category]);
 
@@ -61,7 +64,8 @@ const Blog = () => {
             "@type": "Blog",
             name: "Rocket Blog",
             url: `${SITE_URL}/blog`,
-            description: "Branding playbooks for founders.",
+            description:
+              "Ideas on launching, growing, monetizing, and branding independent software.",
             blogPost: posts.slice(0, 20).map((post) => ({
               "@type": "BlogPosting",
               headline: post.title,
@@ -74,17 +78,27 @@ const Blog = () => {
 
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-14 sm:pt-20">
         <header className="max-w-3xl">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">The Rocket Blog</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+            The Rocket Blog
+          </div>
           <h1
             className="mt-5 text-4xl font-medium leading-[1.05] tracking-tight text-neutral-900 sm:text-6xl"
             style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
           >
-            The branding resource for founders.
+            Ideas for independent app builders.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-neutral-600">
-            Practical guides on logos, icons, brand kits, typography, and colour — plus the launch playbooks
-            we use ourselves. New article every day.
+            Practical thinking on launching, growing, monetizing, and branding
+            software you build yourself.
           </p>
+          <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">
+            <Link to="/discover" className="text-[#075985] hover:underline">
+              Explore apps →
+            </Link>
+            <Link to="/launch" className="text-[#075985] hover:underline">
+              Launch your app →
+            </Link>
+          </div>
         </header>
 
         {/* Search + categories */}
@@ -141,7 +155,10 @@ const Blog = () => {
         {/* Featured hero */}
         {!searching && category === "All" && featured && (
           <section className="mt-14 border-t border-neutral-200 pt-12">
-            <Link to={`/blog/${featured.slug}`} className="group grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
+            <Link
+              to={`/blog/${featured.slug}`}
+              className="group grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center"
+            >
               <ArticleCover
                 post={featured}
                 size="lg"
@@ -163,7 +180,9 @@ const Blog = () => {
                 >
                   {featured.title}
                 </h2>
-                <p className="mt-5 max-w-xl text-base leading-relaxed text-neutral-600">{featured.excerpt}</p>
+                <p className="mt-5 max-w-xl text-base leading-relaxed text-neutral-600">
+                  {featured.excerpt}
+                </p>
                 <span className="mt-7 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-brand-hover">
                   Read article <ArrowRight className="h-4 w-4" />
                 </span>
@@ -176,16 +195,24 @@ const Blog = () => {
         <section className="mt-16 border-t border-neutral-200 pt-12">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
-              {searching ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}` : category === "All" ? "Latest articles" : category}
+              {searching
+                ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}`
+                : category === "All"
+                  ? "Latest articles"
+                  : category}
             </h2>
-            <Link to="/resources" className="text-sm font-medium text-brand hover:underline">
+            <Link
+              to="/resources"
+              className="text-sm font-medium text-brand hover:underline"
+            >
               Browse guides →
             </Link>
           </div>
 
           {shown.length === 0 ? (
             <p className="mt-10 text-sm text-neutral-500">
-              No articles matched “{query}”. Try a broader term like “logo”, “typography”, or “launch”.
+              No articles matched “{query}”. Try a broader term like “logo”,
+              “typography”, or “launch”.
             </p>
           ) : (
             <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
@@ -197,7 +224,11 @@ const Blog = () => {
 
           {grid.length > shown.length && (
             <div className="mt-14 text-center">
-              <Button variant="outline" size="lg" onClick={() => setVisible((value) => value + PAGE_SIZE)}>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setVisible((value) => value + PAGE_SIZE)}
+              >
                 Load more articles
               </Button>
             </div>
@@ -206,7 +237,9 @@ const Blog = () => {
 
         {/* Pillar guides */}
         <section className="mt-20 border-t border-neutral-200 pt-12">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Start here</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+            Start here
+          </h2>
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PILLARS.map((pillar) => (
               <Link
@@ -214,14 +247,18 @@ const Blog = () => {
                 to={`/resources/${pillar.slug}`}
                 className="group rounded-2xl border border-neutral-200 p-6 transition hover:border-neutral-900"
               >
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">{pillar.kicker}</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                  {pillar.kicker}
+                </div>
                 <div
                   className="mt-3 text-xl font-medium tracking-tight text-neutral-900"
                   style={{ fontFamily: "Reckless, ui-serif, Georgia, serif" }}
                 >
                   {pillar.title}
                 </div>
-                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-neutral-600">{pillar.summary}</p>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-neutral-600">
+                  {pillar.summary}
+                </p>
               </Link>
             ))}
           </div>

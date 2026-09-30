@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MobilePrimaryNav, PrimaryNav, PublicMobileNav } from "./PrimaryNav";
 
 describe("platform primary navigation", () => {
-  it("presents exactly five destinations on desktop and mobile", async () => {
+  it("keeps desktop destinations and exposes search/account on mobile", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -19,17 +19,20 @@ describe("platform primary navigation", () => {
           </MemoryRouter>,
         );
       });
-      const expected = ["Discover", "Saved", "Your Apps", "Launch", "Create"];
-      for (const nav of container.querySelectorAll("nav")) {
+      const expected = [
+        ["Discover", "Saved", "Your Apps", "Launch", "Create"],
+        ["Discover", "Search", "Saved", "Launch", "Your Apps", "Account"],
+      ];
+      [...container.querySelectorAll("nav")].forEach((nav, index) => {
         expect(
           [...nav.querySelectorAll("a")].map((link) =>
             link.textContent?.trim(),
           ),
-        ).toEqual(expected);
+        ).toEqual(expected[index]);
         expect(
           nav.querySelector('a[href="/launch"]')?.getAttribute("aria-current"),
         ).toBe("page");
-      }
+      });
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -37,7 +40,7 @@ describe("platform primary navigation", () => {
     }
   });
 
-  it("keeps public mobile discovery and launch visible without signed-in destinations", async () => {
+  it("keeps public mobile discovery and launch visible with auth return destinations", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -54,7 +57,14 @@ describe("platform primary navigation", () => {
         [...container.querySelectorAll("nav a")].map((link) =>
           link.textContent?.trim(),
         ),
-      ).toEqual(["Discover", "Saved", "Launch", "Sign in"]);
+      ).toEqual([
+        "Discover",
+        "Search",
+        "Saved",
+        "Launch",
+        "Your Apps",
+        "Account",
+      ]);
       expect(
         container
           .querySelector('a[href="/discover"]')
