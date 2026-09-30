@@ -12,6 +12,26 @@ export type MarketplaceComparison = {
 // Narrow descriptions sourced from each platform's own documentation.
 export const marketplaceComparisons: MarketplaceComparison[] = [
   {
+    slug: "app-store",
+    name: "App Store",
+    focus: "Apps for Apple devices",
+    summary: "Apple's App Store helps people discover and download apps and games for Apple devices, with editorial collections, ratings, and reviews.",
+    chooseThem: "You want to find and download an app for an Apple device, with the App Store's native installation and purchase experience.",
+    chooseRocket: "You want to explore independent web apps across the open web, including apps that do not require an App Store download.",
+    sourceUrl: "https://www.apple.com/app-store/",
+    sourceLabel: "Apple: App Store",
+  },
+  {
+    slug: "google-play",
+    name: "Google Play",
+    focus: "Apps for Android devices",
+    summary: "Google Play helps people discover and install Android apps and games, with categories, ratings, and reviews.",
+    chooseThem: "You want to find and install an Android app through Google Play.",
+    chooseRocket: "You want to browse and save independent web apps, including software accessed directly through a website.",
+    sourceUrl: "https://play.google.com/store/apps/category/APPLICATION",
+    sourceLabel: "Google Play: Apps",
+  },
+  {
     slug: "product-hunt",
     name: "Product Hunt",
     focus: "Daily community launches",

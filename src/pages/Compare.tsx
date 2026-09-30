@@ -8,7 +8,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 export default function Compare() {
   useDocumentMeta({
     title: "Compare Rocket with other software marketplaces",
-    description: "How Rocket's independent-app discovery differs from Product Hunt, Whop, Gumroad, and G2.",
+    description: "How Rocket's independent web-app discovery differs from the App Store, Google Play, Product Hunt, Whop, Gumroad, and G2.",
     canonical: "https://tryrocket.ai/compare",
   });
 
