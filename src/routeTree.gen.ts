@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AiInfoRouteImport } from './routes/ai-info'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
+import { Route as ClaimInvitationRouteImport } from './routes/claim-invitation'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -61,6 +62,7 @@ import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as ConnectAuthorizeRouteImport } from './routes/connect.authorize'
 import { Route as CreateBrandingRouteImport } from './routes/create_.branding'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as OutreachUnsubscribeRouteImport } from './routes/outreach.unsubscribe'
 import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
@@ -137,6 +139,11 @@ const AiInfoRoute = AiInfoRouteImport.update({
 const BrandKitRoute = BrandKitRouteImport.update({
   id: '/brand-kit',
   path: '/brand-kit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimInvitationRoute = ClaimInvitationRouteImport.update({
+  id: '/claim-invitation',
+  path: '/claim-invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -372,6 +379,11 @@ const CreateBrandingRoute = CreateBrandingRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutreachUnsubscribeRoute = OutreachUnsubscribeRouteImport.update({
+  id: '/outreach/unsubscribe',
+  path: '/outreach/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
@@ -647,6 +659,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
@@ -691,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
   '/blog/': typeof BlogIndexRoute
@@ -753,6 +767,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
@@ -796,6 +811,7 @@ export interface FileRoutesByTo {
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
   '/blog': typeof BlogIndexRoute
@@ -859,6 +875,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
@@ -903,6 +920,7 @@ export interface FileRoutesById {
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create_/branding': typeof CreateBrandingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
   '/blog/': typeof BlogIndexRoute
@@ -967,6 +985,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/claim-invitation'
     | '/contact'
     | '/discover'
     | '/faq'
@@ -1011,6 +1030,7 @@ export interface FileRouteTypes {
     | '/connect/authorize'
     | '/create/branding'
     | '/invite/$token'
+    | '/outreach/unsubscribe'
     | '/resources/$slug'
     | '/tools/$slug'
     | '/blog/'
@@ -1073,6 +1093,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/claim-invitation'
     | '/contact'
     | '/discover'
     | '/faq'
@@ -1116,6 +1137,7 @@ export interface FileRouteTypes {
     | '/connect/authorize'
     | '/create/branding'
     | '/invite/$token'
+    | '/outreach/unsubscribe'
     | '/resources/$slug'
     | '/tools/$slug'
     | '/blog'
@@ -1178,6 +1200,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/claim-invitation'
     | '/contact'
     | '/discover'
     | '/faq'
@@ -1222,6 +1245,7 @@ export interface FileRouteTypes {
     | '/connect/authorize'
     | '/create_/branding'
     | '/invite/$token'
+    | '/outreach/unsubscribe'
     | '/resources/$slug'
     | '/tools/$slug'
     | '/blog/'
@@ -1286,6 +1310,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AiInfoRoute: typeof AiInfoRoute
   BrandKitRoute: typeof BrandKitRoute
+  ClaimInvitationRoute: typeof ClaimInvitationRoute
   ContactRoute: typeof ContactRoute
   DiscoverRoute: typeof DiscoverRoute
   FaqRoute: typeof FaqRoute
@@ -1312,6 +1337,7 @@ export interface RootRouteChildren {
   ConnectAuthorizeRoute: typeof ConnectAuthorizeRoute
   CreateBrandingRoute: typeof CreateBrandingRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  OutreachUnsubscribeRoute: typeof OutreachUnsubscribeRoute
   ResourcesSlugRoute: typeof ResourcesSlugRoute
   ToolsSlugRoute: typeof ToolsSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
@@ -1359,6 +1385,13 @@ declare module '@tanstack/react-router' {
       path: '/brand-kit'
       fullPath: '/brand-kit'
       preLoaderRoute: typeof BrandKitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claim-invitation': {
+      id: '/claim-invitation'
+      path: '/claim-invitation'
+      fullPath: '/claim-invitation'
+      preLoaderRoute: typeof ClaimInvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1688,6 +1721,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outreach/unsubscribe': {
+      id: '/outreach/unsubscribe'
+      path: '/outreach/unsubscribe'
+      fullPath: '/outreach/unsubscribe'
+      preLoaderRoute: typeof OutreachUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resources/': {
@@ -2236,6 +2276,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AiInfoRoute: AiInfoRoute,
   BrandKitRoute: BrandKitRoute,
+  ClaimInvitationRoute: ClaimInvitationRoute,
   ContactRoute: ContactRoute,
   DiscoverRoute: DiscoverRoute,
   FaqRoute: FaqRoute,
@@ -2262,6 +2303,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectAuthorizeRoute: ConnectAuthorizeRoute,
   CreateBrandingRoute: CreateBrandingRoute,
   InviteTokenRoute: InviteTokenRoute,
+  OutreachUnsubscribeRoute: OutreachUnsubscribeRoute,
   ResourcesSlugRoute: ResourcesSlugRoute,
   ToolsSlugRoute: ToolsSlugRoute,
   BlogIndexRoute: BlogIndexRoute,

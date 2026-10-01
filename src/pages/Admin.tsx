@@ -15,6 +15,7 @@ const adminRpc = supabase.rpc as unknown as (name: string, args: Record<string, 
 const rows = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
 const obj = (value: unknown): Row => value && typeof value === "object" && !Array.isArray(value) ? value as Row : {};
 const label = (name: string) => name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
 const count = (value: unknown) => typeof value === "number" ? value.toLocaleString() : "Not tracked";
 const when = (value: unknown) => typeof value === "string" ? new Date(value).toLocaleString() : "—";
 const appUrl = (row: Row) => `/apps/${encodeURIComponent(String(row.slug || row.id))}`;
@@ -37,13 +38,19 @@ export default function Admin() {
   const section = (sections.some((item) => item.id === params.section) ? params.section : "home") as Section;
   const [period, setPeriod] = useState<Period>("30d");
   const [data, setData] = useState<Row | null>(null);
+  const [today, setToday] = useState<Row[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const refresh = useCallback(async () => {
-    setError(""); setData(null);
-    const result = await adminRpc("rocket_admin_snapshot", { p_section: section, p_period: period });
+    setError(""); setData(null); setToday([]);
+    const [result, batch] = await Promise.all([
+      adminRpc("rocket_admin_snapshot", { p_section: section, p_period: period }),
+      section === "outreach" ? adminRpc("rocket_admin_outreach_today", {}) : Promise.resolve(null),
+    ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
+    if (batch?.error) { setError(batch.error.message); return; }
+    setToday(rows(batch?.data));
     setData(obj(result.data));
   }, [section, period]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
@@ -68,7 +75,14 @@ export default function Admin() {
     const blocks = issueApps.map((app) => `${app.name}\n${app.headline || "Explore its Rocket profile."}\nWhy Rocket noticed it: selected as a Rocket Pick by our editor.\nhttps://tryrocket.ai${appUrl(app)}`);
     return `${intro}\n\n${blocks.join("\n\n")}\n\nFind more apps at https://tryrocket.ai/discover\n\nAlex\nRocket`;
   }, [issueApps]);
+  const issueHtml = useMemo(() => `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#20252b;line-height:1.6"><h1>This week on Rocket</h1><p>${issueApps.length} independently built ${issueApps.length === 1 ? "app" : "apps"} selected from Rocket’s catalogue. A listing is not a blanket endorsement.</p>${issueApps.map((app) => `<section style="border-top:1px solid #ddd;padding:20px 0"><h2>${escapeHtml(app.name)}</h2><p>${escapeHtml(app.headline || "Explore its Rocket profile.")}</p><p>Why Rocket noticed it: selected as a Rocket Pick by our editor.</p><p><a href="https://tryrocket.ai${appUrl(app)}">View on Rocket</a></p></section>`).join("")}<p><a href="https://tryrocket.ai/discover">Discover more apps</a></p><p>Alex<br>Rocket</p></div>`, [issueApps]);
   const copy = async (text: string) => { await navigator.clipboard.writeText(text); };
+  const copyNewsletter = async () => {
+    try { await navigator.clipboard.write([new ClipboardItem({
+      "text/html": new Blob([issueHtml], { type: "text/html" }),
+      "text/plain": new Blob([issue], { type: "text/plain" }),
+    })]); } catch { await copy(issue); }
+  };
 
   return <main className="rocket-admin">
     <header className="rocket-admin-heading"><div><p className="rocket-admin-eyebrow">Rocket operating system</p><h1>{section === "home" ? "Admin overview" : label(section)}</h1><p>Production data, explicit decisions, and auditable changes.</p></div>
@@ -98,11 +112,12 @@ export default function Admin() {
       <p className="rocket-admin-note">Signals nominate candidates; only a deliberate Feature action creates a Rocket Pick. Private metrics are not used here.</p>
       <Panel title="Rocket Picks">{picks.length ? <div className="rocket-admin-list">{picks.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link> · {String(row.placement)}</strong><p>{String(row.headline || "No editorial headline")}</p><button disabled={busy} onClick={() => void act("unfeature", String(row.app_id))}>Unfeature</button></article>)}</div> : <Empty>No Rocket Picks yet.</Empty>}</Panel>
       <Panel title="Candidates from public Launch activity">{candidates.length ? <div className="rocket-admin-list">{candidates.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link></strong><p>{String(row.tagline || "No description")} · {Array.isArray(row.categories) ? row.categories.join(", ") : "Uncategorized"}</p><p>Signal: {String(row.signal_type || "New listing")} · public Launch votes: {count(row.net_votes)}</p><div className="rocket-admin-actions"><a href={String(row.website_url)} target="_blank" rel="noopener noreferrer">External app ↗</a><button disabled={busy || picks.some((pick) => pick.app_id === row.id)} onClick={() => { const headline = window.prompt("Optional factual headline for this Rocket Pick:") || ""; void act("feature", String(row.id), null, { placement: "standard", headline }); }}>Feature</button></div></article>)}</div> : <Empty />}</Panel>
-      <Panel title="This week on Rocket"><p className="rocket-admin-muted">Select existing Rocket Picks to assemble a draft. Nothing is sent to Beehiiv.</p>{picks.map((row) => <label className="rocket-admin-check" key={String(row.id)}><input type="checkbox" checked={selected.includes(String(row.app_id))} onChange={(event) => setSelected((prior) => event.target.checked ? [...prior, String(row.app_id)] : prior.filter((id) => id !== row.app_id))} />{String(row.name)}</label>)}{issue && <><div className="rocket-admin-actions"><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}`)}>Copy subject</button><button onClick={() => void copy(`${issueApps.length} apps selected by Rocket’s editor`) }>Copy preview</button><button onClick={() => void copy(issue)}>Copy newsletter</button><button onClick={() => void copy(issue)}>Copy plain text</button><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}. Explore ${issueApps.map((row) => `https://tryrocket.ai${appUrl(row)}`).join(" ")}`)}>Copy social post</button></div><pre className="rocket-admin-draft">{issue}</pre></>}</Panel>
+      <Panel title="This week on Rocket"><p className="rocket-admin-muted">Select existing Rocket Picks to assemble a draft. Nothing is sent to Beehiiv.</p>{picks.map((row) => <label className="rocket-admin-check" key={String(row.id)}><input type="checkbox" checked={selected.includes(String(row.app_id))} onChange={(event) => setSelected((prior) => event.target.checked ? [...prior, String(row.app_id)] : prior.filter((id) => id !== row.app_id))} />{String(row.name)}</label>)}{issue && <><div className="rocket-admin-actions"><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}`)}>Copy subject</button><button onClick={() => void copy(`${issueApps.length} apps selected by Rocket’s editor`) }>Copy preview</button><button onClick={() => void copyNewsletter()}>Copy newsletter</button><button onClick={() => void copy(issue)}>Copy plain text</button><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}. Explore ${issueApps.map((row) => `https://tryrocket.ai${appUrl(row)}`).join(" ")}`)}>Copy social post</button></div><pre className="rocket-admin-draft">{issue}</pre></>}</Panel>
     </>}
     {data && section === "outreach" && <>
       <p className="rocket-admin-note">Founder outreach is in test mode and paused. No real Launch founders can be emailed from this version.</p>
       <Panel title="Queue status"><StatGrid data={obj(data.counts)} /><p className="rocket-admin-muted">Daily target after separate activation: 25 eligible founders. Sending is not enabled.</p><button disabled={busy} onClick={() => void act("pause_outreach", null)}>Pause outreach</button></Panel>
+      <Panel title="Today’s Outreach"><p className="rocket-admin-muted">Read-only preview of the next 25 eligible, unsuppressed founders. The campaign remains paused.</p>{today.length ? <div className="rocket-admin-list">{today.map((row) => <article key={String(row.id)}><strong>{String(row.founder_first_name || "Founder")} · {String(row.app_name)}</strong><p>{String(row.recipient_email)} · Launch source {String(row.launch_product_id)} · {String(row.status)}</p><button disabled={busy} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No eligible founders in the next batch.</Empty>}</Panel>
       <Panel title="Founder queue">{rows(data.queue).length ? <div className="rocket-admin-list">{rows(data.queue).map((row) => <article key={String(row.id)}><strong>{String(row.recipient_email)} · {String(row.status)}</strong><p>App {String(row.app_id)} · {when(row.created_at)}</p><button disabled={busy || !["eligible","queued"].includes(String(row.status))} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No founder relationships imported yet. A private, read-only Launch founder credential and test claim flow are required before this queue is populated.</Empty>}</Panel>
     </>}
   </main>;

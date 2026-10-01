@@ -15,6 +15,12 @@ verify_jwt = false
 [functions.send-email]
 verify_jwt = true
 
+[functions.rocket-founder-outreach-test]
+verify_jwt = true
+
+[functions.rocket-founder-resend-webhook]
+verify_jwt = false # Resend signature verification is performed on the raw body.
+
 [functions.contact-request]
 verify_jwt = false
 
