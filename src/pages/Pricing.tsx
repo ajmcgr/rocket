@@ -395,17 +395,29 @@ const Pricing = () => {
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Grow pricing</h2>
             <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Launch, Post, and Media are separate products. Choose and pay on each product's own site.</p>
           </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="mt-10 flex flex-col gap-6">
             {GROW_PRODUCTS.map((product) => (
-              <div key={product.name} className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-                <h3 className="text-2xl font-semibold tracking-tight">{product.name}</h3>
-                <p className="mt-3 min-h-16 text-sm leading-relaxed text-neutral-600">{product.description}</p>
-                <ul className="mt-5 flex-1 space-y-2 border-t border-neutral-200 pt-5 text-sm text-neutral-700">
-                  {product.plans.map((plan) => <li key={plan}>{plan}</li>)}
-                </ul>
-                <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">
-                  View {product.name} pricing ↗
-                </a>
+              <div key={product.name} className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+                <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+                  <div className="flex flex-col items-start">
+                    <h3 className="text-2xl font-semibold tracking-tight">{product.name}</h3>
+                    <p className="mt-3 max-w-md text-sm leading-relaxed text-neutral-600">{product.description}</p>
+                    <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">
+                      View {product.name} pricing ↗
+                    </a>
+                  </div>
+                  <ul className="space-y-3" aria-label={`${product.name} plans`}>
+                    {product.plans.map((plan) => {
+                      const [name, price] = plan.split(" · ");
+                      return (
+                        <li key={plan} className="flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-5 py-4">
+                          <span className="font-semibold text-neutral-900">{name}</span>
+                          {price && <span className="text-sm text-neutral-600">{price}</span>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             ))}
           </div>

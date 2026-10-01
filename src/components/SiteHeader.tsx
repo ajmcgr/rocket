@@ -37,6 +37,23 @@ import ThemeToggle from "./ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
 
 type NavItem = { label: string; to: string; icon: LucideIcon; match?: string };
+export const isMarketplaceSidebarItemActive = (
+  label: string,
+  to: string,
+  pathname: string,
+  search: string,
+) => {
+  // Pricing is a multi-section overview, not the Buy with Rocket page.
+  if (label === "Buy with Rocket") return false;
+  return (
+    pathname + search === to ||
+    (to === "/discover" && pathname === "/discover" && !search) ||
+    (to === "/saved-apps" && pathname === "/saved-apps") ||
+    (to === "/submit" && pathname === "/submit") ||
+    (to === "/create" && pathname === "/create") ||
+    (to === "/developer" && pathname.startsWith("/developer"))
+  );
+};
 const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Discover",
@@ -103,14 +120,7 @@ export default function SiteHeader() {
   };
 
   const navItem = ({ label, to, icon: Icon }: NavItem) => {
-    const active =
-      (label !== "Buy with Rocket" && pathname + locationSearch === to) ||
-      (label === "Buy with Rocket" && pathname === "/pricing") ||
-      (to === "/discover" && pathname === "/discover" && !locationSearch) ||
-      (to === "/saved-apps" && pathname === "/saved-apps") ||
-      (to === "/submit" && pathname === "/submit") ||
-      (to === "/create" && pathname === "/create") ||
-      (to === "/developer" && pathname.startsWith("/developer"));
+    const active = isMarketplaceSidebarItemActive(label, to, pathname, locationSearch);
     return (
       <Link
         key={label}
