@@ -15,6 +15,15 @@ function validIcon(url: string | null) {
   try { const parsed = new URL(url); return parsed.protocol === "https:" && !parsed.username && !parsed.password; } catch { return false; }
 }
 function validReturnUri(uri: string | null) { return !!uri && validRedirectUri(uri); }
+function validProductionCallback(uri: string) {
+  if (!validRedirectUri(uri)) return false;
+  const url = new URL(uri);
+  const host = url.hostname.toLowerCase();
+  return url.protocol === "https:" && host.includes(".") && !/^\d+(?:\.\d+){3}$/.test(host) && !host.startsWith("[") &&
+    host !== "localhost" && host !== "127.0.0.1" && host !== "[::1]" &&
+    !host.endsWith(".local") && !host.endsWith(".internal") && !/^(?:10|127|192\.168|169\.254)\./.test(host) &&
+    !/^172\.(?:1[6-9]|2\d|3[01])\./.test(host);
+}
 function validCountry(value: unknown) { return typeof value === "string" && /^[A-Za-z]{2}$/.test(value); }
 function productKey(name: string) {
   const prefix = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "subscription";
@@ -117,7 +126,7 @@ Deno.serve(async (req) => {
       const name = string(body.name, 120);
       const redirectUri = string(body.redirect_uri, 2048);
       if (!appId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(appId) || !name || !redirectUri ||
-        !validRedirectUri(redirectUri) || new URL(redirectUri).protocol !== "https:") {
+        !validProductionCallback(redirectUri)) {
         return json({ error: "invalid_production_app_configuration" }, 400);
       }
       const { data: permitted, error: permissionError } = await ctx.admin.rpc("can_monetize_rocket_app", {
@@ -152,7 +161,7 @@ Deno.serve(async (req) => {
           client_id: publicClientId(), name, app_id: appId, environment: "production",
           created_by: ctx.user.id, redirect_uris: [redirectUri],
           checkout_return_uris: [new URL(redirectUri).origin],
-          allowed_scopes: ["openid", "profile", "email"],
+          allowed_scopes: ["openid", "profile", "email", "entitlements:read"],
           client_type: "public", is_active: true,
         })
         .select("client_id,name,redirect_uris,is_active,app_id").single();

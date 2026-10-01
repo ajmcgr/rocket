@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import SaveAppButton from "@/components/SaveAppButton";
-import AppPurchaseActions from "@/components/AppPurchaseActions";
+import AppProfileBuyAction from "@/components/AppProfileBuyAction";
 import {
   signalExplanation,
   signalLabel,
@@ -346,7 +346,7 @@ export default function PublicAppProfile() {
                   saved={saved}
                   onChange={setSaved}
                 />
-                <AppPurchaseActions appId={app.id} showView={false} />
+                <AppProfileBuyAction appId={app.id} appName={app.name} websiteUrl={app.website_url} />
                 <button
                   type="button"
                   onClick={shareApp}

@@ -41,6 +41,7 @@ import { Route as AppFilesRouteImport } from './routes/_app/files'
 import { Route as AppGenerateRouteImport } from './routes/_app/generate'
 import { Route as AppIconsRouteImport } from './routes/_app/icons'
 import { Route as AppInsightsRouteImport } from './routes/_app/insights'
+import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppLogosRouteImport } from './routes/_app/logos'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppPresentRouteImport } from './routes/_app/present'
@@ -274,6 +275,11 @@ const AppIconsRoute = AppIconsRouteImport.update({
 const AppInsightsRoute = AppInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLibraryRoute = AppLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLogosRoute = AppLogosRouteImport.update({
@@ -686,6 +692,7 @@ export interface FileRoutesByFullPath {
   '/generate': typeof AppGenerateRoute
   '/icons': typeof AppIconsRoute
   '/insights': typeof AppInsightsRoute
+  '/library': typeof AppLibraryRoute
   '/logos': typeof AppLogosRoute
   '/notifications': typeof AppNotificationsRoute
   '/present': typeof AppPresentRoute
@@ -794,6 +801,7 @@ export interface FileRoutesByTo {
   '/generate': typeof AppGenerateRoute
   '/icons': typeof AppIconsRoute
   '/insights': typeof AppInsightsRoute
+  '/library': typeof AppLibraryRoute
   '/logos': typeof AppLogosRoute
   '/notifications': typeof AppNotificationsRoute
   '/present': typeof AppPresentRoute
@@ -902,6 +910,7 @@ export interface FileRoutesById {
   '/_app/generate': typeof AppGenerateRoute
   '/_app/icons': typeof AppIconsRoute
   '/_app/insights': typeof AppInsightsRoute
+  '/_app/library': typeof AppLibraryRoute
   '/_app/logos': typeof AppLogosRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/present': typeof AppPresentRoute
@@ -1012,6 +1021,7 @@ export interface FileRouteTypes {
     | '/generate'
     | '/icons'
     | '/insights'
+    | '/library'
     | '/logos'
     | '/notifications'
     | '/present'
@@ -1120,6 +1130,7 @@ export interface FileRouteTypes {
     | '/generate'
     | '/icons'
     | '/insights'
+    | '/library'
     | '/logos'
     | '/notifications'
     | '/present'
@@ -1227,6 +1238,7 @@ export interface FileRouteTypes {
     | '/_app/generate'
     | '/_app/icons'
     | '/_app/insights'
+    | '/_app/library'
     | '/_app/logos'
     | '/_app/notifications'
     | '/_app/present'
@@ -1574,6 +1586,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights'
       preLoaderRoute: typeof AppInsightsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/library': {
+      id: '/_app/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AppLibraryRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/logos': {
@@ -2169,6 +2188,7 @@ interface AppRouteChildren {
   AppGenerateRoute: typeof AppGenerateRoute
   AppIconsRoute: typeof AppIconsRoute
   AppInsightsRoute: typeof AppInsightsRoute
+  AppLibraryRoute: typeof AppLibraryRoute
   AppLogosRoute: typeof AppLogosRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPresentRoute: typeof AppPresentRoute
@@ -2223,6 +2243,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGenerateRoute: AppGenerateRoute,
   AppIconsRoute: AppIconsRoute,
   AppInsightsRoute: AppInsightsRoute,
+  AppLibraryRoute: AppLibraryRoute,
   AppLogosRoute: AppLogosRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPresentRoute: AppPresentRoute,

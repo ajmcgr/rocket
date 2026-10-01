@@ -439,10 +439,10 @@ const Pricing = () => {
               <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into your app.</p></div>
               <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users buy access to your app.</p></div>
             </div>
-            <p className="mt-5 text-sm text-neutral-600">Production activation is subject to verified ownership and integration readiness. Buy with Rocket currently remains a test-mode pilot.</p>
+            <p className="mt-5 text-sm text-neutral-600">Production activation requires verified ownership, a ready Stripe merchant, and a tested identity and entitlement integration. Live buying remains closed until acceptance testing is complete.</p>
             <Link to="/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
           </div>
-          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. Eligible Buy with Rocket transactions may also carry a platform fee.</p>
+          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. Buy with Rocket carries a 10% Rocket platform fee on app purchases, plus separate Stripe processing fees.</p>
         </div>
       </section>
 

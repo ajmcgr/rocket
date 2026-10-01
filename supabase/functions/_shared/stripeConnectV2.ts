@@ -10,14 +10,16 @@ export class StripeConnectV2Error extends Error {
   }
 }
 
-function key() {
-  const value = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
-  return value?.startsWith("sk_test_") ? value : null;
+export type ConnectEnvironment = "test" | "production";
+
+function key(environment: ConnectEnvironment) {
+  const value = Deno.env.get(environment === "production" ? "STRIPE_SECRET_KEY" : "STRIPE_CONNECT_TEST_SECRET_KEY");
+  return value?.startsWith(environment === "production" ? "sk_live_" : "sk_test_") ? value : null;
 }
 
-async function request(path: string, init: RequestInit = {}, idempotencyKey?: string) {
-  const secret = key();
-  if (!secret) throw new StripeConnectV2Error(503, "connect_test_mode_not_configured", "Rocket Connect test mode is not configured", null);
+async function request(path: string, init: RequestInit = {}, idempotencyKey?: string, environment: ConnectEnvironment = "test") {
+  const secret = key(environment);
+  if (!secret) throw new StripeConnectV2Error(503, "connect_mode_not_configured", "Rocket Connect is not configured", null);
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${secret}`);
   headers.set("Stripe-Version", STRIPE_ACCOUNTS_V2_VERSION);
@@ -38,7 +40,8 @@ export type StripeConnectV2Account = {
 
 const accountInclude = "?include=configuration.merchant&include=defaults&include=requirements";
 
-export async function createStripeConnectV2Merchant(input: { email?: string; displayName: string; clientId: string; userId: string; country: string }) {
+export async function createStripeConnectV2Merchant(input: { email?: string; displayName: string; clientId: string; userId: string; country: string; environment?: ConnectEnvironment }) {
+  const environment = input.environment || "test";
   return await request("/v2/core/accounts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -54,14 +57,14 @@ export async function createStripeConnectV2Merchant(input: { email?: string; dis
       // Stripe's current v2 rules require the full hosted Dashboard with both
       // responsibilities assigned to Stripe; Express is not a valid pairing.
       dashboard: "full",
-      metadata: { rocket_client_id: input.clientId, rocket_developer_user_id: input.userId, rocket_environment: "test", rocket_accounts_api: "v2" },
+      metadata: { rocket_client_id: input.clientId, rocket_developer_user_id: input.userId, rocket_environment: environment, rocket_accounts_api: "v2" },
       include: ["configuration.merchant", "defaults", "requirements"],
     }),
-  }, `rocket-connect-v2-account-${input.clientId}-${input.userId}`) as StripeConnectV2Account;
+  }, `rocket-connect-v2-account-${environment}-${input.clientId}-${input.userId}`, environment) as StripeConnectV2Account;
 }
 
-export async function retrieveStripeConnectV2Merchant(accountId: string) {
-  return await request(`/v2/core/accounts/${encodeURIComponent(accountId)}${accountInclude}`) as StripeConnectV2Account;
+export async function retrieveStripeConnectV2Merchant(accountId: string, environment: ConnectEnvironment = "test") {
+  return await request(`/v2/core/accounts/${encodeURIComponent(accountId)}${accountInclude}`, {}, undefined, environment) as StripeConnectV2Account;
 }
 
 export function stripeConnectV2Ready(account: StripeConnectV2Account) {
@@ -71,9 +74,9 @@ export function stripeConnectV2Ready(account: StripeConnectV2Account) {
 
 // Account Links remain the Stripe-hosted onboarding mechanism. Their v1
 // endpoint accepts the connected account ID returned by Accounts v2.
-export async function createStripeHostedOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string) {
-  const secret = key();
-  if (!secret) throw new StripeConnectV2Error(503, "connect_test_mode_not_configured", "Rocket Connect test mode is not configured", null);
+export async function createStripeHostedOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string, environment: ConnectEnvironment = "test") {
+  const secret = key(environment);
+  if (!secret) throw new StripeConnectV2Error(503, "connect_mode_not_configured", "Rocket Connect is not configured", null);
   const form = new URLSearchParams({ account: accountId, refresh_url: refreshUrl, return_url: returnUrl, type: "account_onboarding" });
   const response = await fetch("https://api.stripe.com/v1/account_links", {
     method: "POST",

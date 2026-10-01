@@ -1,0 +1,149 @@
+import Stripe from "npm:stripe@16.12.0";
+import { APP_URL, base64url, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
+import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
+
+const liveKey = Deno.env.get("STRIPE_SECRET_KEY");
+const stripe = liveKey?.startsWith("sk_live_") ? new Stripe(liveKey, { apiVersion: "2024-06-20" }) : null;
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const shortText = (value: unknown, max: number) => typeof value === "string" && value.trim().length > 0 && value.trim().length <= max ? value.trim() : null;
+const productKey = (name: string) => `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "access"}-${base64url(crypto.getRandomValues(new Uint8Array(5))).toLowerCase()}`;
+
+async function context(req: Request, appId: string) {
+  const user = await getRocketUser(req);
+  if (!user) return { error: json({ error: "unauthorized" }, 401) };
+  const admin = getAdmin();
+  const { data: permitted, error } = await admin.rpc("can_monetize_rocket_app", { p_user_id: user.id, p_app_id: appId });
+  if (error) throw error;
+  if (!permitted) return { error: json({ error: "rocket_developer_and_verified_ownership_required" }, 403) };
+  const { data: client, error: clientError } = await admin.from("rocket_oauth_clients")
+    .select("client_id,app_id,name,redirect_uris,allowed_scopes,is_active")
+    .eq("app_id", appId).eq("created_by", user.id).eq("environment", "production").maybeSingle();
+  if (clientError) throw clientError;
+  if (!client || !client.is_active || !client.allowed_scopes.includes("entitlements:read")) {
+    return { error: json({ error: "production_rocket_id_required" }, 409) };
+  }
+  return { user, admin, client };
+}
+
+async function currentAccount(admin: ReturnType<typeof getAdmin>, clientId: string, userId: string) {
+  const { data, error } = await admin.from("connect_developer_accounts")
+    .select("id,client_id,developer_user_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version")
+    .eq("client_id", clientId).eq("developer_user_id", userId).eq("is_current", true).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  if (data.stripe_api_version !== "v2") return { ...data, ready: false };
+  const remote = await retrieveStripeConnectV2Merchant(data.stripe_account_id, "production");
+  const ready = stripeConnectV2Ready(remote);
+  if (data.charges_enabled !== ready || data.payouts_enabled !== ready || data.status !== (ready ? "active" : "pending")) {
+    const { error: updateError } = await admin.from("connect_developer_accounts")
+      .update({ status: ready ? "active" : "pending", charges_enabled: ready, payouts_enabled: ready, updated_at: new Date().toISOString(), account_configuration: { dashboard: remote.dashboard || null, defaults: remote.defaults || {}, requirements: remote.requirements || null } })
+      .eq("id", data.id);
+    if (updateError) throw updateError;
+  }
+  return { ...data, status: ready ? "active" : "pending", charges_enabled: ready, payouts_enabled: ready, ready };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: { "Access-Control-Allow-Origin": APP_URL, "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info", "Access-Control-Allow-Methods": "POST,OPTIONS", Vary: "Origin" } });
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  try {
+    const body = await req.json().catch(() => ({}));
+    const appId = shortText(body.app_id, 36);
+    if (!appId || !uuid.test(appId)) return json({ error: "invalid_app" }, 400);
+    const ctx = await context(req, appId);
+    if ("error" in ctx) return ctx.error!;
+    const { user, admin, client } = ctx;
+    if (!user || !admin || !client) return json({ error: "unavailable" }, 500);
+    const action = shortText(body.action, 40);
+    if (!stripe) return json({ error: "live_connect_not_configured" }, 503);
+
+    if (action === "status") {
+      const account = await currentAccount(admin, client.client_id, user.id);
+      const { data: products, error } = await admin.from("connect_products")
+        .select("id,product_key,name,amount_cents,currency,interval,platform_fee_bps,is_active,activated_at,integration_confirmed_at,developer_account_id")
+        .eq("client_id", client.client_id).eq("developer_user_id", user.id).order("created_at", { ascending: false });
+      if (error) throw error;
+      const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
+        .select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
+      if (configurationError) throw configurationError;
+      return json({ app_id: appId, client_id: client.client_id, merchant: account ? { ready: account.ready, status: account.status, stripe_api_version: account.stripe_api_version } : null,
+        products: (products || []).filter((p) => p.developer_account_id === account?.id), platform_fee_bps: configuration.platform_fee_bps,
+        launch_ready: configuration.live_checkout_enabled && !!Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET") });
+    }
+
+    if (action === "stripe_onboarding") {
+      let account = await currentAccount(admin, client.client_id, user.id);
+      if (!account) {
+        const country = shortText(body.country, 2);
+        if (!country || !/^[A-Za-z]{2}$/.test(country)) return json({ error: "invalid_business_country" }, 400);
+        const remote = await createStripeConnectV2Merchant({ email: user.email || undefined, displayName: client.name, clientId: client.client_id, userId: user.id, country, environment: "production" });
+        if (!remote.id) throw new Error("Stripe did not return an account ID");
+        const { data, error } = await admin.rpc("connect_set_current_developer_account", {
+          target_client_id: client.client_id, target_developer_user_id: user.id, target_stripe_account_id: remote.id,
+          target_configuration: { dashboard: remote.dashboard || "full", defaults: remote.defaults || {}, requirements: remote.requirements || null },
+        }).single();
+        if (error || !data) throw error || new Error("Could not record connected account");
+        account = { ...data, ready: false };
+      }
+      const destination = `${APP_URL}/developer?app=${encodeURIComponent(appId)}&stripe=return`;
+      const onboardingUrl = await createStripeHostedOnboardingLink(account.stripe_account_id, `${destination}&refresh=1`, destination, "production");
+      return json({ onboarding_url: onboardingUrl, merchant_ready: account.ready });
+    }
+
+    if (action === "create_plan") {
+      const account = await currentAccount(admin, client.client_id, user.id);
+      if (!account?.ready) return json({ error: "merchant_onboarding_incomplete" }, 409);
+      const name = shortText(body.name, 120);
+      const amount = body.amount_cents;
+      const interval = body.interval;
+      if (!name || !Number.isInteger(amount) || amount < 100 || amount > 100000 || !["month", "year"].includes(interval)) return json({ error: "invalid_plan" }, 400);
+      const { data: existing, error: existingError } = await admin.from("connect_products")
+        .select("id").eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("is_active", true).limit(1);
+      if (existingError) throw existingError;
+      if (existing?.length) return json({ error: "one_active_plan_per_app" }, 409);
+      const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
+        .select("platform_fee_bps").eq("singleton", true).single();
+      if (configurationError) throw configurationError;
+      const product = await stripe.products.create({ name, metadata: { rocket_client_id: client.client_id, rocket_app_id: appId, rocket_developer_user_id: user.id, rocket_environment: "production" } }, { stripeAccount: account.stripe_account_id });
+      const price = await stripe.prices.create({ product: product.id, currency: "usd", unit_amount: amount, recurring: { interval }, metadata: { rocket_client_id: client.client_id, rocket_environment: "production" } }, { stripeAccount: account.stripe_account_id });
+      const { data: saved, error } = await admin.from("connect_products").insert({
+        client_id: client.client_id, developer_account_id: account.id, developer_user_id: user.id,
+        product_key: productKey(name), name, stripe_product_id: product.id, stripe_price_id: price.id,
+        amount_cents: amount, currency: "usd", interval, platform_fee_bps: configuration.platform_fee_bps,
+        is_active: false, checkout_return_uris: [APP_URL],
+      }).select("id,product_key,name,amount_cents,currency,interval,platform_fee_bps,is_active").single();
+      if (error) throw error;
+      return json({ plan: saved }, 201);
+    }
+
+    if (action === "activate_plan") {
+      const planId = shortText(body.plan_id, 36);
+      if (!planId || !uuid.test(planId)) return json({ error: "invalid_plan" }, 400);
+      const { data: configuration } = await admin.from("rocket_buy_configuration").select("live_checkout_enabled").eq("singleton", true).single();
+      if (!configuration?.live_checkout_enabled || !Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET")) return json({ error: "live_payments_not_ready" }, 409);
+      const account = await currentAccount(admin, client.client_id, user.id);
+      if (!account?.ready) return json({ error: "merchant_onboarding_incomplete" }, 409);
+      const { data: plan, error: planError } = await admin.from("connect_products").select("*")
+        .eq("id", planId).eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("developer_user_id", user.id).maybeSingle();
+      if (planError) throw planError;
+      if (!plan) return json({ error: "plan_not_found" }, 404);
+      if (!plan.integration_confirmed_at) return json({ error: "external_entitlement_test_required" }, 409);
+      const price = await stripe.prices.retrieve(plan.stripe_price_id, { stripeAccount: account.stripe_account_id });
+      if (!price.active || price.unit_amount !== plan.amount_cents || price.currency !== "usd" || price.recurring?.interval !== plan.interval || price.product !== plan.stripe_product_id) return json({ error: "stripe_plan_mismatch" }, 409);
+      const { data: active } = await admin.from("connect_products").select("id").eq("client_id", client.client_id).eq("is_active", true).neq("id", plan.id).limit(1);
+      if (active?.length) return json({ error: "one_active_plan_per_app" }, 409);
+      const { error } = await admin.from("connect_products").update({ is_active: true, activated_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", plan.id).eq("is_active", false);
+      if (error) throw error;
+      return json({ activated: true });
+    }
+
+    return json({ error: "invalid_action" }, 400);
+  } catch (error) {
+    if (error instanceof StripeConnectV2Error) {
+      console.error("rocket-buy-developer Stripe Accounts v2", { status: error.status, code: error.code, requestId: error.requestId });
+      return json({ error: "stripe_account_unavailable", stripe_code: error.code || null }, error.status >= 400 && error.status < 500 ? 400 : 503);
+    }
+    console.error("rocket-buy-developer", error);
+    return json({ error: "developer_payments_unavailable" }, 500);
+  }
+});

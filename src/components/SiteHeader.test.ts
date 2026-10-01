@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { isMarketplaceSidebarItemActive } from "./SiteHeader";
 
 describe("marketplace sidebar active state", () => {
-  it("does not select Buy with Rocket on the pricing overview", () => {
-    expect(isMarketplaceSidebarItemActive("Buy with Rocket", "/pricing#buy-with-rocket", "/pricing", "")).toBe(false);
+  it("does not select Revenue on the pricing overview", () => {
+    expect(isMarketplaceSidebarItemActive("Revenue", "/your-apps", "/pricing", "")).toBe(false);
   });
 
   it("still selects actual page destinations", () => {

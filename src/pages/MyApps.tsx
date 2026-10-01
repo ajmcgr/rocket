@@ -151,6 +151,14 @@ export default function MyApps() {
                     Set up Rocket ID
                   </Link>
                 )}
+                {item.owned && (
+                  <Link
+                    to={`/developer?app=${item.app_id}#buy-with-rocket`}
+                    className="font-medium text-sky-800 hover:underline"
+                  >
+                    Set up Buy with Rocket
+                  </Link>
+                )}
               </div>
               <AppJourney item={item} />
               {item.owned && (

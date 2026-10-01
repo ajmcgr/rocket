@@ -11,6 +11,11 @@ Deno.serve(async (req) => {
     // Phase 1 deliberately supports public PKCE clients only. A confidential client
     // must not become usable until client authentication is implemented at /token.
     if (!client || client.client_type !== "public" || !client.redirect_uris.includes(request.redirectUri)) return json({ error: "invalid_request", error_description: "Unknown client or redirect URI." }, 400);
+    // Production integrations must bind the browser round-trip and ID token
+    // to the initiating app session. Retain historical test-client behavior.
+    if (client.environment === "production" && (request.state.length < 16 || !request.nonce || request.nonce.length < 16)) {
+      return json({ error: "invalid_request", error_description: "Production authorization requires state and nonce." }, 400);
+    }
     if (!request.scope.every((scope) => client.allowed_scopes.includes(scope))) return json({ error: "invalid_scope" }, 400);
     if (body.action === "inspect") return json({ client: { name: client.name, icon_url: client.icon_url }, scopes: request.scope });
 

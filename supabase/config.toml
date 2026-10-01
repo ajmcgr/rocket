@@ -93,6 +93,15 @@ verify_jwt = false
 [functions.rocket-connect-developer]
 verify_jwt = false
 
+[functions.rocket-buy-developer]
+verify_jwt = true
+
+[functions.rocket-buy]
+verify_jwt = false # Public catalog; all buyer and mutation actions verify the user in code.
+
+[functions.connect-payment-webhook]
+verify_jwt = false # Stripe signed webhook; raw payload signature is verified in code.
+
 [functions.rocket-apps]
 verify_jwt = false # The preview action is anonymous; all mutating actions verify the user in code.
 
