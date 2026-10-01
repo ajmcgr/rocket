@@ -44,14 +44,14 @@ export const isMarketplaceSidebarItemActive = (
   search: string,
 ) => {
   // Pricing is a multi-section overview, not the Buy with Rocket page.
-  if (label === "Buy with Rocket") return false;
+  if (label === "Revenue" || label === "Rocket ID") return false;
   return (
     pathname + search === to ||
     (to === "/discover" && pathname === "/discover" && !search) ||
     (to === "/saved-apps" && pathname === "/saved-apps") ||
     (to === "/submit" && pathname === "/submit") ||
     (to === "/create" && pathname === "/create") ||
-    (to === "/developer" && pathname.startsWith("/developer"))
+    (label === "Developer" && pathname.startsWith("/developer"))
   );
 };
 const sections: { heading: string; items: NavItem[] }[] = [
@@ -79,8 +79,9 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Monetize",
     items: [
-      { label: "Buy with Rocket", to: "/pricing#buy-with-rocket", icon: Wallet },
-      { label: "Rocket ID", to: "/developer", icon: ShieldCheck },
+      { label: "Revenue", to: "/pricing#buy-with-rocket", icon: Wallet },
+      { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
+      { label: "Developer", to: "/developer", icon: Layers3 },
     ],
   },
 ];

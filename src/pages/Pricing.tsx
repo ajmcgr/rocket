@@ -62,7 +62,7 @@ const COMPARE = [
 ];
 
 const FAQS = [
-  { q: "When does Rocket take 10%?", a: "Only when an eligible connected app processes a purchase through Buy with Rocket. Rocket ID by itself has no subscription or revenue-share fee. Buy with Rocket currently runs as a test-mode developer pilot, not a production checkout for catalogue apps." },
+  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. App submission, claiming, basic management, and verification remain free. Rocket ID and Buy with Rocket production access require active membership and verified app ownership; the Connect payment integration remains a limited pilot until production activation is complete." },
   { q: "Are Stripe fees included in Rocket's 10%?", a: "No. Rocket's platform fee is separate from Stripe processing fees and any other applicable charges. A $100 purchase leaves $90 for the app before those separate costs." },
   { q: "What is a Rocket Credit?", a: "Credits power everything you generate. Free includes 500 credits; Starter includes 500/month, Pro 3,000/month, and Business 15,000/month. One-time credit packs never expire." },
   { q: "How is Free different from Starter?", a: "Free includes 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG and SVG downloads. Choose Starter when you need ongoing generation or files to use outside Rocket." },
@@ -369,23 +369,20 @@ const Pricing = () => {
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="text-center">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Monetize plans</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Rocket ID is free. Buy with Rocket takes a share only when an eligible connected app sells through Rocket.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Submit, claim, manage, and verify your apps for free. Rocket Developer is the account-level membership for monetization.</p>
           </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-              <h3 className="text-2xl font-semibold tracking-tight">Buy with Rocket</h3>
-              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">10%</span><span className="text-neutral-600">Rocket platform fee</span></div>
-              <p className="mt-4 text-neutral-600">For payments processed through Buy with Rocket on an eligible, connected app. On a $100 purchase, Rocket's share is $10 and the app's share is $90 before Stripe processing fees and other applicable charges.</p>
-              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Test-mode pilot only. Production purchases and general developer onboarding are not available yet.</p>
+          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+            <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
+            <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
+            <p className="mt-4 text-neutral-600">Monetize your apps with Rocket. One membership covers the apps you legitimately own.</p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into your app.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users buy access to your app.</p></div>
             </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-              <h3 className="text-2xl font-semibold tracking-tight">Rocket ID</h3>
-              <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">Free</span><span className="text-neutral-600">for identity</span></div>
-              <p className="mt-4 text-neutral-600">Rocket ID lets a connected app offer Rocket sign-in. There is no Rocket subscription or revenue-share fee for using identity alone. The 10% fee applies only to purchases processed through Buy with Rocket.</p>
-              <p className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">Integration is in a developer pilot. It is not available across every app listed on Rocket.</p>
-            </div>
+            <p className="mt-5 text-sm text-neutral-600">Production activation is subject to verified ownership and integration readiness. Buy with Rocket currently remains a test-mode pilot.</p>
+            <Link to="/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
           </div>
-          <p className="mt-5 text-sm text-neutral-500">Create credits and subscriptions are separate from the Buy with Rocket fee.</p>
+          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. Eligible Buy with Rocket transactions may also carry a platform fee.</p>
         </div>
       </section>
 

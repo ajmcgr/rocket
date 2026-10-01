@@ -143,6 +143,14 @@ export default function MyApps() {
                       Edit profile
                     </Link>
                   )}
+                {item.owned && (
+                  <Link
+                    to={`/developer?app=${item.app_id}#rocket-id`}
+                    className="font-medium text-sky-800 hover:underline"
+                  >
+                    Set up Rocket ID
+                  </Link>
+                )}
               </div>
               <AppJourney item={item} />
               {item.owned && (

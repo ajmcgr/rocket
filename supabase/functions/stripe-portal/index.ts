@@ -32,9 +32,14 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { data: sub } = await admin.from("subscriptions").select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
+    const payload = await req.json().catch(() => ({}));
+    const developer = payload?.context === "rocket_developer";
+    if (payload?.context && !developer) return new Response(JSON.stringify({ error: "invalid_context" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const table = developer ? "rocket_developer_memberships" : "subscriptions";
+    const { data: sub, error: lookupError } = await admin.from(table).select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
+    if (lookupError) throw lookupError;
     if (!sub?.stripe_customer_id) return new Response(JSON.stringify({ error: "no_customer" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    const session = await stripe.billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: `${APP_URL}/projects` });
+    const session = await stripe.billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: `${APP_URL}/${developer ? "developer" : "projects"}` });
     return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

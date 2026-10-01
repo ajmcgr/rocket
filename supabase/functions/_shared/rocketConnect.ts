@@ -69,9 +69,18 @@ export async function getRocketUser(req: Request) {
 }
 
 export async function getActiveClient(clientId: string) {
-  const { data } = await getAdmin().from("rocket_oauth_clients")
-    .select("client_id,name,icon_url,redirect_uris,allowed_scopes,client_type,is_active")
+  const admin = getAdmin();
+  const { data } = await admin.from("rocket_oauth_clients")
+    .select("client_id,name,icon_url,redirect_uris,allowed_scopes,client_type,is_active,environment,app_id,created_by")
     .eq("client_id", clientId).eq("is_active", true).maybeSingle();
+  if (data?.environment === "production") {
+    if (!data.app_id || !data.created_by) return null;
+    const { data: permitted, error } = await admin.rpc("can_monetize_rocket_app", {
+      p_user_id: data.created_by,
+      p_app_id: data.app_id,
+    });
+    if (error || !permitted) return null;
+  }
   return data as any | null;
 }
 

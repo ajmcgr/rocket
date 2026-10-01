@@ -35,8 +35,8 @@ async function actor(req: Request) {
 async function ownedClient(admin: ReturnType<typeof getAdmin>, userId: string, clientId: unknown) {
   if (typeof clientId !== "string") return null;
   const { data } = await admin.from("rocket_oauth_clients")
-    .select("client_id,name,icon_url,redirect_uris,checkout_return_uris,allowed_scopes,is_active,created_at")
-    .eq("client_id", clientId).eq("created_by", userId).maybeSingle();
+    .select("client_id,name,icon_url,redirect_uris,checkout_return_uris,allowed_scopes,is_active,created_at,environment")
+    .eq("client_id", clientId).eq("created_by", userId).eq("environment", "test").maybeSingle();
   return data as any | null;
 }
 
@@ -66,8 +66,9 @@ async function refreshAccount(admin: ReturnType<typeof getAdmin>, clientId: stri
 
 async function dashboard(ctx: NonNullable<Awaited<ReturnType<typeof actor>>>) {
   const { data: apps, error } = await ctx.admin.from("rocket_oauth_clients")
-    .select("client_id,name,icon_url,redirect_uris,checkout_return_uris,allowed_scopes,is_active,created_at")
-    .eq("created_by", ctx.user.id).order("created_at", { ascending: false });
+    .select("client_id,name,icon_url,redirect_uris,checkout_return_uris,allowed_scopes,is_active,created_at,environment")
+    .eq("created_by", ctx.user.id).eq("environment", "test")
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return { developer: ctx.developer, operator: ctx.operator, apps: apps || [] };
 }
@@ -109,6 +110,54 @@ Deno.serve(async (req) => {
         .eq("id", invitation.id).is("accepted_at", null).select("id").maybeSingle();
       if (!accepted) return json({ error: "invalid_invitation" }, 400);
       return json({ activated: true });
+    }
+
+    if (action === "register_production_app") {
+      const appId = string(body.app_id, 36);
+      const name = string(body.name, 120);
+      const redirectUri = string(body.redirect_uri, 2048);
+      if (!appId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(appId) || !name || !redirectUri ||
+        !validRedirectUri(redirectUri) || new URL(redirectUri).protocol !== "https:") {
+        return json({ error: "invalid_production_app_configuration" }, 400);
+      }
+      const { data: permitted, error: permissionError } = await ctx.admin.rpc("can_monetize_rocket_app", {
+        p_user_id: ctx.user.id, p_app_id: appId,
+      });
+      if (permissionError) throw permissionError;
+      if (!permitted) return json({ error: "membership_and_verified_ownership_required" }, 403);
+      const { data: existing, error: lookupError } = await ctx.admin.from("rocket_oauth_clients")
+        .select("client_id,name,redirect_uris,is_active,app_id,created_by")
+        .eq("environment", "production").eq("app_id", appId).maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing) {
+        if (existing.created_by !== ctx.user.id) return json({ error: "app_client_already_owned" }, 409);
+        if (existing.name !== name || existing.redirect_uris[0] !== redirectUri) {
+          const revokedAt = new Date().toISOString();
+          const [{ error: tokenError }, { error: codeError }] = await Promise.all([
+            ctx.admin.from("rocket_oauth_access_tokens").update({ revoked_at: revokedAt }).eq("client_id", existing.client_id).is("revoked_at", null),
+            ctx.admin.from("rocket_oauth_codes").update({ consumed_at: revokedAt }).eq("client_id", existing.client_id).is("consumed_at", null),
+          ]);
+          if (tokenError || codeError) throw tokenError || codeError;
+          const { data: updated, error: updateError } = await ctx.admin.from("rocket_oauth_clients")
+            .update({ name, redirect_uris: [redirectUri], checkout_return_uris: [new URL(redirectUri).origin], updated_at: revokedAt })
+            .eq("client_id", existing.client_id).eq("created_by", ctx.user.id)
+            .select("client_id,name,redirect_uris,is_active,app_id").single();
+          if (updateError) throw updateError;
+          return json({ app: updated, reused: true });
+        }
+        return json({ app: existing, reused: true });
+      }
+      const { data: registered, error: insertError } = await ctx.admin.from("rocket_oauth_clients")
+        .insert({
+          client_id: publicClientId(), name, app_id: appId, environment: "production",
+          created_by: ctx.user.id, redirect_uris: [redirectUri],
+          checkout_return_uris: [new URL(redirectUri).origin],
+          allowed_scopes: ["openid", "profile", "email"],
+          client_type: "public", is_active: true,
+        })
+        .select("client_id,name,redirect_uris,is_active,app_id").single();
+      if (insertError) throw insertError;
+      return json({ app: registered, reused: false }, 201);
     }
 
     if (!ctx.developer) return json({ error: "developer_access_required" }, 403);

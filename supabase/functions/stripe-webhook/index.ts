@@ -38,6 +38,25 @@ function planName(plan: PaidPlan): string {
   return plan === "growth" ? "Pro" : plan[0].toUpperCase() + plan.slice(1);
 }
 
+// Stripe's newer subscription event shape places period bounds on items.
+// Older events still carry them on the subscription itself.
+function subscriptionPeriod(sub: Stripe.Subscription) {
+  const item = sub.items.data[0] as Stripe.SubscriptionItem & {
+    current_period_start?: number;
+    current_period_end?: number;
+  } | undefined;
+  const legacy = sub as Stripe.Subscription & {
+    current_period_start?: number;
+    current_period_end?: number;
+  };
+  const start = item?.current_period_start ?? legacy.current_period_start;
+  const end = item?.current_period_end ?? legacy.current_period_end;
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end! <= start!) {
+    throw new Error("Subscription billing period is unavailable");
+  }
+  return { start: new Date(start! * 1000).toISOString(), end: new Date(end! * 1000).toISOString() };
+}
+
 // ---- Inlined branded email layout (self-contained, no shared imports) ----
 // Shared email layout — matches the "Launch" reference design.
 // Centered logo, soft outer bg, white card, divider, headline, body, blue CTA, muted footer.
@@ -257,6 +276,38 @@ async function getEmail(admin: any, userId: string): Promise<string | null> {
   return data?.user?.email ?? null;
 }
 
+async function applyDeveloperSubscription(admin: any, stripe: Stripe, event: Stripe.Event, sub: Stripe.Subscription): Promise<boolean> {
+  const { data: configured, error: configError } = await admin.from("rocket_billing_prices")
+    .select("stripe_price_id")
+    .eq("product_code", "rocket_developer").maybeSingle();
+  if (configError) throw configError;
+  const priceId = sub.items.data[0]?.price?.id;
+  if (!configured || !priceId || priceId !== configured.stripe_price_id) return false;
+  if (sub.items.data.length !== 1 || sub.items.data[0].quantity !== 1) {
+    throw new Error("Unexpected Rocket Developer subscription items");
+  }
+  const userId = sub.metadata.rocket_developer_user_id;
+  if (!userId) throw new Error("Rocket Developer subscription has no account owner");
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+  const customer = await stripe.customers.retrieve(customerId);
+  if (customer.deleted || customer.metadata.rocket_developer_user_id !== userId) {
+    throw new Error("Rocket Developer customer does not match account owner");
+  }
+  const { error } = await admin.rpc("apply_rocket_developer_subscription_event", {
+    p_event_id: event.id,
+    p_user_id: userId,
+    p_customer_id: customerId,
+    p_subscription_id: sub.id,
+    p_price_id: priceId,
+    p_status: sub.status,
+    p_period_end: subscriptionPeriod(sub).end,
+    p_cancel_at_period_end: sub.cancel_at_period_end,
+    p_event_created_at: new Date(event.created * 1000).toISOString(),
+  });
+  if (error) throw error;
+  return true;
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = cors(req);
   if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
@@ -278,6 +329,11 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const s = event.data.object as Stripe.Checkout.Session;
+        if (s.mode === "subscription" && s.subscription) {
+          const subscriptionId = typeof s.subscription === "string" ? s.subscription : s.subscription.id;
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          if (await applyDeveloperSubscription(admin, stripe, event, subscription)) break;
+        }
         const userId = s.metadata?.user_id;
         const product = s.metadata?.product;
         const credits = parseInt(s.metadata?.credits || "0", 10);
@@ -327,13 +383,17 @@ Deno.serve(async (req) => {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
+        if (await applyDeveloperSubscription(admin, stripe, event, sub)) break;
+        const period = subscriptionPeriod(sub);
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
         const { data: row } = await admin
           .from("subscriptions")
-          .select("user_id,plan")
+          .select("user_id,plan,stripe_subscription_id")
           .eq("stripe_customer_id", customerId)
           .maybeSingle();
         if (!row) break;
+        if (row.stripe_subscription_id && row.stripe_subscription_id !== sub.id) break;
+        if (!row.stripe_subscription_id && !paidPlanFromProduct(sub.metadata.product)) break;
         const selectedPlan = paidPlanFromSubscription(sub) || paidPlanFromProduct(row.plan);
         const plan = sub.status === "active" || sub.status === "trialing" ? (selectedPlan || "free") : "free";
         const { error } = await admin.rpc("apply_stripe_subscription_event", {
@@ -345,8 +405,8 @@ Deno.serve(async (req) => {
           p_price_id: sub.items.data[0]?.price?.id ?? null,
           p_plan: plan,
           p_status: sub.status,
-          p_current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-          p_current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          p_current_period_start: period.start,
+          p_current_period_end: period.end,
           p_trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
           p_cancel_at_period_end: sub.cancel_at_period_end,
           p_event_created_at: new Date(event.created * 1000).toISOString(),
@@ -357,13 +417,15 @@ Deno.serve(async (req) => {
       }
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
+        if (await applyDeveloperSubscription(admin, stripe, event, sub)) break;
+        const period = subscriptionPeriod(sub);
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
         const { data: row } = await admin
           .from("subscriptions")
-          .select("user_id")
+          .select("user_id,stripe_subscription_id")
           .eq("stripe_customer_id", customerId)
           .maybeSingle();
-        if (!row) break;
+        if (!row || row.stripe_subscription_id !== sub.id) break;
         const { error } = await admin.rpc("apply_stripe_subscription_event", {
           p_event_id: event.id,
           p_event_type: event.type,
@@ -373,8 +435,8 @@ Deno.serve(async (req) => {
           p_price_id: sub.items.data[0]?.price?.id ?? null,
           p_plan: "free",
           p_status: "canceled",
-          p_current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-          p_current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          p_current_period_start: period.start,
+          p_current_period_end: period.end,
           p_trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
           p_cancel_at_period_end: sub.cancel_at_period_end,
           p_event_created_at: new Date(event.created * 1000).toISOString(),

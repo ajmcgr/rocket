@@ -115,13 +115,81 @@ Deno.serve(async (req) => {
 
     const { product } = await req.json();
     const p = PRICES[product];
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (product === "rocket_developer") {
+      const { data: configured, error: configError } = await admin
+        .from("rocket_billing_prices")
+        .select("stripe_product_id,stripe_price_id")
+        .eq("product_code", "rocket_developer")
+        .maybeSingle();
+      if (configError) throw configError;
+      if (!configured) throw new Error("Rocket Developer checkout is not configured");
+
+      const price = await stripe.prices.retrieve(configured.stripe_price_id);
+      const productId = typeof price.product === "string" ? price.product : price.product.id;
+      if (!price.active || !price.livemode || !STRIPE_SECRET_KEY.startsWith("sk_live_") ||
+        productId !== configured.stripe_product_id || price.unit_amount !== 9900 ||
+        price.currency !== "usd" || price.type !== "recurring" ||
+        price.recurring?.interval !== "year" || price.recurring.interval_count !== 1) {
+        throw new Error("Rocket Developer price configuration is invalid");
+      }
+      const { data: membership, error: membershipError } = await admin
+        .from("rocket_developer_memberships")
+        .select("stripe_customer_id,status,current_period_end")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (membershipError) throw membershipError;
+      if (membership?.status === "active" && new Date(membership.current_period_end) > new Date()) {
+        return new Response(JSON.stringify({ error: "already_subscribed" }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: attempt, error: attemptError } = await admin.rpc("get_active_stripe_checkout_attempt", {
+        p_user_id: user.id, p_product: product,
+      });
+      if (attemptError) throw attemptError;
+      const checkoutAttempt = Array.isArray(attempt) ? attempt[0] : attempt;
+      if (!checkoutAttempt?.idempotency_key) throw new Error("Could not start checkout");
+      if (checkoutAttempt.stripe_session_id) {
+        const existing = await stripe.checkout.sessions.retrieve(checkoutAttempt.stripe_session_id);
+        if (existing.status === "open" && existing.url) {
+          return new Response(JSON.stringify({ url: existing.url }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+      let customerId = membership?.stripe_customer_id;
+      if (!customerId) {
+        const customer = await stripe.customers.create(
+          { email: user.email!, metadata: { rocket_developer_user_id: user.id } },
+          { idempotencyKey: `rocket-developer-customer-${user.id}` },
+        );
+        customerId = customer.id;
+      }
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: "subscription",
+        line_items: [{ price: configured.stripe_price_id, quantity: 1 }],
+        client_reference_id: user.id,
+        subscription_data: { metadata: { rocket_developer_user_id: user.id, product: "rocket_developer" } },
+        success_url: `${APP_URL}/developer?checkout=success`,
+        cancel_url: `${APP_URL}/developer?checkout=canceled`,
+        metadata: { rocket_developer_user_id: user.id, product: "rocket_developer" },
+      }, { idempotencyKey: checkoutAttempt.idempotency_key });
+      const { error: storeError } = await admin.from("stripe_checkout_attempts")
+        .update({ stripe_session_id: session.id }).eq("id", checkoutAttempt.id)
+        .is("stripe_session_id", null);
+      if (storeError) throw storeError;
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!p)
       return new Response(JSON.stringify({ error: "invalid_product" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
 
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: attempt, error: attemptError } = await admin.rpc("get_active_stripe_checkout_attempt", {
       p_user_id: user.id,
       p_product: product,
