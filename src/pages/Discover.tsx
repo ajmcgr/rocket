@@ -337,9 +337,10 @@ export default function Discover() {
             Search
           </button>
         </form>
+        <div className="mt-5 flex items-center justify-between gap-3 border-b border-neutral-200 pb-3">
         <nav
           aria-label="Discover sections"
-          className="mt-5 flex gap-2 overflow-x-auto border-b border-neutral-200 pb-3 [scrollbar-width:none]"
+          className="flex min-w-0 gap-2 overflow-x-auto [scrollbar-width:none]"
         >
           {(
             [
@@ -362,6 +363,24 @@ export default function Discover() {
             </button>
           ))}
         </nav>
+        {view !== "rankings" && (
+          <label className="flex shrink-0 items-center gap-2 text-sm font-medium text-neutral-600">
+            <span className="hidden sm:inline">Platform</span>
+            <select
+              aria-label="Browse by platform"
+              value={platform}
+              onChange={(event) => change("platform", event.target.value)}
+              className="min-h-10 rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
+            >
+              <option value="">All platforms</option>
+              <option value="web">Web</option>
+              <option value="ios">iOS</option>
+              <option value="android">Android</option>
+              <option value="hardware">Hardware</option>
+            </select>
+          </label>
+        )}
+        </div>
         {view === "rankings" && (
           <section className="mt-6" aria-labelledby="ranking-categories-heading">
             <h2 id="ranking-categories-heading" className="text-lg font-bold">Top 20 by Rocket views</h2>
@@ -379,7 +398,7 @@ export default function Discover() {
           </section>
         )}
         {view !== "rankings" && (
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-3 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
             {categories.length > 0 && (
               <nav
                 aria-label="Browse categories"
@@ -409,21 +428,6 @@ export default function Discover() {
                 ))}
               </nav>
             )}
-            <label className="flex shrink-0 items-center gap-2 text-sm font-medium text-neutral-600">
-              <span>Platform</span>
-              <select
-                aria-label="Browse by platform"
-                value={platform}
-                onChange={(event) => change("platform", event.target.value)}
-                className="min-h-10 rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
-              >
-                <option value="">All platforms</option>
-                <option value="web">Web</option>
-                <option value="ios">iOS</option>
-                <option value="android">Android</option>
-                <option value="hardware">Hardware</option>
-              </select>
-            </label>
           </div>
         )}
         {showOverview && <DiscoveryPreview />}

@@ -21,11 +21,10 @@ import appCss from "../styles.css?url";
 // throw unhandled rejections unrelated to the app; swallow those before hydration.
 const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&r.stack)||"")+" "+((r&&r.message)||String(r||""));return /chrome-extension:\\/\\/|moz-extension:\\/\\/|safari-web-extension:\\/\\/|MetaMask/i.test(t)};window.addEventListener("unhandledrejection",function(e){if(isExt(e.reason))e.preventDefault()});window.addEventListener("error",function(e){if(isExt(e.error)||/-extension:\\/\\//.test(e.filename||""))e.preventDefault()});})();`;
 
-const SITE_TITLE = "Rocket — Discover independent apps worth using";
+const SITE_TITLE = "Rocket — The open app platform";
 const SITE_DESCRIPTION =
-  "Discover independent apps worth using. Explore what's rising, save your favorites, and submit your own app to Rocket.";
-const SOCIAL_IMAGE =
-  "https://tryrocket.ai/__l5e/assets-v1/0903ee88-5f0b-4c82-b73a-ca1eb9454294/social-sharing-card.png";
+  "Find rising apps and new software from vibe coders and developers.";
+const SOCIAL_IMAGE = "https://tryrocket.ai/og-homepage.png";
 type GoogleTranslateWindow = Window & {
   googleTranslateElementInit?: () => void;
   google?: {
@@ -51,6 +50,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: "og:title", content: SITE_TITLE },
         { property: "og:description", content: SITE_DESCRIPTION },
         { property: "og:image", content: SOCIAL_IMAGE },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:site", content: "@tryrocketai" },
         { name: "twitter:title", content: SITE_TITLE },

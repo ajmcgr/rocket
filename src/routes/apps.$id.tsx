@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 
 const siteUrl = "https://tryrocket.ai";
-const fallbackImage = `${siteUrl}/__l5e/assets-v1/0903ee88-5f0b-4c82-b73a-ca1eb9454294/social-sharing-card.png`;
+const fallbackImage = `${siteUrl}/og-homepage.png`;
 
 function summarize(description: string) {
   const firstParagraph = description.trim().split(/\n\s*\n/)[0];
