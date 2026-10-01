@@ -625,6 +625,14 @@ html.dark .logo-dark {
   filter: brightness(0) invert(1);
 }
 
+/* Compact sidebar icon: white flower in dark mode only */
+html.dark .sidebar-icon-light {
+  display: none !important;
+}
+html:not(.dark) .sidebar-icon-dark {
+  display: none !important;
+}
+
 /* Abstract category art: distinct gradients, never simulated product screenshots. */
 .rocket-category-card {
   color: #14202c;
