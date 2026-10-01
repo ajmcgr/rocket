@@ -218,6 +218,7 @@ const Pricing = () => {
     <div className="min-h-screen bg-white text-neutral-900">
       <SiteHeader />
 
+      <main>
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-10 sm:pt-24">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Rocket pricing</h1>
           <p className="mt-5 max-w-2xl text-lg text-neutral-600">Submit and manage your apps for free. Create, monetize, and grow with the products that fit your work.</p>
@@ -543,6 +544,7 @@ const Pricing = () => {
         </div>
       </section>
 
+      </main>
       <SiteFooter />
     </div>
   );
