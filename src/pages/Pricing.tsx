@@ -218,6 +218,7 @@ const Pricing = () => {
     <div className="min-h-screen bg-white text-neutral-900">
       <SiteHeader />
 
+      <main>
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-10 sm:pt-24">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">Rocket pricing</h1>
           <p className="mt-5 max-w-2xl text-lg text-neutral-600">Submit and manage your apps for free. Create, monetize, and grow with the products that fit your work.</p>
@@ -458,39 +459,35 @@ const Pricing = () => {
                   <h3 className="text-xl font-semibold tracking-tight">{product.name}</h3>
                   <p className="text-sm text-neutral-600">{product.description}</p>
                 </div>
-                <div className="mt-4 flex flex-col gap-4">
-                  {product.plans.map((plan) => (
-                    <div key={plan.name} className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-                      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h4 className="text-2xl font-semibold tracking-tight">{plan.name}</h4>
-                            {plan.badge && <span className="rounded-full border border-[#167ac6] px-2.5 py-0.5 text-xs font-semibold text-[#167ac6] dark:text-[#dcefff]">{plan.badge}</span>}
-                          </div>
-                          <p className="mt-1 text-sm text-neutral-600">{plan.tagline}</p>
-                          <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-5xl font-semibold tracking-tight">{plan.price}</span>
-                            {plan.suffix && <span className="text-neutral-600">{plan.suffix}</span>}
-                          </div>
-                          <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">
+                  <div className={`mt-4 grid gap-4 ${product.plans.length > 2 ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-2"}`}>
+                    {product.plans.map((plan) => (
+                      <div key={plan.name} className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 sm:p-7">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-xl font-semibold tracking-tight">{plan.name}</h4>
+                          {plan.badge && <span className="rounded-full border border-[#167ac6] px-2.5 py-0.5 text-xs font-semibold text-[#167ac6] dark:text-[#dcefff]">{plan.badge}</span>}
+                        </div>
+                        <p className="mt-1 text-sm text-neutral-600">{plan.tagline}</p>
+                        <div className="mt-4 flex items-baseline gap-2">
+                          <span className="text-4xl font-semibold tracking-tight">{plan.price}</span>
+                          {plan.suffix && <span className="text-sm text-neutral-600">{plan.suffix}</span>}
+                        </div>
+                        <ul className="mt-5 space-y-2.5 text-sm text-neutral-700">
+                          {plan.features.map((f) => (
+                            <li key={f} className="flex gap-2.5">
+                              <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#167ac6]" />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {plan.note && <p className="mt-4 text-xs leading-relaxed text-neutral-500">{plan.note}</p>}
+                        <div className="mt-auto pt-6">
+                          <a href={product.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">
                             {plan.cta} on {product.name} ↗
                           </a>
                         </div>
-                        <div>
-                          <ul className="space-y-2.5 text-sm text-neutral-700">
-                            {plan.features.map((f) => (
-                              <li key={f} className="flex gap-2.5">
-                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#167ac6]" />
-                                <span>{f}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          {plan.note && <p className="mt-4 text-xs leading-relaxed text-neutral-500">{plan.note}</p>}
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
                 <p className="mt-3 text-xs text-neutral-500">{product.footnote}</p>
               </div>
             ))}
@@ -547,6 +544,7 @@ const Pricing = () => {
         </div>
       </section>
 
+      </main>
       <SiteFooter />
     </div>
   );
