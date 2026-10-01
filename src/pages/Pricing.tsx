@@ -479,9 +479,11 @@ const Pricing = () => {
                           ))}
                         </ul>
                         {plan.note && <p className="mt-4 text-xs leading-relaxed text-neutral-500">{plan.note}</p>}
-                        <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-5 pt-0 text-sm font-semibold text-white hover:bg-[#1268aa]">
-                          {plan.cta} on {product.name} ↗
-                        </a>
+                        <div className="mt-auto pt-6">
+                          <a href={product.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">
+                            {plan.cta} on {product.name} ↗
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>
