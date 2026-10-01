@@ -113,7 +113,6 @@ export default function ProductionBuySetup({
   if (!ownedApps.length) return null;
   return (
     <section
-      id="buy-with-rocket"
       className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6"
     >
       <h2 className="text-xl font-semibold">Buy with Rocket</h2>

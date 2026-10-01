@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Layers3,
   Plus,
-  Settings,
   Sparkles,
   Flame,
   TrendingUp,
@@ -44,8 +43,8 @@ export const isMarketplaceSidebarItemActive = (
   pathname: string,
   search: string,
 ) => {
-  // Pricing is a multi-section overview, not the Buy with Rocket page.
-  if (label === "Revenue" || label === "Rocket ID") return false;
+  // These links point to sections within Developer, not standalone pages.
+  if (label === "Buy with Rocket" || label === "Rocket ID") return false;
   return (
     pathname + search === to ||
     (to === "/discover" && pathname === "/discover" && !search) ||
@@ -81,7 +80,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Monetize",
     items: [
-      { label: "Revenue", to: "/your-apps", icon: Wallet },
+      { label: "Buy with Rocket", to: "/developer#buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
       { label: "Developer", to: "/developer", icon: Layers3 },
     ],
@@ -218,17 +217,6 @@ export default function SiteHeader() {
             </div>
           </nav>
         </div>
-        {user && <div className={`border-t border-[#e8edf2] py-3 ${sidebarCompact ? "px-2" : "px-3"}`}>
-          <Link
-            to="/settings"
-            title={sidebarCompact ? "Settings" : undefined}
-            aria-label={sidebarCompact ? "Settings" : undefined}
-            className={`flex min-h-10 items-center gap-3 rounded-xl text-sm text-neutral-600 hover:bg-neutral-100 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
-          >
-            <Settings className="h-[18px] w-[18px]" />
-            {!sidebarCompact && "Settings"}
-          </Link>
-        </div>}
       </aside>
       <header className="sticky top-0 z-40 border-b border-[#e8edf2] bg-white/95 backdrop-blur-sm lg:transition-[margin-left] lg:duration-200">
         <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:gap-6 lg:px-8 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)_minmax(0,1fr)]">

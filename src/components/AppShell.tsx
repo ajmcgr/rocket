@@ -35,7 +35,6 @@ import {
   Layers3,
   Plus,
   Palette,
-  Settings,
   PanelLeftClose,
   PanelLeftOpen,
   Send,
@@ -129,7 +128,7 @@ const AppShell = () => {
     {
       label: "Monetize",
       items: [
-        { label: "Buy with Rocket", to: "/pricing#buy-with-rocket", icon: Wallet },
+        { label: "Buy with Rocket", to: "/developer#buy-with-rocket", icon: Wallet },
         { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
         { label: "Developer", to: "/developer", icon: Layers3 },
       ],
@@ -327,20 +326,6 @@ const AppShell = () => {
           )}
         </nav>
         <div className="mt-auto flex flex-col gap-1">
-          <NavLink
-            to="/settings/profile"
-            className={sidebarItemClass({
-              isActive: pathname.startsWith("/settings"),
-            })}
-            aria-label="Settings"
-            title="Settings"
-          >
-            <Settings
-              className="h-[18px] w-[18px] shrink-0"
-              strokeWidth={1.9}
-            />
-            {!collapsed && <span className="truncate">Settings</span>}
-          </NavLink>
           <NavLink
             to="/settings/billing"
             className={sidebarItemClass({
