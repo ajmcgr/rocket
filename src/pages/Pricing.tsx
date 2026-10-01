@@ -1,4 +1,4 @@
-import { Loader2 as ControlLoader2 } from "lucide-react";
+import { Loader2 as ControlLoader2, Check } from "lucide-react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import { Check, Loader2 } from "@/components/EmojiIcons";
 import { useEffect, useRef, useState } from "react";
