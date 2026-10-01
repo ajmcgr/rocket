@@ -31,6 +31,7 @@ import { Route as StartRouteImport } from './routes/start'
 import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppEditorRouteImport } from './routes/_app/editor'
 import { Route as AppFilesRouteImport } from './routes/_app/files'
@@ -62,6 +63,7 @@ import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
+import { Route as AppAdminSectionRouteImport } from './routes/_app/admin.$section'
 import { Route as AppAppsAddRouteImport } from './routes/_app/apps.add'
 import { Route as AppAssetsIndexRouteImport } from './routes/_app/assets.index'
 import { Route as AppAssetsIdRouteImport } from './routes/_app/assets.$id'
@@ -220,6 +222,11 @@ const AppAccountRoute = AppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -374,6 +381,11 @@ const ToolsSlugRoute = ToolsSlugRouteImport.update({
   id: '/tools/$slug',
   path: '/tools/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminSectionRoute = AppAdminSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAppsAddRoute = AppAppsAddRouteImport.update({
   id: '/apps/add',
@@ -640,6 +652,7 @@ export interface FileRoutesByFullPath {
   '/submit': typeof SubmitRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/editor': typeof AppEditorRoute
   '/files': typeof AppFilesRoute
@@ -671,6 +684,7 @@ export interface FileRoutesByFullPath {
   '/compare/': typeof CompareIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/tools/': typeof ToolsIndexRoute
+  '/admin/$section': typeof AppAdminSectionRoute
   '/apps/add': typeof AppAppsAddRoute
   '/assets/$id': typeof AppAssetsIdRoute
   '/brand/$id': typeof AppBrandIdRoute
@@ -742,6 +756,7 @@ export interface FileRoutesByTo {
   '/submit': typeof SubmitRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/editor': typeof AppEditorRoute
   '/files': typeof AppFilesRoute
@@ -772,6 +787,7 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/tools': typeof ToolsIndexRoute
+  '/admin/$section': typeof AppAdminSectionRoute
   '/apps/add': typeof AppAppsAddRoute
   '/assets/$id': typeof AppAssetsIdRoute
   '/brand/$id': typeof AppBrandIdRoute
@@ -844,6 +860,7 @@ export interface FileRoutesById {
   '/submit': typeof SubmitRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/account': typeof AppAccountRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/editor': typeof AppEditorRoute
   '/_app/files': typeof AppFilesRoute
@@ -875,6 +892,7 @@ export interface FileRoutesById {
   '/compare/': typeof CompareIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/tools/': typeof ToolsIndexRoute
+  '/_app/admin/$section': typeof AppAdminSectionRoute
   '/_app/apps/add': typeof AppAppsAddRoute
   '/_app/assets/$id': typeof AppAssetsIdRoute
   '/_app/brand/$id': typeof AppBrandIdRoute
@@ -948,6 +966,7 @@ export interface FileRouteTypes {
     | '/submit'
     | '/verify-email'
     | '/account'
+    | '/admin'
     | '/dashboard'
     | '/editor'
     | '/files'
@@ -979,6 +998,7 @@ export interface FileRouteTypes {
     | '/compare/'
     | '/resources/'
     | '/tools/'
+    | '/admin/$section'
     | '/apps/add'
     | '/assets/$id'
     | '/brand/$id'
@@ -1050,6 +1070,7 @@ export interface FileRouteTypes {
     | '/submit'
     | '/verify-email'
     | '/account'
+    | '/admin'
     | '/dashboard'
     | '/editor'
     | '/files'
@@ -1080,6 +1101,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/resources'
     | '/tools'
+    | '/admin/$section'
     | '/apps/add'
     | '/assets/$id'
     | '/brand/$id'
@@ -1151,6 +1173,7 @@ export interface FileRouteTypes {
     | '/submit'
     | '/verify-email'
     | '/_app/account'
+    | '/_app/admin'
     | '/_app/dashboard'
     | '/_app/editor'
     | '/_app/files'
@@ -1182,6 +1205,7 @@ export interface FileRouteTypes {
     | '/compare/'
     | '/resources/'
     | '/tools/'
+    | '/_app/admin/$section'
     | '/_app/apps/add'
     | '/_app/assets/$id'
     | '/_app/brand/$id'
@@ -1430,6 +1454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAccountRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -1646,6 +1677,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tools/$slug'
       preLoaderRoute: typeof ToolsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/admin/$section': {
+      id: '/_app/admin/$section'
+      path: '/$section'
+      fullPath: '/admin/$section'
+      preLoaderRoute: typeof AppAdminSectionRouteImport
+      parentRoute: typeof AppAdminRoute
     }
     '/_app/apps/add': {
       id: '/_app/apps/add'
@@ -1986,6 +2024,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminSectionRoute: typeof AppAdminSectionRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminSectionRoute: AppAdminSectionRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppSettingsRouteChildren {
   AppSettingsAccountRoute: typeof AppSettingsAccountRoute
   AppSettingsBillingRoute: typeof AppSettingsBillingRoute
@@ -2032,6 +2082,7 @@ const AppBrandsIdRouteWithChildren = AppBrandsIdRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppEditorRoute: typeof AppEditorRoute
   AppFilesRoute: typeof AppFilesRoute
@@ -2085,6 +2136,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppEditorRoute: AppEditorRoute,
   AppFilesRoute: AppFilesRoute,
