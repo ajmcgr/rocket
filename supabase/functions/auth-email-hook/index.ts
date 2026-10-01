@@ -62,7 +62,7 @@ function buildEmail(actionType: string, confirmationUrl: string, token: string, 
   }
 }
 
-Deno.serve(async (req) => {
+export async function handleAuthEmailHook(req: Request): Promise<Response> {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   try {
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
@@ -79,9 +79,16 @@ Deno.serve(async (req) => {
     const sigBuf = await crypto.subtle.sign("HMAC", key, toSign);
     const expected = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
     const provided = sigHeader.split(" ").map((s) => s.replace(/^v1,/, ""));
-    if (!provided.includes(expected)) {
+    const sentAt = Number(timestamp);
+    const signatureMatches = provided.some((candidate) => {
+      if (candidate.length !== expected.length) return false;
+      let diff = 0;
+      for (let i = 0; i < candidate.length; i++) diff |= candidate.charCodeAt(i) ^ expected.charCodeAt(i);
+      return diff === 0;
+    });
+    if (!id || !Number.isSafeInteger(sentAt) || Math.abs(Date.now() / 1000 - sentAt) > 300 || !signatureMatches) {
       console.error("Invalid signature");
-      return new Response(JSON.stringify({ ok: false, error: "Invalid signature" }), { status: 200, headers: { "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: { message: "Invalid webhook signature" } }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
     const data = JSON.parse(payload) as {
       user: { email: string };
@@ -105,16 +112,16 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ from: FROM_EMAIL, to: [user.email], subject, html }),
     });
     if (!res.ok) {
-      const err = await res.text();
-      console.error("Resend error", err);
-      // Don't block auth flow if email send fails — log and return 200.
-      // Supabase will treat non-2xx as hook failure and reject the signup.
-      return new Response(JSON.stringify({ ok: false, error: err }), { status: 200, headers: { "Content-Type": "application/json" } });
+      console.error("Resend delivery failed", res.status);
+      // A successful hook response would tell Auth that an unsent email was
+      // delivered. 503 lets Supabase retry a transient provider failure.
+      return new Response(JSON.stringify({ error: { message: "Email delivery temporarily unavailable" } }), { status: 503, headers: { "Content-Type": "application/json" } });
     }
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     console.error("auth-email-hook error", e);
-    // Always 200 so a transient hook failure doesn't break signup.
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: { message: "Email hook failed" } }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
-});
+}
+
+Deno.serve(handleAuthEmailHook);

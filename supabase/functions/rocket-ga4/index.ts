@@ -200,7 +200,7 @@ async function handle(request: Request) {
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return fail("Invalid request"); }
   if (body.action === "scheduled_sync") {
-    const configured = Deno.env.get("GA4_SYNC_SECRET");
+    const configured = Deno.env.get("ROCKET_GA4_SYNC_SECRET");
     if (!configured || configured.length < 32 || request.headers.get("x-rocket-sync-secret") !== configured) return fail("Unauthorized", 401);
     const found = await service.from("app_data_connections").select("*").in("status", ["active", "error"])
       .order("last_attempted_sync", { ascending: true, nullsFirst: true }).limit(50);
