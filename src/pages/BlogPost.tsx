@@ -274,7 +274,7 @@ const BlogPost = () => {
 
         <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_260px]">
           <div id="article-body" className="min-w-0 max-w-3xl">
-            <article className="prose prose-neutral max-w-none prose-headings:tracking-tight prose-headings:font-medium prose-h2:mt-14 prose-h2:text-3xl prose-h3:mt-10 prose-h3:text-xl prose-p:leading-[1.8] prose-p:text-neutral-700 prose-li:leading-[1.8] prose-a:text-brand prose-strong:text-neutral-900 prose-blockquote:border-brand prose-blockquote:not-italic prose-img:rounded-2xl">
+            <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-headings:font-medium prose-h2:mt-14 prose-h2:text-3xl prose-h3:mt-10 prose-h3:text-xl prose-p:leading-[1.8] prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-li:leading-[1.8] prose-a:text-brand dark:prose-a:text-sky-300 prose-strong:text-neutral-900 dark:prose-strong:text-neutral-100 prose-blockquote:border-brand prose-blockquote:not-italic prose-img:rounded-2xl">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {intro}
               </ReactMarkdown>

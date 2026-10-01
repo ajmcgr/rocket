@@ -24,11 +24,13 @@ import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MediaKitRouteImport } from './routes/media-kit'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SubmitRouteImport } from './routes/submit'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
@@ -187,6 +189,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReserveRoute = ReserveRouteImport.update({
   id: '/reserve',
   path: '/reserve',
@@ -210,6 +217,11 @@ const StartRoute = StartRouteImport.update({
 const SubmitRoute = SubmitRouteImport.update({
   id: '/submit',
   path: '/submit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -645,11 +657,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
   '/admin': typeof AppAdminRouteWithChildren
@@ -749,11 +763,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
   '/admin': typeof AppAdminRouteWithChildren
@@ -853,11 +869,13 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
@@ -959,11 +977,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/media-kit'
     | '/pricing'
+    | '/privacy'
     | '/reserve'
     | '/reset-password'
     | '/signup'
     | '/start'
     | '/submit'
+    | '/terms'
     | '/verify-email'
     | '/account'
     | '/admin'
@@ -1063,11 +1083,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/media-kit'
     | '/pricing'
+    | '/privacy'
     | '/reserve'
     | '/reset-password'
     | '/signup'
     | '/start'
     | '/submit'
+    | '/terms'
     | '/verify-email'
     | '/account'
     | '/admin'
@@ -1166,11 +1188,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/media-kit'
     | '/pricing'
+    | '/privacy'
     | '/reserve'
     | '/reset-password'
     | '/signup'
     | '/start'
     | '/submit'
+    | '/terms'
     | '/verify-email'
     | '/_app/account'
     | '/_app/admin'
@@ -1272,11 +1296,13 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MediaKitRoute: typeof MediaKitRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReserveRoute: typeof ReserveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   StartRoute: typeof StartRoute
   SubmitRoute: typeof SubmitRoute
+  TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AppsIdRoute: typeof AppsIdRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1405,6 +1431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reserve': {
       id: '/reserve'
       path: '/reserve'
@@ -1438,6 +1471,13 @@ declare module '@tanstack/react-router' {
       path: '/submit'
       fullPath: '/submit'
       preLoaderRoute: typeof SubmitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -2206,11 +2246,13 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MediaKitRoute: MediaKitRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ReserveRoute: ReserveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   StartRoute: StartRoute,
   SubmitRoute: SubmitRoute,
+  TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AppsIdRoute: AppsIdRoute,
   AuthCallbackRoute: AuthCallbackRoute,

@@ -8,6 +8,8 @@
   <url><loc>https://tryrocket.ai/faq</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/about</loc><priority>0.7</priority></url>
   <url><loc>https://tryrocket.ai/contact</loc><priority>0.7</priority></url>
+  <url><loc>https://tryrocket.ai/privacy</loc><priority>0.5</priority></url>
+  <url><loc>https://tryrocket.ai/terms</loc><priority>0.5</priority></url>
   <url><loc>https://tryrocket.ai/blog</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/resources</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/tools</loc><priority>0.7</priority></url>
