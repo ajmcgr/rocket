@@ -144,7 +144,17 @@ export default function SiteHeader() {
         <div className={`flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "px-4"}`}>
           {sidebarCompact ? (
             <Link to="/" aria-label="Rocket home" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100">
-              <img src="/rocket-sidebar-icon.png" alt="" className="h-9 w-9 object-contain" />
+              <img
+                src="/rocket-sidebar-icon.png"
+                alt=""
+                className="sidebar-icon-light h-9 w-9 object-contain"
+              />
+              <img
+                src={sidebarIconWhite.url}
+                alt=""
+                aria-hidden="true"
+                className="sidebar-icon-dark h-9 w-9 object-contain"
+              />
             </Link>
           ) : (
             <Logo size="md" className="max-w-[190px]" />
