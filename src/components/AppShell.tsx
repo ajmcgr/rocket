@@ -129,7 +129,7 @@ const AppShell = () => {
     {
       label: "Monetize",
       items: [
-        { label: "Revenue", to: "/pricing#buy-with-rocket", icon: Wallet },
+        { label: "Buy with Rocket", to: "/pricing#buy-with-rocket", icon: Wallet },
         { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
         { label: "Developer", to: "/developer", icon: Layers3 },
       ],
