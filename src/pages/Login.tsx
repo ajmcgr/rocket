@@ -15,7 +15,7 @@ const AUTH_CALLBACK_URL =
     : "https://tryrocket.ai/auth/callback";
 
 type OAuthProvider = "google" | "github" | "x";
-type OAuthAvailability = { github: boolean; x: boolean };
+type OAuthAvailability = { github: boolean };
 
 const Login = ({ mode = "login" as "login" | "signup" }) => {
   const [email, setEmail] = useState("");
@@ -34,8 +34,9 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    // Keep unconfigured providers visible but inactive instead of sending users
-    // to Supabase's provider-disabled error page.
+    // Supabase's public settings currently omit the OAuth 2.0 X provider even
+    // when /auth/v1/authorize?provider=x is configured and redirects to X.
+    // Only use this settings response to gate GitHub, which it does report.
     fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/settings`, {
       headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
       signal: controller.signal,
@@ -47,11 +48,10 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
       .then((settings: { external?: Partial<OAuthAvailability> }) => {
         setOAuthAvailability({
           github: settings.external?.github === true,
-          x: settings.external?.x === true,
         });
       })
       .catch((error) => {
-        if (error?.name !== "AbortError") setOAuthAvailability({ github: false, x: false });
+        if (error?.name !== "AbortError") setOAuthAvailability({ github: false });
       });
     return () => controller.abort();
   }, []);
@@ -120,8 +120,8 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
     if (oauthLoading || loading) return;
     setOAuthLoading(provider);
     try {
-      if (provider !== "google" && !oauthAvailability?.[provider]) {
-        throw new Error(`${provider === "x" ? "X" : "GitHub"} sign-in is not available yet.`);
+      if (provider === "github" && !oauthAvailability?.github) {
+        throw new Error("GitHub sign-in is not available yet.");
       }
       if (isSignup) track("signup_started", { method: provider, ref: new URLSearchParams(window.location.search).get("ref") || undefined });
       const { error } = await supabase.auth.signInWithOAuth({
@@ -150,7 +150,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
             <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.99 6.99 0 0 1 5.47 12c0-.73.13-1.43.36-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
             Continue with Google
           </Button>
-          <Button onClick={() => socialSignIn("x")} disabled={loading || !!oauthLoading || !oauthAvailability?.x} variant="outline" size="lg" className="w-full gap-2">
+          <Button onClick={() => socialSignIn("x")} disabled={loading || !!oauthLoading} variant="outline" size="lg" className="w-full gap-2">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.901 2H22l-6.773 7.74L23.2 22h-6.244l-4.89-7.428L5.566 22H2.465l7.244-8.28L1.8 2h6.402l4.421 6.752L18.901 2Zm-1.095 18h1.717L7.269 3.895H5.426L17.806 20Z" /></svg>
             Continue with X
           </Button>
@@ -158,9 +158,9 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
             <Github className="h-4 w-4" aria-hidden="true" />
             Continue with GitHub
           </Button>
-          {oauthAvailability && (!oauthAvailability.x || !oauthAvailability.github) && (
+          {oauthAvailability && !oauthAvailability.github && (
             <p className="text-center text-xs text-neutral-500">
-              {[!oauthAvailability.x && "X", !oauthAvailability.github && "GitHub"].filter(Boolean).join(" and ")} sign-in will become available when configured.
+              GitHub sign-in will become available when configured.
             </p>
           )}
           </div>
