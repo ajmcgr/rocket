@@ -169,7 +169,7 @@ function RootErrorComponent({
   error,
   reset,
 }: {
-  error: Error;
+  error: unknown;
   reset: () => void;
 }) {
   const router = useRouter();
