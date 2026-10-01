@@ -71,39 +71,85 @@ const FAQS = [
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
 ];
 
-const GROW_PRODUCTS = [
+type GrowPlan = {
+  name: string;
+  tagline: string;
+  price: string;
+  suffix: string | null;
+  badge?: string;
+  cta: string;
+  features: string[];
+  note?: string;
+};
+
+const GROW_PRODUCTS: { name: string; description: string; href: string; footnote: string; plans: GrowPlan[] }[] = [
   {
     name: "Launch",
     description: "Launch your app and reach a community of vibe coders and early adopters.",
     href: "https://trylaunch.ai/pricing",
+    footnote: "Maximum 1 launch per week across all plans.",
     plans: [
-      { name: "Free listing", price: "$0", suffix: null },
-      { name: "Pro", price: "$39", suffix: null },
-      { name: "Grow", price: "$199", suffix: null },
-      { name: "Pass", price: "$99", suffix: "/ year, billed annually" },
+      {
+        name: "Free", tagline: "Basic listing", price: "$0", suffix: "one-time", cta: "Start free",
+        features: ["Homepage listing", "Standard launch queue", "Current queue estimate shown before submitting"],
+      },
+      {
+        name: "Pro", tagline: "Full promotion", price: "$39", suffix: "per launch", badge: "Most popular", cta: "Get started",
+        features: ["Guaranteed high-authority backlink", "Homepage listing", "Social media promotion", "Newsletter feature", "Choose your launch date", "Verified badge", "Skip the queue — launch today"],
+      },
+      {
+        name: "Grow", tagline: "Pro + directory submissions", price: "$199", suffix: "per launch", badge: "Most impact", cta: "Get started",
+        features: ["Everything in Pro", "Submission to 120+ startup directories", "Manual submission by the Launch team", "High-quality backlink opportunities", "Saves 20+ hours of manual work", "Progress tracking and confirmation"],
+        note: "Includes G2, Product Hunt, There's An AI For That, Hacker News, Peerlist, BetaList, Uneed, Indie Hackers and 110+ more.",
+      },
+      {
+        name: "Pass", tagline: "Unlimited launches", price: "$99", suffix: "/ year", badge: "Best value", cta: "Get Pass",
+        features: ["Guaranteed high-authority backlink", "Everything in Pro", "Unlimited launches and relaunches", "Future self-serve launch features", "12 months access"],
+        note: "Pays for itself in 3 launches ($117 vs $99). Best for makers shipping multiple products.",
+      },
     ],
   },
   {
     name: "Post",
     description: "Plan and publish across social channels from one place.",
     href: "https://trypost.ai/pricing",
+    footnote: "Paid plans include a 14-day free trial. Yearly billing saves ~17%. Cancel anytime.",
     plans: [
-      { name: "Free", price: "$0", suffix: null },
-      { name: "Pro", price: "$19", suffix: "/month" },
+      {
+        name: "Free", tagline: "Everything you need to publish your first campaigns.", price: "$0", suffix: "/month", cta: "Get started",
+        features: ["Connect up to 2 social platforms", "10 scheduled posts per month", "Single post composer", "Calendar view", "Drafts library", "1 user"],
+      },
+      {
+        name: "Pro", tagline: "For creators publishing consistently across every platform.", price: "$19", suffix: "/month", badge: "Most popular", cta: "Start free trial",
+        features: ["Connect all 7 platforms (Instagram, YouTube, TikTok, X, LinkedIn, Facebook, Threads)", "Unlimited scheduled posts", "Single and bulk image/video publishing", "Calendar, queue and posting time slots", "Draft, scheduled and published post views", "Failure email notifications", "Priority support"],
+      },
     ],
   },
   {
     name: "Media",
     description: "Find journalists and creators, build lists, and manage outreach.",
     href: "https://trymedia.ai/pricing",
+    footnote: "Paid plans include a 30-day trial. Yearly billing saves ~17%. AI credit usage varies by request complexity.",
     plans: [
-      { name: "Free", price: "$0", suffix: "AI credits" },
-      { name: "Starter", price: "$29", suffix: "/month" },
-      { name: "Growth", price: "$99", suffix: "/month" },
-      { name: "Enterprise", price: "Custom", suffix: null },
+      {
+        name: "Free", tagline: "Try Media AI search.", price: "$0", suffix: "/month", cta: "Start free",
+        features: ["5,000 free AI credits every month", "Media AI search", "Upgrade any time"],
+      },
+      {
+        name: "Starter", tagline: "Media AI search.", price: "$29", suffix: "/month", cta: "Start 30-day trial",
+        features: ["200,000 AI credits / month", "Verified contact emails where available, plus on-demand enrichment", "Up to 100 media contacts per query", "Top-up credits any time", "Email support"],
+      },
+      {
+        name: "Growth", tagline: "Full journalist & creator database, monitoring, inbox and teams.", price: "$99", suffix: "/month", badge: "Most popular", cta: "Start 30-day trial",
+        features: ["1,000,000 AI credits / month", "Unlimited media contacts per query", "100% database access — no row limits", "Sort, filter, save views, export", "Share contacts via link, email, or CSV", "Keyword Monitor — daily Google News alerts", "Outreach Inbox — pitch and reply tracking", "Team workspaces with shared lists and roles", "Top-up credits any time", "Email support"],
+      },
+      {
+        name: "Enterprise", tagline: "Custom API, volume credits, dedicated support.", price: "Custom", suffix: null, cta: "Contact us",
+        features: ["Everything in Growth", "Custom API access", "Volume credit pricing", "SSO and dedicated support", "Custom contracts"],
+      },
     ],
   },
-] as const;
+];
 
 const Pricing = () => {
   const { user } = useAuth();
@@ -415,17 +461,37 @@ const Pricing = () => {
                 <div className="mt-4 flex flex-col gap-4">
                   {product.plans.map((plan) => (
                     <div key={plan.name} className="rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-                      <h4 className="text-2xl font-semibold tracking-tight">{plan.name}</h4>
-                      <div className="mt-4 flex items-baseline gap-2">
-                        <span className="text-5xl font-semibold tracking-tight">{plan.price}</span>
-                        {plan.suffix && <span className="text-neutral-600">{plan.suffix}</span>}
+                      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-2xl font-semibold tracking-tight">{plan.name}</h4>
+                            {plan.badge && <span className="rounded-full border border-[#167ac6] px-2.5 py-0.5 text-xs font-semibold text-[#167ac6] dark:text-[#dcefff]">{plan.badge}</span>}
+                          </div>
+                          <p className="mt-1 text-sm text-neutral-600">{plan.tagline}</p>
+                          <div className="mt-4 flex items-baseline gap-2">
+                            <span className="text-5xl font-semibold tracking-tight">{plan.price}</span>
+                            {plan.suffix && <span className="text-neutral-600">{plan.suffix}</span>}
+                          </div>
+                          <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">
+                            {plan.cta} on {product.name} ↗
+                          </a>
+                        </div>
+                        <div>
+                          <ul className="space-y-2.5 text-sm text-neutral-700">
+                            {plan.features.map((f) => (
+                              <li key={f} className="flex gap-2.5">
+                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#167ac6]" />
+                                <span>{f}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {plan.note && <p className="mt-4 text-xs leading-relaxed text-neutral-500">{plan.note}</p>}
+                        </div>
                       </div>
-                      <a href={product.href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">
-                        View {product.name} pricing ↗
-                      </a>
                     </div>
                   ))}
                 </div>
+                <p className="mt-3 text-xs text-neutral-500">{product.footnote}</p>
               </div>
             ))}
           </div>
