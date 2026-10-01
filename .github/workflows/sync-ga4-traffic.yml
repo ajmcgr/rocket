@@ -12,10 +12,12 @@ jobs:
         env:
           ROCKET_GA4_SYNC_SECRET: ${{ secrets.ROCKET_GA4_SYNC_SECRET }}
         run: |
-          test -n "$ROCKET_GA4_SYNC_SECRET"
+          if [ "${#ROCKET_GA4_SYNC_SECRET}" -lt 32 ]; then
+            echo 'GA4 sync secret is missing or shorter than 32 characters' >&2
+            exit 1
+          fi
           curl --fail-with-body --silent --show-error --max-time 840 \
             -X POST 'https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-ga4' \
             -H 'Content-Type: application/json' \
             -H "x-rocket-sync-secret: $ROCKET_GA4_SYNC_SECRET" \
-            --data '{"action":"scheduled_sync"}' \
-            --output /dev/null
+            --data '{"action":"scheduled_sync"}'

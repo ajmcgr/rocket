@@ -2,12 +2,13 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import http from "node:http";
 import https from "node:https";
+import { fileURLToPath } from "node:url";
 
 const base = process.env.ROCKET_SUPABASE_URL || "https://lcujmvdgczkjxdstzhnr.supabase.co";
 const key = process.env.ROCKET_SUPABASE_SERVICE_ROLE_KEY;
-if (!key) throw new Error("ROCKET_SUPABASE_SERVICE_ROLE_KEY is required");
 
 async function rpc(name, body) {
+  if (!key) throw new Error("ROCKET_SUPABASE_SERVICE_ROLE_KEY is required");
   const response = await fetch(`${base}/rest/v1/rpc/${name}`, {
     method: "POST",
     headers: { apikey: key, Authorization: `Bearer ${key}`, "content-type": "application/json" },
@@ -89,13 +90,26 @@ async function probe(value) {
   return "uncertain";
 }
 
-const candidates = await rpc("next_app_website_checks", { p_limit: 80 });
-let checked = 0;
-let hardFailures = 0;
-for (const row of candidates) {
-  const result = await probe(row.website_url).catch(() => "uncertain");
-  await rpc("record_app_website_check", { p_app_id: row.app_id, p_result: result });
-  checked++;
-  if (result === "hard_failure") hardFailures++;
+async function runWebsiteChecks() {
+  const candidates = await rpc("next_app_website_checks", { p_limit: 80 });
+  let checked = 0;
+  let hardFailures = 0;
+  for (const row of candidates) {
+    const result = await probe(row.website_url).catch(() => "uncertain");
+    await rpc("record_app_website_check", { p_app_id: row.app_id, p_result: result });
+    checked++;
+    if (result === "hard_failure") hardFailures++;
+  }
+  const summary = { checked, hard_failures: hardFailures };
+  console.log(JSON.stringify({ website_health: summary }));
+  return summary;
 }
-console.log(`Website health: ${checked} bounded checks, ${hardFailures} hard failures (no single failure hides an app)`);
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  runWebsiteChecks().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+export { runWebsiteChecks };

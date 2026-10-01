@@ -382,6 +382,7 @@ async function run() {
   const runId = await rocketRpc(rocketKey, "start_launch_app_import", {
     p_expected_count: records.length,
   });
+  let stage = "catalogue";
   try {
     for (let offset = 0; offset < records.length; offset += PAGE_SIZE) {
       await rocketRpc(rocketKey, "sync_launch_app_batch", {
@@ -392,47 +393,47 @@ async function run() {
         `Synced ${Math.min(offset + PAGE_SIZE, records.length)}/${records.length}`,
       );
     }
+    stage = "media";
+    let mediaUpdates = 0;
+    for (let offset = 0; offset < mediaRecords.length; offset += PAGE_SIZE) {
+      mediaUpdates += await rocketRpc(rocketKey, "sync_launch_app_media_batch", {
+        p_items: mediaRecords.slice(offset, offset + PAGE_SIZE),
+      });
+    }
+    console.log(JSON.stringify({ media_updates: mediaUpdates }));
+
+    stage = "votes";
+    let voteUpdates = 0;
+    for (let offset = 0; offset < voteRecords.length; offset += PAGE_SIZE) {
+      voteUpdates += await rocketRpc(rocketKey, "sync_launch_vote_counts", {
+        p_items: voteRecords.slice(offset, offset + PAGE_SIZE),
+      });
+    }
+    stage = "intelligence";
+    const intelligence = await rocketRpc(rocketKey, "refresh_launch_intelligence", {});
+    console.log(JSON.stringify({ vote_updates: voteUpdates, intelligence }));
+
+    stage = "website_health";
+    const { runWebsiteChecks } = await import("./check-app-websites.mjs");
+    await runWebsiteChecks();
+
+    stage = "finalize";
     const completed = await rocketRpc(rocketKey, "finish_launch_app_import", {
       p_run_id: runId,
     });
     console.log(JSON.stringify({ run_id: runId, completed }));
   } catch (error) {
-    console.error(
-      `Import ${runId} remains incomplete and cannot withdraw old records.`,
-    );
+    console.error(`Import ${runId} failed at ${stage}; old unseen sources remain active.`);
     try {
       await rocketRpc(rocketKey, "fail_launch_app_import", {
         p_run_id: runId,
-        p_error: String(error).slice(0, 500),
+        p_error: `${stage}: ${String(error)}`.slice(0, 500),
       });
     } catch {
-      console.error(
-        `Unable to close failed import ${runId}; it will time out after two hours.`,
-      );
+      console.error(`Unable to close failed import ${runId}; it will time out after two hours.`);
     }
     throw error;
   }
-  let mediaUpdates = 0;
-  for (let offset = 0; offset < mediaRecords.length; offset += PAGE_SIZE) {
-    mediaUpdates += await rocketRpc(rocketKey, "sync_launch_app_media_batch", {
-      p_items: mediaRecords.slice(offset, offset + PAGE_SIZE),
-    });
-  }
-  console.log(JSON.stringify({ media_updates: mediaUpdates }));
-  // A vote/derived refresh failure leaves the catalogue and the last successful
-  // intelligence snapshot intact; the next daily run can retry it safely.
-  let voteUpdates = 0;
-  for (let offset = 0; offset < voteRecords.length; offset += PAGE_SIZE) {
-    voteUpdates += await rocketRpc(rocketKey, "sync_launch_vote_counts", {
-      p_items: voteRecords.slice(offset, offset + PAGE_SIZE),
-    });
-  }
-  const intelligence = await rocketRpc(
-    rocketKey,
-    "refresh_launch_intelligence",
-    {},
-  );
-  console.log(JSON.stringify({ vote_updates: voteUpdates, intelligence }));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

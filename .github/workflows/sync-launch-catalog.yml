@@ -25,7 +25,3 @@ jobs:
           LAUNCH_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.LAUNCH_SUPABASE_PUBLISHABLE_KEY }}
           ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/sync-launch-catalog.mjs --apply
-      - name: Check a bounded sample of app websites
-        env:
-          ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/check-app-websites.mjs
