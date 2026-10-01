@@ -19,6 +19,7 @@ const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (
 const count = (value: unknown) => typeof value === "number" ? value.toLocaleString() : "Not tracked";
 const when = (value: unknown) => typeof value === "string" ? new Date(value).toLocaleString() : "—";
 const appUrl = (row: Row) => `/apps/${encodeURIComponent(String(row.slug || row.id))}`;
+const outreachStatuses = ["eligible", "queued", "sent", "delivered", "clicked", "claimed", "verified", "connected", "bounced", "suppressed", "skipped", "failed"];
 
 function StatGrid({ data }: { data: Row }) {
   return <div className="rocket-admin-stats">{Object.entries(data).map(([name, value]) =>
@@ -116,7 +117,7 @@ export default function Admin() {
     </>}
     {data && section === "outreach" && <>
       <p className="rocket-admin-note">Founder outreach is in test mode and paused. No real Launch founders can be emailed from this version.</p>
-      <Panel title="Queue status"><StatGrid data={obj(data.counts)} /><p className="rocket-admin-muted">Daily target after separate activation: 25 eligible founders. Sending is not enabled.</p><button disabled={busy} onClick={() => void act("pause_outreach", null)}>Pause outreach</button></Panel>
+      <Panel title="Queue status"><StatGrid data={Object.fromEntries(outreachStatuses.map((status) => [status, Number(obj(data.counts)[status] || 0)]))} /><p className="rocket-admin-muted">Daily target after separate activation: 25 eligible founders. Sending is not enabled.</p><button disabled={busy} onClick={() => void act("pause_outreach", null)}>Pause outreach</button></Panel>
       <Panel title="Today’s Outreach"><p className="rocket-admin-muted">Read-only preview of the next 25 eligible, unsuppressed founders. The campaign remains paused.</p>{today.length ? <div className="rocket-admin-list">{today.map((row) => <article key={String(row.id)}><strong>{String(row.founder_first_name || "Founder")} · {String(row.app_name)}</strong><p>{String(row.recipient_email)} · Launch source {String(row.launch_product_id)} · {String(row.status)}</p><button disabled={busy} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No eligible founders in the next batch.</Empty>}</Panel>
       <Panel title="Founder queue">{rows(data.queue).length ? <div className="rocket-admin-list">{rows(data.queue).map((row) => <article key={String(row.id)}><strong>{String(row.recipient_email)} · {String(row.status)}</strong><p>App {String(row.app_id)} · {when(row.created_at)}</p><button disabled={busy || !["eligible","queued"].includes(String(row.status))} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No founder relationships imported yet. A private, read-only Launch founder credential and test claim flow are required before this queue is populated.</Empty>}</Panel>
     </>}

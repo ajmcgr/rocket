@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
   if (!queue || queue.recipient_email?.toLowerCase() !== TEST_EMAIL) {
     return json({ error: "Recipient is not the approved internal test address" }, 403);
   }
-  const { data: app } = await admin.from("public_discoverable_apps")
+  const { data: app } = await userClient.from("public_discoverable_apps")
     .select("name").eq("id", queue.app_id).maybeSingle();
   if (!app?.name) return json({ error: "App unavailable" }, 409);
   const { data: invitation, error: invitationError } = await userClient.rpc(
