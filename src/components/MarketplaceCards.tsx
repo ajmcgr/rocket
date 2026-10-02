@@ -142,7 +142,7 @@ export function StandardAppCard({
   return (
     <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-sky-300 hover:bg-neutral-50 hover:shadow-sm">
       <Link
-        to={`/apps/${app.id}`}
+        to={`/apps/${app.slug || app.id}`}
         className="min-w-0 focus-visible:outline-2 focus-visible:outline-sky-500"
       >
         {hasCover && <Artwork app={app} media={media} className="h-40 w-full sm:h-44" />}
@@ -192,7 +192,7 @@ export function RankedAppRow({
         src={app.logo_url}
         className="h-11 w-11"
       />
-      <Link to={`/apps/${app.id}`} className="min-w-32 flex-1 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
+      <Link to={`/apps/${app.slug || app.id}`} className="min-w-32 flex-1 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
         <strong className="block truncate text-sm font-semibold text-neutral-950">
           {app.name}
         </strong>
@@ -218,7 +218,7 @@ export function RisingAppCard({
 }: BaseProps & { rank: number }) {
   return (
     <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm">
-      <Link to={`/apps/${app.id}`} className="focus-visible:outline-2 focus-visible:outline-[#167ac6]">
+      <Link to={`/apps/${app.slug || app.id}`} className="focus-visible:outline-2 focus-visible:outline-[#167ac6]">
       <AppCardIdentity app={app} rank={rank} metadata={metadata} />
       <div className="mt-2"><AppCardByline metadata={metadata} /></div>
       <span className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-600">
@@ -242,7 +242,7 @@ export function MarketplaceListRow({
   return (
     <article className="flex min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3">
       <Link
-        to={`/apps/${app.id}`}
+        to={`/apps/${app.slug || app.id}`}
         className="flex min-w-0 flex-1 items-center gap-3 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
       >
         <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />

@@ -93,7 +93,7 @@ export default function PublicAppProfile() {
   const [error, setError] = useState(false);
   const shareApp = async () => {
     if (!app) return;
-    const url = `https://tryrocket.ai/apps/${app.id}`;
+    const url = `https://tryrocket.ai/apps/${app.slug || app.id}`;
     setShareStatus("");
     if (navigator.share) {
       try {
@@ -117,7 +117,7 @@ export default function PublicAppProfile() {
       (app?.description
         ? descriptionSummary(app.description).slice(0, 180)
         : "Explore a public app listed on Rocket."),
-    canonical: id ? `https://tryrocket.ai/apps/${id}` : undefined,
+    canonical: app ? `https://tryrocket.ai/apps/${app.slug || app.id}` : undefined,
     image:
       app?.logo_url && /^https:\/\//i.test(app.logo_url)
         ? app.logo_url
@@ -127,39 +127,42 @@ export default function PublicAppProfile() {
   useEffect(() => {
     let canceled = false;
     setLoading(true);
-    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    if (!id) {
       setLoading(false);
       setError(true);
       return;
     }
-    Promise.all([
-      supabase.from("public_apps").select("*").eq("id", id).maybeSingle(),
-      supabase.from("public_app_sources").select("*").eq("app_id", id),
-      supabase.from("public_app_traction").select("*").eq("app_id", id),
-      supabase.from("public_app_revenue").select("*").eq("app_id", id),
-      supabase.from("public_app_intelligence").select("*").eq("app_id", id),
+    const load = async () => {
+      const isId = /^[0-9a-f-]{36}$/i.test(id);
+      const appResult = await supabase.from("public_apps").select("*").eq(isId ? "id" : "slug", id).maybeSingle();
+      if (canceled) return;
+      if (appResult.error || !appResult.data) {
+        setApp(null);
+        setError(true);
+        setLoading(false);
+        return;
+      }
+      const appId = appResult.data.id;
+      const [
+        sourceResult, tractionResult, revenueResult, signalResult,
+        trustResult, mediaResult, presentationResult,
+      ] = await Promise.all([
+      supabase.from("public_app_sources").select("*").eq("app_id", appId),
+      supabase.from("public_app_traction").select("*").eq("app_id", appId),
+      supabase.from("public_app_revenue").select("*").eq("app_id", appId),
+      supabase.from("public_app_intelligence").select("*").eq("app_id", appId),
       supabase
         .from("public_app_trust")
         .select("*")
-        .eq("app_id", id)
+        .eq("app_id", appId)
         .maybeSingle(),
-      loadAppMedia([id], false),
+      loadAppMedia([appId], false),
       supabase
         .from("public_app_presentation")
         .select("pricing_display,public_links")
-        .eq("app_id", id)
+        .eq("app_id", appId)
         .maybeSingle(),
-    ]).then(
-      ([
-        appResult,
-        sourceResult,
-        tractionResult,
-        revenueResult,
-        signalResult,
-        trustResult,
-        mediaResult,
-        presentationResult,
-      ]) => {
+      ]);
         if (canceled) return;
         setApp(appResult.data);
         setSources(sourceResult.data || []);
@@ -167,7 +170,7 @@ export default function PublicAppProfile() {
         setRevenue(revenueResult.data || []);
         setSignals(signalResult.data || []);
         setTrust(trustResult.data);
-        setMedia(mediaResult.get(id) || []);
+        setMedia(mediaResult.get(appId) || []);
         setPresentation(presentationResult.data || null);
         setError(
           Boolean(
@@ -189,8 +192,10 @@ export default function PublicAppProfile() {
           }
         }
         setLoading(false);
-      },
-    );
+    };
+    void load().catch(() => {
+      if (!canceled) { setError(true); setLoading(false); }
+    });
     return () => {
       canceled = true;
     };

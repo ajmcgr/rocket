@@ -15,11 +15,11 @@ function summarize(description: string) {
 export const Route = createFileRoute("/apps/$id")({
   pendingComponent: AppProfileRouteSkeleton,
   loader: async ({ params }) => {
-    if (!/^[0-9a-f-]{36}$/i.test(params.id)) return null;
+    const isId = /^[0-9a-f-]{36}$/i.test(params.id);
     const { data, error } = await supabase
       .from("public_apps")
-      .select("id,name,tagline,description,logo_url")
-      .eq("id", params.id)
+      .select("id,slug,name,tagline,description,logo_url")
+      .eq(isId ? "id" : "slug", params.id)
       .maybeSingle();
     if (error) throw error;
     return data;
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/apps/$id")({
       (app.description
         ? summarize(app.description)
         : `Explore ${app.name} on Rocket.`);
-    const canonical = `${siteUrl}/apps/${app.id}`;
+    const canonical = `${siteUrl}/apps/${app.slug || app.id}`;
     const image =
       app.logo_url && /^https:\/\//i.test(app.logo_url)
         ? app.logo_url

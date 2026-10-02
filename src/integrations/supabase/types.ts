@@ -249,6 +249,7 @@ export type Database = {
       public_apps: {
         Row: {
           id: string;
+          slug: string;
           name: string;
           tagline: string | null;
           description: string | null;
@@ -268,6 +269,7 @@ export type Database = {
       public_discoverable_apps: {
         Row: {
           id: string;
+          slug: string;
           name: string;
           tagline: string | null;
           description: string | null;

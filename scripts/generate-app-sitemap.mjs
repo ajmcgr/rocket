@@ -11,15 +11,15 @@ if (!url || !key) throw new Error("Public Supabase configuration is required to 
 const apps = [];
 for (let offset = 0; ; offset += 1000) {
   const endpoint = new URL("/rest/v1/public_apps", url);
-  endpoint.searchParams.set("select", "id");
+  endpoint.searchParams.set("select", "id,slug");
   endpoint.searchParams.set("order", "id.asc");
   endpoint.searchParams.set("limit", "1000");
   endpoint.searchParams.set("offset", String(offset));
   const response = await fetch(endpoint, { headers: { apikey: key }, signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`Public app sitemap query failed: HTTP ${response.status}`);
   const page = await response.json();
-  if (!Array.isArray(page) || page.some((item) => !/^[0-9a-f-]{36}$/i.test(item.id)))
-    throw new Error("Public app sitemap returned invalid IDs");
+  if (!Array.isArray(page) || page.some((item) => !/^[0-9a-f-]{36}$/i.test(item.id) || !/^[a-z0-9-]+$/.test(item.slug)))
+    throw new Error("Public app sitemap returned invalid app IDs or slugs");
   apps.push(...page);
   if (page.length < 1000) break;
 }
@@ -28,7 +28,7 @@ const sitemapPath = [".output/public/sitemap.xml", "dist/client/sitemap.xml", "d
 if (!sitemapPath) throw new Error("Built public sitemap was not found");
 const sitemap = readFileSync(sitemapPath, "utf8");
 if (!sitemap.includes("</urlset>")) throw new Error("Built sitemap is not a URL set");
-const entries = apps.map(({ id }) => `  <url><loc>https://tryrocket.ai/apps/${id}</loc></url>`).join("\n");
+const entries = apps.map(({ slug }) => `  <url><loc>https://tryrocket.ai/apps/${slug}</loc></url>`).join("\n");
 writeFileSync(sitemapPath, sitemap.replace("</urlset>", `${entries}\n</urlset>`));
 
 console.log(`Generated sitemap entries for ${apps.length} public app profiles`);
