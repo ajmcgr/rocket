@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import PostHogTrafficConnection from "@/components/PostHogTrafficConnection";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Metric = "active_users" | "sessions" | "views";
@@ -51,7 +52,7 @@ export default function AppAnalytics() {
   return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Traffic connection</h1>
-    <p className="mt-2 text-sm text-neutral-600">Connect a Google Analytics 4 web stream for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
+    <p className="mt-2 text-sm text-neutral-600">Connect Google Analytics or PostHog for this domain-verified app. Every metric remains private until you choose otherwise. Each provider has separate sharing controls.</p>
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
@@ -102,5 +103,6 @@ export default function AppAnalytics() {
       </label>)}</div>
       <Link to={`/apps/${id}`} className="mt-5 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
+    {id && <PostHogTrafficConnection appId={id} />}
   </main>;
 }

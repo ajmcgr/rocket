@@ -1,4 +1,4 @@
-name: Sync verified GA4 traffic
+name: Sync verified app traffic
 on:
   schedule:
     - cron: '23 5 * * *'
@@ -9,6 +9,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Sync active GA4 connections
+        id: ga4
+        continue-on-error: true
         env:
           ROCKET_GA4_SYNC_SECRET: ${{ secrets.ROCKET_GA4_SYNC_SECRET }}
         run: |
@@ -21,3 +23,21 @@ jobs:
             -H 'Content-Type: application/json' \
             -H "x-rocket-sync-secret: $ROCKET_GA4_SYNC_SECRET" \
             --data '{"action":"scheduled_sync"}'
+      - name: Sync active PostHog connections
+        id: posthog
+        continue-on-error: true
+        env:
+          ROCKET_GA4_SYNC_SECRET: ${{ secrets.ROCKET_GA4_SYNC_SECRET }}
+        run: |
+          if [ "${#ROCKET_GA4_SYNC_SECRET}" -lt 32 ]; then
+            echo 'Traffic sync secret is missing or shorter than 32 characters' >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 840 \
+            -X POST 'https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-posthog' \
+            -H 'Content-Type: application/json' \
+            -H "x-rocket-sync-secret: $ROCKET_GA4_SYNC_SECRET" \
+            --data '{"action":"scheduled_sync"}'
+      - name: Report sync failures
+        if: steps.ga4.outcome == 'failure' || steps.posthog.outcome == 'failure'
+        run: exit 1

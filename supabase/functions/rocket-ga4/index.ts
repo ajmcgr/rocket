@@ -202,7 +202,7 @@ async function handle(request: Request) {
   if (body.action === "scheduled_sync") {
     const configured = Deno.env.get("ROCKET_GA4_SYNC_SECRET");
     if (!configured || configured.length < 32 || request.headers.get("x-rocket-sync-secret") !== configured) return fail("Unauthorized", 401);
-    const found = await service.from("app_data_connections").select("*").in("status", ["active", "error"])
+    const found = await service.from("app_data_connections").select("*").eq("provider", "ga4").in("status", ["active", "error"])
       .order("last_attempted_sync", { ascending: true, nullsFirst: true }).limit(50);
     if (found.error) throw found.error;
     let succeeded = 0, failed = 0;
@@ -220,7 +220,7 @@ async function handle(request: Request) {
   const app = await ownedApp(body.app_id, userId);
   const row = await connection(app.id);
   if (body.action === "status") {
-    const vis = await service.from("app_metric_visibility").select("metric_type,visibility").eq("app_id", app.id);
+    const vis = await service.from("app_metric_visibility").select("metric_type,visibility").eq("app_id", app.id).eq("provider", "ga4");
     if (vis.error) throw vis.error;
     let latest: Array<{ metric_type: string; metric_date: string; metric_value: number }> = [];
     let growth: Record<string, { seven_day: number | null; thirty_day: number | null }> = {};
@@ -294,8 +294,8 @@ async function handle(request: Request) {
     if (typeof body.metric_type !== "string" || !["active_users", "sessions", "views"].includes(body.metric_type)
       || typeof body.visibility !== "string" || !VISIBILITIES.includes(body.visibility as typeof VISIBILITIES[number])) return fail("Invalid visibility");
     const saved = await service.from("app_metric_visibility").upsert({ app_id: app.id,
-      metric_type: body.metric_type, visibility: body.visibility, updated_at: new Date().toISOString() },
-    { onConflict: "app_id,metric_type" });
+      provider: "ga4", metric_type: body.metric_type, visibility: body.visibility, updated_at: new Date().toISOString() },
+    { onConflict: "app_id,provider,metric_type" });
     if (saved.error) throw saved.error;
     await project(app.id);
     return json({ ok: true });

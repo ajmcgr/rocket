@@ -498,12 +498,12 @@ export default function PublicAppProfile() {
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {traction.map((point) => (
                     <div
-                      key={point.metric_type}
+                      key={`${point.provider}-${point.metric_type}`}
                       className="border-l-2 border-[#167ac6] pl-4"
                     >
                       <p className="text-sm text-neutral-500">
                         {{
-                          active_users: "Active users",
+                          active_users: point.provider === "posthog" ? "Unique visitors" : "Active users",
                           sessions: "Sessions",
                           views: "Views",
                         }[point.metric_type] || point.metric_type}{" "}
@@ -517,7 +517,7 @@ export default function PublicAppProfile() {
                             : point.value?.toLocaleString()}
                       </p>
                       <p className="mt-2 text-xs text-neutral-500">
-                        Verified by Google Analytics · Updated{" "}
+                        Verified by {point.provider === "posthog" ? "PostHog (UTC)" : "Google Analytics"} · Updated{" "}
                         {new Date(point.last_verified_at).toLocaleString()}
                       </p>
                     </div>

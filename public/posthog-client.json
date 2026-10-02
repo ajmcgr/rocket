@@ -1,0 +1,13 @@
+{
+  "client_id": "https://tryrocket.ai/posthog-client.json",
+  "client_name": "Rocket app traffic",
+  "token_endpoint_auth_method": "none",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "redirect_uris": [
+    "https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-posthog"
+  ],
+  "com.posthog": {
+    "scopes": ["project:read", "endpoint:read", "endpoint:write"]
+  }
+}

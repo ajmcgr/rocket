@@ -111,5 +111,8 @@ verify_jwt = false
 [functions.rocket-ga4]
 verify_jwt = false
 
+[functions.rocket-posthog]
+verify_jwt = false # Public OAuth callback; owner actions validate the signed-in user in code.
+
 [functions.rocket-stripe-revenue]
 verify_jwt = false
