@@ -82,7 +82,6 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "Buy with Rocket", to: "/developer#buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
-      { label: "Developer", to: "/developer", icon: Layers3 },
     ],
   },
 ];
