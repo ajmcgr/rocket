@@ -16,6 +16,7 @@ import { Route as AiInfoRouteImport } from './routes/ai-info'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
 import { Route as ClaimInvitationRouteImport } from './routes/claim-invitation'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -81,7 +82,6 @@ import { Route as AppCreateChatRouteImport } from './routes/_app/create.chat'
 import { Route as AppCreateGenerateRouteImport } from './routes/_app/create.generate'
 import { Route as AppDesignsIndexRouteImport } from './routes/_app/designs.index'
 import { Route as AppDesignsIdRouteImport } from './routes/_app/designs.$id'
-import { Route as AppDeveloperIndexRouteImport } from './routes/_app/developer.index'
 import { Route as AppDeveloperActivateRouteImport } from './routes/_app/developer.activate'
 import { Route as AppMyAppsIndexRouteImport } from './routes/_app/my-apps.index'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app/projects.index'
@@ -150,6 +150,11 @@ const ClaimInvitationRoute = ClaimInvitationRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeveloperRoute = DeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiscoverRoute = DiscoverRouteImport.update({
@@ -477,11 +482,6 @@ const AppDesignsIdRoute = AppDesignsIdRouteImport.update({
   path: '/designs/$id',
   getParentRoute: () => AppRoute,
 } as any)
-const AppDeveloperIndexRoute = AppDeveloperIndexRouteImport.update({
-  id: '/developer/',
-  path: '/developer/',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDeveloperActivateRoute = AppDeveloperActivateRouteImport.update({
   id: '/developer/activate',
   path: '/developer/activate',
@@ -667,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/brand-kit': typeof BrandKitRoute
   '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
+  '/developer': typeof DeveloperRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -746,7 +747,6 @@ export interface FileRoutesByFullPath {
   '/brands/': typeof AppBrandsIndexRoute
   '/create/': typeof AppCreateIndexRoute
   '/designs/': typeof AppDesignsIndexRoute
-  '/developer/': typeof AppDeveloperIndexRoute
   '/my-apps/': typeof AppMyAppsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
@@ -776,6 +776,7 @@ export interface FileRoutesByTo {
   '/brand-kit': typeof BrandKitRoute
   '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
+  '/developer': typeof DeveloperRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -853,7 +854,6 @@ export interface FileRoutesByTo {
   '/brands': typeof AppBrandsIndexRoute
   '/create': typeof AppCreateIndexRoute
   '/designs': typeof AppDesignsIndexRoute
-  '/developer': typeof AppDeveloperIndexRoute
   '/my-apps': typeof AppMyAppsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
@@ -885,6 +885,7 @@ export interface FileRoutesById {
   '/brand-kit': typeof BrandKitRoute
   '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
+  '/developer': typeof DeveloperRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -964,7 +965,6 @@ export interface FileRoutesById {
   '/_app/brands/': typeof AppBrandsIndexRoute
   '/_app/create/': typeof AppCreateIndexRoute
   '/_app/designs/': typeof AppDesignsIndexRoute
-  '/_app/developer/': typeof AppDeveloperIndexRoute
   '/_app/my-apps/': typeof AppMyAppsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
@@ -996,6 +996,7 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/claim-invitation'
     | '/contact'
+    | '/developer'
     | '/discover'
     | '/faq'
     | '/forgot-password'
@@ -1075,7 +1076,6 @@ export interface FileRouteTypes {
     | '/brands/'
     | '/create/'
     | '/designs/'
-    | '/developer/'
     | '/my-apps/'
     | '/projects/'
     | '/settings/'
@@ -1105,6 +1105,7 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/claim-invitation'
     | '/contact'
+    | '/developer'
     | '/discover'
     | '/faq'
     | '/forgot-password'
@@ -1182,7 +1183,6 @@ export interface FileRouteTypes {
     | '/brands'
     | '/create'
     | '/designs'
-    | '/developer'
     | '/my-apps'
     | '/projects'
     | '/settings'
@@ -1213,6 +1213,7 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/claim-invitation'
     | '/contact'
+    | '/developer'
     | '/discover'
     | '/faq'
     | '/forgot-password'
@@ -1292,7 +1293,6 @@ export interface FileRouteTypes {
     | '/_app/brands/'
     | '/_app/create/'
     | '/_app/designs/'
-    | '/_app/developer/'
     | '/_app/my-apps/'
     | '/_app/projects/'
     | '/_app/settings/'
@@ -1324,6 +1324,7 @@ export interface RootRouteChildren {
   BrandKitRoute: typeof BrandKitRoute
   ClaimInvitationRoute: typeof ClaimInvitationRoute
   ContactRoute: typeof ContactRoute
+  DeveloperRoute: typeof DeveloperRoute
   DiscoverRoute: typeof DiscoverRoute
   FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -1411,6 +1412,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/developer': {
+      id: '/developer'
+      path: '/developer'
+      fullPath: '/developer'
+      preLoaderRoute: typeof DeveloperRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/discover': {
@@ -1868,13 +1876,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDesignsIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/developer/': {
-      id: '/_app/developer/'
-      path: '/developer'
-      fullPath: '/developer/'
-      preLoaderRoute: typeof AppDeveloperIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/developer/activate': {
       id: '/_app/developer/activate'
       path: '/developer/activate'
@@ -2216,7 +2217,6 @@ interface AppRouteChildren {
   AppBrandsIndexRoute: typeof AppBrandsIndexRoute
   AppCreateIndexRoute: typeof AppCreateIndexRoute
   AppDesignsIndexRoute: typeof AppDesignsIndexRoute
-  AppDeveloperIndexRoute: typeof AppDeveloperIndexRoute
   AppMyAppsIndexRoute: typeof AppMyAppsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
   AppStudioIndexRoute: typeof AppStudioIndexRoute
@@ -2271,7 +2271,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppBrandsIndexRoute: AppBrandsIndexRoute,
   AppCreateIndexRoute: AppCreateIndexRoute,
   AppDesignsIndexRoute: AppDesignsIndexRoute,
-  AppDeveloperIndexRoute: AppDeveloperIndexRoute,
   AppMyAppsIndexRoute: AppMyAppsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppStudioIndexRoute: AppStudioIndexRoute,
@@ -2299,6 +2298,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrandKitRoute: BrandKitRoute,
   ClaimInvitationRoute: ClaimInvitationRoute,
   ContactRoute: ContactRoute,
+  DeveloperRoute: DeveloperRoute,
   DiscoverRoute: DiscoverRoute,
   FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

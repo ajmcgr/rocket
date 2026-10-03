@@ -1,6 +1,10 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  developerMessage,
+  type DeveloperBuyStatus,
+} from "@/lib/developerExperience";
 
 type Plan = {
   id: string;
@@ -35,8 +39,10 @@ async function request<T>(
 
 export default function ProductionBuySetup({
   ownedApps,
+  onStatus,
 }: {
-  ownedApps: { app_id: string }[];
+  ownedApps: { app_id: string; name?: string }[];
+  onStatus?: (status: DeveloperBuyStatus) => void;
 }) {
   const [params] = useSearchParams();
   const requestedApp = params.get("app");
@@ -56,7 +62,9 @@ export default function ProductionBuySetup({
     if (!appId) return;
     try {
       setError("");
-      setStatus(await request<BuyStatus>("status", appId));
+      const next = await request<BuyStatus>("status", appId);
+      setStatus(next);
+      onStatus?.(next);
     } catch (caught: unknown) {
       setStatus(null);
       setError(
@@ -112,9 +120,7 @@ export default function ProductionBuySetup({
   };
   if (!ownedApps.length) return null;
   return (
-    <section
-      className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6"
-    >
+    <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6">
       <h2 className="text-xl font-semibold">Buy with Rocket</h2>
       <p className="mt-2 text-sm text-neutral-600">
         Connect your own Stripe merchant account, then set one monthly or annual
@@ -133,16 +139,14 @@ export default function ProductionBuySetup({
         >
           {ownedApps.map((app) => (
             <option key={app.app_id} value={app.app_id}>
-              {app.app_id}
+              {app.name || "Your app"}
             </option>
           ))}
         </select>
       </label>
       {error && (
         <p role="alert" className="mt-3 text-sm text-red-600">
-          {error === "production_rocket_id_required"
-            ? "Set up production Rocket ID for this app first."
-            : error}
+          {developerMessage(error)}
         </p>
       )}
       {status && (

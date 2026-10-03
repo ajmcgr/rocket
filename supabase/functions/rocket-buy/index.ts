@@ -66,6 +66,15 @@ Deno.serve(async (req) => {
     const action = text(body.action, 20);
     const admin = getAdmin();
 
+    // Read-only commercial terms for the Developer explanation page.
+    // This does not change offer(), merchant readiness, or checkout activation.
+    if (action === "configuration") {
+      const { data: configuration, error } = await admin.from("rocket_buy_configuration")
+        .select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
+      if (error) throw error;
+      return json({ platform_fee_bps: configuration.platform_fee_bps, live_checkout_enabled: configuration.live_checkout_enabled });
+    }
+
     if (action === "library") {
       const user = await getRocketUser(req);
       if (!user) return json({ error: "unauthorized" }, 401);

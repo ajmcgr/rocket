@@ -79,7 +79,13 @@ async function dashboard(ctx: NonNullable<Awaited<ReturnType<typeof actor>>>) {
     .eq("created_by", ctx.user.id).eq("environment", "test")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return { developer: ctx.developer, operator: ctx.operator, apps: apps || [] };
+  // Public integration settings only, scoped to this authenticated owner.
+  // Token/code/private credential tables are deliberately never queried here.
+  const { data: productionApps, error: productionError } = await ctx.admin.from("rocket_oauth_clients")
+    .select("client_id,app_id,name,redirect_uris,is_active,environment")
+    .eq("created_by", ctx.user.id).eq("environment", "production");
+  if (productionError) throw productionError;
+  return { developer: ctx.developer, operator: ctx.operator, apps: apps || [], production_apps: productionApps || [] };
 }
 
 Deno.serve(async (req) => {
