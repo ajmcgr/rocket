@@ -12,7 +12,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
-import { ScrollToTop } from "@/components/ScrollToTop";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import NotFound from "@/pages/NotFound";
 import appCss from "../styles.css?url";
@@ -156,7 +155,6 @@ function RootComponent() {
         <Sonner />
         <AuthProvider>
           <NotificationsProvider>
-            <ScrollToTop />
             <Outlet />
           </NotificationsProvider>
         </AuthProvider>

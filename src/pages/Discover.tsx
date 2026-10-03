@@ -19,6 +19,7 @@ import {
 } from "@/components/MarketplaceCards";
 import { track } from "@/lib/analytics";
 import { availableCategories } from "@/lib/appCategories";
+import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -204,15 +205,22 @@ export default function Discover() {
           data,
           error: queryError,
           count: total,
-        } = await request
+        } = await publicMarketplaceRead("catalogue", JSON.stringify({search,category,platform,source,sort,page}), () => request
           .order(sort === "discovered" ? "discovered_at" : "launched_at", {
             ascending: false,
             nullsFirst: false,
           })
           .order("id", { ascending: true })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1));
         if (queryError) throw queryError;
         const ids = (data || []).map((app) => app.id);
+        if (!canceled) {
+          setApps(data || []);
+          setCount(total || 0);
+          setMedia(new Map());
+          setSignals(new Map());
+          setLoading(false);
+        }
         const [evidence, mediaResult] = ids.length
           ? await Promise.all([
               supabase
@@ -246,7 +254,7 @@ export default function Discover() {
     return () => {
       canceled = true;
     };
-  }, [search, category, platform, source, sort, page, view, rankingCategories, rankingCategoriesLoading]);
+  }, [search, category, platform, source, sort, page, view, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
 
   useEffect(() => {
     if (!user || apps.length === 0) {

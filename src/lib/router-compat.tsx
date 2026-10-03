@@ -10,12 +10,13 @@ import {
   useSearch as tsSearch,
   useRouter,
   Link as TSLink,
-  Navigate as TSNavigate,
   Outlet as TSOutlet,
 } from "@tanstack/react-router";
 import {
   useMemo,
   useCallback,
+  useEffect,
+  useRef,
   forwardRef,
   type ComponentProps,
   type CSSProperties,
@@ -143,6 +144,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       hash={hash}
       replace={replace}
       state={state as never}
+      preload={/^\/apps\/[^/]+$/.test(pathname) && pathname !== "/apps/add" ? "intent" : false}
       {...((rest ?? {}) as Record<string, unknown>)}
     >
       {children}
@@ -154,8 +156,17 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
 // ---------- Navigate ----------
 
 export function Navigate({ to, replace, state }: { to: string; replace?: boolean; state?: unknown }) {
-  const { pathname, search, hash } = parseTo(to);
-  return <TSNavigate to={pathname as never} search={search as never} hash={hash} state={state as never} replace={replace} />;
+  const navigate = useNavigate();
+  const lastRedirect = useRef<{ to: string; replace?: boolean } | null>(null);
+  useEffect(() => {
+    // A pending destination leaves the source route mounted. TanStack's
+    // Navigate compares the props object by identity, so fresh search/state
+    // objects on every source render can restart navigation indefinitely.
+    if (lastRedirect.current?.to === to && lastRedirect.current.replace === replace) return;
+    lastRedirect.current = { to, replace };
+    navigate(to, { replace, state });
+  }, [navigate, to, replace, state]);
+  return null;
 }
 
 // ---------- Outlet ----------
