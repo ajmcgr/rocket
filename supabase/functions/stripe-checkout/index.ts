@@ -170,6 +170,7 @@ Deno.serve(async (req) => {
         customer: customerId,
         mode: "subscription",
         line_items: [{ price: configured.stripe_price_id, quantity: 1 }],
+        allow_promotion_codes: true,
         client_reference_id: user.id,
         subscription_data: { metadata: { rocket_developer_user_id: user.id, product: "rocket_developer" } },
         success_url: `${APP_URL}/developer?checkout=success`,
