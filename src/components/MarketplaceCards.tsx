@@ -66,6 +66,7 @@ function Artwork({
           }
           alt={`Product image for ${app.name}`}
           loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           className="h-full w-full object-contain"
           onError={() => setFailed(true)}

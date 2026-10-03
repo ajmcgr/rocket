@@ -143,6 +143,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       hash={hash}
       replace={replace}
       state={state as never}
+      preload={/^\/apps\/[^/]+$/.test(pathname) && pathname !== "/apps/add" ? "intent" : false}
       {...((rest ?? {}) as Record<string, unknown>)}
     >
       {children}

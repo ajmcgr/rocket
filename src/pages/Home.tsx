@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function Home() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   useDocumentMeta({
     title: "Rocket — The open app platform",
     description:
@@ -30,7 +30,7 @@ export default function Home() {
       <SiteHeader />
       <main className="mx-auto max-w-[90rem] px-5 pb-20 sm:px-8">
         <DiscoveryPreview
-          intro={!authLoading && !user ? (
+          intro={!user ? (
             <section className="flex min-w-0 flex-col items-center justify-center py-6 text-center lg:py-10">
               <h1 className="mx-auto max-w-2xl text-[clamp(2.7rem,4.7vw,5.1rem)] font-bold leading-[.98] tracking-[-.06em] text-neutral-950">
                 The open app platform.

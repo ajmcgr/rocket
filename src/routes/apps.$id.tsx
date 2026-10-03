@@ -1,9 +1,12 @@
-import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeletons";
+import { loadAppMedia } from "@/lib/appMedia";
 
 const siteUrl = "https://tryrocket.ai";
 const fallbackImage = `${siteUrl}/og-homepage.png`;
+const Profile = lazy(() => import("@/pages/PublicAppProfile"));
 
 function summarize(description: string) {
   const firstParagraph = description.trim().split(/\n\s*\n/)[0];
@@ -13,18 +16,26 @@ function summarize(description: string) {
 }
 
 export const Route = createFileRoute("/apps/$id")({
+  staleTime: 60_000,
+  preloadStaleTime: 30_000,
   pendingComponent: AppProfileRouteSkeleton,
   loader: async ({ params }) => {
     const isId = /^[0-9a-f-]{36}$/i.test(params.id);
     const { data, error } = await supabase
       .from("public_apps")
-      .select("id,slug,name,tagline,description,logo_url")
+      // This curated public view supplies both SEO and the initial profile.
+      // Reuse it after hydration rather than fetching the same app again.
+      .select("*")
       .eq(isId ? "id" : "slug", params.id)
       .maybeSingle();
     if (error) throw error;
-    return data;
+    // Primary gallery metadata reserves its final geometry in the SSR response.
+    // Images still load responsively/lazily; reviews/evidence remain independent.
+    const media = data ? (await loadAppMedia([data.id], false)).get(data.id) || [] : [];
+    return { app: data, media };
   },
-  head: ({ loaderData: app }) => {
+  head: ({ loaderData }) => {
+    const app = loaderData?.app;
     if (!app) {
       return {
         meta: [
@@ -60,5 +71,10 @@ export const Route = createFileRoute("/apps/$id")({
       links: [{ rel: "canonical", href: canonical }],
     };
   },
-  component: lazyRouteComponent(() => import("@/pages/PublicAppProfile")),
+  component: AppProfileRoute,
 });
+
+function AppProfileRoute() {
+  const { app, media } = Route.useLoaderData();
+  return <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} /></Suspense>;
+}

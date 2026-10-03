@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
+import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
 import { AppCardSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import {
   EditorialAppCard,
@@ -59,30 +60,31 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [metadata, setMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(true);
   useEffect(() => {
     let active = true;
     const load = async () => {
       const [rankingResult, newResult, categoryResult] = await Promise.all([
-        supabase
+        publicMarketplaceRead("preview", "rankings", () => supabase
           .from("public_app_rankings")
           .select("app_id,rocket_view_count")
           .order("rocket_view_count", { ascending: false })
           .order("last_viewed_at", { ascending: false, nullsFirst: false })
           .order("launched_at", { ascending: false, nullsFirst: false })
           .order("app_id", { ascending: true })
-          .limit(4),
-        supabase
+          .limit(4)),
+        publicMarketplaceRead("preview", "new", () => supabase
           .from("public_discoverable_app_intelligence")
           .select("*")
           .eq("signal_type", "new_interesting")
           .order("percentile_rank", { ascending: false })
           .order("net_votes", { ascending: false })
-          .limit(4),
-        supabase
+          .limit(4)),
+        publicMarketplaceRead("categories", "home", () => supabase
           .from("public_app_categories")
           .select("category,app_count")
           .order("app_count", { ascending: false })
-          .limit(8),
+          .limit(8)),
       ]);
       // Each rail is optional: a failed rankings query must not hide New or Categories.
       if (rankingResult.error && newResult.error && categoryResult.error)
@@ -94,13 +96,12 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           [...rankingRows, ...freshSignals].map((signal) => signal.app_id),
         ),
       ];
-      const [appResult, mediaResult, metadataResult] = await Promise.all([
-        ids.length
-          ? supabase.from("public_discoverable_apps").select("*").in("id", ids)
-          : Promise.resolve({ data: [] as App[] }),
-        loadAppMedia(ids),
-        loadAppCardMetadata(ids),
-      ]);
+      // Start enrichment together, but do not make core cards wait for it.
+      const mediaPromise = loadAppMedia(ids);
+      const metadataPromise = loadAppCardMetadata(ids);
+      const appResult = await (ids.length
+          ? publicMarketplaceRead("preview", ids.join(","), () => supabase.from("public_discoverable_apps").select("*").in("id", ids))
+          : Promise.resolve({ data: [] as App[] }));
       if (!active) return;
       const apps = new Map((appResult.data || []).map((app) => [app.id, app]));
       const mapRows = (signals: Signal[]) =>
@@ -111,9 +112,11 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
       setRankings(rankingRows.flatMap((row) => apps.get(row.app_id) ? [apps.get(row.app_id)!] : []));
       setFresh(mapRows(freshSignals));
       setCategories(categoryResult.error ? [] : categoryResult.data || []);
-      setMedia(mediaResult);
-      setMetadata(metadataResult);
       setLoading(false);
+      void mediaPromise.then((result) => {
+        if (active) { setMedia(result); setMediaLoading(false); }
+      }).catch(() => { if (active) setMediaLoading(false); });
+      void metadataPromise.then((result) => { if (active) setMetadata(result); }).catch(() => undefined);
     };
     load().catch(() => {
       if (active) {
@@ -128,15 +131,15 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   if (loading)
     return (
       <div className={intro ? "pt-6 lg:pt-10" : ""}>
-        {intro}
+        <div className="mx-auto max-w-4xl">{intro}</div>
         <div role="status" aria-label="Finding apps worth exploring" aria-busy="true" className="mt-6 space-y-10">
-          <div className="rocket-skeleton-surface h-[22rem] animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100" aria-hidden="true" />
+          {intro && <div className="rocket-skeleton-surface mx-auto h-[22rem] max-w-4xl animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100" aria-hidden="true" />}
           <section aria-hidden="true">
             <div className="rocket-skeleton-surface mb-5 flex items-end justify-between border-b border-neutral-200 pb-4">
               <div className="h-8 w-40 animate-pulse rounded-lg bg-neutral-100" />
               <div className="h-4 w-28 animate-pulse rounded-lg bg-neutral-100" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[0, 1, 2, 3].map((item) => <AppCardSkeleton key={item} />)}
             </div>
           </section>
@@ -186,6 +189,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
                 />
               </div>
             )}
+            {!visual && mediaLoading && <div aria-label="Loading featured app media" className="rocket-skeleton-surface mx-auto mt-8 h-[22rem] max-w-4xl animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100" />}
           </div>
         );
       })()}

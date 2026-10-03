@@ -65,18 +65,18 @@ const linkHost = (value: string) => {
   }
 };
 
-export default function PublicAppProfile() {
+export default function PublicAppProfile({ initialApp, initialMedia }: { initialApp?: App | null; initialMedia?: PublicAppMedia[] } = {}) {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const saveAfterAuth = searchParams.get("save") === "1";
   const { user } = useAuth();
-  const [app, setApp] = useState<App | null>(null);
+  const [app, setApp] = useState<App | null>(initialApp || null);
   const [sources, setSources] = useState<Source[]>([]);
   const [traction, setTraction] = useState<Traction[]>([]);
   const [revenue, setRevenue] = useState<Revenue[]>([]);
   const [signals, setSignals] = useState<AppSignal[]>([]);
   const [trust, setTrust] = useState<AppTrust | null>(null);
-  const [media, setMedia] = useState<PublicAppMedia[]>([]);
+  const [media, setMedia] = useState<PublicAppMedia[]>(initialMedia || []);
   const [similar, setSimilar] = useState<App[]>([]);
   const [similarMetadata, setSimilarMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
   const [reviewSummary, setReviewSummary] = useState<{
@@ -89,8 +89,8 @@ export default function PublicAppProfile() {
   } | null>(null);
   const [saved, setSaved] = useState(false);
   const [shareStatus, setShareStatus] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(initialApp === undefined);
+  const [error, setError] = useState(initialApp === null);
   const shareApp = async () => {
     if (!app) return;
     const url = `https://tryrocket.ai/apps/${app.slug || app.id}`;
@@ -126,7 +126,10 @@ export default function PublicAppProfile() {
 
   useEffect(() => {
     let canceled = false;
-    setLoading(true);
+    let coreReady = false;
+    const matchesInitial = initialApp && (initialApp.id === id || initialApp.slug === id);
+    setLoading(!matchesInitial);
+    setError(false);
     if (!id) {
       setLoading(false);
       setError(true);
@@ -134,7 +137,9 @@ export default function PublicAppProfile() {
     }
     const load = async () => {
       const isId = /^[0-9a-f-]{36}$/i.test(id);
-      const appResult = await supabase.from("public_apps").select("*").eq(isId ? "id" : "slug", id).maybeSingle();
+      const appResult = matchesInitial
+        ? { data: initialApp, error: null }
+        : await supabase.from("public_apps").select("*").eq(isId ? "id" : "slug", id).maybeSingle();
       if (canceled) return;
       if (appResult.error || !appResult.data) {
         setApp(null);
@@ -143,6 +148,12 @@ export default function PublicAppProfile() {
         return;
       }
       const appId = appResult.data.id;
+      coreReady = true;
+      setApp(appResult.data);
+      setLoading(false);
+      // Core identity/description/CTAs render before optional evidence/media.
+      setSources([]); setTraction([]); setRevenue([]); setSignals([]);
+      setTrust(null); setMedia(matchesInitial ? initialMedia || [] : []); setPresentation(null);
       const [
         sourceResult, tractionResult, revenueResult, signalResult,
         trustResult, mediaResult, presentationResult,
@@ -156,7 +167,7 @@ export default function PublicAppProfile() {
         .select("*")
         .eq("app_id", appId)
         .maybeSingle(),
-      loadAppMedia([appId], false),
+      matchesInitial && initialMedia !== undefined ? Promise.resolve(new Map([[appId, initialMedia]])) : loadAppMedia([appId], false),
       supabase
         .from("public_app_presentation")
         .select("pricing_display,public_links")
@@ -172,16 +183,7 @@ export default function PublicAppProfile() {
         setTrust(trustResult.data);
         setMedia(mediaResult.get(appId) || []);
         setPresentation(presentationResult.data || null);
-        setError(
-          Boolean(
-            appResult.error ||
-            sourceResult.error ||
-            tractionResult.error ||
-            revenueResult.error ||
-            signalResult.error ||
-            !appResult.data,
-          ),
-        );
+        // Optional evidence failures must not hide a valid public profile.
         if (appResult.data && !appResult.error) {
           track("app_profile_viewed", { app_id: appResult.data.id });
           // First-party rankings count real production profile visits only.
@@ -194,12 +196,12 @@ export default function PublicAppProfile() {
         setLoading(false);
     };
     void load().catch(() => {
-      if (!canceled) { setError(true); setLoading(false); }
+      if (!canceled) { if (!coreReady) setError(true); setLoading(false); }
     });
     return () => {
       canceled = true;
     };
-  }, [id]);
+  }, [id, initialApp, initialMedia]);
 
   useEffect(() => {
     if (!app?.categories.length) {

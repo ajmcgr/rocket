@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { optimizedMediaUrl } from "@/lib/appMedia";
 
 type Props = {
   name: string;
@@ -23,10 +24,11 @@ export default function AppLogo({
     >
       {showImage ? (
         <img
-          src={src!}
+          src={failedUrl === `${src}:variant` ? src! : optimizedMediaUrl(src!, 192, 192, "contain")}
           alt=""
           loading={eager ? "eager" : "lazy"}
-          onError={() => setFailedUrl(src!)}
+          decoding="async"
+          onError={() => setFailedUrl(failedUrl === `${src}:variant` || optimizedMediaUrl(src!, 192, 192, "contain") === src ? src! : `${src}:variant`)}
           className="h-full w-full object-contain"
         />
       ) : (
