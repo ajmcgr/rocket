@@ -116,6 +116,15 @@ describe("Developer product experience", () => {
       expect(container.textContent).toContain("7.25% Rocket fee");
       expect(container.textContent).not.toContain("10% Rocket fee");
       expect(container.textContent).toContain("EXAMPLE ONLY");
+      expect(container.textContent).toContain("Rocket consent");
+      for (const legacy of [
+        "Developer pilot",
+        "Invite a test developer",
+        "Create invite",
+        "sandbox tools",
+        "Rocket Connect · Test mode",
+      ])
+        expect(container.textContent).not.toContain(legacy);
       expect(
         container.querySelector('a[href="/login?next=%2Fdeveloper"]'),
       ).not.toBeNull();
@@ -170,12 +179,17 @@ describe("Developer product experience", () => {
         container.textContent!.indexOf("One account for your app."),
       );
       expect(container.textContent).toContain("Stripe setup");
+      expect(container.textContent).not.toContain("Developer pilot");
+      expect(container.textContent).not.toContain("Create invite");
       expect(container.querySelector("#developer-setup")).not.toBeNull();
       expect(
         [...container.querySelectorAll("button")].some(
           (button) => button.textContent === "Copy integration prompt",
         ),
       ).toBe(true);
+      expect(
+        container.querySelector("#developer-setup .dev-coding"),
+      ).not.toBeNull();
       expect(container.textContent).not.toContain("Access denied");
     } finally {
       await cleanup();

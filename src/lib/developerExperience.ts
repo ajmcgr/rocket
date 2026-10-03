@@ -50,6 +50,14 @@ export function developerMessage(code: string) {
       "Live payments are not available yet. Your setup can remain saved while activation is pending.",
     production_stripe_not_configured:
       "Stripe setup is not available yet. Please return when live payments are ready.",
+    live_connect_not_configured:
+      "Live Stripe onboarding is not available yet. Your existing setup is unchanged.",
+    external_entitlement_test_required:
+      "An independent entitlement test must be verified before activating this plan.",
+    merchant_onboarding_incomplete:
+      "Complete Stripe business verification before creating or activating a plan.",
+    one_active_plan_per_app:
+      "This app already has an active plan. Review it before creating another.",
   };
   return (
     messages[code] ||

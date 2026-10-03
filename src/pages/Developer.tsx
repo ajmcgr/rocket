@@ -1,9 +1,8 @@
 import {
   Loader2 as ControlLoader2,
   Copy as ControlCopy,
-  Plus as ControlPlus,
 } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Link,
   Navigate,
@@ -68,15 +67,6 @@ function copy(value: string) {
 function FunctionError({ error }: { error: any }) {
   return <p className="mt-3 text-sm text-red-600">{error}</p>;
 }
-function invitationToken() {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  let raw = "";
-  bytes.forEach((byte) => {
-    raw += String.fromCharCode(byte);
-  });
-  return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
 async function call(action: string, body?: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke(
     "rocket-connect-developer",
@@ -117,7 +107,6 @@ export default function Developer() {
 
 function DeveloperSession() {
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
   const [membership, setMembership] = useState<DeveloperMembership | null>(
     null,
   );
@@ -130,16 +119,6 @@ function DeveloperSession() {
     production_apps?: DeveloperClient[];
   } | null>(null);
   const [error, setError] = useState("");
-  const [appName, setAppName] = useState("");
-  const [redirectUri, setRedirectUri] = useState(
-    "http://127.0.0.1:3002/callback",
-  );
-  const [returnUri, setReturnUri] = useState("http://127.0.0.1:3002/");
-  const [iconUrl, setIconUrl] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteUrl, setInviteUrl] = useState("");
-  const [busy, setBusy] = useState("");
-  const inviteTokenRef = useRef<string | null>(null);
   const load = async () => {
     try {
       setError("");
@@ -159,6 +138,7 @@ function DeveloperSession() {
       { method: "GET" },
     );
     if (result.error) throw result.error;
+    if (typeof result.data?.active !== "boolean" || !Array.isArray(result.data?.owned_apps)) throw new Error("Membership unavailable");
     setMembership(result.data);
   };
   useEffect(() => {
@@ -193,230 +173,6 @@ function DeveloperSession() {
       setBillingBusy(false);
     }
   };
-  const createApp = async (event: FormEvent) => {
-    event.preventDefault();
-    setBusy("app");
-    try {
-      const result = await call("create_app", {
-        name: appName,
-        icon_url: iconUrl,
-        redirect_uri: redirectUri,
-        checkout_return_uri: returnUri,
-      });
-      toast({ title: "Test app registered" });
-      setAppName("");
-      setIconUrl("");
-      setData((current) =>
-        current ? { ...current, apps: [result.app, ...current.apps] } : current,
-      );
-    } catch (err: any) {
-      toast({
-        title: "Couldn’t create app",
-        description: err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setBusy("");
-    }
-  };
-  const invite = async (event: FormEvent) => {
-    event.preventDefault();
-    if (inviteTokenRef.current) return;
-    const token = invitationToken();
-    inviteTokenRef.current = token;
-    setBusy("invite");
-    try {
-      const result = await call("invite", { email: inviteEmail, token });
-      setInviteUrl(result.invitation_url);
-      toast({ title: "Developer invitation created" });
-    } catch (err: any) {
-      toast({
-        title: "Couldn’t create invitation",
-        description: err.message,
-        variant: "destructive",
-      });
-    } finally {
-      inviteTokenRef.current = null;
-      setBusy("");
-    }
-  };
-  const pilot =
-    data?.developer || data?.operator ? (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-sky-600">
-              Rocket Connect · Test mode
-            </p>
-            <h2 className="mt-1 text-3xl font-semibold tracking-tight">
-              Developer pilot
-            </h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              Register a single-purpose test app, connect a Stripe test account,
-              and integrate Continue with Rocket.
-            </p>
-          </div>
-          {data.developer && (
-            <a
-              href="#create-app"
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white"
-            >
-              <ControlPlus className="h-4 w-4" /> Create app
-            </a>
-          )}
-        </div>
-        {error && <FunctionError error={error} />}
-        {data.operator && (
-          <section className="mt-8 rounded-2xl border border-sky-100 bg-sky-50 p-5">
-            <h2 className="text-sm font-semibold text-sky-950">
-              Invite a test developer
-            </h2>
-            <p className="mt-1 text-sm text-sky-800">
-              This is the only operator action required. The developer accepts
-              the link with their own Rocket account.
-            </p>
-            <form onSubmit={invite} className="mt-4 flex max-w-xl gap-2">
-              <input
-                required
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="developer@example.com"
-                className="h-10 min-w-0 flex-1 rounded-lg border border-sky-200 bg-white px-3 text-sm"
-              />
-              <button
-                disabled={busy === "invite"}
-                className="h-10 rounded-lg bg-sky-700 px-4 text-sm font-medium text-white disabled:opacity-60"
-              >
-                {busy === "invite" ? "Creating…" : "Create invite"}
-              </button>
-            </form>
-            {inviteUrl && (
-              <div className="mt-3 rounded-lg border border-sky-200 bg-white p-3 text-xs text-sky-950 break-all">
-                <span className="font-medium">Share once: </span>
-                {inviteUrl}{" "}
-                <button
-                  type="button"
-                  onClick={() => copy(inviteUrl)}
-                  className="ml-2 underline"
-                >
-                  Copy
-                </button>
-              </div>
-            )}
-          </section>
-        )}
-        {data.developer && (
-          <>
-            <section className="mt-8">
-              <h2 className="text-lg font-semibold">My apps</h2>
-              {data.apps.length === 0 ? (
-                <p className="mt-3 rounded-xl border border-dashed border-neutral-200 p-5 text-sm text-neutral-500">
-                  No apps yet. Create a test app with exact callback and
-                  checkout return URIs.
-                </p>
-              ) : (
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {data.apps.map((app) => (
-                    <Link
-                      key={app.client_id}
-                      to={`/developer/apps/${app.client_id}`}
-                      className="rounded-2xl border border-neutral-200 bg-white p-5 transition hover:border-neutral-300 hover:shadow-xs"
-                    >
-                      <div className="flex items-center gap-3">
-                        {app.icon_url ? (
-                          <img
-                            src={app.icon_url}
-                            alt=""
-                            className="h-9 w-9 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="grid h-9 w-9 place-items-center rounded-lg bg-neutral-100 text-xs font-semibold">
-                            {app.name.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-medium">{app.name}</p>
-                          <p className="text-xs text-neutral-500">
-                            {app.is_active ? "Active" : "Disabled"} · test
-                          </p>
-                        </div>
-                      </div>
-                      <p className="mt-4 break-all font-mono text-xs text-neutral-500">
-                        {app.client_id}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
-            <section
-              id="create-app"
-              className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6"
-            >
-              <h2 className="text-lg font-semibold">Create app</h2>
-              <p className="mt-1 text-sm text-neutral-600">
-                Callbacks must match exactly. Wildcards and browser-provided
-                payment values are not accepted.
-              </p>
-              <form
-                onSubmit={createApp}
-                className="mt-5 grid gap-4 md:grid-cols-2"
-              >
-                <label className="text-sm font-medium">
-                  App name
-                  <input
-                    required
-                    value={appName}
-                    onChange={(e) => setAppName(e.target.value)}
-                    maxLength={120}
-                    className="mt-1 h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm font-normal"
-                  />
-                </label>
-                <label className="text-sm font-medium">
-                  Icon URL{" "}
-                  <span className="font-normal text-neutral-400">
-                    optional HTTPS
-                  </span>
-                  <input
-                    value={iconUrl}
-                    onChange={(e) => setIconUrl(e.target.value)}
-                    type="url"
-                    className="mt-1 h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm font-normal"
-                  />
-                </label>
-                <label className="text-sm font-medium md:col-span-2">
-                  OAuth callback URI
-                  <input
-                    required
-                    value={redirectUri}
-                    onChange={(e) => setRedirectUri(e.target.value)}
-                    type="url"
-                    className="mt-1 h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm font-normal"
-                  />
-                </label>
-                <label className="text-sm font-medium md:col-span-2">
-                  Checkout return URI
-                  <input
-                    required
-                    value={returnUri}
-                    onChange={(e) => setReturnUri(e.target.value)}
-                    type="url"
-                    className="mt-1 h-10 w-full rounded-lg border border-neutral-200 px-3 text-sm font-normal"
-                  />
-                </label>
-                <button
-                  disabled={busy === "app"}
-                  className="inline-flex h-10 w-fit items-center rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white disabled:opacity-60"
-                >
-                  {busy === "app" ? "Creating…" : "Register test app"}
-                </button>
-              </form>
-            </section>
-          </>
-        )}
-      </div>
-    ) : null;
   return (
     <DeveloperExperience
       signedIn={!!user}
@@ -432,7 +188,6 @@ function DeveloperSession() {
           setBillingError("Membership status is temporarily unavailable."),
         );
       }}
-      pilot={pilot}
     />
   );
 }

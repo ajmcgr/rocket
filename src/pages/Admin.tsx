@@ -2,14 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
+import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
 
-type Section = "home" | "metrics" | "ops" | "marketing" | "outreach";
+type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
 type Row = Record<string, unknown>;
 const sections: Array<{ id: Section; label: string }> = [
   { id: "home", label: "Overview" }, { id: "metrics", label: "Metrics" },
   { id: "ops", label: "Ops" }, { id: "marketing", label: "Marketing" },
   { id: "outreach", label: "Outreach" },
+  { id: "developer-testing", label: "Developer testing" },
 ];
 const adminRpc = supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 const rows = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
@@ -46,7 +48,7 @@ export default function Admin() {
   const refresh = useCallback(async () => {
     setError(""); setData(null); setToday([]);
     const [result, batch] = await Promise.all([
-      adminRpc("rocket_admin_snapshot", { p_section: section, p_period: period }),
+      adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_today", {}) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
@@ -90,6 +92,7 @@ export default function Admin() {
       {(section === "home" || section === "metrics") && <label>Period <select value={period} onChange={(event) => setPeriod(event.target.value as Period)}><option value="today">Today</option><option value="7d">7 days</option><option value="30d">30 days</option><option value="all">All time</option></select></label>}
     </header>
     <nav className="rocket-admin-tabs" aria-label="Admin sections">{sections.map((item) => <Link key={item.id} to={item.id === "home" ? "/admin" : `/admin/${item.id}`} className={section === item.id ? "active" : ""}>{item.label}</Link>)}</nav>
+    {data && section === "developer-testing" && <AdminDeveloperTesting />}
     {error && <p className="rocket-admin-error" role="alert">{error}</p>}
     {!data && !error && <div className="rocket-admin-loading" role="status" aria-label="Loading admin data"><div /><div /><div /><div /></div>}
     {data && (section === "home" || section === "metrics") && <>

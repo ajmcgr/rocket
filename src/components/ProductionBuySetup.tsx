@@ -13,6 +13,8 @@ type Plan = {
   interval: "month" | "year";
   platform_fee_bps: number;
   is_active: boolean;
+  integration_confirmed_at?: string | null;
+  activated_at?: string | null;
 };
 type BuyStatus = {
   merchant: { ready: boolean; status: string } | null;
@@ -113,6 +115,20 @@ export default function ProductionBuySetup({
     } catch (caught: unknown) {
       setError(
         caught instanceof Error ? caught.message : "Could not create plan",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const activatePlan = async (planId: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      await request("activate_plan", appId, { plan_id: planId });
+      await refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Could not activate plan",
       );
     } finally {
       setBusy(false);
@@ -251,11 +267,45 @@ export default function ProductionBuySetup({
               </button>
             </form>
           </div>
-          <p className="text-sm text-neutral-600">
-            3. Integrate Rocket ID and server-side entitlement checks in your
-            app. Live buying remains off until the connected-account webhook and
-            independent purchase test are verified.
-          </p>
+          <div className="rounded-xl border border-neutral-200 p-4">
+            <h3 className="font-semibold">3. Integrate, test and activate</h3>
+            <p className="text-sm text-neutral-600">
+              Copy the integration prompt above into your coding agent. Test
+              Continue with Rocket and server-side entitlement checks in your
+              app. An independent purchase test must be verified before
+              activation.
+            </p>
+            {status.products.map((plan) => (
+              <div key={plan.id} className="mt-4">
+                <p>
+                  {plan.name}:{" "}
+                  {plan.integration_confirmed_at
+                    ? "Entitlement integration verified"
+                    : "Entitlement verification required"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => activatePlan(plan.id)}
+                  disabled={
+                    busy ||
+                    plan.is_active ||
+                    !status.launch_ready ||
+                    !status.merchant?.ready ||
+                    !plan.integration_confirmed_at
+                  }
+                  className="rounded-lg border border-[#469DDA] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                >
+                  {plan.is_active ? "Live" : "Activate Buy with Rocket"}
+                </button>
+              </div>
+            ))}
+            {!status.launch_ready && (
+              <p className="mt-2 text-sm">
+                Live activation is not available yet. Your configuration remains
+                saved.
+              </p>
+            )}
+          </div>
         </div>
       )}
     </section>

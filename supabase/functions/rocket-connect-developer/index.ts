@@ -1,4 +1,6 @@
 import Stripe from "npm:stripe@16.12.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { canInviteDeveloper } from "../_shared/developerOperatorAccess.ts";
 import { APP_URL, base64url, getAdmin, getRocketUser, json, sha256, validRedirectUri } from "../_shared/rocketConnect.ts";
 import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
 
@@ -100,6 +102,13 @@ Deno.serve(async (req) => {
 
     if (action === "invite") {
       if (!ctx.operator) return json({ error: "forbidden" }, 403);
+      // Invitation tooling lives under /admin, but the URL/UI is not security.
+      // Reuse the existing server-authorized admin RPC with the caller's JWT.
+      const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: req.headers.get("Authorization")! } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      if (!await canInviteDeveloper(ctx.operator, () => userClient.rpc("is_rocket_admin"))) return json({ error: "forbidden" }, 403);
       const email = normaliseEmail(body.email);
       const token = body.token;
       if (!/^\S+@\S+\.\S+$/.test(email) || !validInviteToken(token)) return json({ error: "invalid_invitation_request" }, 400);

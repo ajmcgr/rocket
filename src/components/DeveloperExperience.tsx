@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type CSSProperties } from "react";
 import {
   ArrowRight,
   Check,
@@ -28,7 +28,12 @@ export type DeveloperMembership = {
   membership: { status: string; current_period_end: string } | null;
   owned_apps: { app_id: string; verification_level: string }[];
 };
-type OwnedApp = { app_id: string; name: string; logo_url?: string | null };
+type OwnedApp = {
+  app_id: string;
+  name: string;
+  logo_url?: string | null;
+  website_url?: string | null;
+};
 type Props = {
   signedIn: boolean;
   loading: boolean;
@@ -38,12 +43,14 @@ type Props = {
   error: string;
   onBilling: (action: "checkout" | "portal") => void;
   onRefresh: () => void;
-  pilot?: ReactNode;
 };
 
 function Flow({ steps }: { steps: { title: string; detail?: string }[] }) {
   return (
-    <ol className="dev-flow">
+    <ol
+      className="dev-flow"
+      style={{ "--dev-flow-columns": steps.length } as CSSProperties}
+    >
       {steps.map((step, i) => (
         <li key={`${i}-${step.title}`}>
           <span className="dev-flow-number">{i + 1}</span>
@@ -162,6 +169,23 @@ function RocketIdSetup({
           <code>{client.redirect_uris[0]}</code>
         </details>
       )}
+      {client && (
+        <p className="dev-small">
+          Rocket ID is {client.is_active ? "enabled" : "disabled"} for this app.
+          After adding the integration prompt, test Continue with Rocket on your
+          app and verify the callback before launch.
+        </p>
+      )}
+      {client && app.website_url?.startsWith("https://") && (
+        <a
+          className="dev-button dev-button-outline"
+          href={app.website_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Test Continue with Rocket ↗
+        </a>
+      )}
     </section>
   );
 }
@@ -175,7 +199,6 @@ export default function DeveloperExperience({
   error,
   onBilling,
   onRefresh,
-  pilot,
 }: Props) {
   const [params] = useSearchParams();
   const requested = params.get("app");
@@ -241,6 +264,7 @@ export default function DeveloperExperience({
               app_id: item.app_id,
               name: item.app?.name || "Your app",
               logo_url: item.app?.logo_url,
+              website_url: item.app?.website_url,
             });
         // Membership ownership is authoritative even when a public profile is unavailable.
         const rows = [...owners].map(
@@ -339,6 +363,43 @@ export default function DeveloperExperience({
         {label}
       </Link>
     );
+  const codingSection = (
+    <section className="dev-coding">
+      <Code2 size={28} aria-hidden="true" />
+      <h2>Built for how apps are built now.</h2>
+      <p className="dev-lead">
+        Copy Rocket’s integration prompt into Codex, Claude Code, Cursor,
+        Lovable, Replit or your coding agent and let it wire up the integration.
+      </p>
+      {prompt ? (
+        <>
+          <button
+            className="dev-button dev-button-outline"
+            onClick={copyPrompt}
+          >
+            <Copy size={17} />
+            {copied ? "Prompt copied" : "Copy integration prompt"}
+          </button>
+          <p role="status" className="dev-small">
+            {copied
+              ? `Copied public configuration for ${selectedApp?.name}.`
+              : `Ready for ${selectedApp?.name}. Public configuration only—no secrets.`}
+          </p>
+          {copyError && <p role="alert">{copyError}</p>}
+          <details className="dev-details">
+            <summary>Review integration prompt</summary>
+            <pre>{prompt}</pre>
+          </details>
+        </>
+      ) : (
+        <p className="dev-small">
+          {active
+            ? "Choose an app and save its Rocket ID callback to generate your app-specific prompt."
+            : "An app-specific prompt becomes available after you join and configure Rocket ID for an app you own."}
+        </p>
+      )}
+    </section>
+  );
   return (
     <div className="dev-page">
       <SiteHeader />
@@ -356,7 +417,7 @@ export default function DeveloperExperience({
           <p className="dev-lead">
             {active
               ? "Identity and payments for the apps you own. Choose an app to get started."
-              : "Add Rocket identity and payments to your app with one developer membership."}
+              : "Add identity and payments to your apps with one developer membership."}
           </p>
           <div className="dev-price">
             <strong>
@@ -530,11 +591,11 @@ export default function DeveloperExperience({
                                 )
                               }
                             >
-                              Set up Buy with Rocket
+                              Configure Buy with Rocket
                             </button>
                           </>
                         ) : (
-                          join()
+                          join("Join Rocket Developer · $99/year")
                         )}
                       </div>
                       {statusErrors[app.app_id] && (
@@ -588,6 +649,7 @@ export default function DeveloperExperience({
                     }}
                   />
                 )}
+                {codingSection}
                 <div id="configure-buy-with-rocket">
                   {selectedClient ? (
                     <ProductionBuySetup
@@ -647,13 +709,25 @@ export default function DeveloperExperience({
             </p>
             <Benefits
               items={[
-                "Fast account creation",
-                "Rocket user identity",
-                "Secure OAuth/OIDC",
-                "Works with Rocket entitlements",
-                "Designed for independent apps",
+                "One-click Rocket sign-in",
+                "Secure identity",
+                "Stable Rocket user",
+                "Works with Buy with Rocket entitlements",
               ]}
             />
+            <p>Rocket ID tells your app who the Rocket user is.</p>
+            <a
+              className="dev-button dev-button-outline"
+              href={
+                active
+                  ? selectedApp
+                    ? "#developer-setup"
+                    : "#your-developer-apps"
+                  : "#rocket-id-how"
+              }
+            >
+              {active ? "Configure Rocket ID" : "Learn how it works"}
+            </a>
             <details className="dev-details">
               <summary>Implementation details</summary>
               <p>
@@ -666,6 +740,7 @@ export default function DeveloperExperience({
           </div>
           <div
             className="dev-demo"
+            id="rocket-id-how"
             aria-label="Illustrative Rocket ID sign-in flow"
           >
             <p className="dev-small">THE SIGN-IN EXPERIENCE</p>
@@ -676,7 +751,7 @@ export default function DeveloperExperience({
               ↓
             </span>
             <div className="dev-consent">
-              <strong>Approve access</strong>
+              <strong>Rocket consent</strong>
               <p>Choose to share your Rocket identity with the app.</p>
             </div>
             <span className="dev-down" aria-hidden="true">
@@ -684,7 +759,7 @@ export default function DeveloperExperience({
             </span>
             <div className="dev-demo-result">
               <Check size={22} />
-              <strong>Signed in. Ready to go.</strong>
+              <strong>Signed in to your app</strong>
             </div>
             <p className="dev-small">For apps that have connected Rocket ID.</p>
           </div>
@@ -710,6 +785,17 @@ export default function DeveloperExperience({
                 "You remain the connected Stripe merchant",
               ]}
             />
+            <p>
+              Buy with Rocket lets Rocket users purchase access to your app.
+            </p>
+            <a
+              className="dev-button dev-button-outline"
+              href={
+                active ? "#configure-buy-with-rocket" : "#buy-with-rocket-how"
+              }
+            >
+              {active ? "Configure Buy with Rocket" : "Learn how it works"}
+            </a>
             <p className="dev-fee">
               {fee !== null
                 ? `${fee / 100}% Rocket fee on Buy with Rocket sales.`
@@ -723,10 +809,14 @@ export default function DeveloperExperience({
               </p>
             )}
           </div>
-          <div className="dev-demo" aria-label="Illustrative purchase flow">
+          <div
+            id="buy-with-rocket-how"
+            className="dev-demo"
+            aria-label="Illustrative purchase flow"
+          >
             <p className="dev-small">EXAMPLE ONLY · NOT A LIVE OFFER</p>
             <div className="dev-example-plan">
-              <span>Your app · Monthly access</span>
+              <span>Your Rocket app page · Monthly access</span>
               <strong>
                 $19<span>/month</span>
               </strong>
@@ -778,7 +868,8 @@ export default function DeveloperExperience({
             steps={[
               { title: "Rocket user" },
               { title: "Rocket ID" },
-              { title: "Your app", detail: "Checks entitlement." },
+              { title: "Your app" },
+              { title: "Entitlement check" },
               { title: "Access granted" },
             ]}
           />
@@ -811,42 +902,7 @@ export default function DeveloperExperience({
           </div>
         </section>
 
-        <section className="dev-coding">
-          <Code2 size={28} aria-hidden="true" />
-          <h2>Built for how apps are built now.</h2>
-          <p className="dev-lead">
-            Copy Rocket’s integration prompt into Codex, Claude Code, Cursor,
-            Lovable, Replit or your coding agent and let it wire up the
-            integration.
-          </p>
-          {prompt ? (
-            <>
-              <button
-                className="dev-button dev-button-outline"
-                onClick={copyPrompt}
-              >
-                <Copy size={17} />
-                {copied ? "Prompt copied" : "Copy integration prompt"}
-              </button>
-              <p role="status" className="dev-small">
-                {copied
-                  ? `Copied public configuration for ${selectedApp?.name}.`
-                  : `Ready for ${selectedApp?.name}. Public configuration only—no secrets.`}
-              </p>
-              {copyError && <p role="alert">{copyError}</p>}
-              <details className="dev-details">
-                <summary>Review integration prompt</summary>
-                <pre>{prompt}</pre>
-              </details>
-            </>
-          ) : (
-            <p className="dev-small">
-              {active
-                ? "Choose an app and save its Rocket ID callback to generate your app-specific prompt."
-                : "An app-specific prompt becomes available after you join and configure Rocket ID for an app you own."}
-            </p>
-          )}
-        </section>
+        {!(active && selectedApp) && codingSection}
 
         <section className="dev-comparison">
           <p className="dev-eyebrow">ONE MEMBERSHIP. TWO PRODUCTS.</p>
@@ -902,12 +958,6 @@ export default function DeveloperExperience({
             join()
           )}
         </section>
-        {pilot && (
-          <details className="dev-pilot">
-            <summary>Developer testing · sandbox tools</summary>
-            {pilot}
-          </details>
-        )}
       </main>
       <SiteFooter />
     </div>
