@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "@/lib/router-compat";
+import { Link, useNavigate, useParams, useSearchParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +74,7 @@ export default function PublicAppProfile({
   initialMedia,
 }: { initialApp?: App | null; initialMedia?: PublicAppMedia[] } = {}) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const saveAfterAuth = searchParams.get("save") === "1";
   const { user } = useAuth();
@@ -318,6 +319,8 @@ export default function PublicAppProfile({
           setSaved(true);
           if (!result.error)
             track("app_saved", { app_id: id, after_auth: true });
+          navigate("/saved-apps", { replace: true });
+          return;
         }
         if (!canceled) setSearchParams({}, { replace: true });
       } else {
@@ -334,7 +337,7 @@ export default function PublicAppProfile({
     return () => {
       canceled = true;
     };
-  }, [id, user, saveAfterAuth, setSearchParams]);
+  }, [id, user, saveAfterAuth, setSearchParams, navigate]);
 
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">

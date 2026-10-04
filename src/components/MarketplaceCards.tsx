@@ -14,11 +14,11 @@ type App = Tables<"public_apps">;
 type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string; trend?: "up" | "down"; metadata?: AppCardMetadata; rank?: number };
 type SaveProps = { saved?: boolean; onSave?: (saved: boolean) => void };
 
-export function AppCardRating({ metadata, light = false }: { metadata?: AppCardMetadata; light?: boolean }) {
+export function AppCardRating({ metadata, light = false, larger = false }: { metadata?: AppCardMetadata; light?: boolean; larger?: boolean }) {
   if (!metadata) return null;
   if (!metadata.rating_count || metadata.average_rating == null)
-    return <span className={`block text-xs ${light ? "text-white/80" : "text-neutral-500"}`} aria-label="No ratings yet">☆ No ratings yet</span>;
-  return <span className={`block text-xs ${light ? "text-white" : "text-neutral-600"}`} aria-label={`${metadata.average_rating} out of 5 stars from ${metadata.rating_count} ratings`}>
+    return <span className={`block ${larger ? "text-sm" : "text-xs"} ${light ? "text-white/80" : "text-neutral-500"}`} aria-label="No ratings yet">☆ No ratings yet</span>;
+  return <span className={`block ${larger ? "text-sm" : "text-xs"} ${light ? "text-white" : "text-neutral-600"}`} aria-label={`${metadata.average_rating} out of 5 stars from ${metadata.rating_count} ratings`}>
     <span className="text-amber-500" aria-hidden="true">★</span>{" "}{metadata.average_rating.toFixed(1)}{" "}
     <span className={light ? "text-white/80" : "text-neutral-500"}>({metadata.rating_count.toLocaleString()})</span>
   </span>;
@@ -202,21 +202,21 @@ export function RankedAppRow({
         className="h-11 w-11"
       />
       <Link to={`/apps/${app.slug || app.id}`} className="min-w-32 flex-1 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
-        <strong className="block truncate text-sm font-semibold text-neutral-950">
+        <strong className="block truncate text-base font-semibold text-neutral-950">
           {app.name}
         </strong>
-        <AppCardRating metadata={metadata} />
-        <span className="block truncate text-xs text-neutral-500">
+        <AppCardRating metadata={metadata} larger />
+        <span className="block truncate text-sm text-neutral-500">
           {app.tagline || app.canonical_host}
         </span>
-        <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
+        <span className="mt-0.5 block truncate text-[13px] text-neutral-500">
           {app.categories[0] || "App"}
           {eyebrow ? ` · ${eyebrow}` : ""}
         </span>
         <AppCardByline metadata={metadata} />
       </Link>
-      {onSave && <SaveAppButton appId={app.id} saved={Boolean(saved)} onChange={onSave} />}
-      <AppPurchaseActions appId={app.id} />
+      {onSave && <SaveAppButton appId={app.id} saved={Boolean(saved)} onChange={onSave} compact />}
+      <AppPurchaseActions appId={app.id} compact />
     </article>
   );
 }
@@ -262,14 +262,14 @@ export function MarketplaceListRow({
       >
         <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
         <span className="min-w-0 flex-1">
-          <strong className="block truncate text-sm font-semibold text-neutral-950">
+          <strong className="block truncate text-base font-semibold text-neutral-950">
             {app.name}
           </strong>
-          <AppCardRating metadata={metadata} />
-          <span className="block truncate text-xs text-neutral-600">
+          <AppCardRating metadata={metadata} larger />
+          <span className="block truncate text-sm text-neutral-600">
             {app.tagline || app.description || app.canonical_host}
           </span>
-          <span className="mt-0.5 block truncate text-[11px] text-neutral-500">
+          <span className="mt-0.5 block truncate text-[13px] text-neutral-500">
             {app.categories[0] || "App"}
           </span>
           <AppCardByline metadata={metadata} />
@@ -281,9 +281,10 @@ export function MarketplaceListRow({
           appId={app.id}
           saved={Boolean(saved)}
           onChange={onSave}
+          compact
         />
       )}
-      <AppPurchaseActions appId={app.id} />
+      <AppPurchaseActions appId={app.id} compact />
       </div>
     </article>
   );

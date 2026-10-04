@@ -1069,6 +1069,7 @@ Deno.serve(async (req) => {
           .from("app_claims")
           .select("id,app_id,status,method,verification_state,created_at")
           .eq("user_id", user.id)
+          .neq("status", "revoked")
           .order("created_at", { ascending: false })
           .limit(100);
         if (claims.error) throw claims.error;

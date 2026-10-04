@@ -112,6 +112,7 @@ import { Route as AppDeveloperAppsClientIdRouteImport } from './routes/_app/deve
 import { Route as AppMyAppsIdAnalyticsRouteImport } from './routes/_app/my-apps.$id.analytics'
 import { Route as AppMyAppsIdEditRouteImport } from './routes/_app/my-apps.$id.edit'
 import { Route as AppMyAppsIdRevenueRouteImport } from './routes/_app/my-apps.$id.revenue'
+import { Route as AppMyAppsIdRocketAnalyticsRouteImport } from './routes/_app/my-apps.$id.rocket-analytics'
 import { Route as AppProjectsIdBrandKitRouteImport } from './routes/_app/projects.$id_.brand-kit'
 import { Route as AppProjectsIdFontsRouteImport } from './routes/_app/projects.$id_.fonts'
 import { Route as AppProjectsIdGuidelinesRouteImport } from './routes/_app/projects.$id_.guidelines'
@@ -637,6 +638,12 @@ const AppMyAppsIdRevenueRoute = AppMyAppsIdRevenueRouteImport.update({
   path: '/my-apps/$id/revenue',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMyAppsIdRocketAnalyticsRoute =
+  AppMyAppsIdRocketAnalyticsRouteImport.update({
+    id: '/my-apps/$id/rocket-analytics',
+    path: '/my-apps/$id/rocket-analytics',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppProjectsIdBrandKitRoute = AppProjectsIdBrandKitRouteImport.update({
   id: '/projects/$id_/brand-kit',
   path: '/projects/$id/brand-kit',
@@ -780,6 +787,7 @@ export interface FileRoutesByFullPath {
   '/my-apps/$id/analytics': typeof AppMyAppsIdAnalyticsRoute
   '/my-apps/$id/edit': typeof AppMyAppsIdEditRoute
   '/my-apps/$id/revenue': typeof AppMyAppsIdRevenueRoute
+  '/my-apps/$id/rocket-analytics': typeof AppMyAppsIdRocketAnalyticsRoute
   '/projects/$id/brand-kit': typeof AppProjectsIdBrandKitRoute
   '/projects/$id/fonts': typeof AppProjectsIdFontsRoute
   '/projects/$id/guidelines': typeof AppProjectsIdGuidelinesRoute
@@ -890,6 +898,7 @@ export interface FileRoutesByTo {
   '/my-apps/$id/analytics': typeof AppMyAppsIdAnalyticsRoute
   '/my-apps/$id/edit': typeof AppMyAppsIdEditRoute
   '/my-apps/$id/revenue': typeof AppMyAppsIdRevenueRoute
+  '/my-apps/$id/rocket-analytics': typeof AppMyAppsIdRocketAnalyticsRoute
   '/projects/$id/brand-kit': typeof AppProjectsIdBrandKitRoute
   '/projects/$id/fonts': typeof AppProjectsIdFontsRoute
   '/projects/$id/guidelines': typeof AppProjectsIdGuidelinesRoute
@@ -1004,6 +1013,7 @@ export interface FileRoutesById {
   '/_app/my-apps/$id/analytics': typeof AppMyAppsIdAnalyticsRoute
   '/_app/my-apps/$id/edit': typeof AppMyAppsIdEditRoute
   '/_app/my-apps/$id/revenue': typeof AppMyAppsIdRevenueRoute
+  '/_app/my-apps/$id/rocket-analytics': typeof AppMyAppsIdRocketAnalyticsRoute
   '/_app/projects/$id_/brand-kit': typeof AppProjectsIdBrandKitRoute
   '/_app/projects/$id_/fonts': typeof AppProjectsIdFontsRoute
   '/_app/projects/$id_/guidelines': typeof AppProjectsIdGuidelinesRoute
@@ -1118,6 +1128,7 @@ export interface FileRouteTypes {
     | '/my-apps/$id/analytics'
     | '/my-apps/$id/edit'
     | '/my-apps/$id/revenue'
+    | '/my-apps/$id/rocket-analytics'
     | '/projects/$id/brand-kit'
     | '/projects/$id/fonts'
     | '/projects/$id/guidelines'
@@ -1228,6 +1239,7 @@ export interface FileRouteTypes {
     | '/my-apps/$id/analytics'
     | '/my-apps/$id/edit'
     | '/my-apps/$id/revenue'
+    | '/my-apps/$id/rocket-analytics'
     | '/projects/$id/brand-kit'
     | '/projects/$id/fonts'
     | '/projects/$id/guidelines'
@@ -1341,6 +1353,7 @@ export interface FileRouteTypes {
     | '/_app/my-apps/$id/analytics'
     | '/_app/my-apps/$id/edit'
     | '/_app/my-apps/$id/revenue'
+    | '/_app/my-apps/$id/rocket-analytics'
     | '/_app/projects/$id_/brand-kit'
     | '/_app/projects/$id_/fonts'
     | '/_app/projects/$id_/guidelines'
@@ -2124,6 +2137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMyAppsIdRevenueRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/my-apps/$id/rocket-analytics': {
+      id: '/_app/my-apps/$id/rocket-analytics'
+      path: '/my-apps/$id/rocket-analytics'
+      fullPath: '/my-apps/$id/rocket-analytics'
+      preLoaderRoute: typeof AppMyAppsIdRocketAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects/$id_/brand-kit': {
       id: '/_app/projects/$id_/brand-kit'
       path: '/projects/$id/brand-kit'
@@ -2285,6 +2305,7 @@ interface AppRouteChildren {
   AppMyAppsIdAnalyticsRoute: typeof AppMyAppsIdAnalyticsRoute
   AppMyAppsIdEditRoute: typeof AppMyAppsIdEditRoute
   AppMyAppsIdRevenueRoute: typeof AppMyAppsIdRevenueRoute
+  AppMyAppsIdRocketAnalyticsRoute: typeof AppMyAppsIdRocketAnalyticsRoute
   AppProjectsIdBrandKitRoute: typeof AppProjectsIdBrandKitRoute
   AppProjectsIdFontsRoute: typeof AppProjectsIdFontsRoute
   AppProjectsIdGuidelinesRoute: typeof AppProjectsIdGuidelinesRoute
@@ -2339,6 +2360,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMyAppsIdAnalyticsRoute: AppMyAppsIdAnalyticsRoute,
   AppMyAppsIdEditRoute: AppMyAppsIdEditRoute,
   AppMyAppsIdRevenueRoute: AppMyAppsIdRevenueRoute,
+  AppMyAppsIdRocketAnalyticsRoute: AppMyAppsIdRocketAnalyticsRoute,
   AppProjectsIdBrandKitRoute: AppProjectsIdBrandKitRoute,
   AppProjectsIdFontsRoute: AppProjectsIdFontsRoute,
   AppProjectsIdGuidelinesRoute: AppProjectsIdGuidelinesRoute,

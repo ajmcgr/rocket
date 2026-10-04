@@ -40,6 +40,35 @@ describe("AddApp", () => {
     }
   });
 
+  it("shows the DNS host without the domain and keeps the full DNS name as guidance", async () => {
+    mocks.from.mockReturnValue({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({
+        data: { id: "app-1", name: "Media", website_url: "https://trymedia.ai/", claim_state: "unclaimed" },
+      }) }) }),
+    });
+    mocks.invoke.mockResolvedValue({ data: {
+      status: "pending", challenge_id: "challenge-1", method: "dns_txt",
+      host: "_rocket-verify.trymedia.ai", value: "rocket-verification=test", token: "test",
+      expires_at: "2026-10-06T07:00:00Z",
+    }, error: null });
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    try {
+      await act(async () => { root.render(<MemoryRouter initialEntries={["/apps/add?app=app-1"]}><AddApp /></MemoryRouter>); });
+      const button = Array.from(container.querySelectorAll("button")).find((item) => item.textContent === "Verify domain (DNS)")!;
+      await act(async () => { button.click(); });
+      const codes = Array.from(container.querySelectorAll("code")).map((item) => item.textContent);
+      expect(codes).toEqual(["_rocket-verify", "_rocket-verify.trymedia.ai", "rocket-verification=test"]);
+      expect(container.textContent).toContain("Name / Host:");
+      expect(container.textContent).toContain("adds your domain automatically");
+      expect(container.textContent).toContain("Full DNS name (for providers that require it)");
+    } finally {
+      await act(async () => { root.unmount(); });
+      container.remove();
+    }
+  });
+
   it("clears a successful lookup before showing an invalid URL error", async () => {
     let rejectInvalid!: (value: { data: { error: string }; error: null }) => void;
     mocks.invoke

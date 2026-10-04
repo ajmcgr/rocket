@@ -105,6 +105,12 @@ verify_jwt = false # Stripe signed webhook; raw payload signature is verified in
 [functions.rocket-apps]
 verify_jwt = false # The preview action is anonymous; all mutating actions verify the user in code.
 
+[functions.rocket-app-disconnect]
+verify_jwt = false # Every request verifies its bearer token using Auth.getUser before accessing the service-only RPC.
+
+[functions.rocket-app-analytics]
+verify_jwt = false # Auth.getUser validates every request; the service-only RPC checks active ownership.
+
 [functions.rocket-app-view]
 verify_jwt = false
 

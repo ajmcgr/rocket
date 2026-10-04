@@ -161,7 +161,15 @@ export default function AddApp() {
       {challenge?.status === "verified" && <p className="mt-5 rounded-lg bg-green-50 p-4 text-sm text-green-800">{challenge.reason}</p>}
       {challenge?.challenge_id && <div className="mt-5 rounded-xl bg-neutral-50 p-5 text-sm">
         <p className="font-semibold">{challenge.method === "dns_txt" ? "Add this TXT record to your domain" : "Place this text at the exact URL"}</p>
-        <p className="mt-3 text-neutral-600">{challenge.method === "dns_txt" ? "Type: TXT · Host:" : "URL:"}</p><code className="block break-all">{challenge.host}</code>
+        {challenge.method === "dns_txt" ? <>
+          <p className="mt-3 text-neutral-600">Type: TXT · Name / Host:</p>
+          <code className="block break-all">_rocket-verify</code>
+          <p className="mt-2 text-neutral-600">Enter only _rocket-verify in GoDaddy or any DNS provider that adds your domain automatically.</p>
+          <p className="mt-3 text-neutral-600">Full DNS name (for providers that require it):</p>
+          <code className="block break-all">{challenge.host}</code>
+        </> : <>
+          <p className="mt-3 text-neutral-600">URL:</p><code className="block break-all">{challenge.host}</code>
+        </>}
         <p className="mt-3 text-neutral-600">Value:</p><code className="block break-all">{challenge.value}</code>
         <button onClick={() => navigator.clipboard.writeText(challenge.value || "")} className="mt-2 text-sky-700">Copy value</button>
         <p className="mt-3 text-xs text-neutral-500">Expires {new Date(challenge.expires_at || "").toLocaleString()}.</p>

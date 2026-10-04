@@ -40,7 +40,6 @@ export default function Discover() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [rankingCategories, setRankingCategories] = useState<Tables<"public_ranking_categories">[]>([]);
   const [rankingCategoriesLoading, setRankingCategoriesLoading] = useState(true);
-  const [rankingViews, setRankingViews] = useState<Map<string, number>>(new Map());
   const [signals, setSignals] = useState<Map<string, AppSignal>>(new Map());
   const [media, setMedia] = useState<Map<string, PublicAppMedia[]>>(new Map());
   const [cardMetadata, setCardMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
@@ -148,7 +147,6 @@ export default function Discover() {
         const byId = new Map((appResult.data || []).map((app) => [app.id, app]));
         if (!canceled) {
           setApps(ids.map((id) => byId.get(id)).filter((app): app is App => Boolean(app)));
-          setRankingViews(new Map((rankingRows || []).map((row) => [row.app_id, row.rocket_view_count])));
           setSignals(new Map());
           setCount(ids.length);
           setMedia(new Map());
@@ -567,7 +565,6 @@ export default function Discover() {
                   {...saveControls(app.id)}
                   metadata={cardMetadata.get(app.id)}
                   rank={index + 1}
-                  eyebrow={`${rankingViews.get(app.id)?.toLocaleString() || "0"} Rocket views`}
                 />
               ))}
             </div>

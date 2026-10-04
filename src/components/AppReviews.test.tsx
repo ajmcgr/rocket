@@ -95,6 +95,14 @@ describe("real app reviews", () => {
       expect(container.textContent).toContain("from 1 review");
       expect(container.textContent).toContain("A genuinely useful product.");
       expect(container.textContent).toContain("Edit your review");
+      expect(container.querySelector("select")).toBeNull();
+      expect(container.querySelectorAll('input[type="radio"]')).toHaveLength(5);
+      expect(container.querySelector<HTMLInputElement>('input[value="4"]')?.checked).toBe(true);
+      expect(container.querySelectorAll("form .fill-amber-400")).toHaveLength(4);
+      await act(async () => { container.querySelector<HTMLInputElement>('input[value="2"]')!.click(); });
+      expect(container.querySelector<HTMLInputElement>('input[value="2"]')?.checked).toBe(true);
+      expect(container.querySelectorAll("form .fill-amber-400")).toHaveLength(2);
+      expect(container.textContent).toContain("2 out of 5");
       expect(
         (container.querySelector("textarea") as HTMLTextAreaElement).value,
       ).toBe("A genuinely useful product.");

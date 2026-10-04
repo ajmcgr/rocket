@@ -56,7 +56,6 @@ function SectionHeading({ id, title, description, href, action, emoji }: {
 
 export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [rankings, setRankings] = useState<App[]>([]);
-  const [rankingViews, setRankingViews] = useState<Map<string, number>>(new Map());
   const [fresh, setFresh] = useState<Preview[]>([]);
   const saveControls = useSavedAppControls([...rankings.map((app) => app.id), ...fresh.map(({ app }) => app.id)]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -114,7 +113,6 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           return app ? [{ app, signal }] : [];
         });
       setRankings(rankingRows.flatMap((row) => apps.get(row.app_id) ? [apps.get(row.app_id)!] : []));
-      setRankingViews(new Map(rankingRows.map((row) => [row.app_id, row.rocket_view_count])));
       setFresh(mapRows(freshSignals));
       setCategories(categoryResult.error ? [] : categoryResult.data || []);
       setLoading(false);
@@ -204,7 +202,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         {rankings.length > 0 ? (
           <div className="grid gap-x-7 sm:grid-cols-2">
             {rankings.map((app, index) => (
-              <RankedAppRow key={app.id} app={app} {...saveControls(app.id)} rank={index + 1} metadata={metadata.get(app.id)} eyebrow={`${rankingViews.get(app.id)?.toLocaleString() || "0"} Rocket views`} />
+              <RankedAppRow key={app.id} app={app} {...saveControls(app.id)} rank={index + 1} metadata={metadata.get(app.id)} />
             ))}
           </div>
         ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}

@@ -18,6 +18,7 @@ import {
   Database,
   Search,
   MessageCircle,
+  CreditCard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -62,13 +63,13 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: "New", to: "/discover?view=new", icon: Flame },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
       { label: "Saved", to: "/saved-apps", icon: Bookmark },
-      { label: "Library", to: "/library", icon: Layers3 },
     ],
   },
   {
     heading: "Your apps",
     items: [
       { label: "Your Apps", to: "/your-apps", icon: Layers3 },
+      { label: "Your Subscriptions", to: "/library", icon: CreditCard },
       { label: "Submit your app", to: "/submit", icon: Plus },
     ],
   },

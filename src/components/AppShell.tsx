@@ -41,6 +41,7 @@ import {
   Wallet,
   ShieldCheck,
   MessageCircle,
+  CreditCard,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -113,6 +114,7 @@ const AppShell = () => {
       label: "Your apps",
       items: [
         { label: "Your Apps", to: "/your-apps", icon: Layers3 },
+        { label: "Your Subscriptions", to: "/library", icon: CreditCard },
         { label: "Submit your app", to: "/submit", icon: Plus },
       ],
     },

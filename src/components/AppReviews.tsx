@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "@/lib/router-compat";
+import { Star } from "lucide-react";
 
 type Review = {
   id: string;
@@ -179,24 +180,22 @@ export default function AppReviews({
           <h3 className="font-semibold">
             {mine ? "Edit your review" : "Write a review"}
           </h3>
-          <label
-            className="mt-3 block text-sm text-neutral-600"
-            htmlFor="app-rating"
-          >
-            Your rating
-          </label>
-          <select
-            id="app-rating"
-            value={rating}
-            onChange={(event) => setRating(Number(event.target.value))}
-            className="mt-1 rounded-lg border border-neutral-300 bg-white px-3 py-2"
-          >
-            {[5, 4, 3, 2, 1].map((n) => (
-              <option value={n} key={n}>
-                {n} stars
-              </option>
-            ))}
-          </select>
+          <fieldset className="mt-3" disabled={busy}>
+            <legend className="text-sm text-neutral-600">Your rating</legend>
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <label key={n} className="relative cursor-pointer">
+                  <input type="radio" name="app-rating" value={n} checked={rating === n}
+                    onChange={() => setRating(n)} aria-label={`${n} ${n === 1 ? "star" : "stars"}`}
+                    className="peer sr-only" />
+                  <span className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-amber-50 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-600 peer-disabled:opacity-50">
+                    <Star aria-hidden="true" size={28} className={n <= rating ? "fill-amber-400 text-amber-500" : "text-neutral-400"} />
+                  </span>
+                </label>
+              ))}
+              <span className="ml-2 text-sm text-neutral-600" aria-live="polite">{rating} out of 5</span>
+            </div>
+          </fieldset>
           <label
             className="mt-4 block text-sm text-neutral-600"
             htmlFor="app-review-body"

@@ -35,10 +35,13 @@ export default function Library() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   useEffect(() => {
+    setPurchases([]);
+    setError("");
     if (!userId) {
       setLoading(false);
       return;
     }
+    setLoading(true);
     let cancelled = false;
     request<{ purchases: Purchase[] }>("library")
       .then((result) => {
@@ -85,16 +88,17 @@ export default function Library() {
   };
   return (
     <main className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8 sm:pt-14">
-      <h1 className="font-display text-4xl sm:text-5xl">Library</h1>
+      <h1 className="font-display text-4xl sm:text-5xl">Your Subscriptions</h1>
       <p className="mt-3 text-neutral-600">
-        Apps you&apos;ve purchased through Rocket. This is separate from the
-        apps you develop or own.
+        Access the apps you subscribe to through Buy with Rocket, see your
+        subscription status, and manage cancellation. This is separate from
+        your own apps and Rocket Developer membership.
       </p>
       {(loading || authLoading) && (
         <div
           role="status"
           className="mt-8 space-y-4 animate-pulse"
-          aria-label="Loading library"
+          aria-label="Loading subscriptions"
         >
           <div className="h-28 rounded-2xl bg-neutral-100" />
           <div className="h-28 rounded-2xl bg-neutral-100" />
@@ -106,7 +110,7 @@ export default function Library() {
             to="/login?next=%2Flibrary"
             className="font-semibold text-[#167ac6] underline"
           >
-            Log in to see your purchases
+            Log in to see your subscriptions
           </Link>
         </p>
       )}
@@ -115,9 +119,10 @@ export default function Library() {
           {error}
         </p>
       )}
-      {!loading && user && !purchases.length && (
+      {!loading && !error && user && !purchases.length && (
         <div className="mt-8 rounded-2xl border border-neutral-200 p-6">
-          <p>No Rocket purchases yet.</p>
+          <p>No subscriptions yet.</p>
+          <p className="mt-2 text-sm text-neutral-600">App subscriptions purchased through Buy with Rocket will appear here once payment is confirmed.</p>
           <Link
             to="/discover"
             className="mt-3 inline-block font-semibold text-[#167ac6]"

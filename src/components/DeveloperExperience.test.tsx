@@ -122,6 +122,11 @@ describe("Developer product experience", () => {
       expect(container.querySelector("#rocket-id")).toBeNull();
       expect(container.querySelector("#your-developer-apps")).toBeNull();
       expect(container.textContent).not.toContain("Site header");
+      expect(container.querySelector(".dev-membership-settings")?.classList.contains("dev-content")).toBe(true);
+      expect(container.querySelectorAll(".rocket-product-card")).toHaveLength(2);
+      expect(container.querySelector('a[href="/buy-with-rocket"]')?.textContent).toContain("Start selling");
+      expect(container.querySelector('a[href="/rocket-id"]')?.textContent).toContain("Set up Rocket ID");
+      expect(container.querySelectorAll(".rocket-product-cta svg")).toHaveLength(2);
       await act(async () => [...container.querySelectorAll("button")].find(button => button.textContent === "Manage subscription")!.click());
       expect(billing).toHaveBeenCalledWith("portal");
     } finally { await cleanup(); }

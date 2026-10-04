@@ -3,6 +3,9 @@ import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import AppJourney, { type MyApp } from "@/components/AppJourney";
 import AppLogo from "@/components/AppLogo";
+import DeveloperProductCards from "@/components/DeveloperProductCards";
+import AppDisconnectControls from "@/components/AppDisconnectControls";
+import { BarChart3 } from "lucide-react";
 
 export default function MyApps() {
   const [items, setItems] = useState<MyApp[]>([]);
@@ -120,6 +123,7 @@ export default function MyApps() {
                 </span>
               </div>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-neutral-100 pt-4 text-sm">
+                {item.owned && <Link to={`/my-apps/${item.app_id}/rocket-analytics`} className="inline-flex items-center gap-2 font-semibold text-sky-800 hover:underline"><BarChart3 size={18} aria-hidden="true" />Rocket Analytics</Link>}
                 <Link
                   to={`/apps/add?app=${item.app_id}`}
                   className="font-medium text-sky-800 hover:underline"
@@ -143,24 +147,13 @@ export default function MyApps() {
                       Edit profile
                     </Link>
                   )}
-                {item.owned && (
-                  <Link
-                    to={`/rocket-id?app=${item.app_id}`}
-                    className="font-medium text-sky-800 hover:underline"
-                  >
-                    Set up Rocket ID
-                  </Link>
-                )}
-                {item.owned && (
-                  <Link
-                    to={`/buy-with-rocket?app=${item.app_id}`}
-                    className="font-medium text-sky-800 hover:underline"
-                  >
-                    Set up Buy with Rocket
-                  </Link>
-                )}
               </div>
+              {item.owned && <DeveloperProductCards appId={item.app_id} />}
               <AppJourney item={item} />
+              <AppDisconnectControls item={item} onDisconnected={() => {
+                setItems((current) => current.filter((app) => app.app_id !== item.app_id));
+                setNotice("App disconnected from your account. Its public listing has been preserved.");
+              }} />
               {item.owned && (
                 <div className="mt-4 text-sm">
                   <button

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import SiteHeader from "@/components/SiteHeader";
 import ProductionBuySetup from "@/components/ProductionBuySetup";
+import DeveloperProductCards from "@/components/DeveloperProductCards";
 import {
   buyStatus,
   idStatus,
@@ -416,7 +417,7 @@ export default function DeveloperExperience({
         ? periodEnd.toLocaleDateString()
         : "Not available";
     return (
-      <section className="dev-page dev-membership-settings">
+      <section className="dev-page dev-content dev-membership-settings">
         <header>
           <p className="dev-eyebrow">YOUR DEVELOPER SUBSCRIPTION</p>
           <h2>Rocket Developer</h2>
@@ -498,14 +499,7 @@ export default function DeveloperExperience({
             </button>
           </p>
         )}
-        <div className="dev-actions">
-          <Link className="dev-button dev-button-outline" to="/rocket-id">
-            Rocket ID <ArrowRight size={17} />
-          </Link>
-          <Link className="dev-button dev-button-outline" to="/buy-with-rocket">
-            Buy with Rocket <ArrowRight size={17} />
-          </Link>
-        </div>
+        <DeveloperProductCards />
       </section>
     );
   }

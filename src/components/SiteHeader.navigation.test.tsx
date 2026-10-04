@@ -24,6 +24,11 @@ describe("Create sidebar destinations", () => {
         expect((await screen.findByRole("link", { name: "Brand Studio" })).getAttribute("href")).toBe("/create");
         expect(screen.getByRole("link", { name: "Saved Designs" }).getAttribute("href")).toBe("/saved");
         expect(screen.queryByText("Logos/Icons")).toBeNull();
+        const apps = screen.getAllByRole("link", { name: "Your Apps" })[0];
+        const subscriptions = screen.getByRole("link", { name: "Your Subscriptions" });
+        expect(subscriptions.getAttribute("href")).toBe("/library");
+        expect(apps.compareDocumentPosition(subscriptions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(screen.queryByRole("link", { name: "Library" })).toBeNull();
       });
     }
   }

@@ -17,6 +17,13 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("bookmark saving", () => {
+  it("uses a smaller desktop control in list rows while keeping mobile touch targets", () => {
+    render(<SaveAppButton appId="app-1" saved={false} onChange={vi.fn()} compact />);
+    const button = screen.getByRole("button", { name: "Save app" });
+    expect(button.className).toContain("sm:h-9 sm:w-9");
+    expect(button.className).toContain("h-11 w-11");
+    expect(button.querySelector("svg")?.getAttribute("class")).toContain("h-4 w-4");
+  });
   it("has no visible Save text, an accessible label, and an outlined bookmark", () => {
     render(<SaveAppButton appId="app-1" saved={false} onChange={vi.fn()} />);
     const button = screen.getByRole("button", { name: "Save app" });
@@ -32,6 +39,7 @@ describe("bookmark saving", () => {
     await waitFor(() => expect(change).toHaveBeenCalledWith(true));
     expect(mocks.insert).toHaveBeenCalledWith({ user_id: "user-1", app_id: "app-1" });
     expect(parent).not.toHaveBeenCalled();
+    expect(mocks.navigate).toHaveBeenCalledWith("/saved-apps");
   });
   it("fills saved bookmarks and removes only the current user's app", async () => {
     const change = vi.fn();
@@ -42,6 +50,7 @@ describe("bookmark saving", () => {
     fireEvent.click(button);
     await waitFor(() => expect(change).toHaveBeenCalledWith(false));
     expect(mocks.eq.mock.calls).toEqual([["user_id", "user-1"], ["app_id", "app-1"]]);
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
   it("takes signed-out users to login without writing a save", () => {
     mocks.user = null;
@@ -58,6 +67,7 @@ describe("bookmark saving", () => {
     fireEvent.click(button);
     await waitFor(() => expect(button.title).toContain("Could not update"));
     expect(change).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
     expect(button.hasAttribute("disabled")).toBe(false);
     fireEvent.click(button);
     await waitFor(() => expect(change).toHaveBeenCalledWith(true));

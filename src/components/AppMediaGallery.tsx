@@ -32,9 +32,6 @@ export default function AppMediaGallery({
             See {name} in action
           </h2>
         </div>
-        <span className="text-xs text-neutral-500">
-          Product media from Launch or the app owner
-        </span>
       </div>
       {visible.length > 0 && (
         <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:thin]">
