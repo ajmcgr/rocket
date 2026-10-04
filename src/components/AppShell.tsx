@@ -25,6 +25,7 @@ import { MobilePrimaryNav } from "./PrimaryNav";
 import { Share2 as ShareEmoji } from "./EmojiIcons";
 import LanguageSelector from "./LanguageSelector";
 import ThemeToggle from "./ThemeToggle";
+import { createNavigationItems } from "@/lib/createNavigation";
 import {
   BarChart3,
   ExternalLink,
@@ -32,7 +33,6 @@ import {
   Compass,
   Layers3,
   Plus,
-  Palette,
   PanelLeftClose,
   PanelLeftOpen,
   Send,
@@ -119,8 +119,7 @@ const AppShell = () => {
     {
       label: "Create",
       items: [
-        { label: "Brand Studio", to: "/create", icon: Palette },
-        { label: "Saved Designs", to: "/saved", icon: Bookmark },
+        ...createNavigationItems,
       ],
     },
     {

@@ -153,49 +153,6 @@ export default function Discover() {
           setCount(ids.length);
           setMedia(new Map());
         }
-      } else if (view === "new") {
-        const {
-          data: signalRows,
-          count: total,
-          error: signalError,
-        } = await supabase
-          .from("public_discoverable_app_intelligence")
-          .select("*", { count: "exact" })
-          .eq("signal_type", "new_interesting")
-          .order("percentile_rank", { ascending: false })
-          .order("net_votes", { ascending: false })
-          .order("app_id", { ascending: true })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-        if (signalError) throw signalError;
-        const ids = (signalRows || []).map((row) => row.app_id);
-        const [appResult, mediaResult] = ids.length
-          ? await Promise.all([
-              supabase
-                .from("public_discoverable_apps")
-                .select("*")
-                .in("id", ids),
-              loadAppMedia(ids),
-            ])
-          : [
-              { data: [] as App[], error: null },
-              new Map<string, PublicAppMedia[]>(),
-            ];
-        if (appResult.error) throw appResult.error;
-        const byId = new Map(
-          (appResult.data || []).map((app) => [app.id, app]),
-        );
-        if (!canceled) {
-          setApps(
-            ids
-              .map((id) => byId.get(id))
-              .filter((app): app is App => Boolean(app)),
-          );
-          setSignals(
-            new Map((signalRows || []).map((row) => [row.app_id, row])),
-          );
-          setMedia(mediaResult);
-          setCount(total || 0);
-        }
       } else {
         let request = supabase
           .from(search ? "public_apps" : "public_discoverable_apps")
@@ -212,8 +169,8 @@ export default function Discover() {
           data,
           error: queryError,
           count: total,
-        } = await publicMarketplaceRead("catalogue", JSON.stringify({search,category,platform,source,sort,page}), () => request
-          .order(sort === "discovered" ? "discovered_at" : "launched_at", {
+        } = await publicMarketplaceRead("catalogue", JSON.stringify({view,search,category,platform,source,sort,page}), () => request
+          .order(view === "new" || sort === "discovered" ? "discovered_at" : "launched_at", {
             ascending: false,
             nullsFirst: false,
           })
@@ -243,7 +200,7 @@ export default function Discover() {
           setSignals(
             new Map(
               (evidence.data || [])
-                .filter((row) => row.signal_type === "rising")
+                .filter((row) => row.signal_type === "rising" || (view === "new" && row.signal_type === "new_interesting"))
                 .map((row) => [row.app_id, row]),
             ),
           );
@@ -400,16 +357,22 @@ export default function Discover() {
           <section className="mt-6" aria-labelledby="ranking-categories-heading">
             <h2 id="ranking-categories-heading" className="text-lg font-bold">Top 20 by Rocket views</h2>
             <p className="mt-1 text-sm text-neutral-600">Visits to app profiles on Rocket since view tracking began. Repeat visits from the same browser/network to an app in a day count once; ties use the most recent view, then newer listings. Views are not verified users, revenue or a Rocket endorsement.</p>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Ranking categories">
-              <button onClick={() => selectRankingCategory("")} aria-current={!activeRankingCategory ? "page" : undefined} className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium ${!activeRankingCategory ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-700 hover:bg-neutral-100"}`}>
-                All Apps
-              </button>
-              {rankingCategories.map((item) => (
-                <button key={item.category} onClick={() => selectRankingCategory(item.category)} aria-current={activeRankingCategory === item.category ? "page" : undefined} className={`flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium ${activeRankingCategory === item.category ? "bg-neutral-200 text-neutral-900" : "bg-white text-neutral-700 hover:bg-neutral-100"}`}>
-                  <span className="min-w-0 truncate">{item.category}</span>
-                </button>
-              ))}
-            </div>
+            <label className="mt-4 flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+              Category
+              <select
+                value={activeRankingCategory}
+                onChange={(event) => selectRankingCategory(event.target.value)}
+                disabled={rankingCategoriesLoading}
+                className="min-h-10 w-full max-w-xs rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-normal text-neutral-900 disabled:opacity-60 sm:w-64"
+              >
+                <option value="">All Apps</option>
+                {rankingCategories.map((item) => (
+                  <option key={item.category} value={item.category}>
+                    {item.category}
+                  </option>
+                ))}
+              </select>
+            </label>
           </section>
         )}
         {view !== "rankings" && (
@@ -504,7 +467,7 @@ export default function Discover() {
                   ? `Top ${count} apps`
                 : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}
           </span>
-          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by Rocket app-profile views" : "Public Launch activity"}</span>
+          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by Rocket app-profile views" : view === "new" ? "Newest listings on Rocket" : "Public Launch activity"}</span>
         </div>
         {error && (
           <div
@@ -516,7 +479,7 @@ export default function Discover() {
         )}
         {!loading && !error && view !== "categories" && apps.length === 0 && (
           <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-600">
-            {view === "all"
+            {view === "all" || view === "new"
               ? "No apps match these filters."
               : "No apps currently meet this evidence threshold. Browse all apps instead."}
           </div>

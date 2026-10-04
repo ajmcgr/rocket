@@ -5,11 +5,12 @@ import type { Tables } from "@/integrations/supabase/types";
 import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
-import { AppCardSkeleton } from "@/components/MarketplaceLoadingSkeletons";
+import { AppCardSkeleton, RankedAppRowSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
 import {
   EditorialAppCard,
   StandardAppCard,
+  RankedAppRow,
 } from "./MarketplaceCards";
 
 type App = Tables<"public_apps">;
@@ -55,6 +56,7 @@ function SectionHeading({ id, title, description, href, action, emoji }: {
 
 export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [rankings, setRankings] = useState<App[]>([]);
+  const [rankingViews, setRankingViews] = useState<Map<string, number>>(new Map());
   const [fresh, setFresh] = useState<Preview[]>([]);
   const saveControls = useSavedAppControls([...rankings.map((app) => app.id), ...fresh.map(({ app }) => app.id)]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -67,14 +69,14 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
     let active = true;
     const load = async () => {
       const [rankingResult, newResult, categoryResult] = await Promise.all([
-        publicMarketplaceRead("preview", "rankings", () => supabase
+        publicMarketplaceRead("preview", "rankings-top20", () => supabase
           .from("public_app_rankings")
           .select("app_id,rocket_view_count")
           .order("rocket_view_count", { ascending: false })
           .order("last_viewed_at", { ascending: false, nullsFirst: false })
           .order("launched_at", { ascending: false, nullsFirst: false })
           .order("app_id", { ascending: true })
-          .limit(4)),
+          .limit(20)),
         publicMarketplaceRead("preview", "new", () => supabase
           .from("public_discoverable_app_intelligence")
           .select("*")
@@ -112,6 +114,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           return app ? [{ app, signal }] : [];
         });
       setRankings(rankingRows.flatMap((row) => apps.get(row.app_id) ? [apps.get(row.app_id)!] : []));
+      setRankingViews(new Map(rankingRows.map((row) => [row.app_id, row.rocket_view_count])));
       setFresh(mapRows(freshSignals));
       setCategories(categoryResult.error ? [] : categoryResult.data || []);
       setLoading(false);
@@ -141,8 +144,8 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
               <div className="h-8 w-40 animate-pulse rounded-lg bg-neutral-100" />
               <div className="h-4 w-28 animate-pulse rounded-lg bg-neutral-100" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map((item) => <AppCardSkeleton key={item} />)}
+            <div className="grid gap-x-7 sm:grid-cols-2">
+              {Array.from({ length: 20 }, (_, item) => <RankedAppRowSkeleton key={item} />)}
             </div>
           </section>
           <section aria-hidden="true">
@@ -196,7 +199,17 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           </div>
         );
       })()}
-      <section className="mt-10 sm:mt-12" aria-labelledby="new-heading">
+      <section className="mt-10 sm:mt-12" aria-labelledby="rankings-heading">
+        <SectionHeading id="rankings-heading" title="Rankings" description="Most viewed app profiles on Rocket since view tracking began. Repeat visits from the same browser/network in a day count once." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
+        {rankings.length > 0 ? (
+          <div className="grid gap-x-7 sm:grid-cols-2">
+            {rankings.map((app, index) => (
+              <RankedAppRow key={app.id} app={app} {...saveControls(app.id)} rank={index + 1} metadata={metadata.get(app.id)} eyebrow={`${rankingViews.get(app.id)?.toLocaleString() || "0"} Rocket views`} />
+            ))}
+          </div>
+        ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}
+      </section>
+      <section className="mt-12 sm:mt-16" aria-labelledby="new-heading">
         <SectionHeading id="new-heading" title="New" description="Recently listed apps with public Launch activity." href="/discover?view=new" action="See all New" emoji="🔥" />
         {fresh.length > 0 ? (
           <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
@@ -207,18 +220,6 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
             ))}
           </div>
         ) : <p className="text-sm text-neutral-500">No new apps with Launch activity are available right now.</p>}
-      </section>
-      <section className="mt-12 sm:mt-16" aria-labelledby="rankings-heading">
-        <SectionHeading id="rankings-heading" title="Rankings" description="Most viewed app profiles on Rocket since view tracking began. Repeat visits from the same browser/network in a day count once." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
-        {rankings.length > 0 ? (
-          <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
-            {rankings.map((app, index) => (
-              <div key={app.id} className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto">
-                <StandardAppCard app={app} {...saveControls(app.id)} rank={index + 1} media={media.get(app.id)} metadata={metadata.get(app.id)} />
-              </div>
-            ))}
-          </div>
-        ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="categories-heading">
         <SectionHeading id="categories-heading" title="Categories" description="Browse apps by what you want to do." href="/discover?view=categories" action="All categories" emoji="🗂️" />

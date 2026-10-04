@@ -1,0 +1,60 @@
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "@/test/MemoryRouter";
+import Discover from "./Discover";
+
+const mocks = vi.hoisted(() => ({ from: vi.fn(), queries: [] as { table: string; range?: number[]; orders: string[] }[] }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: mocks.from } }));
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
+vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
+vi.mock("@/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => null }));
+vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
+vi.mock("@/lib/appMedia", () => ({ loadAppMedia: async () => new Map() }));
+vi.mock("@/lib/appCardMetadata", () => ({ loadAppCardMetadata: async () => new Map() }));
+vi.mock("@/lib/publicMarketplaceCache", () => ({ publicMarketplaceRead: (_scope: string, _key: string, load: () => unknown) => load() }));
+vi.mock("@/components/MarketplaceCards", () => ({
+  StandardAppCard: ({ app }: { app: { name: string } }) => <article>{app.name}</article>,
+  RankedAppRow: () => null,
+  MarketplaceListRow: () => null,
+}));
+
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+
+describe("New app feed pagination", () => {
+  it("shows 24 newest listings and navigates forward/back without requiring Launch signals", async () => {
+    vi.stubGlobal("scrollTo", vi.fn());
+    mocks.queries.length = 0;
+    mocks.from.mockImplementation((table: string) => {
+      const query = { table, orders: [] as string[], range: undefined as number[] | undefined };
+      mocks.queries.push(query);
+      const builder: any = {};
+      for (const method of ["select", "contains", "or", "not", "in", "limit", "eq"]) builder[method] = () => builder;
+      builder.order = (column: string) => { query.orders.push(column); return builder; };
+      builder.range = (start: number, end: number) => { query.range = [start, end]; return builder; };
+      builder.then = (resolve: (value: unknown) => unknown) => Promise.resolve({
+        data: table === "public_discoverable_apps"
+          ? Array.from({ length: Math.min(24, 50 - (query.range?.[0] || 0)) }, (_, i) => ({
+              id: `app-${(query.range?.[0] || 0) + i}`, name: `App ${(query.range?.[0] || 0) + i + 1}`,
+            }))
+          : [],
+        count: table === "public_discoverable_apps" ? 50 : 0,
+        error: null,
+      }).then(resolve);
+      return builder;
+    });
+    render(<MemoryRouter initialEntries={["/discover?view=new"]}><Discover /></MemoryRouter>);
+    await screen.findByText("App 1");
+    expect(screen.getAllByRole("article")).toHaveLength(24);
+    expect(screen.getByText("Page 1 of 3")).toBeTruthy();
+    expect(mocks.queries.find((q) => q.table === "public_discoverable_apps")).toMatchObject({ range: [0, 23], orders: ["discovered_at", "id"] });
+    expect(mocks.queries.some((q) => q.table === "public_discoverable_app_intelligence")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("App 25");
+    expect(screen.getAllByRole("article")).toHaveLength(24);
+    expect(screen.getByText("Page 2 of 3")).toBeTruthy();
+    expect(screen.queryByText("App 1")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    await screen.findByText("App 1");
+    await waitFor(() => expect(screen.getByText("Page 1 of 3")).toBeTruthy());
+  });
+});

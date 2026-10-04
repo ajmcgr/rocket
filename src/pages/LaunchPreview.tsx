@@ -35,6 +35,7 @@ type Preview = {
   expires_at: string;
   outcome: "existing" | "ambiguous" | "new";
   app: {
+    id?: string;
     name: string;
     description: string;
     website_url: string;
@@ -568,7 +569,9 @@ export default function LaunchPreview() {
             </p>
             {preview.outcome === "existing" && (
               <Link
-                to={`/apps/add?url=${encodeURIComponent(preview.app.website_url)}`}
+                to={preview.app.id
+                  ? `/apps/add?app=${encodeURIComponent(preview.app.id)}`
+                  : `/apps/add?url=${encodeURIComponent(preview.app.website_url)}`}
                 className={`${primary} mt-5`}
               >
                 Claim existing app

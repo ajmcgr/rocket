@@ -513,6 +513,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
     expires_at: new Date(Date.now() + 30 * 60_000).toISOString(),
     outcome,
     app: {
+      id: exact.length === 1 ? exact[0].id : undefined,
       name: display.name,
       description: display.description,
       website_url: display.website_url,

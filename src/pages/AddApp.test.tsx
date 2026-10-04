@@ -18,6 +18,28 @@ describe("AddApp", () => {
   });
   afterEach(() => { vi.unstubAllGlobals(); });
 
+  it("opens an existing app directly without importing its website again", async () => {
+    const appId = "5adcfd38-1c73-400c-973b-083c9e58a3d1";
+    mocks.from.mockReturnValue({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({
+        data: { id: appId, name: "Media", website_url: "https://trymedia.ai/", claim_state: "unclaimed" },
+      }) }) }),
+    });
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    try {
+      await act(async () => { root.render(<MemoryRouter initialEntries={[`/apps/add?app=${appId}`]}><AddApp /></MemoryRouter>); });
+      expect(container.textContent).toContain("Media");
+      expect(container.textContent).toContain("Verify this app");
+      expect(container.querySelector("form")).toBeNull();
+      expect(mocks.invoke).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => { root.unmount(); });
+      container.remove();
+    }
+  });
+
   it("clears a successful lookup before showing an invalid URL error", async () => {
     let rejectInvalid!: (value: { data: { error: string }; error: null }) => void;
     mocks.invoke

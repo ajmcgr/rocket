@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Layers3,
   Plus,
-  Sparkles,
   Flame,
   TrendingUp,
   Wallet,
@@ -35,6 +34,7 @@ import {
 import { MobilePrimaryNav, PublicMobileNav } from "./PrimaryNav";
 import ThemeToggle from "./ThemeToggle";
 import LanguageSelector from "./LanguageSelector";
+import { createNavigationItems } from "@/lib/createNavigation";
 
 type NavItem = { label: string; to: string; icon: LucideIcon; match?: string };
 export const isMarketplaceSidebarItemActive = (
@@ -74,7 +74,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
   },
   {
     heading: "Create",
-    items: [{ label: "Logos/Icons", to: "/create", icon: Sparkles }],
+    items: createNavigationItems,
   },
   {
     heading: "Monetize",

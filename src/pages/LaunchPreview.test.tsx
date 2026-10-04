@@ -27,6 +27,7 @@ const preview = (outcome = "new") => ({
   expires_at: new Date(Date.now() + 100000).toISOString(),
   outcome,
   app: {
+    ...(outcome === "existing" ? { id: "existing-app-id" } : {}),
     name: "Example",
     description: "A useful public product for teams",
     website_url: "https://example.com",
@@ -103,7 +104,7 @@ describe("Rocket app submission", () => {
       screen
         .getByRole("link", { name: "Claim existing app" })
         .getAttribute("href"),
-    ).toContain("url=");
+    ).toBe("/apps/add?app=existing-app-id");
     expect(screen.queryByRole("button", { name: "Publish app" })).toBeNull();
   });
   it("requires media and uses four steps with no scheduling or plan picker", async () => {
