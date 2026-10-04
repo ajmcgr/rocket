@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
       .select("*, connect_developer_accounts!inner(id,client_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version)")
       .eq("client_id", token.client_id).eq("product_key", body.product_key).eq("is_active", true).maybeSingle();
     const developer = (product as any)?.connect_developer_accounts;
+    const { data: client } = await admin.from("rocket_oauth_clients").select("environment").eq("client_id", token.client_id).maybeSingle();
+    if (client?.environment !== "test") return json({ error: "test_client_required" }, 403);
     if (!product || !developer || developer.client_id !== token.client_id || !developer.is_current || developer.status !== "active" || !developer.charges_enabled || !developer.payouts_enabled) return json({ error: "product_unavailable" }, 403);
     if (body.action === "reconcile") {
       if (!token.scopes.includes("entitlements:read")) return json({ error: "insufficient_scope" }, 403);
@@ -62,7 +64,7 @@ Deno.serve(async (req) => {
       : (() => false)();
     const account = developer.stripe_api_version === "v2" ? null : await stripe.accounts.retrieve(developer.stripe_account_id);
     const price = await stripe.prices.retrieve(product.stripe_price_id, { stripeAccount: developer.stripe_account_id });
-    if ((developer.stripe_api_version === "v2" ? !accountReady : !account?.charges_enabled || !account?.payouts_enabled) || !price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "stripe_configuration_invalid" }, 503);
+    if ((developer.stripe_api_version === "v2" ? !accountReady : !account?.charges_enabled || !account?.payouts_enabled) || price.livemode || !price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "stripe_configuration_invalid" }, 503);
     const now = Date.now();
     const { data: existing } = await admin.from("connect_checkout_attempts").select("stripe_checkout_session_id,expires_at")
       .eq("user_id", token.user_id).eq("client_id", token.client_id).eq("product_id", product.id).gt("expires_at", new Date(now).toISOString()).not("stripe_checkout_session_id", "is", null).maybeSingle();

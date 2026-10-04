@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/lib/router-compat";
 import { ensureActiveWorkspaceId, getActiveWorkspaceIdSync, listWorkspaces } from "@/lib/workspace";
 import { Loader2, Trash2, Mail } from "@/components/EmojiIcons";
 
@@ -27,11 +28,16 @@ const Team = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("editor");
   const [sending, setSending] = useState(false);
+  const [teamAccess, setTeamAccess] = useState(false);
+  const [personal, setPersonal] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const canManage = myRole === "owner" || myRole === "admin";
 
   const load = async () => {
     setLoading(true);
+    setLoadError(false);
+    try {
     const wid = await ensureActiveWorkspaceId();
     setWorkspaceId(wid);
     if (!wid) { setLoading(false); return; }
@@ -48,16 +54,23 @@ const Team = () => {
         .order("created_at", { ascending: false }),
       listWorkspaces(),
     ]);
+    if (wRes.error || mRes.error || iRes.error) throw new Error("Team unavailable");
     setWorkspaceName(wRes.data?.name || "");
     const mine = wsList.find(w => w.id === wid);
     setMyRole((mine?.role as Role) || null);
+    setTeamAccess(Boolean(mine?.team_access));
+    setPersonal(Boolean(mine?.is_personal));
     setMembers((mRes.data || []).map((r: any) => ({
       id: r.id, user_id: r.user_id, role: r.role,
       email: r.profiles?.email || r.profiles?.username || r.user_id.slice(0, 8),
       created_at: r.created_at,
     })));
     setInvites(iRes.data || []);
-    setLoading(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { if (user) load(); }, [user?.id]);
@@ -65,7 +78,7 @@ const Team = () => {
   const sendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = inviteEmail.trim().toLowerCase();
-    if (!email || !workspaceId) return;
+    if (!email || !workspaceId || !teamAccess || !canManage) return;
     setSending(true);
     try {
       const token = crypto.randomUUID();
@@ -115,6 +128,7 @@ const Team = () => {
   };
 
   if (loading) return <div className="rocket-skeleton-surface min-h-[50vh] p-8" role="status" aria-label="Loading team" aria-busy="true"><div className="mx-auto max-w-4xl animate-pulse space-y-5"><div className="h-8 w-40 rounded bg-neutral-100" /><div className="h-36 rounded-2xl bg-neutral-100" /></div></div>;
+  if (loadError) return <section role="alert" className="rounded-xl border border-neutral-200 bg-white p-5"><p>Workspaces could not be loaded right now.</p><Button className="mt-3" onClick={load}>Try again</Button></section>;
   if (!workspaceId) return <p className="text-neutral-500">No active workspace.</p>;
 
   return (
@@ -129,7 +143,12 @@ const Team = () => {
         </div>
       </section>
 
-      {canManage && (
+      {!teamAccess && <section className="rounded-xl border border-neutral-200 bg-white p-5">
+        <h3 className="font-semibold">Shared workspaces are included with Rocket Developer</h3>
+        <p className="mt-2 text-sm text-neutral-600">{personal ? "Your personal workspace is free. To collaborate, join Rocket Developer ($99/year), then choose New workspace in the header." : "The workspace owner's Rocket Developer membership must be active to invite teammates or edit roles. Existing data is preserved."}</p>
+        <Link to="/settings/developer" className="mt-3 inline-flex min-h-11 items-center font-semibold text-[#167ac6]">View Developer membership →</Link>
+      </section>}
+      {canManage && teamAccess && (
         <section>
           <h3 className="text-sm font-semibold text-neutral-900">Invite by email</h3>
           <form onSubmit={sendInvite} className="mt-3 flex flex-wrap items-center gap-2">
@@ -178,7 +197,7 @@ const Team = () => {
                 <div className="text-xs text-neutral-500">Joined {new Date(m.created_at).toLocaleDateString()}</div>
               </div>
               <div className="flex items-center gap-2">
-                {canManage && m.role !== "owner" && m.user_id !== user?.id ? (
+                {canManage && teamAccess && m.role !== "owner" && m.user_id !== user?.id ? (
                   <select value={m.role} onChange={(e) => updateRole(m.id, e.target.value as Role)} className="rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs">
                     {ROLES.filter(r => r !== "owner").map(r => <option key={r} value={r}>{r}</option>)}
                   </select>

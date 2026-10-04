@@ -1,6 +1,5 @@
 import { Link, useParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
 import { PILLARS, getPillar, pillarPosts, SITE_URL } from "@/content/blogMeta";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -51,7 +50,7 @@ export const ResourcesHub = () => {
         </div>
 
       </main>
-      <SiteFooter />
+
     </div>
   );
 };
@@ -74,7 +73,7 @@ export const PillarPage = () => {
           <h1 className="text-3xl font-semibold">Guide not found</h1>
           <Link to="/resources" className="mt-6 inline-block text-brand hover:underline">← All resources</Link>
         </main>
-        <SiteFooter />
+
       </div>
     );
   }
@@ -139,7 +138,7 @@ export const PillarPage = () => {
         )}
 
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

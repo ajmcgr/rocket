@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AiInfoRouteImport } from './routes/ai-info'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
+import { Route as BuyWithRocketRouteImport } from './routes/buy-with-rocket'
 import { Route as ClaimInvitationRouteImport } from './routes/claim-invitation'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeveloperRouteImport } from './routes/developer'
@@ -29,6 +30,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RocketIdRouteImport } from './routes/rocket-id'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SubmitRouteImport } from './routes/submit'
@@ -91,6 +93,7 @@ import { Route as AppRocketIdRouteImport } from './routes/_app/rocket.$id'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings.index'
 import { Route as AppSettingsAccountRouteImport } from './routes/_app/settings.account'
 import { Route as AppSettingsBillingRouteImport } from './routes/_app/settings.billing'
+import { Route as AppSettingsDeveloperRouteImport } from './routes/_app/settings.developer'
 import { Route as AppSettingsIntegrationsRouteImport } from './routes/_app/settings.integrations'
 import { Route as AppSettingsNotificationsRouteImport } from './routes/_app/settings.notifications'
 import { Route as AppSettingsProfileRouteImport } from './routes/_app/settings.profile'
@@ -140,6 +143,11 @@ const AiInfoRoute = AiInfoRouteImport.update({
 const BrandKitRoute = BrandKitRouteImport.update({
   id: '/brand-kit',
   path: '/brand-kit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuyWithRocketRoute = BuyWithRocketRouteImport.update({
+  id: '/buy-with-rocket',
+  path: '/buy-with-rocket',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClaimInvitationRoute = ClaimInvitationRouteImport.update({
@@ -215,6 +223,11 @@ const ReserveRoute = ReserveRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RocketIdRoute = RocketIdRouteImport.update({
+  id: '/rocket-id',
+  path: '/rocket-id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -527,6 +540,11 @@ const AppSettingsBillingRoute = AppSettingsBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppSettingsDeveloperRoute = AppSettingsDeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
 const AppSettingsIntegrationsRoute = AppSettingsIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
@@ -665,6 +683,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/buy-with-rocket': typeof BuyWithRocketRoute
   '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
   '/developer': typeof DeveloperRoute
@@ -680,6 +699,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
@@ -734,6 +754,7 @@ export interface FileRoutesByFullPath {
   '/rocket/$id': typeof AppRocketIdRoute
   '/settings/account': typeof AppSettingsAccountRoute
   '/settings/billing': typeof AppSettingsBillingRoute
+  '/settings/developer': typeof AppSettingsDeveloperRoute
   '/settings/integrations': typeof AppSettingsIntegrationsRoute
   '/settings/notifications': typeof AppSettingsNotificationsRoute
   '/settings/profile': typeof AppSettingsProfileRoute
@@ -774,6 +795,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/buy-with-rocket': typeof BuyWithRocketRoute
   '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
   '/developer': typeof DeveloperRoute
@@ -789,6 +811,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
@@ -841,6 +864,7 @@ export interface FileRoutesByTo {
   '/rocket/$id': typeof AppRocketIdRoute
   '/settings/account': typeof AppSettingsAccountRoute
   '/settings/billing': typeof AppSettingsBillingRoute
+  '/settings/developer': typeof AppSettingsDeveloperRoute
   '/settings/integrations': typeof AppSettingsIntegrationsRoute
   '/settings/notifications': typeof AppSettingsNotificationsRoute
   '/settings/profile': typeof AppSettingsProfileRoute
@@ -883,6 +907,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
+  '/buy-with-rocket': typeof BuyWithRocketRoute
   '/claim-invitation': typeof ClaimInvitationRoute
   '/contact': typeof ContactRoute
   '/developer': typeof DeveloperRoute
@@ -898,6 +923,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
@@ -952,6 +978,7 @@ export interface FileRoutesById {
   '/_app/rocket/$id': typeof AppRocketIdRoute
   '/_app/settings/account': typeof AppSettingsAccountRoute
   '/_app/settings/billing': typeof AppSettingsBillingRoute
+  '/_app/settings/developer': typeof AppSettingsDeveloperRoute
   '/_app/settings/integrations': typeof AppSettingsIntegrationsRoute
   '/_app/settings/notifications': typeof AppSettingsNotificationsRoute
   '/_app/settings/profile': typeof AppSettingsProfileRoute
@@ -994,6 +1021,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/buy-with-rocket'
     | '/claim-invitation'
     | '/contact'
     | '/developer'
@@ -1009,6 +1037,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reserve'
     | '/reset-password'
+    | '/rocket-id'
     | '/signup'
     | '/start'
     | '/submit'
@@ -1063,6 +1092,7 @@ export interface FileRouteTypes {
     | '/rocket/$id'
     | '/settings/account'
     | '/settings/billing'
+    | '/settings/developer'
     | '/settings/integrations'
     | '/settings/notifications'
     | '/settings/profile'
@@ -1103,6 +1133,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/buy-with-rocket'
     | '/claim-invitation'
     | '/contact'
     | '/developer'
@@ -1118,6 +1149,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reserve'
     | '/reset-password'
+    | '/rocket-id'
     | '/signup'
     | '/start'
     | '/submit'
@@ -1170,6 +1202,7 @@ export interface FileRouteTypes {
     | '/rocket/$id'
     | '/settings/account'
     | '/settings/billing'
+    | '/settings/developer'
     | '/settings/integrations'
     | '/settings/notifications'
     | '/settings/profile'
@@ -1211,6 +1244,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/ai-info'
     | '/brand-kit'
+    | '/buy-with-rocket'
     | '/claim-invitation'
     | '/contact'
     | '/developer'
@@ -1226,6 +1260,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reserve'
     | '/reset-password'
+    | '/rocket-id'
     | '/signup'
     | '/start'
     | '/submit'
@@ -1280,6 +1315,7 @@ export interface FileRouteTypes {
     | '/_app/rocket/$id'
     | '/_app/settings/account'
     | '/_app/settings/billing'
+    | '/_app/settings/developer'
     | '/_app/settings/integrations'
     | '/_app/settings/notifications'
     | '/_app/settings/profile'
@@ -1322,6 +1358,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AiInfoRoute: typeof AiInfoRoute
   BrandKitRoute: typeof BrandKitRoute
+  BuyWithRocketRoute: typeof BuyWithRocketRoute
   ClaimInvitationRoute: typeof ClaimInvitationRoute
   ContactRoute: typeof ContactRoute
   DeveloperRoute: typeof DeveloperRoute
@@ -1337,6 +1374,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ReserveRoute: typeof ReserveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RocketIdRoute: typeof RocketIdRoute
   SignupRoute: typeof SignupRoute
   StartRoute: typeof StartRoute
   SubmitRoute: typeof SubmitRoute
@@ -1398,6 +1436,13 @@ declare module '@tanstack/react-router' {
       path: '/brand-kit'
       fullPath: '/brand-kit'
       preLoaderRoute: typeof BrandKitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buy-with-rocket': {
+      id: '/buy-with-rocket'
+      path: '/buy-with-rocket'
+      fullPath: '/buy-with-rocket'
+      preLoaderRoute: typeof BuyWithRocketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/claim-invitation': {
@@ -1503,6 +1548,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rocket-id': {
+      id: '/rocket-id'
+      path: '/rocket-id'
+      fullPath: '/rocket-id'
+      preLoaderRoute: typeof RocketIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -1939,6 +1991,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsBillingRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/settings/developer': {
+      id: '/_app/settings/developer'
+      path: '/developer'
+      fullPath: '/settings/developer'
+      preLoaderRoute: typeof AppSettingsDeveloperRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
     '/_app/settings/integrations': {
       id: '/_app/settings/integrations'
       path: '/integrations'
@@ -2139,6 +2198,7 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 interface AppSettingsRouteChildren {
   AppSettingsAccountRoute: typeof AppSettingsAccountRoute
   AppSettingsBillingRoute: typeof AppSettingsBillingRoute
+  AppSettingsDeveloperRoute: typeof AppSettingsDeveloperRoute
   AppSettingsIntegrationsRoute: typeof AppSettingsIntegrationsRoute
   AppSettingsNotificationsRoute: typeof AppSettingsNotificationsRoute
   AppSettingsProfileRoute: typeof AppSettingsProfileRoute
@@ -2149,6 +2209,7 @@ interface AppSettingsRouteChildren {
 const AppSettingsRouteChildren: AppSettingsRouteChildren = {
   AppSettingsAccountRoute: AppSettingsAccountRoute,
   AppSettingsBillingRoute: AppSettingsBillingRoute,
+  AppSettingsDeveloperRoute: AppSettingsDeveloperRoute,
   AppSettingsIntegrationsRoute: AppSettingsIntegrationsRoute,
   AppSettingsNotificationsRoute: AppSettingsNotificationsRoute,
   AppSettingsProfileRoute: AppSettingsProfileRoute,
@@ -2296,6 +2357,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AiInfoRoute: AiInfoRoute,
   BrandKitRoute: BrandKitRoute,
+  BuyWithRocketRoute: BuyWithRocketRoute,
   ClaimInvitationRoute: ClaimInvitationRoute,
   ContactRoute: ContactRoute,
   DeveloperRoute: DeveloperRoute,
@@ -2311,6 +2373,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ReserveRoute: ReserveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RocketIdRoute: RocketIdRoute,
   SignupRoute: SignupRoute,
   StartRoute: StartRoute,
   SubmitRoute: SubmitRoute,

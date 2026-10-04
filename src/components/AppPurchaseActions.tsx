@@ -1,6 +1,6 @@
 import { Link } from "@/lib/router-compat";
 
-// Marketplace checkout is not public yet. Rocket Connect's current checkout is
+// Marketplace checkout is not public yet. Rocket Developer's current checkout is
 // test-mode and requires an app-issued token; Rocket ID alone is not eligibility.
 export default function AppPurchaseActions({
   appId,

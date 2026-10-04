@@ -8,6 +8,7 @@ import SaveAppButton from "./SaveAppButton";
 import TrendArrow from "./TrendArrow";
 import AppPurchaseActions from "./AppPurchaseActions";
 import type { AppCardMetadata } from "@/lib/appCardMetadata";
+import { Bookmark } from "lucide-react";
 
 type App = Tables<"public_apps">;
 type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string; trend?: "up" | "down"; metadata?: AppCardMetadata; rank?: number };
@@ -41,7 +42,7 @@ export function AppCardByline({ metadata, light = false }: { metadata?: AppCardM
   if (!metadata) return null;
   return <div className={`flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${light ? "text-white/85" : "text-neutral-500"}`}>
     {metadata.developer_handle && <span className="truncate font-medium" title="Owner-provided developer handle">@{metadata.developer_handle}</span>}
-    <span title={`${metadata.save_count} saves`} aria-label={`${metadata.save_count} saves`}>🔖 {metadata.save_count.toLocaleString()}</span>
+    <span className="inline-flex items-center gap-1" title={`${metadata.save_count} saves`} aria-label={`${metadata.save_count} saves`}><Bookmark className="h-3.5 w-3.5" aria-hidden="true" />{metadata.save_count.toLocaleString()}</span>
   </div>;
 }
 
@@ -89,7 +90,9 @@ export function EditorialAppCard({
   media,
   eyebrow = "Explore",
   metadata,
-}: BaseProps) {
+  saved,
+  onSave,
+}: BaseProps & SaveProps) {
   return (
     <article className="group relative min-h-[22rem] overflow-hidden rounded-[1.25rem] border border-neutral-200 bg-[#167ac6] text-white">
       <Artwork
@@ -121,7 +124,10 @@ export function EditorialAppCard({
         </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-200">
           <span>{app.categories[0] || "App"}</span>
-          <AppPurchaseActions appId={app.id} light />
+          <div className="flex items-center gap-2">
+            {onSave && <SaveAppButton appId={app.id} saved={Boolean(saved)} onChange={onSave} light />}
+            <AppPurchaseActions appId={app.id} light />
+          </div>
         </div>
         <AppCardByline metadata={metadata} light />
       </div>
@@ -182,7 +188,9 @@ export function RankedAppRow({
   rank,
   eyebrow,
   metadata,
-}: BaseProps & { rank: number }) {
+  saved,
+  onSave,
+}: BaseProps & SaveProps & { rank: number }) {
   return (
     <article className="group flex min-h-20 min-w-0 flex-wrap items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70">
       <span className="w-5 shrink-0 text-sm font-semibold tabular-nums text-neutral-400">
@@ -207,6 +215,7 @@ export function RankedAppRow({
         </span>
         <AppCardByline metadata={metadata} />
       </Link>
+      {onSave && <SaveAppButton appId={app.id} saved={Boolean(saved)} onChange={onSave} />}
       <AppPurchaseActions appId={app.id} />
     </article>
   );
@@ -216,7 +225,9 @@ export function RisingAppCard({
   app,
   rank,
   metadata,
-}: BaseProps & { rank: number }) {
+  saved,
+  onSave,
+}: BaseProps & SaveProps & { rank: number }) {
   return (
     <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm">
       <Link to={`/apps/${app.slug || app.id}`} className="focus-visible:outline-2 focus-visible:outline-[#167ac6]">
@@ -228,7 +239,10 @@ export function RisingAppCard({
       </Link>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5 text-xs text-neutral-500">
         <span className="min-w-0 truncate">{app.canonical_host}</span>
-        <AppPurchaseActions appId={app.id} />
+        <div className="flex items-center gap-2">
+          {onSave && <SaveAppButton appId={app.id} saved={Boolean(saved)} onChange={onSave} />}
+          <AppPurchaseActions appId={app.id} />
+        </div>
       </div>
     </article>
   );

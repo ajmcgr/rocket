@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
 import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 
 const key = Deno.env.get("STRIPE_SECRET_KEY");
 const stripe = key?.startsWith("sk_live_") ? new Stripe(key, { apiVersion: "2024-06-20" }) : null;
@@ -12,7 +13,7 @@ async function offer(appId: string) {
   const { data: configuration, error: configError } = await admin.from("rocket_buy_configuration")
     .select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
   if (configError) throw configError;
-  if (!stripe || !configuration.live_checkout_enabled || !Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET")) return null;
+  if (!stripe || !configuration.live_checkout_enabled || !liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET"))) return null;
   const { data: client, error: clientError } = await admin.from("rocket_oauth_clients")
     .select("client_id,app_id,created_by,is_active,allowed_scopes")
     .eq("app_id", appId).eq("environment", "production").eq("is_active", true).maybeSingle();
@@ -159,7 +160,7 @@ Deno.serve(async (req) => {
         if (!["canceled", "incomplete_expired"].includes(subscription.status)) return json({ error: "existing_subscription_needs_attention" }, 409);
       }
       const price = await stripe.prices.retrieve(product.stripe_price_id, { stripeAccount: account.stripe_account_id });
-      if (!price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "plan_not_ready" }, 409);
+      if (!price.livemode || !price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "plan_not_ready" }, 409);
       const { data: existing } = await admin.from("connect_checkout_attempts").select("stripe_checkout_session_id")
         .eq("user_id", user.id).eq("client_id", client.client_id).eq("product_id", product.id)
         .eq("stripe_account_id", account.stripe_account_id).gt("expires_at", new Date().toISOString())

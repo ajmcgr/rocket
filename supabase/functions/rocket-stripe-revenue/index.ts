@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 import { calculateSubscriptionMrr, MRR_CALCULATION_VERSION, type MappedPrice,
   type RevenueSubscription, type RevenueItem } from "../_shared/stripeRevenueMrr.ts";
 
-// This function never uses Rocket billing or Rocket Connect payment credentials.
+// This function never uses Rocket billing or Rocket Developer payment credentials.
 // A separate Stripe App developer account must own the test OAuth installation.
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const service = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

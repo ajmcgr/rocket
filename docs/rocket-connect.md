@@ -1,6 +1,6 @@
-# Rocket Connect — OAuth integration guide
+# Rocket Developer — OAuth integration guide
 
-Rocket Connect is a minimal OAuth 2.1 / OpenID Connect identity provider. It deliberately does **not** expose a Rocket Supabase Auth access token, refresh token, or product data to third parties.
+Rocket Developer is a minimal OAuth 2.1 / OpenID Connect identity provider. It deliberately does **not** expose a Rocket Supabase Auth access token, refresh token, or product data to third parties.
 
 ## Endpoints
 
@@ -43,13 +43,13 @@ Assign a stable `kid` before setting the secret. Keep the private JWK only in Su
 
 Rocket’s invitation-only Developer portal can register a public test client. Each invited developer can manage their own app name, icon, exact OAuth callback URI, exact Checkout return URI, and enabled state. Browser clients never write `rocket_oauth_clients` directly.
 
-Callback and Checkout return URIs are stored as exact values: no wildcard host, URI prefix, credentials, fragment, or arbitrary HTTP host is accepted. Disabling an app immediately revokes its existing Rocket Connect access tokens and unused authorization codes; it can no longer start authorizations, exchange codes, or read entitlements. Re-enabling an app does not restore old tokens—authenticate again.
+Callback and Checkout return URIs are stored as exact values: no wildcard host, URI prefix, credentials, fragment, or arbitrary HTTP host is accepted. Disabling an app immediately revokes its existing Rocket Developer access tokens and unused authorization codes; it can no longer start authorizations, exchange codes, or read entitlements. Re-enabling an app does not restore old tokens—authenticate again.
 
 This proof accepts **public PKCE clients only**. The schema reserves `confidential` clients for a later phase, but both authorization and token endpoints reject them until server-side client authentication is implemented.
 
 ## Stripe Connect test payments
 
-Invited developers can create one Accounts v2 merchant account in Stripe test mode through Stripe-hosted onboarding. Rocket configures the merchant account with `fees_collector: stripe`, `losses_collector: stripe`, and Stripe’s full hosted Dashboard; Stripe collects its processing fees and is responsible for connected-account negative balances. The developer remains the direct-charge seller and Rocket receives the fixed 10% application fee.
+Developers use Stripe-hosted onboarding for Accounts v2 merchant accounts, with Stripe’s full Dashboard. The approved live platform uses direct charges: the developer is the seller, Stripe collects processing fees from that seller, and Stripe is responsible for connected-account negative balances. New plans use a 5% Rocket application fee, separate from Stripe processing fees. Historical sandbox plans and transactions retain their recorded 10% rate and amounts; never rewrite that evidence. Live approval alone does not activate public buying: membership, verified app ownership, merchant readiness, registered live pricing, and verified entitlement integration are still required.
 
 The existing checkout contract, authorization-code PKCE flow, server-side product validation, connected-account webhooks, and entitlement endpoint are unchanged. Rocket never grants access from a checkout return URL: the independent app must wait for a webhook-backed active entitlement. Legacy Connect account/product rows remain historical evidence and cannot be made current by browser input.
 

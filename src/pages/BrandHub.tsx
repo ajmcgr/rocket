@@ -1,5 +1,5 @@
 import { Plus as ControlPlus, Copy as ControlCopy, Trash2 as ControlTrash2, Sparkles as ControlSparkles, Loader2 as ControlLoader2, RefreshCw as ControlRefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,15 +62,18 @@ function resolveBrandPreview(brand: any): string | null {
   return brand?.cover_url || brand?.preview_url || null;
 }
 
-function BrandKitPreview({ brand }: { brand: any }) {
+export function BrandKitPreview({ brand }: { brand: any }) {
   const source = resolveBrandPreview(brand);
   const logotype = brand?.logotype_state;
   const [state, setState] = useState<"resolving" | "loaded" | "missing" | "error">(source ? "resolving" : "missing");
   const [attempt, setAttempt] = useState(0);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     setAttempt(0);
-    setState(source ? "resolving" : "missing");
+    const image = imageRef.current;
+    // A cached image can finish before its onLoad handler runs.
+    setState(!source ? "missing" : image?.complete && image.naturalWidth > 0 ? "loaded" : "resolving");
   }, [source]);
 
   if (!source || state === "missing" || state === "error") {
@@ -85,9 +88,10 @@ function BrandKitPreview({ brand }: { brand: any }) {
   }
 
   return (
-    <>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
       {state !== "loaded" && <div className="rocket-skeleton-surface absolute inset-0 animate-pulse" aria-label="Loading brand preview" />}
       <img
+        ref={imageRef}
         key={`${source}-${attempt}`}
         src={source}
         alt={`${brand?.name || "Brand"} logo`}
@@ -98,7 +102,7 @@ function BrandKitPreview({ brand }: { brand: any }) {
           else setState("error");
         }}
       />
-    </>
+    </div>
   );
 }
 
@@ -464,7 +468,7 @@ export default function BrandHub() {
                   to={`/brands/${project.id}`}
                   className="group block cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:shadow-md"
                 >
-                  <div className="flex aspect-square w-full items-center justify-center bg-neutral-50 p-4">
+                  <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-neutral-50 p-4">
                     <BrandKitPreview brand={project} />
                   </div>
                   <div className="border-t border-neutral-100 p-3">

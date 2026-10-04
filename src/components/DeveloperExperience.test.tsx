@@ -28,10 +28,12 @@ async function render({
   member = null,
   signedIn = false,
   clients = [],
+  view = "all",
 }: {
   member?: DeveloperMembership | null;
   signedIn?: boolean;
   clients?: any[];
+  view?: "all" | "account" | "id" | "buy";
 } = {}) {
   invoke.mockImplementation(async (name, options) => {
     if (name === "rocket-buy")
@@ -76,6 +78,7 @@ async function render({
     root.render(
       <MemoryRouter>
         <DeveloperExperience
+          view={view}
           signedIn={signedIn}
           loading={false}
           membership={member}
@@ -99,6 +102,30 @@ async function render({
   };
 }
 describe("Developer product experience", () => {
+  it("splits the public products into their own pages", async () => {
+    for (const view of ["id", "buy"] as const) {
+      const { container, cleanup } = await render({ view });
+      try {
+        expect(container.querySelector(view === "id" ? "#rocket-id" : "#buy-with-rocket")).not.toBeNull();
+        expect(container.querySelector(view === "id" ? "#buy-with-rocket" : "#rocket-id")).toBeNull();
+        expect(container.querySelector("h1")?.textContent).toContain(view === "id" ? "Rocket account" : "Buy with Rocket");
+        expect(container.querySelector('a[href="/settings/developer"]')).not.toBeNull();
+      } finally { await cleanup(); }
+    }
+  });
+  it("shows subscription details and portal controls in settings without public product sections", async () => {
+    const { container, billing, cleanup } = await render({ view: "account", signedIn: true, member: { ...membership, membership: { status: "canceling", current_period_end: "2030-01-01" } } });
+    try {
+      expect(container.textContent).toContain("canceling");
+      expect(container.textContent).toContain("Access ends");
+      expect(container.textContent).toContain("$99/year");
+      expect(container.querySelector("#rocket-id")).toBeNull();
+      expect(container.querySelector("#your-developer-apps")).toBeNull();
+      expect(container.textContent).not.toContain("Site header");
+      await act(async () => [...container.querySelectorAll("button")].find(button => button.textContent === "Manage subscription")!.click());
+      expect(billing).toHaveBeenCalledWith("portal");
+    } finally { await cleanup(); }
+  });
   it("explains identity, payments and account-level price without sign-in", async () => {
     const { container, cleanup } = await render();
     try {
@@ -126,7 +153,7 @@ describe("Developer product experience", () => {
       ])
         expect(container.textContent).not.toContain(legacy);
       expect(
-        container.querySelector('a[href="/login?next=%2Fdeveloper"]'),
+        container.querySelector('a[href="/login?next=%2Fsettings%2Fdeveloper"]'),
       ).not.toBeNull();
       expect(
         [...container.querySelectorAll("button")].some((button) =>

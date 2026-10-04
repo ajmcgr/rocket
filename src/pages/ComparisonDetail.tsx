@@ -1,7 +1,6 @@
 import { Link, useParams } from "@/lib/router-compat";
 import { ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { comparisons, getComparison } from "@/content/comparisons";
 import { getMarketplaceComparison, marketplaceComparisons } from "@/content/marketplaceComparisons";
@@ -46,7 +45,7 @@ const ComparisonDetail = () => {
           {marketplaceComparisons.filter((item) => item.slug !== marketplace.slug).map((item) => <Link key={item.slug} to={`/compare/${item.slug}`} className="font-medium text-sky-800 hover:underline">Rocket vs {item.name} →</Link>)}
         </nav>
       </main>
-      <SiteFooter />
+
     </div>
   );
 
@@ -58,7 +57,7 @@ const ComparisonDetail = () => {
           <h1 className="text-3xl font-semibold">Comparison not found</h1>
           <Link to="/" className="mt-6 inline-block text-brand hover:underline">← Back home</Link>
         </main>
-        <SiteFooter />
+
       </div>
     );
   }
@@ -124,7 +123,7 @@ const ComparisonDetail = () => {
           </aside>
         </div>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

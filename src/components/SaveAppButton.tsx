@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { Bookmark, LoaderCircle } from "lucide-react";
 
-type Props = { appId: string; saved: boolean; onChange: (saved: boolean) => void };
+type Props = { appId: string; saved: boolean; onChange: (saved: boolean) => void; light?: boolean };
 
-export default function SaveAppButton({ appId, saved, onChange }: Props) {
+export default function SaveAppButton({ appId, saved, onChange, light = false }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -21,18 +22,23 @@ export default function SaveAppButton({ appId, saved, onChange }: Props) {
     }
     setBusy(true);
     setError(false);
-    const result = saved
-      ? await supabase.from("saved_apps").delete().eq("user_id", user.id).eq("app_id", appId)
-      : await supabase.from("saved_apps").insert({ user_id: user.id, app_id: appId });
-    if (result.error && !(result.error.code === "23505" && !saved)) setError(true);
-    else { onChange(!saved); track(saved ? "app_unsaved" : "app_saved", { app_id: appId }); }
-    setBusy(false);
+    try {
+      const result = saved
+        ? await supabase.from("saved_apps").delete().eq("user_id", user.id).eq("app_id", appId)
+        : await supabase.from("saved_apps").insert({ user_id: user.id, app_id: appId });
+      if (result.error && !(result.error.code === "23505" && !saved)) setError(true);
+      else { onChange(!saved); track(saved ? "app_unsaved" : "app_saved", { app_id: appId }); }
+    } catch {
+      setError(true);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return <button type="button" aria-label={saved ? "Unsave app" : "Save app"}
     aria-pressed={saved} disabled={busy} onClick={toggle}
     title={error ? "Could not update Saved Apps. Try again." : saved ? "Remove from Saved Apps" : "Save app"}
-    className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${saved ? "border-sky-300 bg-sky-50 text-sky-700" : "border-neutral-200 bg-white text-neutral-700 hover:border-sky-300 hover:text-sky-700"}`}>
-    {saved ? "Saved" : "Save"}
+    className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-transparent transition disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${light ? "border-white/80 text-white hover:bg-white/10" : saved ? "border-[#167ac6] text-[#167ac6] dark:text-[#dcefff]" : "border-neutral-200 text-neutral-600 hover:border-[#167ac6] hover:text-[#167ac6] dark:border-neutral-700 dark:text-neutral-200"}`}>
+    {busy ? <LoaderCircle aria-hidden="true" className="h-5 w-5 animate-spin" /> : <Bookmark aria-hidden="true" className="h-5 w-5" fill={saved ? "currentColor" : "none"} />}
   </button>;
 }

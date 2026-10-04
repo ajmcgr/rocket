@@ -7,6 +7,10 @@ import {
   parsePublicUrl,
 } from "../_shared/appIngestion.ts";
 import { geminiText, hasGeminiKey } from "../_shared/gemini.ts";
+import {
+  validateSubmission,
+  type SubmissionDetails,
+} from "../_shared/appSubmission.ts";
 
 const origin = Deno.env.get("SUPABASE_URL")!;
 const admin = createClient(origin, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -371,6 +375,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
     if (attempted.error) throw attempted.error;
   }
   const manual = body.manual === true;
+  const details = body.details ? validateSubmission(body.details) : null;
   const selectedCategory = text(body.category, 80);
   if (selectedCategory && !/^[\p{L}\p{N} &-]{2,80}$/u.test(selectedCategory))
     throw new Error("Choose a valid category");
@@ -383,15 +388,20 @@ async function preview(req: Request, body: Record<string, unknown>) {
   if (manual) {
     if (classifySource(parsed) !== "website")
       throw new Error("Manual entry requires the app's own website");
-    name = text(body.name, 240);
-    description = text(body.description, 2000);
+    name = details?.name || text(body.name, 240);
+    description = details?.description || text(body.description, 2000);
     if (name.length < 2 || description.length < 20)
       throw new Error("Add a name and a short description");
     category = selectedCategory || null;
-    const candidate = text(body.logo_url, 2048);
+    const candidate = details?.logo_url || text(body.logo_url, 2048);
     if (candidate) {
       const logo = parsePublicUrl(candidate);
-      if (logo.hostname !== parsed.hostname)
+      if (
+        logo.hostname !== parsed.hostname &&
+        !candidate.startsWith(
+          `${origin}/storage/v1/object/public/rocket-images/`,
+        )
+      )
         throw new Error("Logo must come from the app website");
       logoUrl = logo.toString();
     }
@@ -454,11 +464,13 @@ async function preview(req: Request, body: Record<string, unknown>) {
     .eq("website_url", normalized)
     .limit(3);
   if (exactMatches.error) throw exactMatches.error;
-  const hostMatches = exactMatches.data?.length ? exactMatches : await admin
-    .from("public_apps")
-    .select("id,name,description,website_url,logo_url,categories")
-    .eq("canonical_host", canonicalHost)
-    .limit(3);
+  const hostMatches = exactMatches.data?.length
+    ? exactMatches
+    : await admin
+        .from("public_apps")
+        .select("id,name,description,website_url,logo_url,categories")
+        .eq("canonical_host", canonicalHost)
+        .limit(3);
   if (hostMatches.error) throw hostMatches.error;
   const exact = hostMatches.data || [];
   const outcome =
@@ -491,6 +503,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
       logo_url: display.logo_url,
       categories: display.categories,
       existing_app_id: exact.length === 1 ? exact[0].id : null,
+      ...(details ? { details } : {}),
     },
   });
   if (saved.error) throw saved.error;
@@ -509,7 +522,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
   };
 }
 
-async function consumePreview(userId: string, token: string) {
+async function consumePreview(userId: string, token: string, publish = false) {
   if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) throw new Error("Invalid preview");
   const hashed = await digest(token);
   const pending = await admin
@@ -614,6 +627,77 @@ async function consumePreview(userId: string, token: string) {
         p_category: firstCategory,
       });
       if (categorized.error) throw categorized.error;
+    }
+    if (publish && result?.status === "complete" && result.app_id) {
+      if (result.result?.outcome !== "new") {
+        // An existing listing is never overwritten by a new submitter.
+        const existing = await admin
+          .from("public_apps")
+          .select("slug")
+          .eq("id", result.app_id)
+          .maybeSingle();
+        return {
+          ...result,
+          slug: existing.data?.slug,
+          published: true,
+          existing: true,
+        };
+      }
+      const fields = pending.data.preview as {
+        details?: SubmissionDetails;
+        website_url: string;
+      };
+      const details = validateSubmission(fields.details);
+      const websiteHost = parsePublicUrl(fields.website_url).hostname.replace(
+        /^www\./,
+        "",
+      );
+      const uploadedPrefix = `${origin}/storage/v1/object/public/rocket-images/${userId}/`;
+      const image = async (candidate: string) => {
+        const url = parsePublicUrl(candidate);
+        const uploaded = candidate.startsWith(uploadedPrefix);
+        if (
+          url.protocol !== "https:" ||
+          (!uploaded && url.hostname.replace(/^www\./, "") !== websiteHost)
+        )
+          throw new Error(
+            "Upload your images to Rocket or use HTTPS images from your app website",
+          );
+        const fetched = await fetchPublicBytes(url.toString(), 2_000_000);
+        const final = parsePublicUrl(fetched.url);
+        if (
+          final.protocol !== "https:" ||
+          (uploaded
+            ? !fetched.url.startsWith(uploadedPrefix)
+            : final.hostname.replace(/^www\./, "") !== websiteHost)
+        )
+          throw new Error("Image redirected outside the permitted website");
+        const bytes = fetched.bytes;
+        if (!(
+          (bytes[0] === 137 &&
+            bytes[1] === 80 &&
+            bytes[2] === 78 &&
+            bytes[3] === 71) ||
+          (bytes[0] === 255 && bytes[1] === 216) ||
+          (new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" &&
+            new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP")
+        ))
+          throw new Error("Images must be PNG, JPEG or WebP, up to 2 MB");
+        return fetched.url;
+      };
+      const logo = await image(details.logo_url);
+      const media = [{ type: "thumbnail", url: await image(details.hero_url) }];
+      for (const screenshot of details.screenshots)
+        media.push({ type: "screenshot", url: await image(screenshot) });
+      if (details.video_url)
+        media.push({ type: "video", url: details.video_url });
+      const published = await admin.rpc("publish_new_app_submission", {
+        p_user_id: userId,
+        p_app_id: result.app_id,
+        p_details: { ...details, logo_url: logo, media },
+      });
+      if (published.error) throw published.error;
+      return { ...result, ...published.data };
     }
     return result;
   } catch (error) {
@@ -817,7 +901,13 @@ Deno.serve(async (req) => {
     const user = await loggedIn(req);
     switch (body.action) {
       case "consume_preview":
-        return json(await consumePreview(user.id, text(body.token, 100)));
+        return json(
+          await consumePreview(
+            user.id,
+            text(body.token, 100),
+            body.publish === true,
+          ),
+        );
       case "update_presentation": {
         const appId = text(body.app_id, 36);
         if (!/^[0-9a-f-]{36}$/i.test(appId)) throw new Error("Invalid app");
@@ -840,15 +930,19 @@ Deno.serve(async (req) => {
         const description = text(body.description, 2001);
         const category = text(body.category, 81);
         const pricing = text(body.pricing_display, 61);
-        const developerHandle = text(body.developer_handle, 31).replace(/^@/, "");
+        const developerHandle = text(body.developer_handle, 31).replace(
+          /^@/,
+          "",
+        );
         if (
           displayName.length < 2 ||
           displayName.length > 120 ||
           description.length < 20 ||
           description.length > 2000 ||
           category.length > 80 ||
-          pricing.length > 60
-          || (developerHandle.length > 0 && !/^[A-Za-z0-9_]{2,30}$/.test(developerHandle))
+          pricing.length > 60 ||
+          (developerHandle.length > 0 &&
+            !/^[A-Za-z0-9_]{2,30}$/.test(developerHandle))
         )
           throw new Error("Invalid presentation fields");
         const links = Array.isArray(body.public_links) ? body.public_links : [];

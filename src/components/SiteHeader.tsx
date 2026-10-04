@@ -43,8 +43,7 @@ export const isMarketplaceSidebarItemActive = (
   pathname: string,
   search: string,
 ) => {
-  // These links point to sections within Developer, not standalone pages.
-  if (label === "Buy with Rocket" || label === "Rocket ID") return false;
+  if (label === "Buy with Rocket" || label === "Rocket ID") return pathname === to;
   return (
     pathname + search === to ||
     (to === "/discover" && pathname === "/discover" && !search) ||
@@ -80,8 +79,8 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Monetize",
     items: [
-      { label: "Buy with Rocket", to: "/developer#buy-with-rocket", icon: Wallet },
-      { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
+      { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
+      { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
     ],
   },
 ];
@@ -139,7 +138,7 @@ export default function SiteHeader() {
 
   return (
     <>
-      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>footer,*:has(>.marketplace-sidebar)>header,*:has(>.marketplace-sidebar)>.marketplace-newsletter{margin-left:${sidebarWidth}px}}`}</style>
+      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>header,body:has(.marketplace-sidebar) .global-site-footer{margin-left:${sidebarWidth}px}}`}</style>
       <aside className="marketplace-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] bg-[#f9fbfd] transition-[width] duration-200 lg:flex" style={{ width: sidebarWidth }}>
         <div className={`flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "px-4"}`}>
           {sidebarCompact ? (

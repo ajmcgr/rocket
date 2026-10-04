@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 
 export default function OutreachUnsubscribe() {
   const [message, setMessage] = useState("Processing your request…");
@@ -31,6 +30,6 @@ export default function OutreachUnsubscribe() {
       <h1 className="text-4xl font-bold tracking-tight">Founder outreach preferences</h1>
       <p className="mt-6 rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-700" role="status">{message}</p>
     </main>
-    <SiteFooter />
+
   </div>;
 }

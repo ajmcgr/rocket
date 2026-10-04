@@ -3,7 +3,6 @@ import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 
 const storageKey = "rocket:founder-claim-invitation";
 type Invitation = { token: string; appId: string };
@@ -71,5 +70,5 @@ export default function ClaimInvitation() {
       className="mt-6 inline-flex rounded-xl bg-[#167ac6] px-5 py-3 font-semibold text-white"
     >Sign in to claim</Link>}
     {done && invitation && <Link to={`/apps/${invitation.appId}`} className="mt-6 inline-flex rounded-xl border border-[#167ac6] px-5 py-3 font-semibold text-[#167ac6] dark:text-sky-300">View your app</Link>}
-  </main><SiteFooter /></div>;
+  </main></div>;
 }

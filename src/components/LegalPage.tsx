@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 type LegalPageProps = {
@@ -22,7 +21,7 @@ const LegalPage = ({ title, summary, children }: LegalPageProps) => (
         {children}
       </div>
     </main>
-    <SiteFooter />
+
   </div>
 );
 

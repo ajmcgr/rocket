@@ -7,6 +7,9 @@ describe("marketplace sidebar active state", () => {
   });
 
   it("still selects actual page destinations", () => {
+    expect(isMarketplaceSidebarItemActive("Buy with Rocket", "/buy-with-rocket", "/buy-with-rocket", "")).toBe(true);
+    expect(isMarketplaceSidebarItemActive("Rocket ID", "/rocket-id", "/rocket-id", "")).toBe(true);
+    expect(isMarketplaceSidebarItemActive("Buy with Rocket", "/buy-with-rocket", "/settings/developer", "")).toBe(false);
     expect(isMarketplaceSidebarItemActive("Discover", "/discover", "/discover", "")).toBe(true);
     expect(isMarketplaceSidebarItemActive("Rankings", "/discover?view=rankings", "/discover", "?view=rankings")).toBe(true);
     expect(isMarketplaceSidebarItemActive("Rocket ID", "/developer#rocket-id", "/developer/apps", "")).toBe(false);

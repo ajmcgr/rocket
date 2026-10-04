@@ -1,6 +1,5 @@
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -26,6 +25,13 @@ const sections = [
       { q: "Can I edit my app profile?", a: "Verified owners can manage supported public presentation details in Your Apps. Owner edits do not replace Rocket's source provenance, public evidence, user reviews, or verification history." },
       { q: "Can I connect Rocket Login or payments?", a: "Supported developers can configure Rocket identity and payments for apps they own. These capabilities require a deliberate integration and are not turned on for every indexed app." },
       { q: "Can I show traffic or revenue on my profile?", a: "Only supported, connected evidence can be shown as verified. Provider metrics are private by default, and owners choose supported public visibility. Availability and verification depend on the specific integration and account." },
+    ],
+  },
+  {
+    title: "Buy with Rocket fees",
+    questions: [
+      { q: "What is the Buy with Rocket take rate?", a: "Rocket takes a 5% platform fee on payments through new Buy with Rocket plans. This transaction fee is separate from the $99/year Rocket Developer membership." },
+      { q: "Are Stripe processing fees included in the 5%?", a: "No. Stripe processing fees and any other applicable charges are separate. On a $100 payment, Rocket's platform fee is $5, leaving $95 for the app before those separate costs." },
     ],
   },
   {
@@ -78,7 +84,7 @@ const FAQ = () => {
           <Link to="/contact" className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa] sm:mt-0">Contact Rocket</Link>
         </div>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

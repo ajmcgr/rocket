@@ -145,7 +145,7 @@ export default function MyApps() {
                   )}
                 {item.owned && (
                   <Link
-                    to={`/developer?app=${item.app_id}#rocket-id`}
+                    to={`/rocket-id?app=${item.app_id}`}
                     className="font-medium text-sky-800 hover:underline"
                   >
                     Set up Rocket ID
@@ -153,7 +153,7 @@ export default function MyApps() {
                 )}
                 {item.owned && (
                   <Link
-                    to={`/developer?app=${item.app_id}#buy-with-rocket`}
+                    to={`/buy-with-rocket?app=${item.app_id}`}
                     className="font-medium text-sky-800 hover:underline"
                   >
                     Set up Buy with Rocket
@@ -228,12 +228,12 @@ export default function MyApps() {
         </div>
       )}
       <p className="mt-8 text-sm text-neutral-500">
-        Invited to the Rocket Connect test program?{" "}
+        Manage your Rocket Developer membership in Settings.{" "}
         <Link
-          to="/developer"
+          to="/settings/developer"
           className="font-medium text-sky-700 hover:underline"
         >
-          Explore Rocket Login and Payments
+          View Developer subscription
         </Link>
         .
       </p>

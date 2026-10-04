@@ -18,20 +18,21 @@ const TABS = [
   { to: "/settings/notifications", label: "Notifications" },
   { to: "/settings/account", label: "Account" },
   { to: "/settings/billing", label: "Billing" },
+  { to: "/settings/developer", label: "Developer" },
 ];
 
 export const SettingsLayout = () => {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 md:py-12">
       <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-      <div className="mt-8 inline-flex rounded-xl border border-neutral-200 bg-white p-1">
+      <div className="mt-8 flex flex-wrap gap-1 rounded-xl border border-neutral-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900">
         {TABS.map((t) => (
           <NavLink
             key={t.to}
             to={t.to}
             className={({ isActive }) =>
               `rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
-                isActive ? "bg-neutral-900 text-white" : "text-neutral-600 hover:text-neutral-900"
+                isActive ? "bg-neutral-900 text-white dark:bg-neutral-700" : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
               }`
             }
           >
@@ -288,6 +289,8 @@ export const NotificationsSettings = () => {
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
       <h2 className="text-base font-semibold">Notifications</h2>
+      <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">Your in-app inbox includes app submissions, ownership and verification, analytics connections, Rocket ID, Buy with Rocket, and billing updates alongside your Create activity.</p>
+      <a href="/notifications" className="mt-3 inline-block text-sm font-medium text-brand hover:underline">View notifications →</a>
       <label className="mt-4 flex items-center justify-between gap-4">
         <span className="text-sm text-neutral-700">Product & launch emails</span>
         <button
@@ -465,7 +468,7 @@ export const BillingSettings = () => {
 
         {!hasPaidSubscription && (
           <ul className="mt-5 space-y-1.5 text-sm text-neutral-700">
-            {["Everything serious founders need to build and grow their brand.", "3,000 Rocket Credits each month", "Unlimited saved logos & brand kits", "Multiple high-res file types (PNG, EPS, SVG, PDF)", "Multiple color variations (including transparent backgrounds)", "Unlimited post-purchase changes", "Full ownership", "Priority generation", "Team workspace access", "Early access to new generators"].map((f) => (
+            {["Everything serious founders need to build and grow their brand.", "3,000 Rocket Credits each month", "Unlimited saved logos & brand kits", "Multiple high-res file types (PNG, EPS, SVG, PDF)", "Multiple color variations (including transparent backgrounds)", "Unlimited post-purchase changes", "Full ownership", "Priority generation", "Early access to new generators"].map((f) => (
               <li key={f} className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-neutral-900" /> {f}</li>
             ))}
           </ul>

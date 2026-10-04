@@ -1,6 +1,5 @@
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const steps = {
@@ -65,7 +64,7 @@ const StartHere = () => {
           A Rocket account saves your apps and supports Rocket features; it does not automatically sign you in to every app in the catalogue. Have a question? <Link to="/faq" className="font-semibold text-[#267cbb] underline underline-offset-4">Read the FAQ</Link> or <Link to="/contact" className="font-semibold text-[#267cbb] underline underline-offset-4">contact us</Link>.
         </p>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

@@ -1,11 +1,12 @@
 import Stripe from "npm:stripe@16.12.0";
 import { getAdmin } from "../_shared/rocketConnect.ts";
-import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd } from "../_shared/connectPaymentRules.ts";
+import { isolatedLiveWebhookSecret } from "../_shared/connectLiveConfiguration.ts";
+import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd, registeredApplicationFee } from "../_shared/connectPaymentRules.ts";
 
 const testKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const liveKey = Deno.env.get("STRIPE_SECRET_KEY");
 const testSecret = Deno.env.get("STRIPE_CONNECT_TEST_WEBHOOK_SECRET");
-const liveSecret = Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET");
+const liveSecret = isolatedLiveWebhookSecret(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET"));
 const testStripe = testKey?.startsWith("sk_test_") ? new Stripe(testKey, { apiVersion: "2024-06-20" }) : null;
 const liveStripe = liveKey?.startsWith("sk_live_") ? new Stripe(liveKey, { apiVersion: "2024-06-20" }) : null;
 const reply = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
@@ -34,6 +35,9 @@ Deno.serve(async (req) => {
     catch { /* A signature from the other isolated Connect environment may follow. */ }
   }
   if (!event || !environment || !stripe) { console.error("connect-webhook: invalid Stripe signature"); return reply({ error: "invalid_signature" }, 400); }
+  // The signing secret and event mode must agree before any receipt or ledger
+  // write. Account/client scoping below independently checks the same mode.
+  if (event.livemode !== (environment === "production")) return reply({ error: "event_mode_mismatch" }, 400);
   const accountId = event.account;
   if (!accountId) { console.error(`connect-webhook: missing connected account context for ${event.type}`); return reply({ error: "not_connect_event" }, 400); }
   const admin = getAdmin();
@@ -82,7 +86,7 @@ Deno.serve(async (req) => {
       if (previous && (previous.user_id !== attempt.user_id || previous.client_id !== attempt.client_id || previous.product_id !== attempt.product_id)) throw new Error("Checkout transaction mapping changed");
       if (previous) transaction = previous;
       else {
-        const { data, error } = await admin.from("connect_transactions").insert({ user_id: attempt.user_id, client_id: attempt.client_id, product_id: attempt.product_id, developer_account_id: account.id, stripe_account_id: accountId, stripe_checkout_session_id: object.id, stripe_customer_id: typeof object.customer === "string" ? object.customer : null, stripe_subscription_id: typeof object.subscription === "string" ? object.subscription : null, stripe_payment_intent_id: typeof checkout.payment_intent === "string" ? checkout.payment_intent : null, amount_cents: product.amount_cents, application_fee_cents: Math.round(product.amount_cents * product.platform_fee_bps / 10000), currency: product.currency, status: "pending", stripe_event_created_at: new Date(event.created * 1000).toISOString() }).select().single();
+        const { data, error } = await admin.from("connect_transactions").insert({ user_id: attempt.user_id, client_id: attempt.client_id, product_id: attempt.product_id, developer_account_id: account.id, stripe_account_id: accountId, stripe_checkout_session_id: object.id, stripe_customer_id: typeof object.customer === "string" ? object.customer : null, stripe_subscription_id: typeof object.subscription === "string" ? object.subscription : null, stripe_payment_intent_id: typeof checkout.payment_intent === "string" ? checkout.payment_intent : null, amount_cents: product.amount_cents, application_fee_cents: registeredApplicationFee(product.amount_cents, product.platform_fee_bps), currency: product.currency, status: "pending", stripe_event_created_at: new Date(event.created * 1000).toISOString() }).select().single();
         if (error) throw error;
         transaction = data;
       }

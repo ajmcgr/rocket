@@ -31,4 +31,4 @@ for (const bad of [
   const response = await request(bad);
   if (response.status !== 400) throw new Error(`Expected invalid request to fail closed with 400, got ${response.status}`);
 }
-console.log("Rocket Connect public security checks passed.");
+console.log("Rocket Developer public security checks passed.");

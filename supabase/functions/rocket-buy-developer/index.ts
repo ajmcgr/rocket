@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, base64url, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
 import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
+import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 
 const liveKey = Deno.env.get("STRIPE_SECRET_KEY");
 const stripe = liveKey?.startsWith("sk_live_") ? new Stripe(liveKey, { apiVersion: "2024-06-20" }) : null;
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
       if (configurationError) throw configurationError;
       return json({ app_id: appId, client_id: client.client_id, merchant: account ? { ready: account.ready, status: account.status, stripe_api_version: account.stripe_api_version } : null,
         products: (products || []).filter((p) => p.developer_account_id === account?.id), platform_fee_bps: configuration.platform_fee_bps,
-        launch_ready: configuration.live_checkout_enabled && !!Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET") });
+        launch_ready: configuration.live_checkout_enabled && liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET")) });
     }
 
     if (action === "stripe_onboarding") {
@@ -85,7 +86,7 @@ Deno.serve(async (req) => {
         if (error || !data) throw error || new Error("Could not record connected account");
         account = { ...data, ready: false };
       }
-      const destination = `${APP_URL}/developer?app=${encodeURIComponent(appId)}&stripe=return`;
+      const destination = `${APP_URL}/buy-with-rocket?app=${encodeURIComponent(appId)}&stripe=return`;
       const onboardingUrl = await createStripeHostedOnboardingLink(account.stripe_account_id, `${destination}&refresh=1`, destination, "production");
       return json({ onboarding_url: onboardingUrl, merchant_ready: account.ready });
     }
@@ -120,7 +121,7 @@ Deno.serve(async (req) => {
       const planId = shortText(body.plan_id, 36);
       if (!planId || !uuid.test(planId)) return json({ error: "invalid_plan" }, 400);
       const { data: configuration } = await admin.from("rocket_buy_configuration").select("live_checkout_enabled").eq("singleton", true).single();
-      if (!configuration?.live_checkout_enabled || !Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET")) return json({ error: "live_payments_not_ready" }, 409);
+      if (!configuration?.live_checkout_enabled || !liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET"))) return json({ error: "live_payments_not_ready" }, 409);
       const account = await currentAccount(admin, client.client_id, user.id);
       if (!account?.ready) return json({ error: "merchant_onboarding_incomplete" }, 409);
       const { data: plan, error: planError } = await admin.from("connect_products").select("*")
@@ -129,7 +130,7 @@ Deno.serve(async (req) => {
       if (!plan) return json({ error: "plan_not_found" }, 404);
       if (!plan.integration_confirmed_at) return json({ error: "external_entitlement_test_required" }, 409);
       const price = await stripe.prices.retrieve(plan.stripe_price_id, { stripeAccount: account.stripe_account_id });
-      if (!price.active || price.unit_amount !== plan.amount_cents || price.currency !== "usd" || price.recurring?.interval !== plan.interval || price.product !== plan.stripe_product_id) return json({ error: "stripe_plan_mismatch" }, 409);
+      if (!price.livemode || !price.active || price.unit_amount !== plan.amount_cents || price.currency !== "usd" || price.recurring?.interval !== plan.interval || price.product !== plan.stripe_product_id) return json({ error: "stripe_plan_mismatch" }, 409);
       const { data: active } = await admin.from("connect_products").select("id").eq("client_id", client.client_id).eq("is_active", true).neq("id", plan.id).limit(1);
       if (active?.length) return json({ error: "one_active_plan_per_app" }, 409);
       const { error } = await admin.from("connect_products").update({ is_active: true, activated_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", plan.id).eq("is_active", false);

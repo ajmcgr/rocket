@@ -3,9 +3,10 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "@/test/MemoryRouter";
 import type { Tables } from "@/integrations/supabase/types";
-import { AppCardByline, AppCardRating, RankedAppRow, RisingAppCard, StandardAppCard } from "./MarketplaceCards";
+import { AppCardByline, AppCardRating, EditorialAppCard, MarketplaceListRow, RankedAppRow, RisingAppCard, StandardAppCard } from "./MarketplaceCards";
 import TrendArrow from "./TrendArrow";
 import { renderToStaticMarkup } from "react-dom/server";
+import { cleanup, render, screen } from "@testing-library/react";
 
 const app = {
   id: "app-1",
@@ -18,6 +19,23 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
+  it("supports bookmark controls in every marketplace layout", async () => {
+    const controls = { saved: true, onSave: vi.fn() };
+    render(<MemoryRouter>
+      <StandardAppCard app={app} {...controls} />
+      <EditorialAppCard app={app} {...controls} />
+      <RankedAppRow app={app} rank={1} {...controls} />
+      <RisingAppCard app={app} rank={1} {...controls} />
+      <MarketplaceListRow app={app} {...controls} />
+    </MemoryRouter>);
+    const buttons = await screen.findAllByRole("button", { name: "Unsave app" });
+    expect(buttons).toHaveLength(5);
+    for (const button of buttons) {
+      expect(button.getAttribute("aria-pressed")).toBe("true");
+      expect(button.textContent).toBe("");
+    }
+    cleanup();
+  });
   it("shows only authoritative card counts and an owner-provided handle", () => {
     expect(renderToStaticMarkup(<AppCardByline />)).toBe("");
     const markup = renderToStaticMarkup(<AppCardByline metadata={{ app_id: app.id, save_count: 27, rating_count: 3, developer_handle: "maker" }} />);

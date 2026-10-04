@@ -1,0 +1,47 @@
+// In-memory PostgreSQL proof. Install @electric-sql/pglite or pass PGLITE_MODULE.
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const pg = new PGlite();
+const migration = new URL('../supabase/migrations/20261003071805_app_submission_publish.sql', import.meta.url);
+await pg.exec(`create role anon; create role authenticated; create role service_role bypassrls;
+create schema auth; create schema app_graph;
+create table auth.users(id uuid primary key);
+create table app_graph.apps(id uuid primary key,name text,tagline text,description text,logo_url text,slug text unique,categories text[],platforms text[],tags text[],is_public boolean,updated_at timestamptz,claim_state text default 'unclaimed');
+grant usage on schema app_graph to anon,authenticated,service_role;
+grant select on app_graph.apps to anon,authenticated;
+create table public.app_jobs(app_id uuid,user_id uuid,status text,result jsonb);
+create table public.app_owners(app_id uuid,user_id uuid,revoked_at timestamptz);
+create table app_graph.app_media(app_id uuid,source_type text,source_media_id text unique,media_type text,source_url text,sort_order integer);
+create table app_graph.app_identity_events(app_id uuid,event_type text,details jsonb);
+grant all on all tables in schema app_graph,public to service_role;
+`);
+await pg.exec(readFileSync(migration,'utf8'));
+const app='00000000-0000-0000-0000-000000000001', user='00000000-0000-0000-0000-000000000002', other='00000000-0000-0000-0000-000000000003', privateApp='00000000-0000-0000-0000-000000000004';
+await pg.exec(`insert into auth.users values('${user}'),('${other}');
+insert into app_graph.apps(id,name,slug,is_public) values('${app}','Before','before',false),('${privateApp}','Private','private',false);
+insert into public.app_jobs values('${app}','${user}','complete','{"outcome":"new"}'),('${privateApp}','${user}','complete','{"outcome":"new"}');`);
+const details={ name:'Example',tagline:'Useful software',description:'An application for independent software developers.',slug:'example',logo_url:'https://example.com/logo.png', categories:['Productivity','AI Agents'],platforms:['web'],tags:['AI'],submission_type:'founder',stack:['React'],languages:['English'],media:[{type:'thumbnail',url:'https://example.com/hero.png'},{type:'video',url:'https://www.youtube.com/watch?v=dQw4w9WgXc'}] };
+const publish=(who,id=app,fields=details)=>pg.query('select public.publish_new_app_submission($1,$2,$3) result',[who,id,fields]);
+await assert.rejects(publish(other));
+await pg.exec('set role service_role');
+await publish(user);
+await pg.exec('reset role');
+assert.equal((await pg.query(`select is_public,claim_state from app_graph.apps where id='${app}'`)).rows[0].is_public,true);
+assert.equal((await pg.query(`select claim_state from app_graph.apps where id='${app}'`)).rows[0].claim_state,'unclaimed');
+assert.equal((await pg.query('select count(*)::int n from public.app_owners')).rows[0].n,0);
+assert.equal((await pg.query('select count(*)::int n from app_graph.app_media')).rows[0].n,2);
+await publish(user,app,{...details,name:'Changed'}); // Safe retry must not rewrite public content.
+assert.equal((await pg.query(`select name from app_graph.apps where id='${app}'`)).rows[0].name,'Example');
+await assert.rejects(publish(user,privateApp)); // Slug collision rolls back publication.
+assert.equal((await pg.query(`select is_public from app_graph.apps where id='${privateApp}'`)).rows[0].is_public,false);
+await pg.exec(`insert into public.app_submission_details values('${privateApp}','${user}','{}',now())`);
+await pg.exec('set role anon');
+assert.equal((await pg.query('select count(*)::int n from public.public_app_submission_details')).rows[0].n,1);
+await assert.rejects(pg.query('select submitted_by from public.app_submission_details'));
+await assert.rejects(publish(user));
+await pg.exec('reset role; set role authenticated');
+await assert.rejects(publish(user));
+await pg.exec('reset role');
+await pg.close();
+console.log('PASS: immediate publication, media, no verification grants, cross-user rejection, immutable public retry, slug collision rollback, private details and restricted RPC');

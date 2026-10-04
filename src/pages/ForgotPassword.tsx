@@ -3,7 +3,6 @@ import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 
 const ForgotPassword = () => {
@@ -61,7 +60,7 @@ const ForgotPassword = () => {
           </div>
         </div>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

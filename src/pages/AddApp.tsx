@@ -37,7 +37,7 @@ async function call(action: string, body: Record<string, unknown> = {}) {
 export default function AddApp() {
   const [params] = useSearchParams();
   const appId = params.get("app");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(params.get("url") || "");
   const [job, setJob] = useState<Job | null>(null);
   const [app, setApp] = useState<FoundApp | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);

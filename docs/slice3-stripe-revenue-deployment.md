@@ -1,6 +1,6 @@
 # Slice 3 Stripe revenue verification — controlled test setup
 
-This is **read-only revenue verification**, not Rocket Connect Payments or Rocket's own billing. Do not point it at the existing Rocket Connect platform account, connected developer account, or payment credentials.
+This is **read-only revenue verification**, not Rocket Developer Payments or Rocket's own billing. Do not point it at the existing Rocket Developer platform account, connected developer account, or payment credentials.
 
 ## Frozen Subscription MRR v1
 
@@ -10,7 +10,7 @@ If any relevant active subscription has a discount, tiered or metered price, tra
 
 ## Stripe App configuration (human action required)
 
-Create a **separate read-only Stripe App integration** when a suitable existing developer account and a genuine external founder account are available. Do not create another Stripe business/account solely for the test, and do not use Rocket Connect Payments credentials. A public-distribution, back-end-only Stripe App with `stripe_api_access_type: "oauth"` is the intended integration. Set its exact HTTPS redirect URI to:
+Create a **separate read-only Stripe App integration** when a suitable existing developer account and a genuine external founder account are available. Do not create another Stripe business/account solely for the test, and do not use Rocket Developer Payments credentials. A public-distribution, back-end-only Stripe App with `stripe_api_access_type: "oauth"` is the intended integration. Set its exact HTTPS redirect URI to:
 
 `https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-stripe-revenue`
 
@@ -27,7 +27,7 @@ A minimal v2 manifest is prepared at `stripe-revenue-app/stripe-app.yaml`. Its a
 The backend needs the **test OAuth install URL** from Stripe's External test tab and the app developer test-mode API credential for one-time code exchange and refresh. Configure them directly in Supabase Edge Function secrets, never in the frontend, GitHub, chat, or logs:
 
 - `STRIPE_REVENUE_TEST_OAUTH_URL` — the exact test OAuth authorize link, on `https://marketplace.stripe.com/oauth/v2/authorize` with its Stripe App `client_id`.
-- `STRIPE_REVENUE_APP_TEST_API_KEY` — the separate Stripe App developer account's test-mode API credential required by Stripe's OAuth token endpoint. **Do not reuse any Rocket Connect payment key.**
+- `STRIPE_REVENUE_APP_TEST_API_KEY` — the separate Stripe App developer account's test-mode API credential required by Stripe's OAuth token endpoint. **Do not reuse any Rocket Developer payment key.**
 - `STRIPE_REVENUE_TOKEN_ENCRYPTION_KEY` — a separate 32-byte base64url AES-GCM key. Do not reuse the GA4 key.
 - `STRIPE_REVENUE_FRONTEND_ORIGIN` — `https://tryrocket.ai` (optional; the function defaults to this).
 - `STRIPE_REVENUE_PILOT_APP_IDS` — optional comma-separated exact Rocket app UUIDs. Leave unset during the safe infrastructure deployment; the owner UI shows **Coming soon** and all connection actions are rejected. Enroll only a controlled, domain-verified external founder app when the least-privilege pilot is ready. This is independent of OAuth credentials.
@@ -46,7 +46,7 @@ No secret values belong in this document. If the Stripe App cannot be created in
 
 ## Rollback
 
-The new function and route can be disabled without touching GA4, Rocket Connect Payments, or Rocket billing. If deployed, set all revenue visibility to private, clear `public_app_revenue`, and disable the revenue Edge Function/frontend route before considering a schema rollback. Do not delete historical private points or Stripe payment records as part of rollback.
+The new function and route can be disabled without touching GA4, Rocket Developer Payments, or Rocket billing. If deployed, set all revenue visibility to private, clear `public_app_revenue`, and disable the revenue Edge Function/frontend route before considering a schema rollback. Do not delete historical private points or Stripe payment records as part of rollback.
 
 ## Current boundary
 

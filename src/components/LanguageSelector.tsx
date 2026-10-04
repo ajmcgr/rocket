@@ -48,8 +48,8 @@ export default function LanguageSelector() {
         aria-label="Choose language"
         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg px-2 text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-[#167ac6] dark:text-neutral-100 dark:hover:bg-neutral-800"
       >
-        <span className="text-[21px] leading-none" aria-hidden="true">{lang.flag}</span>
-        <ChevronDown className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
+        <span className="text-[18px] leading-none" aria-hidden="true">{lang.flag}</span>
+        <ChevronDown className="h-3.5 w-3.5 stroke-[1.8]" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

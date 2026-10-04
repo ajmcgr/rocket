@@ -5,7 +5,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowLeft, ArrowRight, Check, Link2, Linkedin } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
 import ArticleCover from "@/components/blog/ArticleCover";
 import InlineCta from "@/components/blog/InlineCta";
@@ -134,7 +133,7 @@ const BlogPost = () => {
           <h1 className="text-3xl font-semibold">Article not found</h1>
           <Link to="/blog" className="mt-6 inline-block text-brand hover:underline">← Back to blog</Link>
         </main>
-        <SiteFooter />
+
       </div>
     );
   }
@@ -399,7 +398,7 @@ const BlogPost = () => {
 
         <p className="sr-only">{stripMarkdown(post.body).slice(0, 0)}</p>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

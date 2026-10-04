@@ -3,7 +3,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const BEEHIIV_PUB_ID = "pub_0a9afc96-5b2f-4f1f-bdd8-896a877ec01d";
+const BEEHIIV_PUB_ID = "pub_393b5dde-3cfb-4905-914e-dfbdb7cfb01e";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -64,4 +64,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-// redeploy

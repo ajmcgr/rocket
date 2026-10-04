@@ -14,6 +14,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import NotFound from "@/pages/NotFound";
+import SiteFooter from "@/components/SiteFooter";
 import appCss from "../styles.css?url";
 
 // ported from main.tsx — browser extensions (e.g. MetaMask) inject scripts that can
@@ -112,6 +113,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         {children}
+        <div className="global-site-footer"><SiteFooter /></div>
         <div
           id="google_translate_element"
           style={{ display: "none" }}

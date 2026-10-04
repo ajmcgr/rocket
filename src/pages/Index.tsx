@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import CreateShowcase from "@/components/CreateShowcase";
 import FeaturedLogos from "@/components/FeaturedLogos";
 import SenjaWidget from "@/components/SenjaWidget";
@@ -25,7 +24,7 @@ const FAQS = [
   { q: "Can I regenerate individual pieces?", a: "Yes. Every result has Edit, Save, Variants and Remix. Regenerating one design costs 1 credit, and you can steer it with feedback like 'more minimal' or 'brighter'." },
   { q: "What's a credit?", a: "Credits power every generation. Free includes 500 one-time credits; Starter renews 500 credits/month and adds PNG & SVG downloads. Pro includes 3,000/month, and Business includes 15,000/month. Top up anytime — packs never expire." },
   { q: "How does sharing and export work?", a: "Every design opens in the editor via a shareable link (new tab). Export PNG, SVG, PDF, or a full ZIP of your Brand Kit. Pro adds password-protected share links and PDF/Markdown brand guidelines." },
-  { q: "What's included in Pro?", a: "3,000 credits/month, team workspace access, password-protected share links, brand guideline exports, and priority AI capacity. Paid plans include a 7-day trial; cancel anytime." },
+  { q: "What's included in Pro?", a: "3,000 credits/month, password-protected share links, brand guideline exports, and priority AI capacity. Paid plans include a 7-day trial; cancel anytime." },
   { q: "Can I cancel anytime?", a: "Yes, from Settings → Manage Billing. You keep access until the end of the period." },
 ];
 
@@ -46,7 +45,6 @@ const PRO_FEATURES = [
   "Full ownership",
   "Brand Kit ZIP downloads",
   "Priority generation",
-  "Team workspace access",
   "Brand Book & guideline export",
   "Early access to new generators",
 ];
@@ -55,7 +53,6 @@ const BUSINESS_FEATURES = [
   "Everything in Pro",
   "15,000 Rocket Credits each month",
   "Highest priority generation queue",
-  "Team workspace access",
   "Dedicated onboarding & support",
 ];
 
@@ -604,7 +601,7 @@ const Index = () => {
         </div>
       </section>
 
-      <SiteFooter />
+
     </div>
   );
 };

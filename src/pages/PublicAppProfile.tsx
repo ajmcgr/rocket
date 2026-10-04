@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -23,8 +22,13 @@ import AppMediaGallery from "@/components/AppMediaGallery";
 import { AppProfileContentSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import AppReviews from "@/components/AppReviews";
 import { MarketplaceListRow } from "@/components/MarketplaceCards";
-import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
+import { useSavedAppControls } from "@/hooks/useSavedAppControls";
+import {
+  loadAppCardMetadata,
+  type AppCardMetadata,
+} from "@/lib/appCardMetadata";
 import TrendArrow from "@/components/TrendArrow";
+import type { SubmissionDetails } from "../../supabase/functions/_shared/appSubmission";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -65,7 +69,10 @@ const linkHost = (value: string) => {
   }
 };
 
-export default function PublicAppProfile({ initialApp, initialMedia }: { initialApp?: App | null; initialMedia?: PublicAppMedia[] } = {}) {
+export default function PublicAppProfile({
+  initialApp,
+  initialMedia,
+}: { initialApp?: App | null; initialMedia?: PublicAppMedia[] } = {}) {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const saveAfterAuth = searchParams.get("save") === "1";
@@ -78,7 +85,10 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
   const [trust, setTrust] = useState<AppTrust | null>(null);
   const [media, setMedia] = useState<PublicAppMedia[]>(initialMedia || []);
   const [similar, setSimilar] = useState<App[]>([]);
-  const [similarMetadata, setSimilarMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
+  const similarSaveControls = useSavedAppControls(similar.map((item) => item.id));
+  const [similarMetadata, setSimilarMetadata] = useState<
+    Map<string, AppCardMetadata>
+  >(new Map());
   const [reviewSummary, setReviewSummary] = useState<{
     rating_count: number;
     average_rating: number;
@@ -88,6 +98,7 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
     public_links: string[];
   } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
   const [shareStatus, setShareStatus] = useState("");
   const [loading, setLoading] = useState(initialApp === undefined);
   const [error, setError] = useState(initialApp === null);
@@ -100,7 +111,8 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
         await navigator.share({ title: app.name, url });
         return;
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
       }
     }
     try {
@@ -117,7 +129,9 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
       (app?.description
         ? descriptionSummary(app.description).slice(0, 180)
         : "Explore a public app listed on Rocket."),
-    canonical: app ? `https://tryrocket.ai/apps/${app.slug || app.id}` : undefined,
+    canonical: app
+      ? `https://tryrocket.ai/apps/${app.slug || app.id}`
+      : undefined,
     image:
       app?.logo_url && /^https:\/\//i.test(app.logo_url)
         ? app.logo_url
@@ -127,7 +141,8 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
   useEffect(() => {
     let canceled = false;
     let coreReady = false;
-    const matchesInitial = initialApp && (initialApp.id === id || initialApp.slug === id);
+    const matchesInitial =
+      initialApp && (initialApp.id === id || initialApp.slug === id);
     setLoading(!matchesInitial);
     setError(false);
     if (!id) {
@@ -139,7 +154,11 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
       const isId = /^[0-9a-f-]{36}$/i.test(id);
       const appResult = matchesInitial
         ? { data: initialApp, error: null }
-        : await supabase.from("public_apps").select("*").eq(isId ? "id" : "slug", id).maybeSingle();
+        : await supabase
+            .from("public_apps")
+            .select("*")
+            .eq(isId ? "id" : "slug", id)
+            .maybeSingle();
       if (canceled) return;
       if (appResult.error || !appResult.data) {
         setApp(null);
@@ -152,51 +171,86 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
       setApp(appResult.data);
       setLoading(false);
       // Core identity/description/CTAs render before optional evidence/media.
-      setSources([]); setTraction([]); setRevenue([]); setSignals([]);
-      setTrust(null); setMedia(matchesInitial ? initialMedia || [] : []); setPresentation(null);
+      setSources([]);
+      setTraction([]);
+      setRevenue([]);
+      setSignals([]);
+      setTrust(null);
+      setMedia(matchesInitial ? initialMedia || [] : []);
+      setPresentation(null);
+      setSubmission(null);
       const [
-        sourceResult, tractionResult, revenueResult, signalResult,
-        trustResult, mediaResult, presentationResult,
+        sourceResult,
+        tractionResult,
+        revenueResult,
+        signalResult,
+        trustResult,
+        mediaResult,
+        presentationResult,
+        submissionResult,
       ] = await Promise.all([
-      supabase.from("public_app_sources").select("*").eq("app_id", appId),
-      supabase.from("public_app_traction").select("*").eq("app_id", appId),
-      supabase.from("public_app_revenue").select("*").eq("app_id", appId),
-      supabase.from("public_app_intelligence").select("*").eq("app_id", appId),
-      supabase
-        .from("public_app_trust")
-        .select("*")
-        .eq("app_id", appId)
-        .maybeSingle(),
-      matchesInitial && initialMedia !== undefined ? Promise.resolve(new Map([[appId, initialMedia]])) : loadAppMedia([appId], false),
-      supabase
-        .from("public_app_presentation")
-        .select("pricing_display,public_links")
-        .eq("app_id", appId)
-        .maybeSingle(),
+        supabase.from("public_app_sources").select("*").eq("app_id", appId),
+        supabase.from("public_app_traction").select("*").eq("app_id", appId),
+        supabase.from("public_app_revenue").select("*").eq("app_id", appId),
+        supabase
+          .from("public_app_intelligence")
+          .select("*")
+          .eq("app_id", appId),
+        supabase
+          .from("public_app_trust")
+          .select("*")
+          .eq("app_id", appId)
+          .maybeSingle(),
+        matchesInitial && initialMedia !== undefined
+          ? Promise.resolve(new Map([[appId, initialMedia]]))
+          : loadAppMedia([appId], false),
+        supabase
+          .from("public_app_presentation")
+          .select("pricing_display,public_links")
+          .eq("app_id", appId)
+          .maybeSingle(),
+        supabase
+          .from("public_app_submission_details")
+          .select("details")
+          .eq("app_id", appId)
+          .maybeSingle(),
       ]);
-        if (canceled) return;
-        setApp(appResult.data);
-        setSources(sourceResult.data || []);
-        setTraction(tractionResult.data || []);
-        setRevenue(revenueResult.data || []);
-        setSignals(signalResult.data || []);
-        setTrust(trustResult.data);
-        setMedia(mediaResult.get(appId) || []);
-        setPresentation(presentationResult.data || null);
-        // Optional evidence failures must not hide a valid public profile.
-        if (appResult.data && !appResult.error) {
-          track("app_profile_viewed", { app_id: appResult.data.id });
-          // First-party rankings count real production profile visits only.
-          if (["https://tryrocket.ai", "https://www.tryrocket.ai"].includes(window.location.origin)) {
-            void supabase.functions.invoke("rocket-app-view", {
+      if (canceled) return;
+      setApp(appResult.data);
+      setSources(sourceResult.data || []);
+      setTraction(tractionResult.data || []);
+      setRevenue(revenueResult.data || []);
+      setSignals(signalResult.data || []);
+      setTrust(trustResult.data);
+      setMedia(mediaResult.get(appId) || []);
+      setPresentation(presentationResult.data || null);
+      setSubmission(
+        (submissionResult.data?.details as unknown as SubmissionDetails) ||
+          null,
+      );
+      // Optional evidence failures must not hide a valid public profile.
+      if (appResult.data && !appResult.error) {
+        track("app_profile_viewed", { app_id: appResult.data.id });
+        // First-party rankings count real production profile visits only.
+        if (
+          ["https://tryrocket.ai", "https://www.tryrocket.ai"].includes(
+            window.location.origin,
+          )
+        ) {
+          void supabase.functions
+            .invoke("rocket-app-view", {
               body: { app_id: appResult.data.id },
-            }).catch(() => undefined);
-          }
+            })
+            .catch(() => undefined);
         }
-        setLoading(false);
+      }
+      setLoading(false);
     };
     void load().catch(() => {
-      if (!canceled) { if (!coreReady) setError(true); setLoading(false); }
+      if (!canceled) {
+        if (!coreReady) setError(true);
+        setLoading(false);
+      }
     });
     return () => {
       canceled = true;
@@ -244,7 +298,9 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
     loadAppCardMetadata(similar.map((item) => item.id)).then((result) => {
       if (!canceled) setSimilarMetadata(result);
     });
-    return () => { canceled = true; };
+    return () => {
+      canceled = true;
+    };
   }, [similar]);
 
   useEffect(() => {
@@ -291,7 +347,11 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
           <span aria-hidden="true">←</span>
           Back to Discover
         </Link>
-        {loading && <div role="status" aria-label="Loading app profile" aria-busy="true"><AppProfileContentSkeleton /></div>}
+        {loading && (
+          <div role="status" aria-label="Loading app profile" aria-busy="true">
+            <AppProfileContentSkeleton />
+          </div>
+        )}
         {error && !loading && (
           <div
             role="alert"
@@ -353,7 +413,11 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
                   saved={saved}
                   onChange={setSaved}
                 />
-                <AppProfileBuyAction appId={app.id} appName={app.name} websiteUrl={app.website_url} />
+                <AppProfileBuyAction
+                  appId={app.id}
+                  appName={app.name}
+                  websiteUrl={app.website_url}
+                />
                 <button
                   type="button"
                   onClick={shareApp}
@@ -361,7 +425,11 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
                 >
                   Share
                 </button>
-                {shareStatus && <span role="status" className="text-sm text-neutral-600">{shareStatus}</span>}
+                {shareStatus && (
+                  <span role="status" className="text-sm text-neutral-600">
+                    {shareStatus}
+                  </span>
+                )}
                 <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
                   {app.canonical_host}
                 </span>
@@ -376,12 +444,17 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
             <AppMediaGallery name={app.name} media={media} />
             {signals.length > 0 && (
               <section className="mt-8 pb-2">
-                <h2 className="text-xl font-semibold tracking-tight">Why it’s interesting</h2>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Why it’s interesting
+                </h2>
                 <div className="mt-4 space-y-4">
                   {signals.map((signal) => (
                     <div key={signal.signal_type}>
                       <p className="flex items-center gap-1 font-medium text-sky-700">
-                        {signal.signal_type === "rising" && <TrendArrow direction="up" />}{signalLabel(signal)}
+                        {signal.signal_type === "rising" && (
+                          <TrendArrow direction="up" />
+                        )}
+                        {signalLabel(signal)}
                       </p>
                       <p className="mt-1 text-sm text-neutral-700">
                         {signalExplanation(signal)}
@@ -435,6 +508,62 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
                 </>
               )}
               <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
+                {submission && (
+                  <>
+                    {submission.developer_handle && (
+                      <div>
+                        <dt className="text-neutral-500">
+                          Submitted developer
+                        </dt>
+                        <dd className="mt-1 font-medium">
+                          @{submission.developer_handle}{" "}
+                          <span className="font-normal text-neutral-500">
+                            (self-reported)
+                          </span>
+                        </dd>
+                      </div>
+                    )}
+                    {submission.pricing_display && (
+                      <div>
+                        <dt className="text-neutral-500">
+                          Pricing (self-reported)
+                        </dt>
+                        <dd className="mt-1 font-medium">
+                          {submission.pricing_display}
+                        </dd>
+                      </div>
+                    )}
+                    {submission.stack?.length > 0 && (
+                      <div>
+                        <dt className="text-neutral-500">Build stack</dt>
+                        <dd className="mt-1 font-medium">
+                          {submission.stack.join(", ")}
+                        </dd>
+                      </div>
+                    )}
+                    {submission.languages?.length > 0 && (
+                      <div>
+                        <dt className="text-neutral-500">Languages</dt>
+                        <dd className="mt-1 font-medium">
+                          {submission.languages.join(", ")}
+                        </dd>
+                      </div>
+                    )}
+                    {submission.coupon_code && (
+                      <div>
+                        <dt className="text-neutral-500">
+                          Developer offer (self-reported)
+                        </dt>
+                        <dd className="mt-1 font-medium">
+                          {submission.coupon_code}
+                          {submission.coupon_description
+                            ? ` — ${submission.coupon_description}`
+                            : ""}
+                        </dd>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div>
                   <dt className="text-neutral-500">Category</dt>
                   <dd className="mt-1 font-medium">
@@ -496,7 +625,9 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
             </section>
             {traction.length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">Traffic</h2>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Traffic
+                </h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {traction.map((point) => (
                     <div
@@ -529,7 +660,9 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
             )}
             {revenue.length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">Subscription revenue</h2>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Subscription revenue
+                </h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {revenue.map((point) => (
                     <div
@@ -588,8 +721,14 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
               </details>
             )}
             {similar.length > 0 && (
-              <section className="mt-10 border-t border-neutral-200 pt-6" aria-labelledby="similar-apps">
-                <h2 id="similar-apps" className="text-xl font-semibold tracking-tight">
+              <section
+                className="mt-10 border-t border-neutral-200 pt-6"
+                aria-labelledby="similar-apps"
+              >
+                <h2
+                  id="similar-apps"
+                  className="text-xl font-semibold tracking-tight"
+                >
                   Similar apps
                 </h2>
                 <p className="mt-2 mb-5 text-sm text-neutral-600">
@@ -597,7 +736,12 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
                 </p>
                 <div className="grid gap-x-8 sm:grid-cols-2">
                   {similar.map((item) => (
-                    <MarketplaceListRow key={item.id} app={item} metadata={similarMetadata.get(item.id)} />
+                    <MarketplaceListRow
+                      key={item.id}
+                      app={item}
+                      {...similarSaveControls(item.id)}
+                      metadata={similarMetadata.get(item.id)}
+                    />
                   ))}
                 </div>
               </section>
@@ -605,7 +749,7 @@ export default function PublicAppProfile({ initialApp, initialMedia }: { initial
           </>
         )}
       </main>
-      <SiteFooter />
+
     </div>
   );
 }

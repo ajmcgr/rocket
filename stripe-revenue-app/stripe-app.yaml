@@ -1,6 +1,6 @@
 # Separate read-only Stripe App for Rocket revenue verification.
 # Create/upload from a dedicated Stripe App developer account, never from
-# Rocket Connect Payments' platform account or its credentials.
+# Rocket Developer Payments' platform account or its credentials.
 id: com.worksapp.rocket-revenue-verification
 version: 0.1.0
 name: Rocket Revenue Verification

@@ -1,5 +1,4 @@
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import alexAvatar from "@/assets/alex-macgregor.png.asset.json";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -43,7 +42,7 @@ const About = () => {
         </div>
       </article>
     </main>
-    <SiteFooter />
+
   </div>;
 };
 

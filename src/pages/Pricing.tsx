@@ -1,4 +1,4 @@
-import { Loader2 as ControlLoader2 } from "lucide-react";
+import { ArrowUpRight, Loader2 as ControlLoader2 } from "lucide-react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import { Check, Loader2 } from "@/components/EmojiIcons";
 import { useEffect, useRef, useState } from "react";
@@ -6,9 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { track } from "@/lib/analytics";
 const supabase = _sb as any;
@@ -30,7 +28,6 @@ const PRO_FEATURES = [
   "Full ownership",
   "Brand Kit ZIP downloads",
   "Priority generation",
-  "Team workspace access",
   "Brand Book & guideline export",
   "Early access to new generators",
 ];
@@ -39,36 +36,30 @@ const BUSINESS_FEATURES = [
   "Everything in Pro",
   "15,000 Rocket Credits each month",
   "Highest priority generation queue",
-  "Larger team workspaces",
   "Dedicated onboarding & support",
 ];
 
-const COMPARE = [
-  { label: "Rocket Credits", starter: "500 / month", pro: "3,000 / month" },
-  { label: "Logo Designer", starter: true, pro: true },
-  { label: "Icon Designer", starter: true, pro: true },
-  { label: "Templates library", starter: true, pro: true },
-  { label: "Brand Kit", starter: "View & share", pro: "Full brand kit + Brand Book" },
-  { label: "Brand Kit ZIP download", starter: false, pro: true },
-  { label: "High-res file types", starter: "PNG & SVG", pro: "PNG, EPS, SVG, PDF" },
-  { label: "Color variations", starter: "—", pro: "Multiple + transparent" },
-  { label: "Post-purchase changes", starter: "Limited", pro: "Unlimited" },
-  { label: "Full ownership", starter: false, pro: true },
-  { label: "Exports", starter: "PNG & SVG", pro: "PNG, SVG, PDF, ZIP" },
-  { label: "Saved designs", starter: "Limited", pro: "Unlimited" },
-  { label: "Priority generation", starter: false, pro: true },
-  { label: "Team workspace access", starter: false, pro: true },
-  { label: "Early access to new generators", starter: false, pro: true },
-];
-
 const FAQS = [
-  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. App submission, claiming, basic management, and verification remain free. Rocket ID and Buy with Rocket production access require active membership and verified app ownership; the Connect payment integration remains a limited pilot until production activation is complete." },
-  { q: "Are Stripe fees included in Rocket's 10%?", a: "No. Rocket's platform fee is separate from Stripe processing fees and any other applicable charges. A $100 purchase leaves $90 for the app before those separate costs." },
+  { q: "What can I use on Rocket for free?", a: "Browse and discover apps, save apps with a Rocket account, and submit, claim, manage, and verify your own app without a Developer membership. Personal workspaces remain free. Create has a free credit allowance; Launch, Post, and Media offer their own free plans." },
+  { q: "Is there one subscription for every Rocket product?", a: "No. Create plans and credits, Rocket Developer, and the separate Launch, Post, and Media products have their own pricing. Buy only what you need; a subscription to one does not include the others." },
+  { q: "Does submitting an app cost anything?", a: "App submission and basic listing management are free. Rocket ownership verification is separate from submission. Adding an app does not automatically activate Rocket ID or Buy with Rocket." },
+  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. It includes shared workspaces and team invitations, Rocket ID, and Buy with Rocket. The workspace owner's membership covers invited teammates. Personal workspaces, app submission, claiming, basic management, and verification remain free. Production identity and payments require verified app ownership and integration readiness." },
+  { q: "What is Rocket ID?", a: "Rocket ID lets users sign into an integrated app with their Rocket account. It requires an active Developer membership, verified ownership, and a configured and tested integration. Listing your app alone does not enable Rocket ID." },
+  { q: "What is Buy with Rocket?", a: "Buy with Rocket lets users purchase access to an integrated app through Stripe checkout. Developers configure their merchant account, subscription plans, and entitlement integration. Verified ownership, an active Developer membership, and production readiness are required before live buying is available." },
+  { q: "What is the Buy with Rocket take rate?", a: "Rocket takes a 5% platform fee on payments through new Buy with Rocket plans. This transaction fee is separate from the $99/year Rocket Developer membership. Stripe processing fees and any other applicable charges are additional." },
+  { q: "Are Stripe fees included in Rocket's 5%?", a: "No. Rocket's platform fee is separate from Stripe processing fees and any other applicable charges. A $100 purchase leaves $95 for the app before those separate costs." },
+  { q: "Do teammates need their own Developer subscription?", a: "The workspace owner's active Rocket Developer membership covers shared workspaces and invited teammates. It does not grant teammates ownership of another developer's app or automatically activate payments or identity integrations." },
+  { q: "What do Create plans cover?", a: "Create plans cover Rocket's logo, icon, and Brand Kit tools. Paid plans add the generation allowances, downloads, export formats, and other features shown in the Create plan cards above. They are separate from Rocket Developer and the Grow products." },
   { q: "What is a Rocket Credit?", a: "Credits power everything you generate. Free includes 500 credits; Starter includes 500/month, Pro 3,000/month, and Business 15,000/month. One-time credit packs never expire." },
   { q: "How is Free different from Starter?", a: "Free includes 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG and SVG downloads. Choose Starter when you need ongoing generation or files to use outside Rocket." },
-  { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, team workspace access, and priority generation." },
-  { q: "Can I cancel at any time?", a: "Yes. You can cancel or downgrade from Settings → Billing any time. Your Pro features stay active until the end of your billing period." },
+  { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, and priority generation. Shared workspaces are included separately with Rocket Developer ($99/year)." },
+  { q: "Where do I manage or cancel my subscriptions?", a: "Manage Create billing in Settings → Billing and Rocket Developer membership in Settings → Developer. Manage Launch, Post, and Media billing on each product's own site. Purchases of third-party apps through Buy with Rocket are separate and can be managed from your Library where supported. Check the relevant subscription's billing period and cancellation terms." },
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
+  { q: "What does Launch help me do?", a: "Launch gives your app a public product listing for builders and early adopters. Paid plans add promotion, newsletter exposure, or directory submissions as shown above. Launch pricing and purchases are handled on trylaunch.ai; a free Rocket app listing is not a paid Launch promotion." },
+  { q: "What does Post help me do?", a: "Post helps you draft, schedule, and publish updates across connected social channels from one calendar. Its Free and Pro plans have different account connections and publishing limits. Subscribe and manage your plan on trypost.ai, separately from Rocket Developer." },
+  { q: "What does Media help me do?", a: "Media helps you find relevant journalists and creators, build contact lists, and manage outreach. Plans add search credits, database access, monitoring, inbox, and team features as shown above. Media credits and subscriptions are separate from Rocket Create credits and are managed on trymedia.ai." },
+  { q: "Are there trials for the Grow products?", a: "Launch, Post, and Media each have their own free options, trial availability, and billing terms. Check the linked product's pricing and checkout for current details before subscribing. A trial on one product does not apply to the others." },
+  { q: "Does joining the community require a paid plan?", a: "No Rocket paid plan is required to follow the community link and meet other builders on Discord. Community participation does not include paid product subscriptions." },
 ];
 
 type GrowPlan = {
@@ -85,7 +76,7 @@ type GrowPlan = {
 const GROW_PRODUCTS: { name: string; description: string; href: string; footnote: string; plans: GrowPlan[] }[] = [
   {
     name: "Launch",
-    description: "Launch your app and reach a community of vibe coders and early adopters.",
+    description: "Introduce your app to a community of builders and early adopters with a public product listing. Paid plans add promotion, newsletter exposure, and directory submissions to help more people discover what you've built.",
     href: "https://trylaunch.ai/pricing",
     footnote: "Maximum 1 launch per week across all plans.",
     plans: [
@@ -111,7 +102,7 @@ const GROW_PRODUCTS: { name: string; description: string; href: string; footnote
   },
   {
     name: "Post",
-    description: "Plan and publish across social channels from one place.",
+    description: "Plan, schedule, and publish your app's updates across social channels from one workspace. Keep drafts and campaigns organized in a calendar, and share images and videos without switching between each platform's publishing tools.",
     href: "https://trypost.ai/pricing",
     footnote: "Paid plans include a 14-day free trial. Yearly billing saves ~17%. Cancel anytime.",
     plans: [
@@ -127,7 +118,7 @@ const GROW_PRODUCTS: { name: string; description: string; href: string; footnote
   },
   {
     name: "Media",
-    description: "Find journalists and creators, build lists, and manage outreach.",
+    description: "Find journalists and creators relevant to your app with AI-powered search, then build contact lists for your outreach. Higher plans add news monitoring, pitch and reply tracking, and shared team tools to help you manage your publicity in one place.",
     href: "https://trymedia.ai/pricing",
     footnote: "Paid plans include a 30-day trial. Yearly billing saves ~17%. AI credit usage varies by request complexity.",
     plans: [
@@ -142,10 +133,6 @@ const GROW_PRODUCTS: { name: string; description: string; href: string; footnote
       {
         name: "Growth", tagline: "Full journalist & creator database, monitoring, inbox and teams.", price: "$99", suffix: "/month", badge: "Most popular", cta: "Start 30-day trial",
         features: ["1,000,000 AI credits / month", "Unlimited media contacts per query", "100% database access — no row limits", "Sort, filter, save views, export", "Share contacts via link, email, or CSV", "Keyword Monitor — daily Google News alerts", "Outreach Inbox — pitch and reply tracking", "Team workspaces with shared lists and roles", "Top-up credits any time", "Email support"],
-      },
-      {
-        name: "Enterprise", tagline: "Custom API, volume credits, dedicated support.", price: "Custom", suffix: null, cta: "Contact us",
-        features: ["Everything in Growth", "Custom API access", "Volume credit pricing", "SSO and dedicated support", "Custom contracts"],
       },
     ],
   },
@@ -357,74 +344,6 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Feature comparison */}
-      <section className="border-t border-neutral-200/60 bg-neutral-50/60">
-        <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Compare plans</h2>
-            <p className="mt-3 text-neutral-600">Everything included in Starter and Pro.</p>
-          </div>
-          <div className="mt-10 overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-            <table className="w-full text-sm">
-              <thead className="bg-neutral-50 text-neutral-500">
-                <tr>
-                  <th className="px-6 py-4 text-left font-medium">Feature</th>
-                  <th className="px-6 py-4 text-left font-medium">Starter</th>
-                  <th className="px-6 py-4 text-left font-medium">Pro</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-200">
-                {COMPARE.map((row) => (
-                  <tr key={row.label}>
-                    <td className="px-6 py-4 font-medium text-neutral-900">{row.label}</td>
-                    <td className="px-6 py-4 text-neutral-700">
-                      {row.starter === true ? <Check className="h-4 w-4 text-neutral-900" /> : row.starter === false ? <span className="text-neutral-300">—</span> : row.starter}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-700">
-                      {row.pro === true ? <Check className="h-4 w-4 text-brand" /> : row.pro === false ? <span className="text-neutral-300">—</span> : row.pro}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Credit packs */}
-      <section className="border-t border-neutral-200/60">
-        <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">Need more credits?</h2>
-            <p className="mt-2 text-neutral-600">One-time credit packs. Never expire. Stack with your plan.</p>
-          </div>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              { id: "pack_500", credits: "500", price: "$5", note: "Starter pack" },
-              { id: "pack_1500", credits: "1,500", price: "$10", note: "Most popular", highlight: true },
-              { id: "pack_5000", credits: "5,000", price: "$25", note: "Best value" },
-            ].map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => startCheckout(p.id)}
-                disabled={loading === p.id}
-                className={`rounded-2xl border p-6 text-left transition hover:shadow-xs disabled:opacity-60 ${p.highlight ? "border-brand bg-brand/5 hover:bg-brand/10" : "border-neutral-200 bg-white hover:border-neutral-300"}`}
-              >
-                <div className="text-xs font-semibold normal-case tracking-wider text-neutral-500">{p.note}</div>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-4xl font-semibold tracking-tight">{p.price}</span>
-                </div>
-                <div className="mt-1 flex items-center gap-2 text-sm font-medium text-neutral-900">
-                  {loading === p.id && <ControlLoader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {p.credits} credits
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="buy-with-rocket" className="scroll-mt-24 border-t border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="text-center">
@@ -435,14 +354,15 @@ const Pricing = () => {
             <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
             <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
             <p className="mt-4 text-neutral-600">Monetize your apps with Rocket. One membership covers the apps you legitimately own.</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
               <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into your app.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users buy access to your app.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users buy access to your app. Rocket takes 5% per payment on new plans; Stripe processing fees are separate.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Workspaces</h4><p className="mt-2 text-sm text-neutral-600">Create shared workspaces and invite teammates. Included in your $99/year membership; the owner's subscription covers their team.</p><Link to="/settings/team" className="mt-3 inline-flex text-sm font-semibold text-[#167ac6]">Manage workspaces →</Link></div>
             </div>
             <p className="mt-5 text-sm text-neutral-600">Production activation requires verified ownership, a ready Stripe merchant, and a tested identity and entitlement integration. Live buying remains closed until acceptance testing is complete.</p>
-            <Link to="/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
+            <Link to="/settings/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
           </div>
-          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. Buy with Rocket carries a 10% Rocket platform fee on app purchases, plus separate Stripe processing fees.</p>
+          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
         </div>
       </section>
 
@@ -455,11 +375,11 @@ const Pricing = () => {
           <div className="mt-10 flex flex-col gap-10">
             {GROW_PRODUCTS.map((product) => (
               <div key={product.name}>
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="space-y-3">
                   <h3 className="text-xl font-semibold tracking-tight">{product.name}</h3>
-                  <p className="text-sm text-neutral-600">{product.description}</p>
+                  <p className="max-w-3xl text-base leading-relaxed text-neutral-600">{product.description}</p>
                 </div>
-                  <div className={`mt-4 grid gap-4 ${product.plans.length > 2 ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-2"}`}>
+                  <div className={`mt-4 grid gap-4 ${product.plans.length === 3 ? "sm:grid-cols-2 xl:grid-cols-3" : product.plans.length > 3 ? "sm:grid-cols-2 2xl:grid-cols-4" : "sm:grid-cols-2"}`}>
                     {product.plans.map((plan) => (
                       <div key={plan.name} className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 sm:p-7">
                         <div className="flex flex-wrap items-center gap-2">
@@ -481,8 +401,9 @@ const Pricing = () => {
                         </ul>
                         {plan.note && <p className="mt-4 text-xs leading-relaxed text-neutral-500">{plan.note}</p>}
                         <div className="mt-auto pt-6">
-                          <a href={product.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">
-                            {plan.cta} on {product.name} ↗
+                          <a href={product.href} target="_blank" rel="noopener noreferrer" aria-label={`${plan.cta} on ${product.name} (opens in a new tab)`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#167ac6] px-3 py-3 text-center text-sm font-semibold leading-5 text-white hover:bg-[#1268aa]">
+                            <span>{plan.cta}</span>
+                            <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                           </a>
                         </div>
                       </div>
@@ -500,30 +421,30 @@ const Pricing = () => {
       <section className="border-t border-neutral-200/60 bg-neutral-50/60">
         <div className="mx-auto max-w-3xl px-6 py-20">
           <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Frequently asked</h2>
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Frequently asked questions</h2>
           </div>
-          <Accordion type="multiple" defaultValue={FAQS.map((_, i) => `item-${i}`)} className="mt-10 w-full space-y-3">
+          <div className="mt-10 w-full space-y-3">
             {FAQS.map((f, i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="rounded-2xl border border-neutral-200 bg-white">
-                <AccordionTrigger className="px-6 py-5 text-left text-base font-semibold text-neutral-900">{f.q}</AccordionTrigger>
-                <AccordionContent className="px-6 pb-5 text-sm leading-relaxed text-neutral-600">{f.a}</AccordionContent>
-              </AccordionItem>
+              <article key={i} className="rounded-2xl border border-neutral-200 bg-white px-6 py-5 dark:border-neutral-800 dark:bg-neutral-900">
+                <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{f.q}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">{f.a}</p>
+              </article>
             ))}
-          </Accordion>
+          </div>
         </div>
       </section>
 
       {/* Final CTA */}
       <section className="border-t border-neutral-200/60">
         <div className="mx-auto max-w-4xl px-6 py-24 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Design your startup brand today</h2>
-          <p className="mx-auto mt-4 max-w-xl text-neutral-600">Try 500 credits free, once, with no card. Upgrade for monthly credits and export rights when you need them.</p>
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Build, launch, and grow with Rocket</h2>
+          <p className="mx-auto mt-4 max-w-xl text-neutral-600">Discover useful apps, submit your own for free, and choose the tools you need to create, monetize, and grow.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="bg-brand text-white hover:bg-brand/90">
-              <Link to={user ? "/logos" : "/signup"}>Start free</Link>
+              <Link to="/submit">Submit your app</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to={user ? "/settings/billing" : "/signup?next=%2Fpricing%3Fbuy%3Dgrowth"}>Upgrade to Pro</Link>
+              <Link to="/discover">Explore apps</Link>
             </Button>
           </div>
         </div>
@@ -545,7 +466,7 @@ const Pricing = () => {
       </section>
 
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

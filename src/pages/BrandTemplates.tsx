@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { ArrowRight, Check, Palette, Type } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { getTemplate, publicTemplates } from "@/data/templates";
 import { track } from "@/lib/analytics";
@@ -55,7 +54,7 @@ export const BrandTemplates = () => {
         </Link>)}
       </section>
     </main>
-    <SiteFooter />
+
   </div>;
 };
 
@@ -76,7 +75,7 @@ export const BrandTemplateDetail = () => {
     if (eligible) track("organic_template_view", { page_type: "brand_template", template_id: eligible.id, category: eligible.category });
   }, [eligible]);
 
-  if (!eligible) return <div className="min-h-screen bg-white text-neutral-900"><SiteHeader /><main className="mx-auto max-w-3xl px-6 py-24 text-center"><h1 className="text-3xl font-semibold">Brand template not found</h1><Link to="/brand-templates" className="mt-6 inline-block text-brand hover:underline">Browse brand templates</Link></main><SiteFooter /></div>;
+  if (!eligible) return <div className="min-h-screen bg-white text-neutral-900"><SiteHeader /><main className="mx-auto max-w-3xl px-6 py-24 text-center"><h1 className="text-3xl font-semibold">Brand template not found</h1><Link to="/brand-templates" className="mt-6 inline-block text-brand hover:underline">Browse brand templates</Link></main></div>;
 
   const canonical = `${SITE_URL}${templatePath(eligible.id)}`;
   const onStart = () => track("organic_template_cta", { page_type: "brand_template", template_id: eligible.id, destination: "project_wizard" });
@@ -117,6 +116,6 @@ export const BrandTemplateDetail = () => {
 
       {related.length > 0 && <section className="mt-20 border-t border-neutral-200 pt-12"><h2 className="text-2xl font-semibold tracking-tight">Related brand templates</h2><div className="mt-8 grid gap-5 sm:grid-cols-3">{related.map((item) => <Link key={item.id} to={templatePath(item.id)} className="rounded-2xl border border-neutral-200 p-5 transition hover:border-neutral-900"><div className="flex gap-1">{item.colors.slice(0, 4).map((color) => <span key={color} className="h-5 w-5 rounded-full border border-neutral-200" style={{ backgroundColor: color }} />)}</div><h3 className="mt-5 font-semibold">{item.name}</h3><p className="mt-2 text-sm text-neutral-600">{item.category} · {item.tone}</p></Link>)}</div></section>}
     </main>
-    <SiteFooter />
+
   </div>;
 };

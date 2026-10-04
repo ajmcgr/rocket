@@ -89,23 +89,26 @@ export function DeveloperActivate() {
     finally { setBusy(false); }
   };
   if (!token) return <Navigate to="/developer" replace />;
-  return <main className="mx-auto max-w-xl px-4 py-16"><section className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs"><ShieldCheck className="h-7 w-7 text-sky-600" /><h1 className="mt-4 text-2xl font-semibold">Activate Rocket Developer access</h1><p className="mt-2 text-sm leading-6 text-neutral-600">This invitation grants access only to the Rocket Connect test-developer portal. It does not change your Rocket product subscription or workspace access.</p><button onClick={accept} disabled={busy} className="mt-6 inline-flex h-10 items-center rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white disabled:opacity-60">{busy ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Accept invitation"}</button><FunctionError error={error} /></section></main>;
+  return <main className="mx-auto max-w-xl px-4 py-16"><section className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs"><ShieldCheck className="h-7 w-7 text-sky-600" /><h1 className="mt-4 text-2xl font-semibold">Activate Rocket Developer access</h1><p className="mt-2 text-sm leading-6 text-neutral-600">This invitation grants access only to the Rocket Developer test-developer portal. It does not change your Rocket product subscription or workspace access.</p><button onClick={accept} disabled={busy} className="mt-6 inline-flex h-10 items-center rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white disabled:opacity-60">{busy ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Accept invitation"}</button><FunctionError error={error} /></section></main>;
 }
 
 function IntegrationKit({ app, product }: { app: App; product?: Product }) {
   const callback = app.redirect_uris[0]; const returnUri = app.checkout_return_uris[0];
   const code = useMemo(() => `// Generate state, nonce, and a 43–128 character PKCE verifier server-side.\nconst authorize = new URL("https://tryrocket.ai/connect/authorize");\nauthorize.search = new URLSearchParams({\n  response_type: "code",\n  client_id: "${app.client_id}",\n  redirect_uri: "${callback}",\n  scope: "openid profile email entitlements:read",\n  state, nonce, code_challenge, code_challenge_method: "S256"\n});\nres.redirect(authorize.toString());\n\n// On ${callback}, validate state then exchange the code server-side.\nconst tokens = await fetch("${connectUrl}/rocket-connect-token", {\n  method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },\n  body: new URLSearchParams({ grant_type: "authorization_code", client_id: "${app.client_id}", code, redirect_uri: "${callback}", code_verifier })\n});\n// Validate the ES256 id_token against /rocket-connect-jwks; check iss, aud, exp, nonce and sub.\n\n// Only after an app session exists, create checkout using its Rocket access token.\nconst checkout = await fetch("${connectUrl}/connect-payment-checkout", {\n  method: "POST", headers: { Authorization: \`Bearer \${accessToken}\`, "Content-Type": "application/json" },\n  body: JSON.stringify({ product_key: "${product?.product_key || "YOUR_PRODUCT_KEY"}", return_uri: "${returnUri}" })\n});\n// Redirect to checkout_url. Do not grant access from the return URL.\n\nconst entitlement = await fetch("${connectUrl}/connect-entitlements?product_key=${product?.product_key || "YOUR_PRODUCT_KEY"}", {\n  headers: { Authorization: \`Bearer \${accessToken}\` }\n});\n// Grant access only if entitlements[0].active is true. A revoked authorization returns 401.` , [app, callback, product, returnUri]);
-  return <section className="rounded-2xl border border-neutral-200 bg-white p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-semibold">Integration kit</h2><p className="mt-1 text-sm text-neutral-600">Reference implementation for the actual Rocket Connect test endpoints.</p></div><button onClick={() => copy(code)} className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50"><ControlCopy className="h-3.5 w-3.5" /> Copy example</button></div><ol className="mt-5 space-y-2 text-sm text-neutral-700"><li>1. Generate and retain <code>state</code>, <code>nonce</code>, and an S256 PKCE verifier in your own server session.</li><li>2. Redirect to Continue with Rocket using this client ID and exact callback.</li><li>3. Validate the callback state; exchange the code only on your server and validate the signed ID token.</li><li>4. Store the Rocket <code>sub</code> against your own app session—not the browser’s URL parameters.</li><li>5. Start checkout with the Rocket access token, then ask the entitlement endpoint for authoritative access.</li><li>6. A cancelled, refunded, expired, disputed, or revoked authorization must not grant access. Reauthenticate after revocation.</li></ol><pre className="mt-5 overflow-x-auto rounded-xl bg-neutral-950 p-4 text-xs leading-5 text-neutral-100"><code>{code}</code></pre></section>;
+  return <section className="rounded-2xl border border-neutral-200 bg-white p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-semibold">Integration kit</h2><p className="mt-1 text-sm text-neutral-600">Reference implementation for the actual Rocket Developer test endpoints.</p></div><button onClick={() => copy(code)} className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50"><ControlCopy className="h-3.5 w-3.5" /> Copy example</button></div><ol className="mt-5 space-y-2 text-sm text-neutral-700"><li>1. Generate and retain <code>state</code>, <code>nonce</code>, and an S256 PKCE verifier in your own server session.</li><li>2. Redirect to Continue with Rocket using this client ID and exact callback.</li><li>3. Validate the callback state; exchange the code only on your server and validate the signed ID token.</li><li>4. Store the Rocket <code>sub</code> against your own app session—not the browser’s URL parameters.</li><li>5. Start checkout with the Rocket access token, then ask the entitlement endpoint for authoritative access.</li><li>6. A cancelled, refunded, expired, disputed, or revoked authorization must not grant access. Reauthenticate after revocation.</li></ol><pre className="mt-5 overflow-x-auto rounded-xl bg-neutral-950 p-4 text-xs leading-5 text-neutral-100"><code>{code}</code></pre></section>;
 }
 
-export default function Developer() {
+export default function Developer({ view = "account" }: { view?: "account" | "id" | "buy" }) {
   const { user } = useAuth();
   // Account changes remount all private state; an old request cannot paint
   // the previous owner's launchpad into a different user's session.
-  return <DeveloperSession key={user?.id || "public"} />;
+  return <DeveloperSession key={`${user?.id || "public"}-${view}`} view={view} />;
 }
 
-function DeveloperSession() {
+export function RocketID() { return <Developer view="id" />; }
+export function BuyWithRocket() { return <Developer view="buy" />; }
+
+function DeveloperSession({ view }: { view: "account" | "id" | "buy" }) {
   const { user, loading: authLoading } = useAuth();
   const [membership, setMembership] = useState<DeveloperMembership | null>(
     null,
@@ -143,12 +146,12 @@ function DeveloperSession() {
   };
   useEffect(() => {
     if (user) {
-      load();
+      if (view !== "account") load();
       loadMembership().catch(() =>
         setBillingError("Membership status is temporarily unavailable."),
       );
     }
-  }, [user]);
+  }, [user, view]);
   const openBilling = async (action: "checkout" | "portal") => {
     setBillingBusy(true);
     setBillingError("");
@@ -175,6 +178,7 @@ function DeveloperSession() {
   };
   return (
     <DeveloperExperience
+      view={view}
       signedIn={!!user}
       loading={authLoading || (!!user && !membership && !billingError)}
       membership={membership}
@@ -183,7 +187,7 @@ function DeveloperSession() {
       error={billingError || error}
       onBilling={openBilling}
       onRefresh={() => {
-        load();
+        if (view !== "account") load();
         loadMembership().catch(() =>
           setBillingError("Membership status is temporarily unavailable."),
         );
@@ -199,7 +203,7 @@ export function DeveloperAppDetail() {
   const createProduct = async (event: FormEvent) => { event.preventDefault(); setBusy("product"); try { const cents = Math.round(Number(amount) * 100); const result = await call("create_product", { client_id: clientId, name: productName, amount_cents: cents, checkout_return_uri: details?.app.checkout_return_uris[0] }); setDetails((current) => current ? { ...current, products: [result.product, ...current.products] } : current); toast({ title: "Test subscription product created" }); } catch (err: any) { toast({ title: "Couldn’t create product", description: err.message, variant: "destructive" }); } finally { setBusy(""); } };
   const startOnboarding = async () => { if (!isV2Account && !/^[A-Z]{2}$/.test(onboardingCountry)) { toast({ title: "Choose your business country", description: "Stripe requires it before creating a merchant account.", variant: "destructive" }); return; } setBusy("onboarding"); try { const result = await call("stripe_onboarding", { client_id: clientId, country: onboardingCountry }); window.location.assign(result.onboarding_url); } catch (err: any) { toast({ title: "Couldn’t start Stripe onboarding", description: err.message, variant: "destructive" }); setBusy(""); } };
   const saveSettings = async (event: FormEvent) => { event.preventDefault(); setBusy("settings"); try { const result = await call("update_app", { client_id: clientId, name: settingsName, icon_url: settingsIcon, redirect_uri: settingsRedirect, checkout_return_uri: settingsReturn }); setDetails((current) => current ? { ...current, app: result.app } : current); setEditing(false); toast({ title: "App settings saved", description: "New authorization requests now require the updated exact callback URI." }); } catch (err: any) { toast({ title: "Couldn’t save app settings", description: err.message, variant: "destructive" }); } finally { setBusy(""); } };
-  const setAppStatus = async (isActive: boolean) => { if (!isActive && !window.confirm("Disable this app? Existing Rocket Connect tokens and unused codes for this app will stop working immediately.")) return; setBusy("status"); try { const result = await call("set_app_status", { client_id: clientId, is_active: isActive }); setDetails((current) => current ? { ...current, app: result.app } : current); toast({ title: isActive ? "App enabled" : "App disabled", description: isActive ? "New authorization requests are allowed again." : "Existing Rocket Connect access was revoked." }); } catch (err: any) { toast({ title: "Couldn’t update app status", description: err.message, variant: "destructive" }); } finally { setBusy(""); } };
+  const setAppStatus = async (isActive: boolean) => { if (!isActive && !window.confirm("Disable this app? Existing Rocket Developer tokens and unused codes for this app will stop working immediately.")) return; setBusy("status"); try { const result = await call("set_app_status", { client_id: clientId, is_active: isActive }); setDetails((current) => current ? { ...current, app: result.app } : current); toast({ title: isActive ? "App enabled" : "App disabled", description: isActive ? "New authorization requests are allowed again." : "Existing Rocket Developer access was revoked." }); } catch (err: any) { toast({ title: "Couldn’t update app status", description: err.message, variant: "destructive" }); } finally { setBusy(""); } };
   if (!details && busy === "load") return <main className="rocket-skeleton-surface min-h-screen p-8" role="status" aria-label="Loading app settings" aria-busy="true"><div className="mx-auto max-w-5xl animate-pulse space-y-6"><div className="h-8 w-48 rounded bg-neutral-100" /><div className="h-48 rounded-2xl bg-neutral-100" /></div></main>;
   if (!details) return <main className="mx-auto max-w-3xl px-4 py-12"><Link to="/developer" className="text-sm text-neutral-600">← Developer</Link><FunctionError error={error || "App not found"} /></main>;
   const isV2Account = details.stripe_account?.stripe_api_version === "v2";

@@ -1,0 +1,23 @@
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const pg = new PGlite();
+await pg.exec(`
+create role anon; create role authenticated;
+create table public.connect_products(id int primary key, platform_fee_bps integer not null check(platform_fee_bps=1000));
+create table public.connect_transactions(id int primary key,application_fee_cents int);
+create table public.rocket_buy_configuration(singleton boolean primary key, platform_fee_bps int,live_checkout_enabled boolean,updated_at timestamptz);
+insert into public.connect_products values(1,1000);
+insert into public.connect_transactions values(1,100);
+insert into public.rocket_buy_configuration values(true,1000,false,now());
+`);
+await pg.exec(readFileSync(new URL('../supabase/migrations/20261004031752_rocket_buy_live_fee.sql',import.meta.url),'utf8'));
+assert.equal((await pg.query('select platform_fee_bps from connect_products where id=1')).rows[0].platform_fee_bps,1000);
+assert.equal((await pg.query('select application_fee_cents from connect_transactions')).rows[0].application_fee_cents,100);
+assert.deepEqual((await pg.query('select platform_fee_bps,live_checkout_enabled from rocket_buy_configuration')).rows[0],{platform_fee_bps:500,live_checkout_enabled:false});
+await pg.exec('insert into connect_products(id) values(2)');
+assert.equal((await pg.query('select platform_fee_bps from connect_products where id=2')).rows[0].platform_fee_bps,500);
+await assert.rejects(pg.exec('insert into connect_products values(3,1000)'),/5%/);
+await assert.rejects(pg.exec('update connect_products set platform_fee_bps=500 where id=1'),/immutable/);
+console.log('PASS: new plans 5%, historical rates/transactions unchanged, live checkout remains disabled');
+await pg.close();

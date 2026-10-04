@@ -6,6 +6,7 @@ import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
 import { AppCardSkeleton } from "@/components/MarketplaceLoadingSkeletons";
+import { useSavedAppControls } from "@/hooks/useSavedAppControls";
 import {
   EditorialAppCard,
   StandardAppCard,
@@ -55,6 +56,7 @@ function SectionHeading({ id, title, description, href, action, emoji }: {
 export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [rankings, setRankings] = useState<App[]>([]);
   const [fresh, setFresh] = useState<Preview[]>([]);
+  const saveControls = useSavedAppControls([...rankings.map((app) => app.id), ...fresh.map(({ app }) => app.id)]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [media, setMedia] = useState<Map<string, PublicAppMedia[]>>(new Map());
   const [metadata, setMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
@@ -179,6 +181,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
               <div className="mx-auto mt-8 max-w-4xl">
                 <EditorialAppCard
                   app={visual}
+                  {...saveControls(visual.id)}
                   media={media.get(visual.id)}
                   metadata={metadata.get(visual.id)}
                   eyebrow={
@@ -193,29 +196,29 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           </div>
         );
       })()}
-      <section className="mt-10 sm:mt-12" aria-labelledby="rankings-heading">
-        <SectionHeading id="rankings-heading" title="Rankings" description="Most viewed app profiles on Rocket since view tracking began. Repeat visits from the same browser/network in a day count once." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
-        {rankings.length > 0 ? (
-          <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
-            {rankings.map((app, index) => (
-              <div key={app.id} className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto">
-                <StandardAppCard app={app} rank={index + 1} media={media.get(app.id)} metadata={metadata.get(app.id)} />
-              </div>
-            ))}
-          </div>
-        ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}
-      </section>
-      <section className="mt-12 sm:mt-16" aria-labelledby="new-heading">
+      <section className="mt-10 sm:mt-12" aria-labelledby="new-heading">
         <SectionHeading id="new-heading" title="New" description="Recently listed apps with public Launch activity." href="/discover?view=new" action="See all New" emoji="🔥" />
         {fresh.length > 0 ? (
           <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
             {fresh.map(({ app }) => (
               <div key={app.id} className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto">
-                <StandardAppCard app={app} media={media.get(app.id)} metadata={metadata.get(app.id)} />
+                <StandardAppCard app={app} {...saveControls(app.id)} media={media.get(app.id)} metadata={metadata.get(app.id)} />
               </div>
             ))}
           </div>
         ) : <p className="text-sm text-neutral-500">No new apps with Launch activity are available right now.</p>}
+      </section>
+      <section className="mt-12 sm:mt-16" aria-labelledby="rankings-heading">
+        <SectionHeading id="rankings-heading" title="Rankings" description="Most viewed app profiles on Rocket since view tracking began. Repeat visits from the same browser/network in a day count once." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
+        {rankings.length > 0 ? (
+          <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
+            {rankings.map((app, index) => (
+              <div key={app.id} className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto">
+                <StandardAppCard app={app} {...saveControls(app.id)} rank={index + 1} media={media.get(app.id)} metadata={metadata.get(app.id)} />
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="categories-heading">
         <SectionHeading id="categories-heading" title="Categories" description="Browse apps by what you want to do." href="/discover?view=categories" action="All categories" emoji="🗂️" />

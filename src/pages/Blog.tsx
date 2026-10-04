@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { Search, X, ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
 import ArticleCover from "@/components/blog/ArticleCover";
 import Highlight from "@/components/blog/Highlight";
@@ -265,7 +264,7 @@ const Blog = () => {
         </section>
 
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

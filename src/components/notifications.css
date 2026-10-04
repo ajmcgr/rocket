@@ -1,0 +1,12 @@
+.dark .notification-surface.bg-white,
+.dark .notification-surface .bg-white { background-color: #171717; }
+.dark .notification-surface .text-neutral-900,
+.dark .notification-surface .text-neutral-700 { color: #f5f5f5; }
+.dark .notification-surface .text-neutral-600,
+.dark .notification-surface .text-neutral-500 { color: #d4d4d4; }
+.dark .notification-surface.border-neutral-200,
+.dark .notification-surface .border-neutral-200,
+.dark .notification-surface .border-neutral-100,
+.dark .notification-surface .divide-neutral-100 > :not([hidden]) ~ :not([hidden]) { border-color: #404040; }
+.dark .notification-surface .hover\:bg-neutral-50:hover,
+.dark .notification-surface .hover\:bg-neutral-100:hover { background-color: #262626; }

@@ -115,6 +115,10 @@ export type Database = {
       };
     };
     Views: {
+      public_app_submission_details: {
+        Row: { app_id: string; details: Json; created_at: string };
+        Relationships: [];
+      };
       public_app_media: {
         Row: {
           id: string;

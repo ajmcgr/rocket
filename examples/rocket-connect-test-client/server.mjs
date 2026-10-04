@@ -17,7 +17,7 @@ const pending = new Map();
 const sessions = new Map();
 const b64url = (value) => Buffer.from(value).toString("base64url");
 const cookie = (req, name) => Object.fromEntries((req.headers.cookie || "").split("; ").filter(Boolean).map((v) => v.split("=")))[name];
-const html = (body) => `<!doctype html><html><head><meta charset="utf-8"><title>Rocket Connect Test App</title><style>body{font:16px system-ui;max-width:680px;margin:80px auto;padding:0 24px;color:#172033}a,button{display:inline-block;background:#079ad7;color:white;border:0;border-radius:9px;padding:12px 18px;text-decoration:none;font-weight:650;cursor:pointer}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}pre{white-space:pre-wrap;background:#f3f4f6;padding:16px;border-radius:10px}</style></head><body>${body}</body></html>`;
+const html = (body) => `<!doctype html><html><head><meta charset="utf-8"><title>Rocket Developer Test App</title><style>body{font:16px system-ui;max-width:680px;margin:80px auto;padding:0 24px;color:#172033}a,button{display:inline-block;background:#079ad7;color:white;border:0;border-radius:9px;padding:12px 18px;text-decoration:none;font-weight:650;cursor:pointer}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}pre{white-space:pre-wrap;background:#f3f4f6;padding:16px;border-radius:10px}</style></head><body>${body}</body></html>`;
 
 async function verifyIdToken(idToken, expectedNonce) {
   const parts = idToken?.split(".");
@@ -40,7 +40,7 @@ createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   if (url.pathname === "/") {
     const session = sessions.get(cookie(req, "rocket_test_session"));
-    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", entitlement: session.entitlement || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/buy">Buy $10/month test product</a> <a href="/verify-entitlement">Verify access entitlement</a> ${reconcileSessionId ? `<a href="/reconcile-purchase">Reconcile completed test purchase</a>` : ""} <a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Connect test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
+    res.end(html(session ? `<h1>Connected to Rocket</h1><p>This independent app established its own server session after validating Rocket’s signed ID token and UserInfo response.</p><pre>${JSON.stringify({ sub: session.sub, name: session.name, email: session.email, connected_at: session.connected_at, rocket_access: session.rocket_access || "not checked", entitlement: session.entitlement || "not checked", invalid_pkce_verifier: session.invalid_pkce_verifier || "not checked", authorization_code_reuse: session.authorization_code_reuse || "not checked" }, null, 2)}</pre><a href="/buy">Buy $10/month test product</a> <a href="/verify-entitlement">Verify access entitlement</a> ${reconcileSessionId ? `<a href="/reconcile-purchase">Reconcile completed test purchase</a>` : ""} <a href="/verify-access">Verify Rocket access</a> <a href="/verify-code-reuse">Verify code replay rejection</a> <a href="/login">Authenticate again</a> <a href="/logout">Log out</a>` : `<h1>Independent Rocket Developer test app</h1><p>This app is separate from Rocket. It uses OAuth authorization code + PKCE.</p><a href="/login">Continue with Rocket</a>`));
     return;
   }
   if (url.pathname === "/login") {
@@ -113,4 +113,4 @@ createServer(async (req, res) => {
   }
   if (url.pathname === "/logout") { const id = cookie(req, "rocket_test_session"); sessions.delete(id); res.writeHead(302, { Location: "/", "Set-Cookie": "rocket_test_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0" }); res.end(); return; }
   res.statusCode = 404; res.end("Not found");
-}).listen(port, "127.0.0.1", () => console.log(`Rocket Connect test client: http://127.0.0.1:${port}`));
+}).listen(port, "127.0.0.1", () => console.log(`Rocket Developer test client: http://127.0.0.1:${port}`));

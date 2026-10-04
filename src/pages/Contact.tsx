@@ -1,6 +1,5 @@
 import { useState } from "react";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,7 +81,7 @@ const Contact = () => {
 
         <p className="mt-7 text-center text-sm text-neutral-600 dark:text-neutral-300">Prefer email? <a href="mailto:alex@tryrocket.ai" className="font-semibold text-[#267cbb] underline underline-offset-4 dark:text-[#80c7f4]">alex@tryrocket.ai</a></p>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

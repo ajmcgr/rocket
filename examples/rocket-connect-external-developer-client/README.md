@@ -1,4 +1,4 @@
-# Rocket Connect external-developer proof client
+# Rocket Developer external-developer proof client
 
 This is an independently runnable local web application for the Phase 3 proof.
 It intentionally requires a client ID and product key created through Rocket's

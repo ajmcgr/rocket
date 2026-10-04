@@ -8,10 +8,12 @@ export type Workspace = {
   name: string;
   is_personal?: boolean;
   role?: "owner" | "admin" | "editor" | "viewer";
+  team_access?: boolean;
 };
 
 let cachedList: Workspace[] | null = null;
 let inflight: Promise<Workspace[]> | null = null;
+let cacheOwner: string | null = null;
 
 function normalizeWorkspace(data: any): Workspace | null {
   if (!data?.id) return null;
@@ -38,13 +40,19 @@ export function setActiveWorkspaceId(id: string) {
 }
 
 export async function listWorkspaces(force = false): Promise<Workspace[]> {
+  const { data: auth } = await sb.auth.getUser();
+  const userId = auth?.user?.id || null;
+  if (!userId) { invalidateWorkspacesCache(); cacheOwner = null; return []; }
+  if (cacheOwner !== userId) { cachedList = null; inflight = null; cacheOwner = userId; }
   if (!force && cachedList) return cachedList;
   if (inflight) return inflight;
-  inflight = (async () => {
-    const { data: memberships } = await sb
+  const request = (async () => {
+    const { data: memberships, error } = await sb
       .from("workspace_members")
       .select("role, workspace_id, workspaces(id, name, is_personal)")
+      .eq("user_id", userId)
       .order("created_at", { ascending: true });
+    if (error) throw error;
     const list: Workspace[] = (memberships || [])
       .map((m: any) => m.workspaces ? {
         id: m.workspaces.id,
@@ -55,10 +63,15 @@ export async function listWorkspaces(force = false): Promise<Workspace[]> {
       .filter(Boolean) as Workspace[];
     // Personal first
     list.sort((a, b) => (b.is_personal ? 1 : 0) - (a.is_personal ? 1 : 0));
-    cachedList = list;
+    await Promise.all(list.filter((w) => !w.is_personal).map(async (w) => {
+      const { data, error } = await sb.rpc("workspace_developer_access", { _workspace_id: w.id });
+      w.team_access = !error && data === true;
+    }));
+    if (cacheOwner === userId) cachedList = list;
     return list;
   })();
-  try { return await inflight; } finally { inflight = null; }
+  inflight = request;
+  try { return await request; } finally { if (inflight === request) inflight = null; }
 }
 
 export async function createWorkspace(
@@ -69,48 +82,10 @@ export async function createWorkspace(
   if (!trimmed) throw new Error("Workspace name is required");
 
   const isPersonal = !!opts?.isPersonal;
-  const rpcName = trimmed;
-
-  try {
-    const { data, error } = await sb.functions.invoke("create-workspace", {
-      body: { name: trimmed, is_personal: isPersonal },
-    });
-    if (!error) {
-      const ws = extractWorkspace(data);
-      if (ws) return ws;
-    }
-  } catch (_error) {
-    // fall through
-  }
-
-  if (!isPersonal) {
-    const { data, error } = await sb.rpc("create_workspace", { _name: rpcName });
-    if (!error) {
-      const ws = extractWorkspace(data);
-      if (ws) return ws;
-    }
-  }
-
-  if (opts?.userId) {
-    const { data, error } = await sb
-      .from("workspaces")
-      .insert({ name: trimmed, owner_id: opts.userId, is_personal: isPersonal })
-      .select("id,name,is_personal")
-      .single();
-    if (!error && data?.id) {
-      const { error: memberError } = await sb
-        .from("workspace_members")
-        .insert({ workspace_id: data.id, user_id: opts.userId, role: "owner" });
-      if (memberError && !/duplicate key|already exists/i.test(memberError.message || "")) {
-        throw memberError;
-      }
-      const ws = extractWorkspace(data);
-      if (ws) return ws;
-    }
-    if (error && !/row-level security|policy/i.test(error.message || "")) {
-      throw error;
-    }
-  }
+  const { data, error } = await sb.rpc(isPersonal ? "ensure_personal_workspace" : "create_workspace", { _name: trimmed });
+  if (error) throw new Error(error.message || "Workspace creation failed");
+  const workspace = extractWorkspace(data);
+  if (workspace) { invalidateWorkspacesCache(); return workspace; }
 
   throw new Error(
     isPersonal
@@ -139,8 +114,8 @@ async function ensurePersonalWorkspace(): Promise<string | null> {
 export async function ensureActiveWorkspaceId(): Promise<string | null> {
   const existing = getActiveWorkspaceIdSync();
   const list = await listWorkspaces();
-  if (existing && list.some(w => w.id === existing)) return existing;
-  const first = list[0]?.id || null;
+  if (existing && list.some(w => w.id === existing && (w.is_personal || w.team_access))) return existing;
+  const first = list.find(w => w.is_personal || w.team_access)?.id || null;
   if (first) setActiveWorkspaceId(first);
   if (first) return first;
   return ensurePersonalWorkspace();

@@ -78,7 +78,7 @@ const ThemeToggle = () => {
         title={`Appearance: ${preference}`}
         className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-[#167ac6] dark:text-neutral-100 dark:hover:bg-neutral-800"
       >
-        <CurrentIcon className="h-[22px] w-[22px] stroke-[1.8]" aria-hidden="true" />
+        <CurrentIcon className="h-[19px] w-[19px] stroke-[1.8]" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-40 rounded-xl border border-neutral-200 bg-white p-1.5 text-neutral-800 shadow-[0_10px_28px_rgba(0,0,0,0.16)] dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
         {(["light", "dark", "system"] as const).map((option) => (

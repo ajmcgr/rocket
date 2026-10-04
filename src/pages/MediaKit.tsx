@@ -1,5 +1,4 @@
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import rocketColor from "@/assets/rocket-logo-color.png.asset.json";
 import { Button } from "@/components/ui/button";
 
@@ -72,7 +71,7 @@ const MediaKit = () => (
         <a href="mailto:alex@trylaunch.ai" className="mt-3 inline-block text-brand hover:underline">alex@trylaunch.ai</a>
       </section>
     </main>
-    <SiteFooter />
+
   </div>
 );
 

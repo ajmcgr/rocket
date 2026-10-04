@@ -1,6 +1,5 @@
 import { Link, useParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import ArticleCard from "@/components/blog/ArticleCard";
 import { getAuthor, postsByAuthor } from "@/content/blogMeta";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -53,7 +52,7 @@ const BlogAuthor = () => {
           </div>
         </section>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

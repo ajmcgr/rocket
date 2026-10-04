@@ -7,7 +7,6 @@ import {
   useNavigate as tsNavigate,
   useLocation as tsLocation,
   useParams as tsParams,
-  useSearch as tsSearch,
   useRouter,
   Link as TSLink,
   Outlet as TSOutlet,
@@ -92,11 +91,23 @@ export function useParams<T extends Record<string, string | undefined> = Record<
 
 // ---------- useSearchParams (@/lib/router-compat compat) ----------
 
+function decodedSearchParams(search: Record<string, unknown>): URLSearchParams {
+  const params = new URLSearchParams();
+  // TanStack JSON-encodes numeric-looking strings (page="1"). Read its
+  // decoded search object rather than treating those serialization quotes
+  // as part of the value, as URLSearchParams(searchStr) would do.
+  for (const [key, value] of Object.entries(search)) {
+    if (value === undefined) continue;
+    params.set(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+  }
+  return params;
+}
+
 export function useSearchParams(): [URLSearchParams, (init: URLSearchParams | Record<string, string> | ((prev: URLSearchParams) => URLSearchParams), opts?: { replace?: boolean }) => void] {
   const loc = tsLocation();
   const nav = tsNavigate();
   const router = useRouter();
-  const params = useMemo(() => new URLSearchParams(loc.searchStr ?? ""), [loc.searchStr]);
+  const params = useMemo(() => decodedSearchParams(loc.search), [loc.search]);
   const setParams = useCallback(
     (
       init: URLSearchParams | Record<string, string> | ((prev: URLSearchParams) => URLSearchParams),
@@ -106,7 +117,7 @@ export function useSearchParams(): [URLSearchParams, (init: URLSearchParams | Re
       // snapshot — react-router passes call-time params, and chained updates
       // within one tick must see each other's writes.
       const live = router.state.location;
-      const current = new URLSearchParams(live.searchStr ?? "");
+      const current = decodedSearchParams(live.search);
       const next =
         typeof init === "function"
           ? init(current)

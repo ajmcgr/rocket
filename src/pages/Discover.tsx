@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -47,6 +46,14 @@ export default function Discover() {
   const [cardMetadata, setCardMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
+  const saveControls = (appId: string) => ({
+    saved: savedIds.has(appId),
+    onSave: (saved: boolean) => setSavedIds((current) => {
+      const next = new Set(current);
+      if (saved) next.add(appId); else next.delete(appId);
+      return next;
+    }),
+  });
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -594,6 +601,7 @@ export default function Discover() {
                 <RankedAppRow
                   key={app.id}
                   app={app}
+                  {...saveControls(app.id)}
                   metadata={cardMetadata.get(app.id)}
                   rank={index + 1}
                   eyebrow={`${rankingViews.get(app.id)?.toLocaleString() || "0"} Rocket views`}
@@ -632,6 +640,7 @@ export default function Discover() {
                 <MarketplaceListRow
                   key={app.id}
                   app={app}
+                  {...saveControls(app.id)}
                   metadata={cardMetadata.get(app.id)}
                 />
               ))}
@@ -667,7 +676,7 @@ export default function Discover() {
           </div>
         )}
       </main>
-      <SiteFooter />
+
     </div>
   );
 }

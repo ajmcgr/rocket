@@ -4,7 +4,6 @@ import { Link, useParams } from "@/lib/router-compat";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { getTool } from "@/content/tools";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +33,7 @@ const ToolDetail = () => {
           <h1 className="text-3xl font-semibold">Tool not found</h1>
           <Link to="/tools" className="mt-6 inline-block text-brand hover:underline">← All tools</Link>
         </main>
-        <SiteFooter />
+
       </div>
     );
   }
@@ -106,7 +105,7 @@ const ToolDetail = () => {
           </Button>
         </div>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

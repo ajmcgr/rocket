@@ -27,9 +27,7 @@ import LanguageSelector from "./LanguageSelector";
 import ThemeToggle from "./ThemeToggle";
 import {
   BarChart3,
-  CreditCard,
   ExternalLink,
-  HelpCircle,
   Bookmark,
   Compass,
   Layers3,
@@ -128,9 +126,8 @@ const AppShell = () => {
     {
       label: "Monetize",
       items: [
-        { label: "Buy with Rocket", to: "/developer#buy-with-rocket", icon: Wallet },
-        { label: "Rocket ID", to: "/developer#rocket-id", icon: ShieldCheck },
-        { label: "Developer", to: "/developer", icon: Layers3 },
+        { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
+        { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
       ],
     },
   ];
@@ -325,37 +322,12 @@ const AppShell = () => {
             </div>
           )}
         </nav>
-        <div className="mt-auto flex flex-col gap-1">
-          <NavLink
-            to="/settings/billing"
-            className={sidebarItemClass({
-              isActive: pathname.startsWith("/settings/billing"),
-            })}
-            aria-label="Billing"
-            title="Billing"
-          >
-            <CreditCard className="h-[18px] w-[18px] shrink-0" />
-            {!collapsed && <span>Billing</span>}
-          </NavLink>
-          <a
-            href="mailto:alex@tryrocket.ai"
-            className={`flex h-10 w-full items-center gap-3 rounded-xl font-body text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-950 ${collapsed ? "justify-center px-0" : "px-3"}`}
-            aria-label="Email support"
-            title="Email support"
-          >
-            <HelpCircle
-              className="h-[18px] w-[18px] shrink-0"
-              strokeWidth={1.9}
-            />
-            {!collapsed && <span className="truncate">Help</span>}
-          </a>
-        </div>
       </aside>
       <div
         className="min-h-screen transition-[padding] duration-200"
         style={{ paddingLeft: `var(--rocket-sidebar, 0px)` }}
       >
-        <style>{`@media (min-width: 1024px){.app-shell{--rocket-sidebar:${sidebarWidth}px}}`}</style>
+        <style>{`@media (min-width: 1024px){.app-shell{--rocket-sidebar:${sidebarWidth}px}body:has(.app-shell) .global-site-footer{margin-left:${sidebarWidth}px}}`}</style>
         <OnboardingTour />
         <CommandPalette />
         <ShareExportModal

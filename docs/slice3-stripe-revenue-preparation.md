@@ -1,12 +1,12 @@
 # Slice 3 Stripe revenue verification preparation
 
-Status: architecture and metric definition only. No Stripe App has been created, uploaded, installed, or used to access a founder's account. No MRR is public or marked verified. This is independent of Rocket Connect payments and Rocket's own billing.
+Status: architecture and metric definition only. No Stripe App has been created, uploaded, installed, or used to access a founder's account. No MRR is public or marked verified. This is independent of Rocket Developer payments and Rocket's own billing.
 
 ## Installation model
 
 Build a **public Stripe App** using `stripe_api_access_type: "oauth"` and an exact HTTPS callback. The founder must install it on **their own Stripe account**; an installation on Rocket's Stripe platform account must not be treated as permission to read founders' connected accounts. Store the Stripe account ID and rotated OAuth refresh token under a server-only encrypted boundary. The Rocket app owner must independently prove Rocket app ownership and explicitly select the Stripe products/prices that belong to that app. A Stripe account alone is never an app identifier.
 
-Minimum proposed read permissions for the first controlled proof: `subscription_read` to enumerate current subscriptions and items; `product_read` and `plan_read` to inspect the product/price catalog for explicit mapping. Confirm these against the Stripe CLI's current permission checker when building the manifest. Request no write, charge, payout, balance, customer, or Rocket Connect permissions. Add `invoice_read` only if the controlled test demonstrates that subscription/discount objects do not contain enough information for the frozen definition below. Do not ask a founder to paste a secret key.
+Minimum proposed read permissions for the first controlled proof: `subscription_read` to enumerate current subscriptions and items; `product_read` and `plan_read` to inspect the product/price catalog for explicit mapping. Confirm these against the Stripe CLI's current permission checker when building the manifest. Request no write, charge, payout, balance, customer, or Rocket Developer permissions. Add `invoice_read` only if the controlled test demonstrates that subscription/discount objects do not contain enough information for the frozen definition below. Do not ask a founder to paste a secret key.
 
 The next integration needs a separate `stripe_revenue_connections` table, a service-only encrypted credential, `app_stripe_product_mappings` keyed by Rocket app and Stripe account/product/price, private calculated points, privacy controls defaulting to PRIVATE, and a consented public projection. A product/price cannot be mapped to two Rocket apps under the same owner without explicit review. Disconnect must remove credentials and public verification without deleting historical private evidence.
 
@@ -14,7 +14,7 @@ Stripe's external testing is for public apps uploaded from a live account, suppo
 
 ## Frozen V1 metric: Subscription MRR
 
-Subscription MRR is the monthly-normalized **currently billable recurring subscription amount** for **only the founder-selected products/prices belonging to one Rocket app**, in the subscription's original currency. It is not cash received, revenue, profit, or Rocket Connect transaction volume. Calculate at a dated snapshot using a versioned formula; store the Stripe account, selected product/price mapping version, currency, status basis, and observation time privately.
+Subscription MRR is the monthly-normalized **currently billable recurring subscription amount** for **only the founder-selected products/prices belonging to one Rocket app**, in the subscription's original currency. It is not cash received, revenue, profit, or Rocket Developer transaction volume. Calculate at a dated snapshot using a versioned formula; store the Stripe account, selected product/price mapping version, currency, status basis, and observation time privately.
 
 - Include `active` subscriptions. Exclude `trialing` until the first billable period begins. Exclude `past_due`, `unpaid`, `incomplete`, `incomplete_expired`, `paused`, and `canceled` from **verified billable** MRR; report their excluded counts privately.
 - A subscription set to cancel at period end remains included until its paid period ends; then it is excluded.

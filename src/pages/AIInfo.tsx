@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const facts = [
@@ -114,7 +113,7 @@ export default function AIInfo() {
           <p className="mt-8 text-sm text-neutral-500">Last reviewed: October 1, 2026. Contact: alex@tryrocket.ai.</p>
         </section>
       </main>
-      <SiteFooter />
+
     </div>
   );
 }

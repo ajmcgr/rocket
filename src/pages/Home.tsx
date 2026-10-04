@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import DiscoveryPreview from "@/components/DiscoveryPreview";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { track } from "@/lib/analytics";
@@ -131,7 +130,7 @@ export default function Home() {
           </Link>
         </section>
       </main>
-      <SiteFooter />
+
     </div>
   );
 }

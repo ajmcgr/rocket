@@ -1,7 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import { ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { marketplaceComparisons } from "@/content/marketplaceComparisons";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
@@ -37,7 +36,7 @@ export default function Compare() {
           These are product-positioning comparisons, not feature-parity or pricing claims. Rocket Login and Payments are available only for apps that have actually integrated them; an indexed app does not imply Rocket endorsement.
         </p>
       </main>
-      <SiteFooter />
+
     </div>
   );
 }

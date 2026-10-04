@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { safeReturnPath } from "@/lib/navigation";
 import { track } from "@/lib/analytics";
@@ -204,7 +203,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
           </div>
         </div>
       </main>
-      <SiteFooter />
+
     </div>
   );
 };

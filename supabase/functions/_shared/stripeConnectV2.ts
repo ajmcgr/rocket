@@ -19,7 +19,7 @@ function key(environment: ConnectEnvironment) {
 
 async function request(path: string, init: RequestInit = {}, idempotencyKey?: string, environment: ConnectEnvironment = "test") {
   const secret = key(environment);
-  if (!secret) throw new StripeConnectV2Error(503, "connect_mode_not_configured", "Rocket Connect is not configured", null);
+  if (!secret) throw new StripeConnectV2Error(503, "connect_mode_not_configured", "Rocket Developer is not configured", null);
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${secret}`);
   headers.set("Stripe-Version", STRIPE_ACCOUNTS_V2_VERSION);
@@ -76,7 +76,7 @@ export function stripeConnectV2Ready(account: StripeConnectV2Account) {
 // endpoint accepts the connected account ID returned by Accounts v2.
 export async function createStripeHostedOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string, environment: ConnectEnvironment = "test") {
   const secret = key(environment);
-  if (!secret) throw new StripeConnectV2Error(503, "connect_mode_not_configured", "Rocket Connect is not configured", null);
+  if (!secret) throw new StripeConnectV2Error(503, "connect_mode_not_configured", "Rocket Developer is not configured", null);
   const form = new URLSearchParams({ account: accountId, refresh_url: refreshUrl, return_url: returnUrl, type: "account_onboarding" });
   const response = await fetch("https://api.stripe.com/v1/account_links", {
     method: "POST",

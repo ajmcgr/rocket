@@ -1,0 +1,16 @@
+.rocket-submission-page {
+  --background: #f7f9fb;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --border: #e5e7eb;
+  --muted-foreground: #62676d;
+}
+html.dark .rocket-submission-page {
+  --background: #100f0d;
+  --foreground: #f5f5f5;
+  --card: #171b21;
+  --card-foreground: #f5f5f5;
+  --border: #343a43;
+  --muted-foreground: #c8cdd4;
+}
