@@ -139,7 +139,7 @@ export default function ShareExportModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white text-neutral-900 border-neutral-200">
+      <DialogContent motion="gentle" aria-describedby={undefined} className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white text-neutral-900 border-neutral-200">
         <DialogHeader><DialogTitle>Share & export</DialogTitle></DialogHeader>
 
         {existingUrl && (

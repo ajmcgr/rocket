@@ -5,6 +5,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Keep the share card centred: a small vertical settle, never a diagonal slide. */
+@keyframes gentle-dialog-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes gentle-dialog-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(4px); }
+}
+@keyframes gentle-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gentle-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+.gentle-dialog-content[data-state="open"] { animation: gentle-dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.gentle-dialog-content[data-state="closed"] { animation: gentle-dialog-out 140ms ease-in both; }
+.gentle-dialog-overlay[data-state="open"] { animation: gentle-overlay-in 220ms ease-out both; }
+.gentle-dialog-overlay[data-state="closed"] { animation: gentle-overlay-out 140ms ease-in both; }
+@media (prefers-reduced-motion: reduce) {
+  .gentle-dialog-content[data-state], .gentle-dialog-overlay[data-state] { animation: none; }
+}
+
 /*
  * Design system definition — ported from the pre-migration src/index.css +
  * tailwind.config.ts (Tailwind v3 → v4).
@@ -341,6 +360,17 @@ body {
   top: 0 !important;
   position: static !important;
 }
+/* The document canvas is visible during browser rubber-band scrolling and in
+   shell gaps. Keep body transparent so it inherits the resolved theme instead
+   of exposing the legacy dark design-system background in light mode. */
+html {
+  background-color: #fff;
+  color-scheme: light;
+}
+body {
+  background-color: transparent;
+  color: #171717;
+}
 .skiptranslate > iframe {
   display: none !important;
 }
@@ -359,9 +389,10 @@ body {
  * pre-hydration script in __root.tsx applies the resolved class before paint. */
 html.dark {
   color-scheme: dark;
+  background-color: #0f0e0c;
 }
 html.dark body {
-  background-color: #0f0e0c;
+  background-color: transparent;
   color: hsl(40 30% 95%);
 }
 

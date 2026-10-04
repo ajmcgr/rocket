@@ -91,7 +91,7 @@ const Notifications = () => {
             Notifications
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
-            {unread > 0 ? `${unread} unread` : "You're all caught up."}
+            {loading ? "Loading notifications…" : error ? "Notifications could not be refreshed." : unread > 0 ? `${unread} unread` : "You're all caught up."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -158,10 +158,10 @@ const Notifications = () => {
           <div className="px-6 py-16 text-center">
             <Bell className="mx-auto h-8 w-8 text-neutral-300" />
             <p className="mt-3 text-sm font-medium text-neutral-700">
-              Nothing here
+              {error ? "Inbox unavailable" : "Nothing here"}
             </p>
             <p className="text-xs text-neutral-500">
-              Try a different filter or check back later.
+              {error ? "Retry to load your notifications." : "Try a different filter or check back later."}
             </p>
           </div>
         ) : (
@@ -197,37 +197,33 @@ const Notifications = () => {
                       {fmtDate(n.createdAt)}
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      remove(n.id);
-                    }}
-                    aria-label="Dismiss"
-                    className="self-start rounded p-1 text-neutral-300 transition hover:bg-neutral-100 hover:text-neutral-600"
-                  >
-                    <ControlX className="h-4 w-4" />
-                  </button>
                 </div>
               );
               return (
-                <li key={n.id}>
+                <li key={n.id} className="flex items-start">
                   {n.href ? (
                     <Link
                       to={n.href}
                       onClick={() => markRead(n.id)}
-                      className="block"
+                      className="block min-w-0 flex-1"
                     >
                       {body}
                     </Link>
                   ) : (
                     <button
                       onClick={() => markRead(n.id)}
-                      className="block w-full text-left"
+                      className="block min-w-0 flex-1 text-left"
                     >
                       {body}
                     </button>
                   )}
+                  <button
+                    onClick={() => remove(n.id)}
+                    aria-label={`Dismiss ${n.title}`}
+                    className="mr-4 mt-4 shrink-0 rounded p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
+                  >
+                    <ControlX className="h-4 w-4" />
+                  </button>
                 </li>
               );
             })}

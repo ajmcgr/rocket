@@ -1,0 +1,18 @@
+import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const db = new PGlite();
+await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; grant usage on schema auth,public to anon,authenticated; grant execute on function auth.uid() to anon,authenticated; insert into auth.users values ('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');`);
+await db.exec(readFileSync('supabase/migrations/20261004083550_public_member_profiles.sql','utf8'));
+await db.exec(`set role authenticated; set request.jwt.claim.sub='00000000-0000-0000-0000-000000000001'; insert into public.member_public_profiles(user_id,username,full_name) values (auth.uid(),'alex','Alex'); update public.member_public_profiles set bio='Hello' where user_id=auth.uid();`);
+await db.exec(`set request.jwt.claim.sub='00000000-0000-0000-0000-000000000002'; update public.member_public_profiles set bio='Hacked' where username='alex';`);
+assert.equal((await db.query(`select bio from public.member_public_profiles where username='alex'`)).rows[0].bio,'Hello');
+await assert.rejects(db.exec(`insert into public.member_public_profiles(user_id,username) values ('00000000-0000-0000-0000-000000000001','attacker')`));
+await assert.rejects(db.exec(`insert into public.member_public_profiles(user_id,username) values (auth.uid(),'alex')`));
+await db.exec('reset role; set role anon;');
+assert.equal((await db.query('select username,full_name,bio from public.member_public_profiles')).rows[0].username,'alex');
+await assert.rejects(db.query('select user_id from public.member_public_profiles'));
+await assert.rejects(db.exec("update public.member_public_profiles set bio='Hacked'"));
+await assert.rejects(db.exec("delete from public.member_public_profiles"));
+await db.close();
+console.log('PASS: public fields only, owner writes, unique usernames, anonymous read-only');

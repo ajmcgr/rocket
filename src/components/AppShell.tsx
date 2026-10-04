@@ -134,9 +134,9 @@ const AppShell = () => {
   ];
 
   return (
-    <div className="app-shell min-h-screen bg-[#f5f7fb] pb-20 font-body text-neutral-900 lg:pb-0">
+    <div className="app-shell min-h-screen bg-[#f5f7fb] pt-14 pb-20 font-body text-neutral-900 lg:pb-0">
       <header
-        className="sticky top-0 z-50 bg-white"
+        className="fixed inset-x-0 top-0 z-50 bg-white"
         style={{ boxShadow: "inset 0 -1px 0 #d4d4d8" }}
       >
         <div className="relative flex h-14 w-full items-center px-4 sm:px-5">
@@ -334,7 +334,7 @@ const AppShell = () => {
         <ShareExportModal
           open={shareOpen}
           onOpenChange={setShareOpen}
-          asset={{ id: "site", title: "Rocket — one account for every app" }}
+          asset={{ id: "site", title: "The open app platform." }}
           onCreateShareLink={async () =>
             typeof window !== "undefined"
               ? window.location.origin

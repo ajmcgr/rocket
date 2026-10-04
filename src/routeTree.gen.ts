@@ -71,6 +71,7 @@ import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
+import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AppAdminSectionRouteImport } from './routes/_app/admin.$section'
 import { Route as AppAppsAddRouteImport } from './routes/_app/apps.add'
 import { Route as AppAssetsIndexRouteImport } from './routes/_app/assets.index'
@@ -431,6 +432,11 @@ const ToolsSlugRoute = ToolsSlugRouteImport.update({
   path: '/tools/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAdminSectionRoute = AppAdminSectionRouteImport.update({
   id: '/$section',
   path: '/$section',
@@ -742,6 +748,7 @@ export interface FileRoutesByFullPath {
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
+  '/u/$username': typeof UUsernameRoute
   '/blog/': typeof BlogIndexRoute
   '/brand-templates/': typeof BrandTemplatesIndexRoute
   '/compare/': typeof CompareIndexRoute
@@ -854,6 +861,7 @@ export interface FileRoutesByTo {
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
+  '/u/$username': typeof UUsernameRoute
   '/blog': typeof BlogIndexRoute
   '/brand-templates': typeof BrandTemplatesIndexRoute
   '/compare': typeof CompareIndexRoute
@@ -968,6 +976,7 @@ export interface FileRoutesById {
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/tools/$slug': typeof ToolsSlugRoute
+  '/u/$username': typeof UUsernameRoute
   '/blog/': typeof BlogIndexRoute
   '/brand-templates/': typeof BrandTemplatesIndexRoute
   '/compare/': typeof CompareIndexRoute
@@ -1083,6 +1092,7 @@ export interface FileRouteTypes {
     | '/outreach/unsubscribe'
     | '/resources/$slug'
     | '/tools/$slug'
+    | '/u/$username'
     | '/blog/'
     | '/brand-templates/'
     | '/compare/'
@@ -1195,6 +1205,7 @@ export interface FileRouteTypes {
     | '/outreach/unsubscribe'
     | '/resources/$slug'
     | '/tools/$slug'
+    | '/u/$username'
     | '/blog'
     | '/brand-templates'
     | '/compare'
@@ -1308,6 +1319,7 @@ export interface FileRouteTypes {
     | '/outreach/unsubscribe'
     | '/resources/$slug'
     | '/tools/$slug'
+    | '/u/$username'
     | '/blog/'
     | '/brand-templates/'
     | '/compare/'
@@ -1404,6 +1416,7 @@ export interface RootRouteChildren {
   OutreachUnsubscribeRoute: typeof OutreachUnsubscribeRoute
   ResourcesSlugRoute: typeof ResourcesSlugRoute
   ToolsSlugRoute: typeof ToolsSlugRoute
+  UUsernameRoute: typeof UUsernameRoute
   BlogIndexRoute: typeof BlogIndexRoute
   BrandTemplatesIndexRoute: typeof BrandTemplatesIndexRoute
   CompareIndexRoute: typeof CompareIndexRoute
@@ -1848,6 +1861,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/$slug'
       fullPath: '/tools/$slug'
       preLoaderRoute: typeof ToolsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/$section': {
@@ -2412,6 +2432,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutreachUnsubscribeRoute: OutreachUnsubscribeRoute,
   ResourcesSlugRoute: ResourcesSlugRoute,
   ToolsSlugRoute: ToolsSlugRoute,
+  UUsernameRoute: UUsernameRoute,
   BlogIndexRoute: BlogIndexRoute,
   BrandTemplatesIndexRoute: BrandTemplatesIndexRoute,
   CompareIndexRoute: CompareIndexRoute,
