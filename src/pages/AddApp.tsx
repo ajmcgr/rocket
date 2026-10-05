@@ -41,6 +41,7 @@ export default function AddApp() {
   const [job, setJob] = useState<Job | null>(null);
   const [app, setApp] = useState<FoundApp | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [claimEvidence, setClaimEvidence] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -96,7 +97,7 @@ export default function AddApp() {
     if (!app) return;
     setBusy(true); setError(""); setSuccess("");
     try {
-      const result = await call("claim", { app_id: app.id, method });
+      const result = await call("claim", { app_id: app.id, method, evidence: method === "manual_review" ? claimEvidence : undefined });
       setChallenge(result);
       track("app_claim_started", { app_id: app.id, method });
       if (result.challenge_id) track("app_verification_started", { app_id: app.id, method });
@@ -150,6 +151,9 @@ export default function AddApp() {
           : isSharedStoreUrl(app.website_url)
             ? "Apple and Google own this store domain, so its DNS or website file cannot prove you own this app. Request a review or add your own app website URL."
             : "A Rocket login alone does not prove ownership. Verify control of the app’s website."}</p>
+        <label className="mt-4 block text-sm text-neutral-600">Manual-review evidence (optional)
+          <textarea value={claimEvidence} onChange={(event) => setClaimEvidence(event.target.value)} maxLength={4000} rows={3} className="mt-2 w-full rounded-lg border p-3" placeholder="Describe your relationship to this app and link to public evidence. Do not include passwords, API keys or verification tokens." />
+        </label>
         <div className="mt-4 flex flex-wrap gap-2">
           {app.claim_state !== "domain_verified" && <>{!isSharedStoreUrl(app.website_url) && <><button disabled={busy} onClick={() => startClaim("dns_txt")} className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Verify domain (DNS)</button>
           <button disabled={busy} onClick={() => startClaim("https_well_known")} className="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">Use website file</button></>}
@@ -158,6 +162,7 @@ export default function AddApp() {
         </div>
       </div>
       {challenge?.status === "review" && <p className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">{challenge.reason}</p>}
+      {challenge?.status === "rejected" && <p role="status" className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">{challenge.reason}</p>}
       {challenge?.status === "verified" && <p className="mt-5 rounded-lg bg-green-50 p-4 text-sm text-green-800">{challenge.reason}</p>}
       {challenge?.challenge_id && <div className="mt-5 rounded-xl bg-neutral-50 p-5 text-sm">
         <p className="font-semibold">{challenge.method === "dns_txt" ? "Add this TXT record to your domain" : "Place this text at the exact URL"}</p>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "@/lib/router-compat";
+import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
 import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
@@ -38,6 +38,8 @@ function Empty({ children = "Nothing needs attention here." }: { children?: Reac
 
 export default function Admin() {
   const params = useParams() as { section?: string };
+  const [search] = useSearchParams();
+  const claimId = /^[0-9a-f-]{36}$/i.test(search.get("claim") || "") ? search.get("claim") : null;
   const section = (sections.some((item) => item.id === params.section) ? params.section : "home") as Section;
   const [period, setPeriod] = useState<Period>("30d");
   const [data, setData] = useState<Row | null>(null);
@@ -47,16 +49,21 @@ export default function Admin() {
   const [selected, setSelected] = useState<string[]>([]);
   const refresh = useCallback(async () => {
     setError(""); setData(null); setToday([]);
-    const [result, batch] = await Promise.all([
+    const [result, batch, claims] = await Promise.all([
       adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_today", {}) : Promise.resolve(null),
+      section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
     if (batch?.error) { setError(batch.error.message); return; }
+    if (claims?.error) { setError(claims.error.message); return; }
     setToday(rows(batch?.data));
-    setData(obj(result.data));
-  }, [section, period]);
+    setData({ ...obj(result.data), ...(claims ? { claims: claims.data } : {}) });
+  }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
+  useEffect(() => {
+    if (data && claimId) document.getElementById(`claim-${claimId}`)?.scrollIntoView({ block: "center" });
+  }, [data, claimId]);
   const act = async (action: string, target: string | null, reason: string | null = null, payload: Row = {}) => {
     setBusy(true); setError("");
     try {
@@ -104,8 +111,26 @@ export default function Admin() {
       <Panel title="Outreach"><StatGrid data={obj(data.outreach)} /><p className="rocket-admin-muted">Founder sending remains disabled in test mode.</p></Panel>
     </>}
     {data && section === "ops" && <>
+      <Panel title={`Claims awaiting action · ${rows(data.claims).filter(row => row.status === "review").length} need review`}>
+        <p className="rocket-admin-note">Manual requests are prioritized. A Rocket account alone is not ownership proof. Approval marks an app as claimed, not domain verified, and never replaces an active owner.</p>
+        {rows(data.claims).length ? <div className="rocket-admin-list">{rows(data.claims).map(row => <article key={String(row.id)} id={`claim-${row.id}`} className={row.id === claimId ? "rocket-admin-claim-selected" : undefined}>
+          <strong>{String(row.app_name)} · {String(row.status)}</strong>
+          <p><a href={/^https?:\/\//i.test(String(row.app_url)) ? String(row.app_url) : undefined} target="_blank" rel="noopener noreferrer">{String(row.app_url)}</a></p>
+          <p>Requester: {String(row.requester_name || "Rocket user")} · {String(row.requester_email)} · {String(row.user_id)}</p>
+          <p>{String(row.method)} · Requested {when(row.created_at)}</p>
+          {!!row.owner_conflict && <p className="rocket-admin-warning">An active owner exists. Approval is blocked; investigate the conflict.</p>}
+          <p className="rocket-admin-evidence">Evidence: {String(row.evidence || "No additional evidence supplied. Investigate independently before approving.")}</p>
+          <p>Review note: {String(row.review_reason || "None")}</p>
+          {rows(row.decisions).map((decision, index) => <p key={index}>Audit: {String(decision.action)} · {String(decision.admin_user_id)} · {when(decision.created_at)} · {String(decision.reason)}</p>)}
+          {rows(row.emails).map((email,index) => <p key={index}>Email {String(email.kind)}: {email.sent_at ? `accepted by Resend ${when(email.sent_at)}` : email.last_error ? String(email.last_error) : "queued"} · attempts {String(email.attempts)}</p>)}
+          {["pending","review"].includes(String(row.status)) && <div className="rocket-admin-actions">
+            <button disabled={busy || !!row.owner_conflict || !["manual_review","existing_relationship"].includes(String(row.method))} onClick={() => reasonAction("approve_claim",String(row.id),"Document independently checked relationship/proof (at least 20 characters).")}>Approve as claimed</button>
+            <button disabled={busy} onClick={() => reasonAction("request_claim_correction",String(row.id),"What correction is required? (At least 10 characters.)")}>Request correction</button>
+            <button disabled={busy} onClick={() => reasonAction("reject_claim",String(row.id),"Why is this claim rejected? (At least 10 characters.)")}>Reject</button>
+          </div>}
+        </article>)}</div> : <Empty />}
+      </Panel>
       <Panel title="Sync runs">{rows(data.sync_jobs).length ? <div className="rocket-admin-list">{rows(data.sync_jobs).map((row) => <article key={String(row.id)}><strong>{String(row.status)} · {when(row.started_at)}</strong><p>{count(row.received_count)} / {count(row.expected_count)} received · {count(row.imported_count)} newly imported · {count(row.ambiguous_count)} ambiguous</p>{Boolean(row.error) && <p className="rocket-admin-warning">{String(row.error)}</p>}</article>)}</div> : <Empty />}</Panel>
-      <Panel title="Claims awaiting action">{rows(data.claims).length ? <div className="rocket-admin-list">{rows(data.claims).map((row) => <article key={String(row.id)}><strong>{String(row.app_name)} · {String(row.status)}</strong><p>{String(row.method)} · {when(row.created_at)} · {String(row.review_reason || "No review note")}</p><div className="rocket-admin-actions"><button disabled={busy} onClick={() => reasonAction("approve_claim", String(row.id), "Document the relationship/proof (at least 20 characters). Approval cannot overwrite an existing owner.")}>Approve as claimed</button><button disabled={busy} onClick={() => reasonAction("request_claim_correction", String(row.id), "What correction is required?")}>Request correction</button><button disabled={busy} onClick={() => reasonAction("reject_claim", String(row.id), "Why is this claim rejected?")}>Reject</button></div></article>)}</div> : <Empty />}</Panel>
       <Panel title="Review reports">{rows(data.reports).length ? <div className="rocket-admin-list">{rows(data.reports).map((row) => <article key={String(row.id)}><strong>{String(row.review_status)} review</strong><p>{String(row.body)}</p><p>Report: {String(row.reason)}</p><div className="rocket-admin-actions"><button disabled={busy} onClick={() => reasonAction("hide_review", String(row.review_id), "Why should this review be hidden?")}>Hide review</button><button disabled={busy} onClick={() => void act("restore_review", String(row.review_id))}>Restore review</button></div></article>)}</div> : <Empty>No review reports.</Empty>}</Panel>
       <Panel title="Provider failures">{rows(data.provider_failures).length ? <div className="rocket-admin-list">{rows(data.provider_failures).map((row) => <article key={String(row.app_id)}><strong>{String(row.provider)} · {String(row.app_id)}</strong><p>{String(row.last_error || "Provider needs attention")}</p><p>Last successful: {when(row.last_successful_sync)}</p></article>)}</div> : <Empty />}</Panel>
       <Panel title="Website health">{rows(data.website_issues).length ? <div className="rocket-admin-list">{rows(data.website_issues).map((row) => <article key={String(row.app_id)}><strong>{String(row.name)} · {String(row.status)}</strong><p>Checked {when(row.checked_at)} · {count(row.consecutive_hard_failures)} consecutive hard failures</p></article>)}</div> : <Empty />}</Panel>

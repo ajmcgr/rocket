@@ -711,7 +711,7 @@ async function consumePreview(userId: string, token: string, publish = false) {
   }
 }
 
-async function claim(userId: string, appId: string, method: string) {
+async function claim(userId: string, appId: string, method: string, evidence = "") {
   if (!/^[0-9a-f-]{36}$/i.test(appId)) throw new Error("Invalid app");
   if (!["dns_txt", "https_well_known", "manual_review"].includes(method))
     throw new Error("Invalid verification method");
@@ -751,6 +751,13 @@ async function claim(userId: string, appId: string, method: string) {
     return { status: "verified", reason: "You already own this app." };
   const conflict =
     owner.data && !owner.data.revoked_at && owner.data.user_id !== userId;
+  if (method === "manual_review") {
+    const result = await admin.rpc("request_manual_app_review", {
+      p_user_id: userId, p_app_id: appId, p_evidence: evidence,
+    });
+    if (result.error) throw result.error;
+    return result.data;
+  }
   const current = await admin
     .from("app_claims")
     .select("id,status")
@@ -1037,7 +1044,7 @@ Deno.serve(async (req) => {
         return json(await submit(user.id, text(body.url, 2048)));
       case "claim":
         return json(
-          await claim(user.id, text(body.app_id, 36), text(body.method, 30)),
+          await claim(user.id, text(body.app_id, 36), text(body.method, 30), text(body.evidence, 4000)),
         );
       case "verify":
         return json(
@@ -1067,7 +1074,7 @@ Deno.serve(async (req) => {
       case "my_apps": {
         const claims = await admin
           .from("app_claims")
-          .select("id,app_id,status,method,verification_state,created_at")
+          .select("id,app_id,status,method,verification_state,created_at,review_reason,completed_at,rejected_at")
           .eq("user_id", user.id)
           .neq("status", "revoked")
           .order("created_at", { ascending: false })

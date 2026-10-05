@@ -18,6 +18,8 @@
 .rocket-admin-list article{border:1px solid var(--border-color,#e4e4e4);border-radius:12px;padding:14px}
 .rocket-admin-list article p{font-size:.88rem;color:var(--text-secondary,#666);margin:7px 0}
 .rocket-admin-list a{color:var(--rocket-blue,#187dcc)}
+.rocket-admin-list .rocket-admin-claim-selected{border:2px solid var(--rocket-blue,#187dcc);scroll-margin-top:100px}
+.rocket-admin-evidence{white-space:pre-wrap;overflow-wrap:anywhere}
 .rocket-admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .rocket-admin button,.rocket-admin-actions a{border:1px solid var(--border-color,#ccc);border-radius:9px;background:transparent;color:inherit;padding:8px 12px;font-size:.85rem;cursor:pointer;text-decoration:none}
 .rocket-admin button:hover,.rocket-admin-actions a:hover{border-color:#187dcc}

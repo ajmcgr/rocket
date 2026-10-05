@@ -119,7 +119,7 @@ export default function MyApps() {
                       : "Claimed"
                     : item.status === "review"
                       ? "Review pending"
-                      : "Claim pending"}
+                      : item.status === "rejected" ? "Not approved" : "Claim pending"}
                 </span>
               </div>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-neutral-100 pt-4 text-sm">
