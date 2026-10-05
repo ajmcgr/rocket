@@ -14,7 +14,7 @@ const oauthApiKey = Deno.env.get("STRIPE_REVENUE_APP_TEST_API_KEY");
 // app ID is explicitly enrolled for the external acceptance pilot.
 const pilotAppIds = new Set((Deno.env.get("STRIPE_REVENUE_PILOT_APP_IDS") || "")
   .split(",").map((id) => id.trim())
-  .filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
+  .filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
 const pilotEnabled = (appId: string) => pilotAppIds.has(appId);
 const redirectUri = `${supabaseUrl}/functions/v1/rocket-stripe-revenue`;
 const cors = { "Access-Control-Allow-Origin": frontend,
@@ -24,7 +24,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 const fail = (message: string, status = 400) => json({ error: message }, status);
 const uuid = (value: unknown): value is string => typeof value === "string"
-  && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const b64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 const unb64 = (value: string) => Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")),
   (char) => char.charCodeAt(0));

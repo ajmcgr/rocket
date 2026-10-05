@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Price = { id: string; product_id: string; product_name: string; currency: string;
@@ -41,7 +42,7 @@ export default function AppRevenue() {
     const { data, error: requestError } = await supabase.functions.invoke("rocket-stripe-revenue", {
       body: { action, app_id: id, ...extra },
     });
-    if (requestError || data?.error) throw new Error(data?.error || requestError?.message || "Stripe revenue request failed");
+    if (requestError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(requestError, "Stripe revenue request failed"));
     return data;
   }, [id]);
   const refresh = useCallback(async () => {
@@ -71,6 +72,7 @@ export default function AppRevenue() {
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
       <h2 className="font-semibold">Stripe account</h2>
+      {!status && error && <button disabled={busy} onClick={() => run(refresh)} className="mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Retry connection status</button>}
       {!status && !error && <div role="status" aria-label="Loading connection" className="mt-3 animate-pulse space-y-2"><div className="h-4 w-44 rounded bg-neutral-100" /><div className="h-4 w-64 max-w-full rounded bg-neutral-100" /></div>}
       {status && <>
         <p className="mt-2 text-sm text-neutral-600">{status.connection

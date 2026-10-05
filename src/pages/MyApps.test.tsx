@@ -53,6 +53,10 @@ describe("Your Apps next actions", () => {
       expect(container.textContent).toContain("Domain verified");
       expect(container.textContent).toContain("Connect Google Analytics");
       expect(container.textContent).toContain("Connect Stripe");
+      const connections = container.querySelector('[aria-label="Connect analytics and revenue"]');
+      expect(connections?.classList.contains("grid-cols-1")).toBe(true);
+      expect(connections?.querySelectorAll("a")).toHaveLength(2);
+      expect(connections?.querySelector('a[href="/my-apps/app-1/analytics"]')?.classList.contains("min-h-24")).toBe(true);
       expect(container.querySelector('a[href="/my-apps/app-1/analytics"] svg')).not.toBeNull();
       expect(container.querySelector('a[href="/my-apps/app-1/revenue"] svg')).not.toBeNull();
       expect(container.textContent).toContain("Payment setup is separate");

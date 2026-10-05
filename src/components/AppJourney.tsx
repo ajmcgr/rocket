@@ -15,15 +15,17 @@ export default function AppJourney({ item }: { item: MyApp }) {
       : <div>
         <p className="font-semibold text-neutral-900">Domain verified</p>
         <p className="mt-1 text-neutral-600">Your public listing shows that you control the website.</p>
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
-          <div>
-            <Link to={`/my-apps/${item.app_id}/analytics`} className="inline-flex min-h-11 items-center gap-2 font-medium text-sky-800 hover:underline"><IntegrationLogo provider="google-analytics" />Connect Google Analytics</Link>
-            <p className="text-xs text-neutral-500">Verify your app’s traffic.</p>
-          </div>
-          <div>
-            <Link to={`/my-apps/${item.app_id}/revenue`} className="inline-flex min-h-11 items-center gap-2 font-medium text-sky-800 hover:underline"><IntegrationLogo provider="stripe" />Connect Stripe</Link>
-            <p className="text-xs text-neutral-500">Verify revenue. Payment setup is separate.</p>
-          </div>
+        <div className="mt-5 grid grid-cols-1 gap-3" aria-label="Connect analytics and revenue">
+          <Link to={`/my-apps/${item.app_id}/analytics`} className="group flex min-h-24 items-center gap-4 rounded-xl border border-neutral-200 p-5 transition hover:border-sky-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+            <IntegrationLogo provider="google-analytics" />
+            <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect Google Analytics</span><span className="mt-1 block text-sm text-neutral-600">Verify your app’s traffic.</span></span>
+            <span aria-hidden="true" className="text-xl text-sky-800">→</span>
+          </Link>
+          <Link to={`/my-apps/${item.app_id}/revenue`} className="group flex min-h-24 items-center gap-4 rounded-xl border border-neutral-200 p-5 transition hover:border-sky-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+            <IntegrationLogo provider="stripe" />
+            <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect Stripe</span><span className="mt-1 block text-sm text-neutral-600">Verify revenue. Payment setup is separate.</span></span>
+            <span aria-hidden="true" className="text-xl text-sky-800">→</span>
+          </Link>
         </div>
       </div>}
   </div>;

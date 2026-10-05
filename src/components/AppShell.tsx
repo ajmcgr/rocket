@@ -15,6 +15,7 @@ import {
   useNavigate,
 } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
+import { myProfileHref } from "@/lib/myProfileNavigation";
 import Logo from "./Logo";
 import ShareExportModal from "./ShareExportModal";
 import OnboardingTour from "./OnboardingTour";
@@ -42,6 +43,7 @@ import {
   ShieldCheck,
   MessageCircle,
   CreditCard,
+  UserRound,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -69,6 +71,7 @@ export function useAppShell(): AppShellOutletContext {
 
 const AppShell = () => {
   const { user, signOut } = useAuth();
+  const profileHref = myProfileHref(user?.user_metadata);
   const nav = useNavigate();
   const { pathname } = useLocation();
   const initial = (user?.email?.[0] || "U").toUpperCase();
@@ -115,6 +118,7 @@ const AppShell = () => {
       items: [
         { label: "Your Apps", to: "/your-apps", icon: Layers3 },
         { label: "Your Subscriptions", to: "/library", icon: CreditCard },
+        { label: "My Profile", to: profileHref, icon: UserRound },
         { label: "Submit your app", to: "/submit", icon: Plus },
       ],
     },
@@ -194,6 +198,12 @@ const AppShell = () => {
                     {user?.email}
                   </p>
                 </div>
+                <DropdownMenuItem
+                  asChild
+                  className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900"
+                >
+                  <Link to={profileHref}>My Profile</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   asChild
                   className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-neutral-700 focus:bg-neutral-100 focus:text-neutral-900"

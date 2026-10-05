@@ -6,6 +6,7 @@ import AppLogo from "@/components/AppLogo";
 import DeveloperProductCards from "@/components/DeveloperProductCards";
 import AppDisconnectControls from "@/components/AppDisconnectControls";
 import AppAnalyticsPreview from "@/components/AppAnalyticsPreview";
+import AppBadgeKit from "@/components/AppBadgeKit";
 import { BarChart3 } from "lucide-react";
 
 export default function MyApps() {
@@ -152,6 +153,7 @@ export default function MyApps() {
               {item.owned && <AppAnalyticsPreview appId={item.app_id} appName={item.app?.name || "App"} />}
               {item.owned && <DeveloperProductCards appId={item.app_id} />}
               <AppJourney item={item} />
+              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appName={item.app.name || "your app"} />}
               <AppDisconnectControls item={item} onDisconnected={() => {
                 setItems((current) => current.filter((app) => app.app_id !== item.app_id));
                 setNotice("App disconnected from your account. Its public listing has been preserved.");

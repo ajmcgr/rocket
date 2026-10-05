@@ -19,11 +19,13 @@ import {
   Search,
   MessageCircle,
   CreditCard,
+  UserRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
 import sidebarIconWhite from "@/assets/rocket-sidebar-icon-white.png.asset.json";
 import { useAuth } from "@/contexts/AuthContext";
+import { myProfileHref } from "@/lib/myProfileNavigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -89,6 +91,12 @@ export default function SiteHeader() {
   const [search, setSearch] = useState("");
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const profileHref = myProfileHref(user?.user_metadata);
+  const sidebarSections = sections.map((section) => section.heading !== "Your apps" || !user ? section : {
+    ...section,
+    items: section.items.flatMap((item) => item.label === "Submit your app"
+      ? [{ label: "My Profile", to: profileHref, icon: UserRound }, item] : [item]),
+  });
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
   const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)
@@ -173,7 +181,7 @@ export default function SiteHeader() {
             </button>
           </div>
           <nav aria-label="Marketplace" className="mt-1 space-y-4">
-            {sections.map((section) => (
+            {sidebarSections.map((section) => (
               <div key={section.heading}>
                 {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">{section.heading}</p>}
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
@@ -267,6 +275,9 @@ export default function SiteHeader() {
                     {user.email}
                   </p>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to={profileHref}>My Profile</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings">Settings</Link>
                   </DropdownMenuItem>

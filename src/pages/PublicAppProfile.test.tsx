@@ -20,6 +20,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   from: vi.fn(() => { const q: Record<string, unknown> = { then: () => new Promise(() => {}) }; for (const key of ["select", "eq", "in", "order", "limit", "contains", "neq", "maybeSingle"]) q[key] = () => q; return q; }),
 } }));
 import PublicAppProfile from "./PublicAppProfile";
+import { supabase } from "@/integrations/supabase/client";
 const app = { id: "app1", slug: "whisperit", name: "Whisperit", tagline: "Useful software", description: "Real description", categories: ["Productivity"], tags: [], platforms: ["web"], website_url: "https://whisperit.ai", canonical_host: "whisperit.ai", logo_url: null } as Tables<"public_apps">;
 afterEach(cleanup);
 it("includes useful profile identity in server-rendered HTML", () => {
@@ -32,4 +33,26 @@ it("does not hide the profile while optional queries remain pending", () => {
   render(<PublicAppProfile initialApp={app} />);
   expect(screen.getByRole("heading", { name: "Whisperit", level: 1 })).toBeTruthy();
   expect(screen.getByRole("link", { name: /Visit website/ })).toBeTruthy();
+});
+it("places public traffic and revenue before the screenshot gallery", async () => {
+  vi.mocked(supabase.from).mockImplementation((table) => {
+    const data = table === "public_app_traction"
+      ? [{ metric_type: "views", visibility: "verified_only", metric_date: "2026-10-04", last_verified_at: "2026-10-05T09:03:35Z" }]
+      : table === "public_app_revenue"
+        ? [{ currency: "usd", visibility: "verified_only", observed_at: "2026-10-05T09:03:35Z" }]
+        : [];
+    const result = Promise.resolve({ data, error: null });
+    const q: Record<string, unknown> = { then: result.then.bind(result) };
+    for (const key of ["select", "eq", "in", "order", "limit", "contains", "neq", "maybeSingle"]) q[key] = () => q;
+    return q as never;
+  });
+  render(<PublicAppProfile initialApp={app} initialMedia={[{
+    id: "screenshot1", app_id: app.id, media_type: "screenshot", source_type: "owner",
+    source_url: "https://whisperit.ai/screenshot.png", sort_order: 0,
+  } as never]} />);
+  const traffic = await screen.findByRole("heading", { name: "Traffic" });
+  const revenue = await screen.findByRole("heading", { name: "Subscription revenue" });
+  const gallery = screen.getByRole("heading", { name: "See Whisperit in action" });
+  expect(traffic.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(revenue.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

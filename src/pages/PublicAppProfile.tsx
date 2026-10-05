@@ -444,6 +444,74 @@ export default function PublicAppProfile({
                 </p>
               )}
             </div>
+            {traction.length > 0 && (
+              <section className="mt-8 border-t border-neutral-200 pt-6">
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Traffic
+                </h2>
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {traction.map((point) => (
+                    <div
+                      key={point.metric_type}
+                      className="border-l-2 border-[#167ac6] pl-4"
+                    >
+                      <p className="text-sm text-neutral-500">
+                        {{
+                          active_users: "Active users",
+                          sessions: "Sessions",
+                          views: "Views",
+                        }[point.metric_type] || point.metric_type}{" "}
+                        · {point.metric_date}
+                      </p>
+                      <p className="mt-2 text-xl font-semibold">
+                        {point.visibility === "verified_only"
+                          ? "Traffic verified"
+                          : point.visibility === "range"
+                            ? point.value_range
+                            : point.value?.toLocaleString()}
+                      </p>
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Verified by Google Analytics · Updated{" "}
+                        {new Date(point.last_verified_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+            {revenue.length > 0 && (
+              <section className="mt-8 border-t border-neutral-200 pt-6">
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Subscription revenue
+                </h2>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {revenue.map((point) => (
+                    <div
+                      key={point.currency}
+                      className="border-l-2 border-[#167ac6] pl-4"
+                    >
+                      <p className="text-sm text-neutral-500">
+                        Subscription MRR · {point.currency.toUpperCase()}
+                      </p>
+                      <p className="mt-2 text-xl font-semibold">
+                        {point.visibility === "verified_only"
+                          ? "Revenue verified by Stripe"
+                          : point.visibility === "range" &&
+                              point.range_lower_minor !== null
+                            ? `${revenueMoney(point.range_lower_minor, point.currency)}${point.range_upper_minor === null ? "+" : `–${revenueMoney(point.range_upper_minor, point.currency)}`}`
+                            : point.mrr_minor !== null
+                              ? revenueMoney(point.mrr_minor, point.currency)
+                              : "Revenue verified by Stripe"}
+                      </p>
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Verified by Stripe · Snapshot{" "}
+                        {new Date(point.observed_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
             <AppMediaGallery name={app.name} media={media} />
             {signals.length > 0 && (
               <section className="mt-8 pb-2">
@@ -626,74 +694,6 @@ export default function PublicAppProfile({
                 </Link>
               )}
             </section>
-            {traction.length > 0 && (
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">
-                  Traffic
-                </h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  {traction.map((point) => (
-                    <div
-                      key={point.metric_type}
-                      className="border-l-2 border-[#167ac6] pl-4"
-                    >
-                      <p className="text-sm text-neutral-500">
-                        {{
-                          active_users: "Active users",
-                          sessions: "Sessions",
-                          views: "Views",
-                        }[point.metric_type] || point.metric_type}{" "}
-                        · {point.metric_date}
-                      </p>
-                      <p className="mt-2 text-xl font-semibold">
-                        {point.visibility === "verified_only"
-                          ? "Traffic verified"
-                          : point.visibility === "range"
-                            ? point.value_range
-                            : point.value?.toLocaleString()}
-                      </p>
-                      <p className="mt-2 text-xs text-neutral-500">
-                        Verified by Google Analytics · Updated{" "}
-                        {new Date(point.last_verified_at).toLocaleString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-            {revenue.length > 0 && (
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">
-                  Subscription revenue
-                </h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {revenue.map((point) => (
-                    <div
-                      key={point.currency}
-                      className="border-l-2 border-[#167ac6] pl-4"
-                    >
-                      <p className="text-sm text-neutral-500">
-                        Subscription MRR · {point.currency.toUpperCase()}
-                      </p>
-                      <p className="mt-2 text-xl font-semibold">
-                        {point.visibility === "verified_only"
-                          ? "Revenue verified by Stripe"
-                          : point.visibility === "range" &&
-                              point.range_lower_minor !== null
-                            ? `${revenueMoney(point.range_lower_minor, point.currency)}${point.range_upper_minor === null ? "+" : `–${revenueMoney(point.range_upper_minor, point.currency)}`}`
-                            : point.mrr_minor !== null
-                              ? revenueMoney(point.mrr_minor, point.currency)
-                              : "Revenue verified by Stripe"}
-                      </p>
-                      <p className="mt-2 text-xs text-neutral-500">
-                        Verified by Stripe · Snapshot{" "}
-                        {new Date(point.observed_at).toLocaleString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
             {sources.length > 0 && (
               <details open className="mt-10 border-t border-neutral-200 pt-6">
                 <summary className="cursor-pointer text-xl font-semibold tracking-tight">

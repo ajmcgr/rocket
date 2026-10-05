@@ -288,6 +288,8 @@ describe("Developer product experience", () => {
           view === "id" ? "Set up Rocket ID" : "Set up Buy with Rocket",
         );
         expect(container.querySelector("#developer-setup")).not.toBeNull();
+        const configureButton = container.querySelector(".dev-app-actions button");
+        expect(configureButton?.className).toBe("dev-button dev-button-outline");
         expect(container.querySelector(".dev-price")).toBeNull();
         expect(container.querySelector(".dev-model")).toBeNull();
         expect(container.querySelector(".dev-product")).toBeNull();
@@ -305,8 +307,12 @@ describe("Developer product experience", () => {
         expect(
           container.querySelector("#configure-buy-with-rocket") !== null,
         ).toBe(view === "buy");
-        if (view === "buy")
+        if (view === "id")
+          expect(container.textContent).toContain("Rocket ID can be used on its own.");
+        if (view === "buy") {
           expect(container.textContent).toContain("first, then connect Stripe");
+          expect(container.textContent).toContain("they are not alternatives.");
+        }
       } finally {
         await cleanup();
       }

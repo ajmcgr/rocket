@@ -122,6 +122,10 @@ function RocketIdSetup({
       <p className="dev-eyebrow">ROCKET ID SETUP</p>
       <h3>Connect {app.name}</h3>
       <p>Use the exact HTTPS URL where your app handles Rocket sign-in.</p>
+      <p className="dev-small">
+        Rocket ID can be used on its own. To sell paid access with Buy with
+        Rocket, set up Rocket ID first, then connect Stripe and create an access plan.
+      </p>
       <form onSubmit={register} className="dev-form">
         <label>
           App name
@@ -731,7 +735,7 @@ export default function DeveloperExperience({
                             )}
                             {view !== "id" && (
                               <button
-                                className="dev-button dev-button-quiet"
+                                className="dev-button dev-button-outline"
                                 onClick={() =>
                                   chooseApp(
                                     app.app_id,
@@ -830,7 +834,9 @@ export default function DeveloperExperience({
                             Connect Rocket ID
                           </Link>{" "}
                           first, then connect Stripe and create your access
-                          plan.
+                          plan. Rocket ID identifies the buyer so your app can
+                          check their paid access. The two integrations work together;
+                          they are not alternatives.
                         </p>
                       </div>
                     )}
