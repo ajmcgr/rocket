@@ -20,7 +20,7 @@ export default function AppLogo({
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center text-lg font-semibold text-neutral-500 ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-[22%] text-lg font-semibold text-neutral-500 ${className}`}
     >
       {showImage ? (
         <img
@@ -29,7 +29,7 @@ export default function AppLogo({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           onError={() => setFailedUrl(failedUrl === `${src}:variant` || optimizedMediaUrl(src!, 192, 192, "contain") === src ? src! : `${src}:variant`)}
-          className="h-full w-full object-contain"
+          className="h-full w-full rounded-[22%] object-contain"
         />
       ) : (
         <span aria-hidden="true">

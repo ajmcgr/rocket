@@ -219,7 +219,7 @@ export default function SiteHeader() {
       </aside>
       <header className="sticky top-0 z-40 border-b border-[#e8edf2] bg-white/95 backdrop-blur-sm lg:transition-[margin-left] lg:duration-200">
         <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:gap-6 lg:px-8 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)_minmax(0,1fr)]">
-          <div className="lg:hidden">
+          <div className="flex h-full shrink-0 items-center lg:hidden">
             <Logo size="md" />
           </div>
           <form

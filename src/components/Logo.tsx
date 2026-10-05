@@ -20,7 +20,7 @@ const Logo = ({ to = "/", size = "md", className = "" }: Props) => {
     </>
   );
   return to ? (
-    <Link to={to} className="inline-flex items-center">
+    <Link to={to} className="inline-flex shrink-0 items-center align-middle leading-none">
       {body}
     </Link>
   ) : (
