@@ -23,6 +23,11 @@ describe("Your Apps next actions", () => {
       await act(async () => { root.render(<MemoryRouter><MyApps /></MemoryRouter>); });
       expect(container.querySelector('a[href="/my-apps/app-owned/rocket-analytics"]')?.textContent).toBe("Analytics");
       expect(container.querySelector('[aria-label="Owned app analytics preview"]')).not.toBeNull();
+      const preview = container.querySelector('[aria-label="Owned app analytics preview"]')!;
+      const connections = container.querySelector('[aria-label="Connect analytics and revenue"]')!;
+      const badge = Array.from(container.querySelectorAll("summary")).find((element) => element.textContent?.includes("Rocket badge"))!;
+      expect(connections.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(badge.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(container.querySelector('[aria-label="Pending app analytics preview"]')).toBeNull();
       expect(container.querySelector('a[href="/my-apps/app-pending/rocket-analytics"]')).toBeNull();
     } finally { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); }

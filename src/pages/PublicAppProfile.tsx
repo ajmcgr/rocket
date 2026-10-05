@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "@/lib/router-compat";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +24,11 @@ import { trustLabels } from "@/lib/appTrust";
 import { track } from "@/lib/analytics";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import AppMediaGallery from "@/components/AppMediaGallery";
+import PublicMetricCard, {
+  publicTrafficValue,
+  publicRevenueValue,
+} from "@/components/PublicMetricCard";
+import { Users, Eye, BarChart3, DollarSign } from "lucide-react";
 import { AppProfileContentSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import AppReviews from "@/components/AppReviews";
 import { MarketplaceListRow } from "@/components/MarketplaceCards";
@@ -42,19 +52,6 @@ const date = (value: string | null) =>
         day: "numeric",
       })
     : "Not available";
-const revenueMoney = (minor: number, currency: string) => {
-  try {
-    const format = new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currency.toUpperCase(),
-    });
-    return format.format(
-      minor / 10 ** (format.resolvedOptions().maximumFractionDigits ?? 2),
-    );
-  } catch {
-    return `${minor} ${currency.toUpperCase()} minor units`;
-  }
-};
 const descriptionSummary = (description: string) => {
   const firstParagraph = description.trim().split(/\n\s*\n/)[0];
   return firstParagraph.length > 360
@@ -86,7 +83,9 @@ export default function PublicAppProfile({
   const [trust, setTrust] = useState<AppTrust | null>(null);
   const [media, setMedia] = useState<PublicAppMedia[]>(initialMedia || []);
   const [similar, setSimilar] = useState<App[]>([]);
-  const similarSaveControls = useSavedAppControls(similar.map((item) => item.id));
+  const similarSaveControls = useSavedAppControls(
+    similar.map((item) => item.id),
+  );
   const [similarMetadata, setSimilarMetadata] = useState<
     Map<string, AppCardMetadata>
   >(new Map());
@@ -449,32 +448,31 @@ export default function PublicAppProfile({
                 <h2 className="text-xl font-semibold tracking-tight">
                   Traffic
                 </h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {traction.map((point) => (
-                    <div
+                    <PublicMetricCard
                       key={point.metric_type}
-                      className="border-l-2 border-[#167ac6] pl-4"
-                    >
-                      <p className="text-sm text-neutral-500">
-                        {{
-                          active_users: "Active users",
-                          sessions: "Sessions",
-                          views: "Views",
-                        }[point.metric_type] || point.metric_type}{" "}
-                        · {point.metric_date}
-                      </p>
-                      <p className="mt-2 text-xl font-semibold">
-                        {point.visibility === "verified_only"
-                          ? "Traffic verified"
-                          : point.visibility === "range"
-                            ? point.value_range
-                            : point.value?.toLocaleString()}
-                      </p>
-                      <p className="mt-2 text-xs text-neutral-500">
-                        Verified by Google Analytics · Updated{" "}
-                        {new Date(point.last_verified_at).toLocaleString()}
-                      </p>
-                    </div>
+                      label={
+                        {
+                          active_users: "Daily active users",
+                          sessions: "Daily sessions",
+                          views: "Daily views",
+                        }[point.metric_type] || point.metric_type
+                      }
+                      icon={
+                        point.metric_type === "active_users"
+                          ? Users
+                          : point.metric_type === "views"
+                            ? Eye
+                            : BarChart3
+                      }
+                      value={publicTrafficValue(
+                        point.visibility,
+                        point.value,
+                        point.value_range,
+                      )}
+                      details={`Google Analytics · ${point.metric_date} · Verified ${point.last_verified_at}`}
+                    />
                   ))}
                 </div>
               </section>
@@ -486,28 +484,19 @@ export default function PublicAppProfile({
                 </h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {revenue.map((point) => (
-                    <div
+                    <PublicMetricCard
                       key={point.currency}
-                      className="border-l-2 border-[#167ac6] pl-4"
-                    >
-                      <p className="text-sm text-neutral-500">
-                        Subscription MRR · {point.currency.toUpperCase()}
-                      </p>
-                      <p className="mt-2 text-xl font-semibold">
-                        {point.visibility === "verified_only"
-                          ? "Revenue verified by Stripe"
-                          : point.visibility === "range" &&
-                              point.range_lower_minor !== null
-                            ? `${revenueMoney(point.range_lower_minor, point.currency)}${point.range_upper_minor === null ? "+" : `–${revenueMoney(point.range_upper_minor, point.currency)}`}`
-                            : point.mrr_minor !== null
-                              ? revenueMoney(point.mrr_minor, point.currency)
-                              : "Revenue verified by Stripe"}
-                      </p>
-                      <p className="mt-2 text-xs text-neutral-500">
-                        Verified by Stripe · Snapshot{" "}
-                        {new Date(point.observed_at).toLocaleString()}
-                      </p>
-                    </div>
+                      label={`Monthly recurring revenue · ${point.currency.toUpperCase()}`}
+                      icon={DollarSign}
+                      value={publicRevenueValue(
+                        point.visibility,
+                        point.mrr_minor,
+                        point.range_lower_minor,
+                        point.range_upper_minor,
+                        point.currency,
+                      )}
+                      details={`Stripe · Snapshot ${point.observed_at}`}
+                    />
                   ))}
                 </div>
               </section>
@@ -752,7 +741,6 @@ export default function PublicAppProfile({
           </>
         )}
       </main>
-
     </div>
   );
 }

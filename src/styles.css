@@ -396,6 +396,14 @@ html.dark body {
   color: hsl(40 30% 95%);
 }
 
+/* Use the resolved theme class for both explicit Dark and System mode. */
+.app-shell-sidebar {
+  background-color: #fcfdff;
+}
+html.dark .app-shell-sidebar {
+  background-color: #110f0e;
+}
+
 /* Loading surfaces follow the selected theme without changing content cards. */
 .rocket-skeleton-surface {
   background-color: #fff !important;

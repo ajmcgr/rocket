@@ -237,7 +237,7 @@ const AppShell = () => {
         </div>
       </header>
       <aside
-        className="fixed bottom-0 left-0 top-14 z-40 hidden flex-col overflow-y-auto border-r border-neutral-200 bg-[#fcfdff] py-3 px-3 font-body lg:flex transition-[width] duration-200"
+        className="app-shell-sidebar fixed bottom-0 left-0 top-14 z-40 hidden flex-col overflow-y-auto border-r border-neutral-200 py-3 px-3 font-body lg:flex transition-[width] duration-200"
         style={{ width: sidebarWidth }}
       >
         <button
