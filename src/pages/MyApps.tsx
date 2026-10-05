@@ -5,6 +5,7 @@ import AppJourney, { type MyApp } from "@/components/AppJourney";
 import AppLogo from "@/components/AppLogo";
 import DeveloperProductCards from "@/components/DeveloperProductCards";
 import AppDisconnectControls from "@/components/AppDisconnectControls";
+import AppAnalyticsPreview from "@/components/AppAnalyticsPreview";
 import { BarChart3 } from "lucide-react";
 
 export default function MyApps() {
@@ -123,7 +124,7 @@ export default function MyApps() {
                 </span>
               </div>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-neutral-100 pt-4 text-sm">
-                {item.owned && <Link to={`/my-apps/${item.app_id}/rocket-analytics`} className="inline-flex items-center gap-2 font-semibold text-sky-800 hover:underline"><BarChart3 size={18} aria-hidden="true" />Rocket Analytics</Link>}
+                {item.owned && <Link to={`/my-apps/${item.app_id}/rocket-analytics`} className="inline-flex items-center gap-2 font-semibold text-sky-800 hover:underline"><BarChart3 size={18} aria-hidden="true" />Analytics</Link>}
                 <Link
                   to={`/apps/add?app=${item.app_id}`}
                   className="font-medium text-sky-800 hover:underline"
@@ -148,6 +149,7 @@ export default function MyApps() {
                     </Link>
                   )}
               </div>
+              {item.owned && <AppAnalyticsPreview appId={item.app_id} appName={item.app?.name || "App"} />}
               {item.owned && <DeveloperProductCards appId={item.app_id} />}
               <AppJourney item={item} />
               <AppDisconnectControls item={item} onDisconnected={() => {

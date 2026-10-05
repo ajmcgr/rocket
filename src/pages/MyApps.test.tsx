@@ -4,6 +4,7 @@ import { MemoryRouter } from "@/test/MemoryRouter";
 import { describe, expect, it, vi } from "vitest";
 import AppJourney from "@/components/AppJourney";
 import MyApps from "./MyApps";
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "owner" }, loading: false }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke: vi.fn(async (_endpoint, options) => ({ data: options.body.action === "my_apps" ? [{ id: "claim-owned", app_id: "app-owned", owned: true, owner_verification_level: "domain_verified", status: "verified", app: { name: "Owned app" } }, { id: "claim-pending", app_id: "app-pending", owned: false, status: "pending", app: { name: "Pending app" } }] : { ga4: false, posthog: false, stripe_revenue: false, stripe_payments: false }, error: null })) } } }));
 
 const item = {
@@ -13,14 +14,16 @@ const item = {
 };
 
 describe("Your Apps next actions", () => {
-  it("links Rocket Analytics for owned apps, not pending claims", async () => {
+  it("links Analytics and previews owned apps, not pending claims", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.stubGlobal("scrollTo", vi.fn());
     const container = document.createElement("div"); document.body.appendChild(container);
     const root = createRoot(container);
     try {
       await act(async () => { root.render(<MemoryRouter><MyApps /></MemoryRouter>); });
-      expect(container.querySelector('a[href="/my-apps/app-owned/rocket-analytics"]')?.textContent).toContain("Rocket Analytics");
+      expect(container.querySelector('a[href="/my-apps/app-owned/rocket-analytics"]')?.textContent).toBe("Analytics");
+      expect(container.querySelector('[aria-label="Owned app analytics preview"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="Pending app analytics preview"]')).toBeNull();
       expect(container.querySelector('a[href="/my-apps/app-pending/rocket-analytics"]')).toBeNull();
     } finally { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); }
   });
