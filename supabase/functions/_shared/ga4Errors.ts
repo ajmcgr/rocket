@@ -25,3 +25,20 @@ export function googleAnalyticsApiError(status: number, body: unknown) {
     google_consumer: typeof consumer === "string" && /^projects\/\d+$/.test(consumer) ? consumer : null,
   });
 }
+
+export class GoogleAnalyticsAuthorizationError extends Error {
+  constructor(public readonly diagnostics: { upstream_status: number; oauth_reason: string; stage: "refresh_token" | "authorization_code" }) {
+    super(diagnostics.oauth_reason === "invalid_grant"
+      ? "Google Analytics authorization expired or was revoked. Reconnect Google Analytics."
+      : ["invalid_client", "unauthorized_client"].includes(diagnostics.oauth_reason)
+        ? "Google Analytics OAuth client configuration is invalid. Rocket support must check the client credentials."
+        : "Google Analytics authorization could not be refreshed. Retry or reconnect Google Analytics.");
+  }
+}
+
+export function googleAnalyticsAuthorizationError(status: number, body: unknown, stage: "refresh_token" | "authorization_code") {
+  const reason = (body as { error?: unknown } | null)?.error;
+  const allowed = ["invalid_grant", "invalid_client", "unauthorized_client", "access_denied", "temporarily_unavailable", "invalid_request", "unsupported_grant_type"];
+  return new GoogleAnalyticsAuthorizationError({ upstream_status: status,
+    oauth_reason: typeof reason === "string" && allowed.includes(reason) ? reason : "UNKNOWN", stage });
+}

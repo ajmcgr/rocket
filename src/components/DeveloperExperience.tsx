@@ -204,7 +204,8 @@ export default function DeveloperExperience({
 }: Props) {
   const [params] = useSearchParams();
   const requested = params.get("app");
-  const active = membership?.active === true;
+  const active = signedIn && membership?.active === true;
+  const showMarketing = !active && !loading && !error;
   const [apps, setApps] = useState<OwnedApp[]>([]);
   const [appsError, setAppsError] = useState(false);
   const [appsLoading, setAppsLoading] = useState(false);
@@ -373,10 +374,15 @@ export default function DeveloperExperience({
   const codingSection = (
     <section className="dev-coding">
       <Code2 size={28} aria-hidden="true" />
-      <h2>Built for how apps are built now.</h2>
+      <h2>
+        {active
+          ? "Integration instructions"
+          : "Built for how apps are built now."}
+      </h2>
       <p className="dev-lead">
-        Copy Rocket’s integration prompt into Codex, Claude Code, Cursor,
-        Lovable, Replit or your coding agent and let it wire up the integration.
+        {active
+          ? "Copy your app-specific prompt into your coding tool, or review it below to implement the integration."
+          : "Copy Rocket’s integration prompt into Codex, Claude Code, Cursor, Lovable, Replit or your coding agent and let it wire up the integration."}
       </p>
       {prompt ? (
         <>
@@ -422,8 +428,9 @@ export default function DeveloperExperience({
           <p className="dev-eyebrow">YOUR DEVELOPER SUBSCRIPTION</p>
           <h2>Rocket Developer</h2>
           <p>
-            One $99/year membership for shared workspaces, Rocket ID and Buy with
-            Rocket across eligible apps you own. Your membership covers invited teammates.
+            One $99/year membership for shared workspaces, Rocket ID and Buy
+            with Rocket across eligible apps you own. Your membership covers
+            invited teammates.
           </p>
         </header>
         {loading ? (
@@ -517,57 +524,81 @@ export default function DeveloperExperience({
             {active && <span className="dev-active">Active</span>}
           </p>
           <h1>
-            {view === "id"
-              ? "One Rocket account. Your app."
-              : view === "buy"
-                ? "Sell access with Buy with Rocket."
-                : active
-                  ? "Your next integration starts here."
-                  : "Monetize your app with Rocket."}
+            {loading
+              ? "Loading your developer access…"
+              : active
+                ? view === "id"
+                  ? "Set up Rocket ID"
+                  : view === "buy"
+                    ? "Set up Buy with Rocket"
+                    : "Set up your integrations"
+                : error
+                  ? "Developer access unavailable"
+                  : view === "id"
+                    ? "One Rocket account. Your app."
+                    : view === "buy"
+                      ? "Sell access with Buy with Rocket."
+                      : active
+                        ? "Your next integration starts here."
+                        : "Monetize your app with Rocket."}
           </h1>
           <p className="dev-lead">
-            {view === "id"
-              ? "Let Rocket users sign into your app with a secure, connected identity."
-              : view === "buy"
-                ? "Connect Stripe, create an access plan, and sell directly from your Rocket app page."
-                : active
-                  ? "Identity and payments for the apps you own. Choose an app to get started."
-                  : "Add identity and payments to your apps with one developer membership."}
+            {loading
+              ? "Checking your membership before showing setup."
+              : active
+                ? view === "id"
+                  ? "Choose an app and configure its sign-in callback. Your Developer membership is active."
+                  : view === "buy"
+                    ? "Choose an app to connect Stripe and configure paid access. Your Developer membership is active."
+                    : "Choose an app to configure identity and payments. Your Developer membership is active."
+                : error
+                  ? "Retry the membership check to access your setup."
+                  : view === "id"
+                    ? "Let Rocket users sign into your app with a secure, connected identity."
+                    : view === "buy"
+                      ? "Connect Stripe, create an access plan, and sell directly from your Rocket app page."
+                      : active
+                        ? "Identity and payments for the apps you own. Choose an app to get started."
+                        : "Add identity and payments to your apps with one developer membership."}
           </p>
-          <div className="dev-price">
-            <strong>
-              $99<span>/year</span>
-            </strong>
-            <div>
-              Per developer account, not per app.
-              <br />
-              <span>
-                $8.25/month billed annually. Covers eligible apps you own.
-              </span>
+          {showMarketing && (
+            <div className="dev-price">
+              <strong>
+                $99<span>/year</span>
+              </strong>
+              <div>
+                Per developer account, not per app.
+                <br />
+                <span>
+                  $8.25/month billed annually. Covers eligible apps you own.
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="dev-actions">
-            {active ? (
-              <>
-                <a className="dev-button" href="#your-developer-apps">
-                  Choose an app <ArrowRight size={17} />
-                </a>
-                <Link
-                  className="dev-button dev-button-quiet"
-                  to="/settings/developer"
-                >
-                  Manage membership
-                </Link>
-              </>
-            ) : (
-              <>
-                {join()}
-                <Link className="dev-button dev-button-quiet" to="/your-apps">
-                  View your apps <ArrowRight size={17} />
-                </Link>
-              </>
-            )}
-          </div>
+          )}
+          {(active || showMarketing) && (
+            <div className="dev-actions">
+              {active ? (
+                <>
+                  <a className="dev-button" href="#your-developer-apps">
+                    Choose an app <ArrowRight size={17} />
+                  </a>
+                  <Link
+                    className="dev-button dev-button-quiet"
+                    to="/settings/developer"
+                  >
+                    Manage membership
+                  </Link>
+                </>
+              ) : (
+                <>
+                  {join()}
+                  <Link className="dev-button dev-button-quiet" to="/your-apps">
+                    View your apps <ArrowRight size={17} />
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
           {membership?.membership?.status === "canceling" && (
             <p className="dev-small">
               Membership ends on{" "}
@@ -605,7 +636,7 @@ export default function DeveloperExperience({
                 <p className="dev-eyebrow">YOUR APPS</p>
                 <h2>
                   {active
-                    ? "Build on what you’ve made."
+                    ? "Choose an app to configure"
                     : "Bring Rocket to your apps."}
                 </h2>
               </div>
@@ -776,7 +807,6 @@ export default function DeveloperExperience({
                       }}
                     />
                   ))}
-                {codingSection}
                 {view !== "id" && (
                   <div id="configure-buy-with-rocket">
                     {selectedClient ? (
@@ -806,301 +836,316 @@ export default function DeveloperExperience({
                     )}
                   </div>
                 )}
+                {selectedClient && codingSection}
               </div>
             )}
           </section>
         )}
 
-        <section
-          className="dev-model"
-          aria-label="How Rocket connects to your app"
-        >
-          <Flow
-            steps={[
-              { title: "Your app", detail: "The product you built." },
-              { title: "Rocket ID", detail: "Users sign in with Rocket." },
-              {
-                title: "Buy with Rocket",
-                detail: "Users buy access with Rocket.",
-              },
-              {
-                title: "Your app",
-                detail: "Checks identity + entitlement and grants access.",
-              },
-            ]}
-          />
-        </section>
-
-        {view !== "buy" && (
-          <section id="rocket-id" className="dev-product">
-            <div>
-              <p className="dev-eyebrow">
-                <ShieldCheck size={18} /> ROCKET ID
-              </p>
-              <h2>One account for your app.</h2>
-              <p className="dev-lead">
-                Let Rocket users sign into your app without creating another
-                account.
-              </p>
-              <Benefits
-                items={[
-                  "One-click Rocket sign-in",
-                  "Secure identity",
-                  "Stable Rocket user",
-                  "Works with Buy with Rocket entitlements",
-                ]}
-              />
-              <p>Rocket ID tells your app who the Rocket user is.</p>
-              <a
-                className="dev-button dev-button-outline"
-                href={
-                  active
-                    ? selectedApp
-                      ? "#developer-setup"
-                      : "#your-developer-apps"
-                    : "#rocket-id-how"
-                }
-              >
-                {active ? "Configure Rocket ID" : "Learn how it works"}
-              </a>
-              <details className="dev-details">
-                <summary>Implementation details</summary>
-                <p>
-                  Rocket ID uses OAuth authorization code flow with PKCE and
-                  signed OIDC identity tokens. Your app validates the callback
-                  and creates its own secure session. Public integration
-                  settings appear after you configure an owned app.
-                </p>
-              </details>
-            </div>
-            <div
-              className="dev-demo"
-              id="rocket-id-how"
-              aria-label="Illustrative Rocket ID sign-in flow"
+        {showMarketing && (
+          <>
+            <section
+              className="dev-model"
+              aria-label="How Rocket connects to your app"
             >
-              <p className="dev-small">THE SIGN-IN EXPERIENCE</p>
-              <div className="dev-demo-button">
-                <ShieldCheck size={20} /> Continue with Rocket
-              </div>
-              <span className="dev-down" aria-hidden="true">
-                ↓
-              </span>
-              <div className="dev-consent">
-                <strong>Rocket consent</strong>
-                <p>Choose to share your Rocket identity with the app.</p>
-              </div>
-              <span className="dev-down" aria-hidden="true">
-                ↓
-              </span>
-              <div className="dev-demo-result">
-                <Check size={22} />
-                <strong>Signed in to your app</strong>
-              </div>
-              <p className="dev-small">
-                For apps that have connected Rocket ID.
-              </p>
-            </div>
-          </section>
-        )}
-
-        {view !== "id" && (
-          <section id="buy-with-rocket" className="dev-product">
-            <div>
-              <p className="dev-eyebrow">
-                <CreditCard size={18} /> BUY WITH ROCKET
-              </p>
-              <h2>Sell access to your app.</h2>
-              <p className="dev-lead">
-                Create a plan, connect Stripe, and let Rocket users buy access
-                directly from your Rocket app page.
-              </p>
-              <Benefits
-                items={[
-                  "Sell monthly or annual access",
-                  "Stripe-hosted payment flow",
-                  "Rocket records purchase entitlements",
-                  "Works with Rocket ID",
-                  "Buyers return through their Rocket Library",
-                  "You remain the connected Stripe merchant",
+              <Flow
+                steps={[
+                  { title: "Your app", detail: "The product you built." },
+                  { title: "Rocket ID", detail: "Users sign in with Rocket." },
+                  {
+                    title: "Buy with Rocket",
+                    detail: "Users buy access with Rocket.",
+                  },
+                  {
+                    title: "Your app",
+                    detail: "Checks identity + entitlement and grants access.",
+                  },
                 ]}
               />
+            </section>
+
+            {view !== "buy" && (
+              <section id="rocket-id" className="dev-product">
+                <div>
+                  <p className="dev-eyebrow">
+                    <ShieldCheck size={18} /> ROCKET ID
+                  </p>
+                  <h2>One account for your app.</h2>
+                  <p className="dev-lead">
+                    Let Rocket users sign into your app without creating another
+                    account.
+                  </p>
+                  <Benefits
+                    items={[
+                      "One-click Rocket sign-in",
+                      "Secure identity",
+                      "Stable Rocket user",
+                      "Works with Buy with Rocket entitlements",
+                    ]}
+                  />
+                  <p>Rocket ID tells your app who the Rocket user is.</p>
+                  <a
+                    className="dev-button dev-button-outline"
+                    href={
+                      active
+                        ? selectedApp
+                          ? "#developer-setup"
+                          : "#your-developer-apps"
+                        : "#rocket-id-how"
+                    }
+                  >
+                    {active ? "Configure Rocket ID" : "Learn how it works"}
+                  </a>
+                  <details className="dev-details">
+                    <summary>Implementation details</summary>
+                    <p>
+                      Rocket ID uses OAuth authorization code flow with PKCE and
+                      signed OIDC identity tokens. Your app validates the
+                      callback and creates its own secure session. Public
+                      integration settings appear after you configure an owned
+                      app.
+                    </p>
+                  </details>
+                </div>
+                <div
+                  className="dev-demo"
+                  id="rocket-id-how"
+                  aria-label="Illustrative Rocket ID sign-in flow"
+                >
+                  <p className="dev-small">THE SIGN-IN EXPERIENCE</p>
+                  <div className="dev-demo-button">
+                    <ShieldCheck size={20} /> Continue with Rocket
+                  </div>
+                  <span className="dev-down" aria-hidden="true">
+                    ↓
+                  </span>
+                  <div className="dev-consent">
+                    <strong>Rocket consent</strong>
+                    <p>Choose to share your Rocket identity with the app.</p>
+                  </div>
+                  <span className="dev-down" aria-hidden="true">
+                    ↓
+                  </span>
+                  <div className="dev-demo-result">
+                    <Check size={22} />
+                    <strong>Signed in to your app</strong>
+                  </div>
+                  <p className="dev-small">
+                    For apps that have connected Rocket ID.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {view !== "id" && (
+              <section id="buy-with-rocket" className="dev-product">
+                <div>
+                  <p className="dev-eyebrow">
+                    <CreditCard size={18} /> BUY WITH ROCKET
+                  </p>
+                  <h2>Sell access to your app.</h2>
+                  <p className="dev-lead">
+                    Create a plan, connect Stripe, and let Rocket users buy
+                    access directly from your Rocket app page.
+                  </p>
+                  <Benefits
+                    items={[
+                      "Sell monthly or annual access",
+                      "Stripe-hosted payment flow",
+                      "Rocket records purchase entitlements",
+                      "Works with Rocket ID",
+                      "Buyers return through their Rocket Library",
+                      "You remain the connected Stripe merchant",
+                    ]}
+                  />
+                  <p>
+                    Buy with Rocket lets Rocket users purchase access to your
+                    app.
+                  </p>
+                  <a
+                    className="dev-button dev-button-outline"
+                    href={
+                      active
+                        ? "#configure-buy-with-rocket"
+                        : "#buy-with-rocket-how"
+                    }
+                  >
+                    {active
+                      ? "Configure Buy with Rocket"
+                      : "Learn how it works"}
+                  </a>
+                  <p className="dev-fee">
+                    {fee !== null
+                      ? `${fee / 100}% Rocket fee on Buy with Rocket sales.`
+                      : "Rocket’s current sales fee is confirmed in payment setup."}
+                    <span>Stripe processing fees apply separately.</span>
+                  </p>
+                  {liveAvailable === false && (
+                    <p className="dev-small">
+                      Live payments are not available yet. Membership does not
+                      bypass merchant approval or integration readiness.
+                    </p>
+                  )}
+                </div>
+                <div
+                  id="buy-with-rocket-how"
+                  className="dev-demo"
+                  aria-label="Illustrative purchase flow"
+                >
+                  <p className="dev-small">EXAMPLE ONLY · NOT A LIVE OFFER</p>
+                  <div className="dev-example-plan">
+                    <span>Your Rocket app page · Monthly access</span>
+                    <strong>
+                      $19<span>/month</span>
+                    </strong>
+                    <div className="dev-demo-button">Buy with Rocket</div>
+                  </div>
+                  <span className="dev-down" aria-hidden="true">
+                    ↓
+                  </span>
+                  <div className="dev-consent">
+                    <strong>Stripe Checkout</strong>
+                    <p>
+                      Secure hosted payment. Rocket records access after
+                      confirmation.
+                    </p>
+                  </div>
+                  <span className="dev-down" aria-hidden="true">
+                    ↓
+                  </span>
+                  <div className="dev-demo-result">
+                    <Check size={22} />
+                    <strong>You’re in.</strong>
+                  </div>
+                  <div className="dev-demo-open">
+                    Open App <ArrowRight size={16} />
+                  </div>
+                  <p className="dev-small">
+                    Your app verifies entitlement before granting paid access.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            <section className="dev-together">
+              <p className="dev-eyebrow">BETTER TOGETHER</p>
+              <h2>Identity + payments, connected.</h2>
+              <div className="dev-questions">
+                <div>
+                  <span>Rocket ID answers</span>
+                  <h3>Who is this user?</h3>
+                </div>
+                <div>
+                  <span>Buy with Rocket answers</span>
+                  <h3>Do they have access?</h3>
+                </div>
+              </div>
+              <p className="dev-lead">
+                Your app authenticates the Rocket user and checks whether they
+                have a valid entitlement. One connected experience, two clear
+                checks.
+              </p>
+              <Flow
+                steps={[
+                  { title: "Rocket user" },
+                  { title: "Rocket ID" },
+                  { title: "Your app" },
+                  { title: "Entitlement check" },
+                  { title: "Access granted" },
+                ]}
+              />
+            </section>
+
+            <section className="dev-steps">
+              <p className="dev-eyebrow">THREE STEPS</p>
+              <h2>From your app to Rocket.</h2>
+              <div>
+                {[
+                  {
+                    title: "Add your app",
+                    text: "Submit or claim your app on Rocket. Your listing stays free.",
+                  },
+                  {
+                    title: "Connect",
+                    text: "Configure Rocket ID and your Stripe merchant account. Create an access plan.",
+                  },
+                  {
+                    title: "Ship",
+                    text: "Add the integration, verify identity and entitlement checks, and complete readiness checks before going live.",
+                  },
+                ].map((step, i) => (
+                  <article key={step.title}>
+                    <span className="dev-step-number">0{i + 1}</span>
+                    <h3>{step.title}</h3>
+                    <p>{step.text}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            {!(active && selectedApp) && codingSection}
+
+            <section className="dev-comparison">
+              <p className="dev-eyebrow">ONE MEMBERSHIP. TWO PRODUCTS.</p>
+              <h2>Participate for free. Integrate with Developer.</h2>
+              <div className="dev-plan-pair">
+                <article>
+                  <h3>Free</h3>
+                  <p>Build your place on Rocket.</p>
+                  <Benefits
+                    items={[
+                      "Submit and claim apps",
+                      "Build your app profile",
+                      "Reviews and discovery",
+                      "Verify traffic, revenue and usage",
+                    ]}
+                  />
+                  <Link className="dev-text-link" to="/submit">
+                    Submit your app <ArrowRight size={17} />
+                  </Link>
+                </article>
+                <article>
+                  <h3>
+                    Rocket Developer <span>$99/year</span>
+                  </h3>
+                  <p>Identity and payments for eligible apps you own.</p>
+                  <Benefits
+                    items={[
+                      "Everything in Free",
+                      "Rocket ID",
+                      "Buy with Rocket",
+                    ]}
+                  />
+                  <p className="dev-small">
+                    Per developer account, not per app. Verification, editorial
+                    decisions and rankings remain independent of membership.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section className="dev-final">
+              <h2>
+                {active
+                  ? "Keep building with Rocket."
+                  : "Start building with Rocket."}
+              </h2>
               <p>
-                Buy with Rocket lets Rocket users purchase access to your app.
+                {active
+                  ? "Your membership is ready. Connect your app when you are."
+                  : "One developer membership. Identity and payments. $99/year."}
               </p>
-              <a
-                className="dev-button dev-button-outline"
-                href={
-                  active ? "#configure-buy-with-rocket" : "#buy-with-rocket-how"
-                }
-              >
-                {active ? "Configure Buy with Rocket" : "Learn how it works"}
-              </a>
-              <p className="dev-fee">
-                {fee !== null
-                  ? `${fee / 100}% Rocket fee on Buy with Rocket sales.`
-                  : "Rocket’s current sales fee is confirmed in payment setup."}
-                <span>Stripe processing fees apply separately.</span>
-              </p>
-              {liveAvailable === false && (
-                <p className="dev-small">
-                  Live payments are not available yet. Membership does not
-                  bypass merchant approval or integration readiness.
-                </p>
+              {active ? (
+                <a className="dev-button" href="#your-developer-apps">
+                  Choose an app <ArrowRight size={17} />
+                </a>
+              ) : (
+                join()
               )}
-            </div>
-            <div
-              id="buy-with-rocket-how"
-              className="dev-demo"
-              aria-label="Illustrative purchase flow"
-            >
-              <p className="dev-small">EXAMPLE ONLY · NOT A LIVE OFFER</p>
-              <div className="dev-example-plan">
-                <span>Your Rocket app page · Monthly access</span>
-                <strong>
-                  $19<span>/month</span>
-                </strong>
-                <div className="dev-demo-button">Buy with Rocket</div>
-              </div>
-              <span className="dev-down" aria-hidden="true">
-                ↓
-              </span>
-              <div className="dev-consent">
-                <strong>Stripe Checkout</strong>
-                <p>
-                  Secure hosted payment. Rocket records access after
-                  confirmation.
-                </p>
-              </div>
-              <span className="dev-down" aria-hidden="true">
-                ↓
-              </span>
-              <div className="dev-demo-result">
-                <Check size={22} />
-                <strong>You’re in.</strong>
-              </div>
-              <div className="dev-demo-open">
-                Open App <ArrowRight size={16} />
-              </div>
-              <p className="dev-small">
-                Your app verifies entitlement before granting paid access.
-              </p>
-            </div>
-          </section>
+            </section>
+          </>
         )}
-
-        <section className="dev-together">
-          <p className="dev-eyebrow">BETTER TOGETHER</p>
-          <h2>Identity + payments, connected.</h2>
-          <div className="dev-questions">
-            <div>
-              <span>Rocket ID answers</span>
-              <h3>Who is this user?</h3>
-            </div>
-            <div>
-              <span>Buy with Rocket answers</span>
-              <h3>Do they have access?</h3>
-            </div>
-          </div>
-          <p className="dev-lead">
-            Your app authenticates the Rocket user and checks whether they have
-            a valid entitlement. One connected experience, two clear checks.
-          </p>
-          <Flow
-            steps={[
-              { title: "Rocket user" },
-              { title: "Rocket ID" },
-              { title: "Your app" },
-              { title: "Entitlement check" },
-              { title: "Access granted" },
-            ]}
-          />
-        </section>
-
-        <section className="dev-steps">
-          <p className="dev-eyebrow">THREE STEPS</p>
-          <h2>From your app to Rocket.</h2>
-          <div>
-            {[
-              {
-                title: "Add your app",
-                text: "Submit or claim your app on Rocket. Your listing stays free.",
-              },
-              {
-                title: "Connect",
-                text: "Configure Rocket ID and your Stripe merchant account. Create an access plan.",
-              },
-              {
-                title: "Ship",
-                text: "Add the integration, verify identity and entitlement checks, and complete readiness checks before going live.",
-              },
-            ].map((step, i) => (
-              <article key={step.title}>
-                <span className="dev-step-number">0{i + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {!(active && selectedApp) && codingSection}
-
-        <section className="dev-comparison">
-          <p className="dev-eyebrow">ONE MEMBERSHIP. TWO PRODUCTS.</p>
-          <h2>Participate for free. Integrate with Developer.</h2>
-          <div className="dev-plan-pair">
-            <article>
-              <h3>Free</h3>
-              <p>Build your place on Rocket.</p>
-              <Benefits
-                items={[
-                  "Submit and claim apps",
-                  "Build your app profile",
-                  "Reviews and discovery",
-                  "Verify traffic, revenue and usage",
-                ]}
-              />
-              <Link className="dev-text-link" to="/submit">
-                Submit your app <ArrowRight size={17} />
-              </Link>
-            </article>
-            <article>
-              <h3>
-                Rocket Developer <span>$99/year</span>
-              </h3>
-              <p>Identity and payments for eligible apps you own.</p>
-              <Benefits
-                items={["Everything in Free", "Rocket ID", "Buy with Rocket"]}
-              />
-              <p className="dev-small">
-                Per developer account, not per app. Verification, editorial
-                decisions and rankings remain independent of membership.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <section className="dev-final">
-          <h2>
-            {active
-              ? "Keep building with Rocket."
-              : "Start building with Rocket."}
-          </h2>
-          <p>
-            {active
-              ? "Your membership is ready. Connect your app when you are."
-              : "One developer membership. Identity and payments. $99/year."}
-          </p>
-          {active ? (
-            <a className="dev-button" href="#your-developer-apps">
-              Choose an app <ArrowRight size={17} />
-            </a>
-          ) : (
-            join()
-          )}
-        </section>
       </main>
-
     </div>
   );
 }

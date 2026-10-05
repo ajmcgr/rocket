@@ -29,11 +29,15 @@ async function render({
   signedIn = false,
   clients = [],
   view = "all",
+  loading = false,
+  error = "",
 }: {
   member?: DeveloperMembership | null;
   signedIn?: boolean;
   clients?: any[];
   view?: "all" | "account" | "id" | "buy";
+  loading?: boolean;
+  error?: string;
 } = {}) {
   invoke.mockImplementation(async (name, options) => {
     if (name === "rocket-buy")
@@ -80,11 +84,11 @@ async function render({
         <DeveloperExperience
           view={view}
           signedIn={signedIn}
-          loading={false}
+          loading={loading}
           membership={member}
           clients={clients}
           busy={false}
-          error=""
+          error={error}
           onBilling={billing}
           onRefresh={vi.fn()}
         />
@@ -106,15 +110,36 @@ describe("Developer product experience", () => {
     for (const view of ["id", "buy"] as const) {
       const { container, cleanup } = await render({ view });
       try {
-        expect(container.querySelector(view === "id" ? "#rocket-id" : "#buy-with-rocket")).not.toBeNull();
-        expect(container.querySelector(view === "id" ? "#buy-with-rocket" : "#rocket-id")).toBeNull();
-        expect(container.querySelector("h1")?.textContent).toContain(view === "id" ? "Rocket account" : "Buy with Rocket");
-        expect(container.querySelector('a[href="/settings/developer"]')).not.toBeNull();
-      } finally { await cleanup(); }
+        expect(
+          container.querySelector(
+            view === "id" ? "#rocket-id" : "#buy-with-rocket",
+          ),
+        ).not.toBeNull();
+        expect(
+          container.querySelector(
+            view === "id" ? "#buy-with-rocket" : "#rocket-id",
+          ),
+        ).toBeNull();
+        expect(container.querySelector("h1")?.textContent).toContain(
+          view === "id" ? "Rocket account" : "Buy with Rocket",
+        );
+        expect(
+          container.querySelector('a[href="/settings/developer"]'),
+        ).not.toBeNull();
+      } finally {
+        await cleanup();
+      }
     }
   });
   it("shows subscription details and portal controls in settings without public product sections", async () => {
-    const { container, billing, cleanup } = await render({ view: "account", signedIn: true, member: { ...membership, membership: { status: "canceling", current_period_end: "2030-01-01" } } });
+    const { container, billing, cleanup } = await render({
+      view: "account",
+      signedIn: true,
+      member: {
+        ...membership,
+        membership: { status: "canceling", current_period_end: "2030-01-01" },
+      },
+    });
     try {
       expect(container.textContent).toContain("canceling");
       expect(container.textContent).toContain("Access ends");
@@ -122,14 +147,32 @@ describe("Developer product experience", () => {
       expect(container.querySelector("#rocket-id")).toBeNull();
       expect(container.querySelector("#your-developer-apps")).toBeNull();
       expect(container.textContent).not.toContain("Site header");
-      expect(container.querySelector(".dev-membership-settings")?.classList.contains("dev-content")).toBe(true);
-      expect(container.querySelectorAll(".rocket-product-card")).toHaveLength(2);
-      expect(container.querySelector('a[href="/buy-with-rocket"]')?.textContent).toContain("Start selling");
-      expect(container.querySelector('a[href="/rocket-id"]')?.textContent).toContain("Set up Rocket ID");
-      expect(container.querySelectorAll(".rocket-product-cta svg")).toHaveLength(2);
-      await act(async () => [...container.querySelectorAll("button")].find(button => button.textContent === "Manage subscription")!.click());
+      expect(
+        container
+          .querySelector(".dev-membership-settings")
+          ?.classList.contains("dev-content"),
+      ).toBe(true);
+      expect(container.querySelectorAll(".rocket-product-card")).toHaveLength(
+        2,
+      );
+      expect(
+        container.querySelector('a[href="/buy-with-rocket"]')?.textContent,
+      ).toContain("Start selling");
+      expect(
+        container.querySelector('a[href="/rocket-id"]')?.textContent,
+      ).toContain("Set up Rocket ID");
+      expect(
+        container.querySelectorAll(".rocket-product-cta svg"),
+      ).toHaveLength(2);
+      await act(async () =>
+        [...container.querySelectorAll("button")]
+          .find((button) => button.textContent === "Manage subscription")!
+          .click(),
+      );
       expect(billing).toHaveBeenCalledWith("portal");
-    } finally { await cleanup(); }
+    } finally {
+      await cleanup();
+    }
   });
   it("explains identity, payments and account-level price without sign-in", async () => {
     const { container, cleanup } = await render();
@@ -158,7 +201,9 @@ describe("Developer product experience", () => {
       ])
         expect(container.textContent).not.toContain(legacy);
       expect(
-        container.querySelector('a[href="/login?next=%2Fsettings%2Fdeveloper"]'),
+        container.querySelector(
+          'a[href="/login?next=%2Fsettings%2Fdeveloper"]',
+        ),
       ).not.toBeNull();
       expect(
         [...container.querySelectorAll("button")].some((button) =>
@@ -189,7 +234,7 @@ describe("Developer product experience", () => {
       await cleanup();
     }
   });
-  it("puts an active member's owned apps before explanations and enables only a safe prompt", async () => {
+  it("gives active members setup without marketing and enables only a safe prompt", async () => {
     const clients = [
       {
         app_id: "owned-app",
@@ -207,9 +252,10 @@ describe("Developer product experience", () => {
     });
     try {
       expect(container.textContent).toContain("Active");
-      expect(container.textContent!.indexOf("Care Pods")).toBeLessThan(
-        container.textContent!.indexOf("One account for your app."),
-      );
+      expect(container.textContent).toContain("Care Pods");
+      expect(container.textContent).not.toContain("One account for your app.");
+      expect(container.querySelector(".dev-price")).toBeNull();
+      expect(container.querySelector(".dev-comparison")).toBeNull();
       expect(container.textContent).toContain("Stripe setup");
       expect(container.textContent).not.toContain("Developer pilot");
       expect(container.textContent).not.toContain("Create invite");
@@ -225,6 +271,64 @@ describe("Developer product experience", () => {
       expect(container.textContent).not.toContain("Access denied");
     } finally {
       await cleanup();
+    }
+  });
+  it("shows only the relevant setup on both subscribed product pages", async () => {
+    for (const view of ["id", "buy"] as const) {
+      const { container, cleanup } = await render({
+        view,
+        signedIn: true,
+        member: {
+          ...membership,
+          membership: { status: "canceling", current_period_end: "2030-01-01" },
+        },
+      });
+      try {
+        expect(container.querySelector("h1")?.textContent).toBe(
+          view === "id" ? "Set up Rocket ID" : "Set up Buy with Rocket",
+        );
+        expect(container.querySelector("#developer-setup")).not.toBeNull();
+        expect(container.querySelector(".dev-price")).toBeNull();
+        expect(container.querySelector(".dev-model")).toBeNull();
+        expect(container.querySelector(".dev-product")).toBeNull();
+        expect(container.querySelector(".dev-together")).toBeNull();
+        expect(container.querySelector(".dev-steps")).toBeNull();
+        expect(container.querySelector(".dev-comparison")).toBeNull();
+        expect(container.querySelector(".dev-final")).toBeNull();
+        expect(container.textContent).not.toContain(
+          "Built for how apps are built now.",
+        );
+        expect(container.textContent).not.toContain("Join Rocket Developer");
+        expect(container.querySelector("#configure-rocket-id") !== null).toBe(
+          view === "id",
+        );
+        expect(
+          container.querySelector("#configure-buy-with-rocket") !== null,
+        ).toBe(view === "buy");
+        if (view === "buy")
+          expect(container.textContent).toContain("first, then connect Stripe");
+      } finally {
+        await cleanup();
+      }
+    }
+  });
+  it("does not flash marketing while checking membership or when the check fails", async () => {
+    for (const state of [
+      { loading: true },
+      { error: "Membership unavailable" },
+    ]) {
+      const { container, cleanup } = await render({
+        view: "buy",
+        signedIn: true,
+        ...state,
+      });
+      try {
+        expect(container.querySelector(".dev-price")).toBeNull();
+        expect(container.querySelector(".dev-product")).toBeNull();
+        expect(container.textContent).not.toContain("Join Rocket Developer");
+      } finally {
+        await cleanup();
+      }
     }
   });
   it("gives an active member without apps a free first-app action", async () => {

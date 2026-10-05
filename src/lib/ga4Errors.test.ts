@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { googleAnalyticsApiError } from "../../supabase/functions/_shared/ga4Errors";
+import { googleAnalyticsApiError, googleAnalyticsAuthorizationError } from "../../supabase/functions/_shared/ga4Errors";
 
 describe("safe Google Analytics diagnostics", () => {
   it("identifies the actual API consumer without exposing raw provider content", () => {
@@ -17,5 +17,15 @@ describe("safe Google Analytics diagnostics", () => {
   it("handles malformed or non-JSON provider errors safely", () => {
     expect(googleAnalyticsApiError(403, null).diagnostics.google_reason).toBe("UNKNOWN");
     expect(googleAnalyticsApiError(403, { error: { details: [null] } }).diagnostics.google_reason).toBe("UNKNOWN");
+  });
+  it("identifies revoked refresh grants without keeping descriptions or tokens", () => {
+    const error = googleAnalyticsAuthorizationError(400, { error: "invalid_grant", error_description: "secret-token" }, "refresh_token");
+    expect(error.message).toContain("expired or was revoked");
+    expect(error.diagnostics).toEqual({ upstream_status: 400, oauth_reason: "invalid_grant", stage: "refresh_token" });
+    expect(JSON.stringify(error)).not.toContain("secret-token");
+  });
+  it("distinguishes client configuration errors and discards unknown OAuth text", () => {
+    expect(googleAnalyticsAuthorizationError(401, { error: "invalid_client" }, "refresh_token").message).toContain("client configuration");
+    expect(googleAnalyticsAuthorizationError(400, { error: "secret-token" }, "refresh_token").diagnostics.oauth_reason).toBe("UNKNOWN");
   });
 });

@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 import { GA4_SCOPE, VISIBILITIES, completeDateWindow, completePeriodGrowth, dailyMetricPoints, matchingStreamHost } from "../_shared/ga4Traffic.ts";
-import { GoogleAnalyticsApiError, googleAnalyticsApiError } from "../_shared/ga4Errors.ts";
+import { GoogleAnalyticsApiError, googleAnalyticsApiError, GoogleAnalyticsAuthorizationError, googleAnalyticsAuthorizationError } from "../_shared/ga4Errors.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const service = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -65,7 +65,11 @@ async function tokenRequest(body: URLSearchParams) {
   if (!clientId || !clientSecret) throw new Error("Google Analytics connection is not configured");
   const response = await fetch("https://oauth2.googleapis.com/token", { method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" }, body, signal: AbortSignal.timeout(15_000) });
-  if (!response.ok) throw new Error("Google authorization failed; reconnect Google Analytics");
+  if (!response.ok) {
+    const result = await response.json().catch(() => null);
+    throw googleAnalyticsAuthorizationError(response.status, result,
+      body.get("grant_type") === "refresh_token" ? "refresh_token" : "authorization_code");
+  }
   return await response.json();
 }
 async function accessToken(row: Record<string, unknown>) {
@@ -322,11 +326,16 @@ async function handle(request: Request) {
 Deno.serve(async (request) => {
   try { return await handle(request); }
   catch (error) {
+    if (error instanceof GoogleAnalyticsAuthorizationError) {
+      console.error("ga4_authorization_rejected", error.diagnostics);
+      return json({ error: error.message, ...error.diagnostics }, 502);
+    }
     if (error instanceof GoogleAnalyticsApiError) {
       console.error("ga4_api_rejected", error.diagnostics);
       return json({ error: error.message, ...error.diagnostics }, 502);
     }
     const message = (error as Error).message;
+    console.error("ga4_request_failed", { category: message === "Sign in to continue" ? "authentication" : message === "A domain-verified app owner is required" ? "ownership" : "request", method: request.method });
     if (message === "Sign in to continue") return fail(message, 401);
     if (message === "A domain-verified app owner is required") return fail(message, 403);
     // Never return provider errors, authorization codes, or tokens to the browser.

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Metric = "active_users" | "sessions" | "views";
@@ -31,7 +32,7 @@ export default function AppAnalytics() {
   const [notice, setNotice] = useState("");
   const request = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     const { data, error: invocationError } = await supabase.functions.invoke("rocket-ga4", { body: { action, app_id: id, ...extra } });
-    if (invocationError || data?.error) throw new Error(data?.error || invocationError?.message || "Google Analytics request failed");
+    if (invocationError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(invocationError, "Google Analytics request failed"));
     return data;
   }, [id]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);
@@ -67,6 +68,8 @@ export default function AppAnalytics() {
           const result = await request("start"); window.location.assign(result.authorization_url);
         })} className="mt-4 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Connect Google Analytics</button>}
         {status.connection?.status === "select_property" && <div className="mt-5 space-y-4">
+          <button disabled={busy} onClick={() => run(async () => { const data = await request("properties"); setProperties(data.properties || []); })}
+            className="rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Reload properties</button>
           <label className="block text-sm">GA4 property
             <select value={propertyId} onChange={(event) => { const next = event.target.value; setPropertyId(next); setStreamId(""); setStreams([]);
               if (next) run(async () => { const data = await request("streams", { property_id: next }); setStreams(data.streams || []); }); }} className="mt-2 block w-full rounded-lg border p-2">
