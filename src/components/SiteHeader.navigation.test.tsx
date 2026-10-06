@@ -16,13 +16,13 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("Create sidebar destinations", () => {
   for (const signedIn of [false, true]) {
     for (const path of ["/", "/discover", "/pricing", "/submit"]) {
-      it(`keeps both links on ${path} when ${signedIn ? "signed in" : "signed out"}`, async () => {
+      it(`keeps Brand Studio without a duplicate Saved Designs link on ${path} when ${signedIn ? "signed in" : "signed out"}`, async () => {
         vi.stubGlobal("scrollTo", vi.fn());
         vi.stubGlobal("localStorage", { getItem: vi.fn(() => null), setItem: vi.fn() });
         auth.user = signedIn ? { email: "owner@example.com" } : null;
         render(<MemoryRouter initialEntries={[path]}><SiteHeader /></MemoryRouter>);
         expect((await screen.findByRole("link", { name: "Brand Studio" })).getAttribute("href")).toBe("/create");
-        expect(screen.getByRole("link", { name: "Saved Designs" }).getAttribute("href")).toBe("/saved");
+        expect(screen.queryByRole("link", { name: "Saved Designs" })).toBeNull();
         expect(screen.queryByText("Logos/Icons")).toBeNull();
         const apps = screen.getAllByRole("link", { name: "Your Apps" })[0];
         const subscriptions = screen.getByRole("link", { name: "Your Subscriptions" });
