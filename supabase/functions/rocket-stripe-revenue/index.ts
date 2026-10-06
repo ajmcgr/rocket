@@ -1,15 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 import { calculateSubscriptionMrr, MRR_CALCULATION_VERSION, type MappedPrice,
   type RevenueSubscription, type RevenueItem } from "../_shared/stripeRevenueMrr.ts";
+import { revenueMode, revenueOAuthConfig, validateRevenueTokens } from "../_shared/stripeRevenueOAuth.ts";
 
 // This function never uses Rocket billing or Rocket Developer payment credentials.
-// A separate Stripe App developer account must own the test OAuth installation.
+// A separate Stripe App developer account must own the OAuth installation.
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const service = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 const auth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
 const frontend = Deno.env.get("STRIPE_REVENUE_FRONTEND_ORIGIN") || "https://tryrocket.ai";
-const oauthUrl = Deno.env.get("STRIPE_REVENUE_TEST_OAUTH_URL");
-const oauthApiKey = Deno.env.get("STRIPE_REVENUE_APP_TEST_API_KEY");
+const revenueEnv = (name: string) => Deno.env.get(name);
 // No owner can start or manage an unverified integration unless their exact
 // app ID is explicitly enrolled for the external acceptance pilot.
 const pilotAppIds = new Set((Deno.env.get("STRIPE_REVENUE_PILOT_APP_IDS") || "")
@@ -31,12 +31,11 @@ const unb64 = (value: string) => Uint8Array.from(atob(value.replace(/-/g, "+").r
 const random = () => b64(crypto.getRandomValues(new Uint8Array(32)));
 async function sha256(value: string) { return b64(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)))); }
 function configuredOAuthUrl() {
-  if (!oauthUrl || !oauthApiKey) throw new Error("Stripe revenue verification is awaiting Stripe App setup");
-  const url = new URL(oauthUrl);
-  if (url.protocol !== "https:" || url.hostname !== "marketplace.stripe.com"
-    || url.pathname !== "/oauth/v2/authorize" || !url.searchParams.get("client_id"))
-    throw new Error("Stripe revenue OAuth configuration is invalid");
-  return url;
+  return revenueOAuthConfig(revenueEnv).url;
+}
+async function connectAvailable() {
+  try { configuredOAuthUrl(); await encryptionKey(); return true; }
+  catch { return false; }
 }
 async function encryptionKey() {
   const encoded = Deno.env.get("STRIPE_REVENUE_TOKEN_ENCRYPTION_KEY");
@@ -90,22 +89,25 @@ async function boundConnection(appId: string, userId: string) {
     throw new Error("Stripe revenue connection unavailable");
   return { linked, row };
 }
-async function tokenExchange(body: URLSearchParams) {
-  if (!oauthApiKey) throw new Error("Stripe revenue verification is awaiting Stripe App setup");
+async function tokenExchange(body: URLSearchParams, livemode: boolean) {
+  const { apiKey } = revenueOAuthConfig(revenueEnv, livemode ? "live" : "test");
   const response = await fetch("https://api.stripe.com/v1/oauth/token", { method: "POST",
-    headers: { Authorization: `Basic ${btoa(`${oauthApiKey}:`)}`, "Content-Type": "application/x-www-form-urlencoded" },
+    headers: { Authorization: `Basic ${btoa(`${apiKey}:`)}`, "Content-Type": "application/x-www-form-urlencoded" },
     body, signal: AbortSignal.timeout(15_000) });
   if (!response.ok) throw new Error("Stripe authorization failed");
   return await response.json() as Record<string, unknown>;
 }
 async function accessToken(row: Record<string, unknown>) {
+  if (typeof row.livemode !== "boolean") throw new Error("Stripe account mode is invalid");
+  // Enforce the live gate even when a cached access token has not expired.
+  revenueOAuthConfig(revenueEnv, row.livemode ? "live" : "test");
   if (typeof row.access_token_expires_at === "string"
     && Date.parse(row.access_token_expires_at) > Date.now() + 120_000) {
     return await decrypt(row.access_token_ciphertext, row.access_token_iv);
   }
   const refresh = await decrypt(row.refresh_token_ciphertext, row.refresh_token_iv);
   let tokens: Record<string, unknown>;
-  try { tokens = await tokenExchange(new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh })); }
+  try { tokens = await tokenExchange(new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }), row.livemode); }
   catch (error) {
     // Another invocation may already have rotated the refresh token.
     const fresh = await connection(String(row.id));
@@ -114,11 +116,9 @@ async function accessToken(row: Record<string, unknown>) {
       return await decrypt(fresh.access_token_ciphertext, fresh.access_token_iv);
     throw error;
   }
-  if (typeof tokens.access_token !== "string" || typeof tokens.refresh_token !== "string"
-    || tokens.stripe_user_id !== row.external_account_id || tokens.livemode !== row.livemode)
-    throw new Error("Stripe authorization changed; reconnect Stripe");
-  const access = await encrypt(tokens.access_token);
-  const nextRefresh = await encrypt(tokens.refresh_token);
+  validateRevenueTokens(tokens, row.livemode ? "live" : "test", row.external_account_id);
+  const access = await encrypt(tokens.access_token as string);
+  const nextRefresh = await encrypt(tokens.refresh_token as string);
   const updated = await service.from("app_revenue_connections").update({
     refresh_token_ciphertext: nextRefresh.ciphertext, refresh_token_iv: nextRefresh.iv,
     access_token_ciphertext: access.ciphertext, access_token_iv: access.iv,
@@ -130,7 +130,7 @@ async function accessToken(row: Record<string, unknown>) {
     const fresh = await connection(String(row.id));
     return await decrypt(fresh.access_token_ciphertext, fresh.access_token_iv);
   }
-  return tokens.access_token;
+  return tokens.access_token as string;
 }
 async function stripeGet(path: string, token: string) {
   const response = await fetch(`https://api.stripe.com${path}`, {
@@ -242,15 +242,14 @@ async function callback(request: Request) {
   if (!pilotEnabled(row.app_id)) return new Response("Stripe revenue pilot is unavailable", { status: 503 });
   try {
     await ownedApp(row.app_id, row.user_id);
-    const tokens = await tokenExchange(new URLSearchParams({ code, grant_type: "authorization_code" }));
-    if (tokens.livemode !== false || typeof tokens.stripe_user_id !== "string"
-      || typeof tokens.refresh_token !== "string" || typeof tokens.access_token !== "string"
-      || tokens.scope !== "stripe_apps") throw new Error("Stripe did not grant the expected test App authorization");
-    const refresh = await encrypt(tokens.refresh_token);
-    const access = await encrypt(tokens.access_token);
+    const mode = revenueMode(revenueEnv);
+    const tokens = await tokenExchange(new URLSearchParams({ code, grant_type: "authorization_code" }), mode === "live");
+    validateRevenueTokens(tokens, mode);
+    const refresh = await encrypt(tokens.refresh_token as string);
+    const access = await encrypt(tokens.access_token as string);
     const stored = await service.from("app_revenue_connections").upsert({
       owner_user_id: row.user_id, provider: "stripe", external_account_id: tokens.stripe_user_id,
-      livemode: false, status: "active", refresh_token_ciphertext: refresh.ciphertext,
+      livemode: mode === "live", status: "active", refresh_token_ciphertext: refresh.ciphertext,
       refresh_token_iv: refresh.iv, access_token_ciphertext: access.ciphertext,
       access_token_iv: access.iv, access_token_expires_at: new Date(Date.now() + 55 * 60_000).toISOString(),
       last_error: null, updated_at: new Date().toISOString(),
@@ -289,7 +288,7 @@ async function handle(request: Request) {
     });
     if (points.error) throw points.error;
     const latest = points.data || [];
-    return json({ connect_available: Boolean(oauthUrl && oauthApiKey && Deno.env.get("STRIPE_REVENUE_TOKEN_ENCRYPTION_KEY")),
+    return json({ connect_available: await connectAvailable(),
       connection: row ? { status: row.status, external_account_id: row.external_account_id,
       livemode: row.livemode, last_attempted_sync: row.last_attempted_sync,
       last_successful_sync: row.last_successful_sync, last_error: row.last_error } : null,
@@ -299,6 +298,7 @@ async function handle(request: Request) {
   if (!pilotEnabled(app.id)) return fail("Stripe revenue verification is coming soon", 503);
   if (body.action === "start") {
     const url = configuredOAuthUrl();
+    await encryptionKey();
     const state = random();
     const saved = await service.from("app_revenue_oauth_states").insert({
       state_hash: await sha256(state), app_id: app.id, user_id: userId,
@@ -383,6 +383,10 @@ Deno.serve(async (request) => {
     if (message === "Sign in to continue") return fail(message, 401);
     if (message === "A domain-verified app owner is required") return fail(message, 403);
     if (message === "Stripe revenue verification is awaiting Stripe App setup") return fail(message, 503);
+    if (["Stripe live revenue verification is not enabled", "Stripe revenue mode is invalid",
+      "Stripe revenue OAuth configuration is invalid", "Stripe revenue developer key does not match the selected mode",
+      "Stripe revenue encryption is not configured", "Stripe revenue encryption key must contain 32 bytes"].includes(message))
+      return fail(message, 503);
     if (["Connect Stripe first", "Select at least one Stripe price first", "Reconnect Stripe before syncing",
       "Price mapping changed during sync; retry", "Stripe account exceeds the safe sync limit"].includes(message))
       return fail(message, 400);
