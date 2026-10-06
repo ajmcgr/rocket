@@ -25,7 +25,7 @@ import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
 import sidebarIconWhite from "@/assets/rocket-sidebar-icon-white.png.asset.json";
 import { useAuth } from "@/contexts/AuthContext";
-import { myProfileHref } from "@/lib/myProfileNavigation";
+import { useMyProfileHref } from "@/hooks/useMyProfileHref";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -76,22 +76,22 @@ const sections: { heading: string; items: NavItem[] }[] = [
     ],
   },
   {
-    heading: "Create",
-    items: createNavigationItems,
-  },
-  {
     heading: "Monetize",
     items: [
       { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
     ],
   },
+  {
+    heading: "Create",
+    items: createNavigationItems,
+  },
 ];
 export default function SiteHeader() {
   const [search, setSearch] = useState("");
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
-  const profileHref = myProfileHref(user?.user_metadata);
+  const profileHref = useMyProfileHref(user);
   const sidebarSections = sections.map((section) => section.heading !== "Your apps" || !user ? section : {
     ...section,
     items: section.items.flatMap((item) => item.label === "Submit your app"

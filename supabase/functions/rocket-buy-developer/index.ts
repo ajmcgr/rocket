@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, base64url, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
 import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
+import { approvedPaymentReturn, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 
 const liveKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -56,12 +57,13 @@ Deno.serve(async (req) => {
     const { user, admin, client } = ctx;
     if (!user || !admin || !client) return json({ error: "unavailable" }, 500);
     const action = shortText(body.action, 40);
+    if (body.client_id !== undefined && body.client_id !== client.client_id) return json({ error: "client_mismatch" }, 403);
     if (!stripe) return json({ error: "live_connect_not_configured" }, 503);
 
     if (action === "status") {
       const account = await currentAccount(admin, client.client_id, user.id);
       const { data: products, error } = await admin.from("connect_products")
-        .select("id,product_key,name,amount_cents,currency,interval,platform_fee_bps,is_active,activated_at,integration_confirmed_at,developer_account_id")
+        .select("id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active,activated_at,integration_confirmed_at,developer_account_id")
         .eq("client_id", client.client_id).eq("developer_user_id", user.id).order("created_at", { ascending: false });
       if (error) throw error;
       const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
@@ -91,13 +93,17 @@ Deno.serve(async (req) => {
       return json({ onboarding_url: onboardingUrl, merchant_ready: account.ready });
     }
 
-    if (action === "create_plan") {
+    if (action === "create_plan" || action === "create_product") {
       const account = await currentAccount(admin, client.client_id, user.id);
       if (!account?.ready) return json({ error: "merchant_onboarding_incomplete" }, 409);
       const name = shortText(body.name, 120);
       const amount = body.amount_cents;
-      const interval = body.interval;
-      if (!name || !Number.isInteger(amount) || amount < 100 || amount > 100000 || !["month", "year"].includes(interval)) return json({ error: "invalid_plan" }, 400);
+      const kind = body.billing_type ?? "subscription";
+      const interval = kind === "one_time" ? null : body.interval;
+      if (!["one_time", "subscription"].includes(kind)) return json({ error: "invalid_billing_type" }, 400);
+      const returnUri = kind === "one_time" ? body.payment_return_uri : APP_URL;
+      if (kind === "one_time" && !approvedPaymentReturn(returnUri, client.redirect_uris)) return json({ error: "approved_payment_return_uri_required" }, 400);
+      if (!name || !Number.isInteger(amount) || amount < 100 || amount > 100000 || (kind === "subscription" && !["month", "year"].includes(interval))) return json({ error: "invalid_plan" }, 400);
       const { data: existing, error: existingError } = await admin.from("connect_products")
         .select("id").eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("is_active", true).limit(1);
       if (existingError) throw existingError;
@@ -105,14 +111,18 @@ Deno.serve(async (req) => {
       const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
         .select("platform_fee_bps").eq("singleton", true).single();
       if (configurationError) throw configurationError;
-      const product = await stripe.products.create({ name, metadata: { rocket_client_id: client.client_id, rocket_app_id: appId, rocket_developer_user_id: user.id, rocket_environment: "production" } }, { stripeAccount: account.stripe_account_id });
-      const price = await stripe.prices.create({ product: product.id, currency: "usd", unit_amount: amount, recurring: { interval }, metadata: { rocket_client_id: client.client_id, rocket_environment: "production" } }, { stripeAccount: account.stripe_account_id });
+      if (configuration.platform_fee_bps !== 500) return json({ error: "platform_fee_configuration_invalid" }, 409);
+      const canonicalId = crypto.randomUUID();
+      const registrationKey = `rocket-product-production-${client.client_id}-${canonicalId}`;
+      const product = await stripe.products.create({ name, metadata: { rocket_client_id: client.client_id, rocket_app_id: appId, rocket_developer_user_id: user.id, rocket_environment: "production", rocket_billing_type: kind } }, { stripeAccount: account.stripe_account_id, idempotencyKey: registrationKey });
+      const price = await stripe.prices.create({ product: product.id, currency: "usd", unit_amount: amount, ...(kind === "subscription" ? { recurring: { interval } } : {}), metadata: { rocket_client_id: client.client_id, rocket_environment: "production" } }, { stripeAccount: account.stripe_account_id, idempotencyKey: `${registrationKey}-price` });
+      if (!product.livemode || !priceMatches({ amount_cents: amount, currency: "usd", stripe_product_id: product.id, billing_type: kind, interval }, price, true)) return json({ error: "stripe_product_mismatch" }, 409);
       const { data: saved, error } = await admin.from("connect_products").insert({
-        client_id: client.client_id, developer_account_id: account.id, developer_user_id: user.id,
+        id: canonicalId, client_id: client.client_id, developer_account_id: account.id, developer_user_id: user.id,
         product_key: productKey(name), name, stripe_product_id: product.id, stripe_price_id: price.id,
-        amount_cents: amount, currency: "usd", interval, platform_fee_bps: configuration.platform_fee_bps,
-        is_active: false, checkout_return_uris: [APP_URL],
-      }).select("id,product_key,name,amount_cents,currency,interval,platform_fee_bps,is_active").single();
+        amount_cents: amount, currency: "usd", interval, billing_type: kind, platform_fee_bps: configuration.platform_fee_bps,
+        is_active: false, checkout_return_uris: [returnUri],
+      }).select("id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active").single();
       if (error) throw error;
       return json({ plan: saved }, 201);
     }
@@ -130,7 +140,7 @@ Deno.serve(async (req) => {
       if (!plan) return json({ error: "plan_not_found" }, 404);
       if (!plan.integration_confirmed_at) return json({ error: "external_entitlement_test_required" }, 409);
       const price = await stripe.prices.retrieve(plan.stripe_price_id, { stripeAccount: account.stripe_account_id });
-      if (!price.livemode || !price.active || price.unit_amount !== plan.amount_cents || price.currency !== "usd" || price.recurring?.interval !== plan.interval || price.product !== plan.stripe_product_id) return json({ error: "stripe_plan_mismatch" }, 409);
+      if (!priceMatches(plan, price, true)) return json({ error: "stripe_plan_mismatch" }, 409);
       const { data: active } = await admin.from("connect_products").select("id").eq("client_id", client.client_id).eq("is_active", true).neq("id", plan.id).limit(1);
       if (active?.length) return json({ error: "one_active_plan_per_app" }, 409);
       const { error } = await admin.from("connect_products").update({ is_active: true, activated_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", plan.id).eq("is_active", false);

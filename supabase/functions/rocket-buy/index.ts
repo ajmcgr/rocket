@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
-import { APP_URL, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
+import { APP_URL, getAdmin, getRocketUser, getConnectToken, json } from "../_shared/rocketConnect.ts";
 import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { billingType, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 
 const key = Deno.env.get("STRIPE_SECRET_KEY");
@@ -30,7 +31,7 @@ async function offer(appId: string) {
   const merchant = await retrieveStripeConnectV2Merchant(account.stripe_account_id, "production");
   if (!stripeConnectV2Ready(merchant)) return null;
   const { data: products, error: productError } = await admin.from("connect_products")
-    .select("id,client_id,developer_account_id,developer_user_id,product_key,name,amount_cents,currency,interval,platform_fee_bps,stripe_product_id,stripe_price_id,is_active,activated_at,integration_confirmed_at")
+    .select("id,client_id,developer_account_id,developer_user_id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,checkout_return_uris,stripe_product_id,stripe_price_id,is_active,activated_at,integration_confirmed_at")
     .eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("developer_user_id", client.created_by)
     .eq("is_active", true).not("activated_at", "is", null).not("integration_confirmed_at", "is", null).limit(2);
   if (productError) throw productError;
@@ -38,8 +39,8 @@ async function offer(appId: string) {
   return { admin, client, account, product: products[0] };
 }
 
-const publicPlan = (product: { id: string; name: string; amount_cents: number; currency: string; interval: string }) =>
-  ({ id: product.id, name: product.name, amount_cents: product.amount_cents, currency: product.currency, interval: product.interval });
+const publicPlan = (product: { id: string; name: string; amount_cents: number; currency: string; interval: string | null; billing_type?: string }) =>
+  ({ id: product.id, name: product.name, amount_cents: product.amount_cents, currency: product.currency, interval: product.interval, billing_type: billingType(product) });
 
 async function existingPurchase(admin: ReturnType<typeof getAdmin>, userId: string, appId: string) {
   const { data: client, error: clientError } = await admin.from("rocket_oauth_clients")
@@ -53,7 +54,7 @@ async function existingPurchase(admin: ReturnType<typeof getAdmin>, userId: stri
   const entitlement = (entitlements || []).find((entry) => ["active", "canceling"].includes(entry.status) && (!entry.valid_until || new Date(entry.valid_until).getTime() > Date.now())) || entitlements?.[0];
   if (!entitlement) return null;
   const { data: product, error: productError } = await admin.from("connect_products")
-    .select("id,name,amount_cents,currency,interval").eq("id", entitlement.product_id).eq("client_id", client.client_id).maybeSingle();
+    .select("id,name,amount_cents,currency,interval,billing_type").eq("id", entitlement.product_id).eq("client_id", client.client_id).maybeSingle();
   if (productError) throw productError;
   return product ? { client, product, entitlement,
     active: ["active", "canceling"].includes(entitlement.status) && (!entitlement.valid_until || new Date(entitlement.valid_until).getTime() > Date.now()) } : null;
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
       const productIds = [...new Set(entitlements.map((entry) => entry.product_id))];
       const [{ data: clients, error: clientsError }, { data: products, error: productsError }] = await Promise.all([
         admin.from("rocket_oauth_clients").select("client_id,app_id,name,environment").in("client_id", clientIds).eq("environment", "production"),
-        admin.from("connect_products").select("id,name,amount_cents,currency,interval").in("id", productIds),
+        admin.from("connect_products").select("id,name,amount_cents,currency,interval,billing_type").in("id", productIds),
       ]);
       if (clientsError || productsError) throw clientsError || productsError;
       const appIds = (clients || []).map((client) => client.app_id).filter(Boolean);
@@ -113,8 +114,14 @@ Deno.serve(async (req) => {
       const available = await offer(appId);
       return json({ plan: available ? publicPlan(available.product) : null });
     }
-    const user = await getRocketUser(req);
+    const rocketUser = await getRocketUser(req);
+    const oauthToken = rocketUser ? null : await getConnectToken(req);
+    const user = rocketUser || (oauthToken ? { id: oauthToken.user_id, email: undefined } : null);
     if (!user) return json({ error: "unauthorized" }, 401);
+    if (oauthToken) {
+      const { data: bound } = await admin.from("rocket_oauth_clients").select("client_id").eq("app_id", appId).eq("environment", "production").maybeSingle();
+      if (!oauthToken.scopes.includes("entitlements:read") || bound?.client_id !== oauthToken.client_id) return json({ error: "client_mismatch" }, 403);
+    }
     if (action === "status" || action === "cancel") {
       const purchase = await existingPurchase(admin, user.id, appId);
       if (action === "status") {
@@ -122,6 +129,7 @@ Deno.serve(async (req) => {
         return json({ plan: purchase ? publicPlan(purchase.product) : available ? publicPlan(available.product) : null,
           entitlement: purchase ? { status: purchase.entitlement.status, valid_until: purchase.entitlement.valid_until, active: purchase.active } : null });
       }
+      if (purchase && billingType(purchase.product) === "one_time") return json({ error: "one_time_purchase_has_no_subscription" }, 409);
       if (!stripe || !purchase?.active) return json({ error: "active_purchase_required" }, 409);
       const { data: transaction, error } = await admin.from("connect_transactions")
         .select("id,stripe_subscription_id,stripe_account_id,developer_account_id")
@@ -148,26 +156,37 @@ Deno.serve(async (req) => {
     const hasAccess = !!entitlement && ["active", "canceling"].includes(entitlement.status) && (!entitlement.valid_until || new Date(entitlement.valid_until).getTime() > Date.now());
     if (action === "checkout") {
       if (user.id === client.created_by) return json({ error: "cannot_buy_own_app" }, 403);
-      if (hasAccess) return json({ error: "already_purchased" }, 409);
+      if (hasAccess && billingType(product) === "subscription") return json({ error: "already_purchased" }, 409);
+      if (body.product_key !== undefined && body.product_key !== product.product_key) return json({ error: "product_mismatch" }, 403);
+      const oneTime = billingType(product) === "one_time";
+      if (oneTime && body.product_key !== product.product_key) return json({ error: "product_key_required" }, 400);
+      if (body.client_id !== undefined && body.client_id !== client.client_id) return json({ error: "client_mismatch" }, 403);
+      if (oneTime && (typeof body.purchase_request_id !== "string" || !uuid.test(body.purchase_request_id))) return json({ error: "purchase_request_id_required" }, 400);
+      if (oneTime && !product.checkout_return_uris?.includes(body.return_uri)) return json({ error: "invalid_return_uri" }, 400);
       if (!stripe) return json({ error: "buy_unavailable" }, 503);
       const { data: previousTransactions, error: previousError } = await admin.from("connect_transactions")
         .select("stripe_subscription_id").eq("user_id", user.id).eq("client_id", client.client_id)
         .eq("product_id", product.id).eq("stripe_account_id", account.stripe_account_id)
         .not("stripe_subscription_id", "is", null).order("created_at", { ascending: false }).limit(3);
       if (previousError) throw previousError;
-      for (const previous of previousTransactions || []) {
+      for (const previous of oneTime ? [] : previousTransactions || []) {
         const subscription = await stripe.subscriptions.retrieve(previous.stripe_subscription_id, { stripeAccount: account.stripe_account_id });
         if (!["canceled", "incomplete_expired"].includes(subscription.status)) return json({ error: "existing_subscription_needs_attention" }, 409);
       }
       const price = await stripe.prices.retrieve(product.stripe_price_id, { stripeAccount: account.stripe_account_id });
-      if (!price.livemode || !price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "plan_not_ready" }, 409);
-      const { data: existing } = await admin.from("connect_checkout_attempts").select("stripe_checkout_session_id")
+      if (!priceMatches(product, price, true)) return json({ error: "plan_not_ready" }, 409);
+      const requestKey = oneTime ? `rocket-buy-production-${user.id}-${client.client_id}-${product.id}-${body.purchase_request_id}` : null;
+      let existingQuery = admin.from("connect_checkout_attempts").select("stripe_checkout_session_id")
         .eq("user_id", user.id).eq("client_id", client.client_id).eq("product_id", product.id)
-        .eq("stripe_account_id", account.stripe_account_id).gt("expires_at", new Date().toISOString())
+        .eq("stripe_account_id", account.stripe_account_id)
         .not("stripe_checkout_session_id", "is", null).limit(1);
+      if (requestKey) existingQuery = existingQuery.eq("idempotency_key", requestKey);
+      else existingQuery = existingQuery.gt("expires_at", new Date().toISOString());
+      const { data: existing } = await existingQuery;
       if (existing?.[0]?.stripe_checkout_session_id) {
         const previous = await stripe.checkout.sessions.retrieve(existing[0].stripe_checkout_session_id, { stripeAccount: account.stripe_account_id });
         if (previous.status === "open" && previous.url) return json({ checkout_url: previous.url, reused: true });
+        if (oneTime) return json({ error: "purchase_request_already_used", checkout_status: previous.status }, 409);
       }
       const { data: customerRow } = await admin.from("connect_customers").select("stripe_customer_id")
         .eq("user_id", user.id).eq("developer_account_id", account.id).maybeSingle();
@@ -179,12 +198,14 @@ Deno.serve(async (req) => {
         if (error) throw error;
       }
       const now = Date.now();
-      const idempotencyKey = `rocket-buy-production-${user.id}-${client.client_id}-${product.id}-${Math.floor(now / 1800000)}`;
+      const idempotencyKey = requestKey || `rocket-buy-production-${user.id}-${client.client_id}-${product.id}-${Math.floor(now / 1800000)}`;
       const returnUrl = `${APP_URL}/apps/${appId}`;
+      const metadata = { rocket_user_id: user.id, rocket_client_id: client.client_id, rocket_product_id: product.id };
+      if (oneTime && product.platform_fee_bps !== 500) return json({ error: "platform_fee_configuration_invalid" }, 409);
       const session = await stripe.checkout.sessions.create({
-        mode: "subscription", customer: customerId, payment_method_types: ["card"], line_items: [{ price: product.stripe_price_id, quantity: 1 }],
-        success_url: `${returnUrl}?purchase=processing`, cancel_url: `${returnUrl}?purchase=cancelled`,
-        subscription_data: { application_fee_percent: product.platform_fee_bps / 100, metadata: { rocket_user_id: user.id, rocket_client_id: client.client_id, rocket_product_id: product.id } },
+        mode: oneTime ? "payment" : "subscription", customer: customerId, payment_method_types: ["card"], line_items: [{ price: product.stripe_price_id, quantity: 1 }],
+        success_url: oneTime ? body.return_uri : `${returnUrl}?purchase=processing`, cancel_url: `${returnUrl}?purchase=cancelled`,
+        ...(oneTime ? { payment_intent_data: { application_fee_amount: Math.round(product.amount_cents * product.platform_fee_bps / 10000), metadata } } : { subscription_data: { application_fee_percent: product.platform_fee_bps / 100, metadata } }),
         metadata: { rocket_user_id: user.id, rocket_client_id: client.client_id, rocket_product_id: product.id },
       }, { stripeAccount: account.stripe_account_id, idempotencyKey });
       if (!session.url) return json({ error: "checkout_unavailable" }, 503);

@@ -1,4 +1,5 @@
 import Stripe from "npm:stripe@16.12.0";
+import { billingType, verifiedOneTimePayment } from "../_shared/oneTimePayments.ts";
 import { getAdmin } from "../_shared/rocketConnect.ts";
 import { isolatedLiveWebhookSecret } from "../_shared/connectLiveConfiguration.ts";
 import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd, registeredApplicationFee, verifiedSubscriptionPeriodEnd } from "../_shared/connectPaymentRules.ts";
@@ -49,7 +50,8 @@ Deno.serve(async (req) => {
   if (isDuplicate && priorReceipt?.stripe_account_id !== accountId) return reply({ error: "event_account_mismatch" }, 400);
   // Permit recovery only for payment-settlement events that can legitimately
   // have reached the receipt ledger before their downstream state transition.
-  if (isDuplicate && priorReceipt?.processing_result !== "failed" && !["invoice.paid", "charge.refunded"].includes(event.type)) return reply({ received: true, duplicate: true });
+  const recoverableOneTime = ["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type) && (event.data.object as any).mode === "payment";
+  if (isDuplicate && priorReceipt?.processing_result !== "failed" && !["invoice.paid", "charge.refunded"].includes(event.type) && !recoverableOneTime) return reply({ received: true, duplicate: true });
   if (received && !isDuplicate) return reply({ error: "event_record_failed" }, 500);
   try {
     const object: any = event.data.object;
@@ -64,6 +66,46 @@ Deno.serve(async (req) => {
       if (!subscriptionId) return reply({ received: true, duplicate: true });
       const { data: existing } = await admin.from("connect_transactions").select("status").eq("stripe_account_id", accountId).eq("stripe_subscription_id", subscriptionId).maybeSingle();
       if (!existing || existing.status === "paid") return reply({ received: true, duplicate: true });
+    }
+    if (["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type) && object.mode === "payment") {
+      const { data: attempt, error: attemptError } = await admin.from("connect_checkout_attempts").select("*")
+        .eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).eq("client_id", account.client_id).maybeSingle();
+      if (attemptError || !attempt) throw attemptError || new Error("Unmapped one-time checkout");
+      const { data: product, error: productError } = await admin.from("connect_products").select("*")
+        .eq("id", attempt.product_id).eq("client_id", account.client_id).eq("developer_account_id", account.id).maybeSingle();
+      if (productError || !product || billingType(product) !== "one_time") throw productError || new Error("One-time product mapping mismatch");
+      const checkout = await stripe.checkout.sessions.retrieve(object.id, { stripeAccount: accountId });
+      if (checkout.payment_status !== "paid") {
+        await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "payment not settled" } }).eq("event_id", event.id);
+        return reply({ received: true, ignored: true });
+      }
+      if (typeof checkout.payment_intent !== "string") throw new Error("Missing one-time PaymentIntent");
+      const intent = await stripe.paymentIntents.retrieve(checkout.payment_intent, { expand: ["latest_charge"] }, { stripeAccount: accountId });
+      const lines = await stripe.checkout.sessions.listLineItems(checkout.id, { limit: 2 }, { stripeAccount: accountId });
+      if (!verifiedOneTimePayment(checkout, intent, lines, product, attempt, environment === "production")) throw new Error("One-time payment did not match canonical purchase");
+      // DO NOTHING on conflict: a duplicate must never reset refunded/disputed
+      // state. Both concurrent deliveries converge on the same transaction ID.
+      const { error: insertError } = await admin.from("connect_transactions").upsert({
+        user_id: attempt.user_id, client_id: attempt.client_id, product_id: product.id,
+        developer_account_id: account.id, stripe_account_id: accountId,
+        stripe_checkout_session_id: checkout.id, stripe_customer_id: typeof checkout.customer === "string" ? checkout.customer : null,
+        stripe_payment_intent_id: intent.id, stripe_subscription_id: null,
+        amount_cents: product.amount_cents, currency: product.currency,
+        application_fee_cents: registeredApplicationFee(product.amount_cents, product.platform_fee_bps), status: "pending",
+        stripe_event_created_at: new Date(event.created * 1000).toISOString(),
+      }, { onConflict: "stripe_checkout_session_id", ignoreDuplicates: true });
+      if (insertError) throw insertError;
+      const { data: transaction, error: lookupError } = await admin.from("connect_transactions").select("*")
+        .eq("stripe_checkout_session_id", checkout.id).eq("stripe_account_id", accountId).eq("client_id", attempt.client_id).maybeSingle();
+      if (lookupError || !transaction || transaction.user_id !== attempt.user_id || transaction.product_id !== product.id ||
+          transaction.stripe_payment_intent_id !== intent.id) throw lookupError || new Error("Purchase mapping changed");
+      const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
+      const state = charge?.disputed ? "disputed" : charge?.refunded ? "refunded" : "granted";
+      const { error: settlementError } = await admin.rpc("connect_settle_one_time", { p_transaction_id: transaction.id, p_environment: environment, p_status: state });
+      if (settlementError) throw settlementError;
+      const { error: receiptError } = await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { purchase_id: transaction.id, status: state } }).eq("event_id", event.id);
+      if (receiptError) throw receiptError;
+      return reply({ received: true });
     }
     if (event.type === "checkout.session.completed") {
       const { data: attempt } = await admin.from("connect_checkout_attempts").select("*").eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).maybeSingle();
@@ -151,6 +193,19 @@ Deno.serve(async (req) => {
     if (!transaction) {
       await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "unmapped event" } }).eq("event_id", event.id);
       return reply({ received: true, ignored: true });
+    }
+    const { data: purchasedKind, error: kindError } = await admin.from("connect_products").select("billing_type")
+      .eq("id", transaction.product_id).eq("client_id", transaction.client_id).maybeSingle();
+    if (kindError || !purchasedKind) throw kindError || new Error("Missing purchased product");
+    if (billingType(purchasedKind) === "one_time") {
+      const state = event.type === "charge.dispute.created" ? "disputed" :
+        event.type === "charge.refunded" && object.refunded === true ? "refunded" : null;
+      if (state) {
+        const { error } = await admin.rpc("connect_settle_one_time", { p_transaction_id: transaction.id, p_environment: environment, p_status: state });
+        if (error) throw error;
+      }
+      await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { purchase_id: transaction.id, status: state || "ignored" } }).eq("event_id", event.id);
+      return reply({ received: true });
     }
     if (transaction.stripe_event_created_at && new Date(transaction.stripe_event_created_at).getTime() > event.created * 1000 && transaction.status !== "pending") {
       await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "older event" } }).eq("event_id", event.id);

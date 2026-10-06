@@ -1,0 +1,77 @@
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import ts from "typescript";
+import { describe, expect, it, vi } from "vitest";
+import * as payments from "../../supabase/functions/_shared/oneTimePayments";
+import * as rules from "../../supabase/functions/_shared/connectPaymentRules";
+
+function load(path: string, stripe: any, admin: any, gate = true) {
+  let handler!: (req: Request) => Promise<Response>;
+  const json = (body: unknown, status=200) => new Response(JSON.stringify(body), {status});
+  runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText, {
+    exports: {}, Request, Response, URL, Date, console, crypto,
+    Deno:{env:{get:(key: string)=>key === "STRIPE_SECRET_KEY" ? "sk_live_mock_only" : key === "STRIPE_CONNECT_LIVE_WEBHOOK_SECRET" ? "whsec_mock_only" : undefined},serve:(fn: typeof handler)=>handler=fn},
+    require:(name: string)=> name.startsWith("npm:stripe") ? {default: class { constructor(){return stripe;} }} : name.includes("oneTimePayments") ? payments : name.includes("connectPaymentRules") ? rules : name.includes("connectLiveConfiguration") ? {isolatedLiveWebhookSecret:()=>"whsec_mock_only",liveWebhookConfigured:()=>gate} : name.includes("stripeConnectV2") ? {retrieveStripeConnectV2Merchant:async()=>({}),stripeConnectV2Ready:()=>true,StripeConnectV2Error:class extends Error {}} : {APP_URL:"https://tryrocket.ai",getAdmin:()=>admin,getRocketUser:async()=>({id:"buyer"}),getConnectToken:async()=>null,base64url:(bytes:Uint8Array)=>Buffer.from(bytes).toString("base64url"),json},
+  });
+  return handler;
+}
+const product = { id:"product",client_id:"launch",developer_account_id:"merchant",developer_user_id:"owner",product_key:"real-key",name:"Launch Pro",billing_type:"one_time",amount_cents:3900,currency:"usd",platform_fee_bps:500,stripe_price_id:"price_real",stripe_product_id:"prod_real",checkout_return_uris:["https://trylaunch.ai/my-products?success=true"] };
+function query(data: any, extras: Record<string,any>={}) {
+  const result={data,error:null}; const q: any={then:(resolve:any)=>resolve(result),single:async()=>result,maybeSingle:async()=>result,...extras};
+  for(const m of ["select","eq","not","limit","order","in","gt","is","update"]) q[m] ||= ()=>q;
+  return q;
+}
+function checkoutHarness(kind="one_time", gate=true, existingStatus?:string) {
+  const create=vi.fn().mockResolvedValue({id:"cs_real",url:"https://checkout.stripe.com/mock"});
+  const p={...product,billing_type:kind,interval:kind==="subscription"?"month":null};
+  const admin={rpc:async()=>({data:true,error:null}),from:(table:string)=>query(table==="rocket_buy_configuration"?{live_checkout_enabled:gate,platform_fee_bps:500}:table==="rocket_oauth_clients"?{client_id:"launch",created_by:"owner",allowed_scopes:["entitlements:read"]}:table==="connect_developer_accounts"?{id:"merchant",stripe_account_id:"acct_launch",stripe_api_version:"v2",status:"active",charges_enabled:true,payouts_enabled:true}:table==="connect_products"?[p]:table==="connect_customers"?{stripe_customer_id:"cus_real"}:table==="connect_checkout_attempts"?(existingStatus?[{stripe_checkout_session_id:"cs_real"}]:[]):table==="connect_transactions"?[]:null,{upsert:()=>query(null)})};
+  const stripe={prices:{retrieve:async()=>({active:true,livemode:true,unit_amount:3900,currency:"usd",product:"prod_real",type:kind,recurring:kind==="subscription"?{interval:"month"}:null})},checkout:{sessions:{create,retrieve:async()=>({status:existingStatus,url:existingStatus==="open"?"https://checkout.stripe.com/mock":null})}}};
+  return {create,handler:load("supabase/functions/rocket-buy/index.ts",stripe,admin)};
+}
+const body={action:"checkout",app_id:"b202d75a-02ae-46e6-8419-5b3410cbaac8",client_id:"launch",product_key:"real-key",purchase_request_id:"00000000-0000-4000-8000-000000000001",return_uri:"https://trylaunch.ai/my-products?success=true"};
+const request=(value:any)=>new Request("https://mock.invalid/",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(value)});
+describe("actual production merchant registration (isolated)",()=>{
+  function registration() {
+    const insert=vi.fn((record:any)=>query(record));
+    const stripe={products:{create:vi.fn().mockResolvedValue({id:"prod_real",livemode:true})},prices:{create:vi.fn().mockResolvedValue({id:"price_real",product:"prod_real",active:true,livemode:true,type:"one_time",unit_amount:3900,currency:"usd"})}};
+    const admin={rpc:async()=>({data:true,error:null}),from:(table:string)=>query(table==="rocket_oauth_clients"?{client_id:"launch",is_active:true,allowed_scopes:["entitlements:read"],redirect_uris:["https://trylaunch.ai/rocket/callback"]}:table==="connect_developer_accounts"?{id:"merchant",client_id:"launch",stripe_account_id:"acct_launch",stripe_api_version:"v2",status:"active",charges_enabled:true,payouts_enabled:true}:table==="rocket_buy_configuration"?{platform_fee_bps:500}:[],{insert})};
+    return {insert,stripe,handler:load("supabase/functions/rocket-buy-developer/index.ts",stripe,admin)};
+  }
+  const registrationBody={...body,action:"create_product",name:"Launch Pro",billing_type:"one_time",amount_cents:3900,payment_return_uri:body.return_uri};
+  it("registers a new real-price-backed UUID/key, inactive, exclusively to merchant/client",async()=>{
+    const h=registration();expect((await h.handler(request(registrationBody))).status).toBe(201);
+    const row=h.insert.mock.calls[0][0];expect(row.id).toMatch(/^[0-9a-f-]{36}$/);expect(row.product_key).toMatch(/^launch-pro-/);expect(row.client_id).toBe("launch");expect(row.developer_account_id).toBe("merchant");expect(row.is_active).toBe(false);expect(row.interval).toBeNull();expect(row.amount_cents).toBe(3900);expect(row.checkout_return_uris).toEqual([body.return_uri]);expect(h.stripe.prices.create.mock.calls[0][0].recurring).toBeUndefined();
+  });
+  it.each([{client_id:"other"},{payment_return_uri:"https://other.invalid"}])("rejects cross-client registration and unapproved origins %j",async patch=>{const h=registration();expect((await h.handler(request({...registrationBody,...patch}))).status).toBeGreaterThanOrEqual(400);expect(h.stripe.products.create).not.toHaveBeenCalled();});
+});
+describe("actual production checkout handler (isolated)",()=>{
+  it("creates payment mode, one unit, exact approved URI and $1.95 fee",async()=>{
+    const h=checkoutHarness(); expect((await h.handler(request(body))).status).toBe(200);
+    const [params,options]=h.create.mock.calls[0]; expect(params.mode).toBe("payment"); expect(params.payment_intent_data.application_fee_amount).toBe(195); expect(params.subscription_data).toBeUndefined(); expect(params.line_items).toEqual([{price:"price_real",quantity:1}]); expect(params.success_url).toBe(body.return_uri); expect(options.stripeAccount).toBe("acct_launch"); expect(options.idempotencyKey).toContain(body.purchase_request_id);
+  });
+  it("preserves subscription checkout and percentage fee",async()=>{
+    const h=checkoutHarness("subscription"); expect((await h.handler(request(body))).status).toBe(200); const [p]=h.create.mock.calls[0]; expect(p.mode).toBe("subscription"); expect(p.subscription_data.application_fee_percent).toBe(5); expect(p.payment_intent_data).toBeUndefined();
+  });
+  it("leaves the closed public gate effective",async()=>{const h=checkoutHarness("one_time",false);expect((await h.handler(request(body))).status).toBe(409);expect(h.create).not.toHaveBeenCalled();});
+  it.each([{client_id:"other"},{product_key:"other"},{return_uri:"https://attacker.invalid"},{purchase_request_id:null}])("rejects mismatched checkout inputs %j",async patch=>{const h=checkoutHarness();expect((await h.handler(request({...body,...patch}))).status).toBeGreaterThanOrEqual(400);expect(h.create).not.toHaveBeenCalled();});
+  it("reuses open sessions and never reuses a completed request",async()=>{for(const status of ["open","complete"]){const h=checkoutHarness("one_time",true,status);expect((await h.handler(request(body))).status).toBe(status==="open"?200:409);expect(h.create).not.toHaveBeenCalled();}});
+});
+
+function webhookHarness(validSignature=true, mode=true) {
+  const metadata={rocket_user_id:"buyer",rocket_client_id:"launch",rocket_product_id:"product"};
+  const attempt={user_id:"buyer",client_id:"launch",product_id:"product",stripe_checkout_session_id:"cs_real"};
+  const transaction={...attempt,id:"purchase",stripe_payment_intent_id:"pi_real"};
+  const grants=new Set<string>(); const rpc=vi.fn(async(_name:string,args:any)=>{grants.add(args.p_transaction_id);return {error:null};});
+  const admin={rpc,from:(table:string)=>query(table==="connect_developer_accounts"?{id:"merchant",client_id:"launch"}:table==="connect_checkout_attempts"?attempt:table==="connect_products"?product:table==="connect_transactions"?transaction:null,{insert:()=>query(null),upsert:()=>query(null)})};
+  const checkout={id:"cs_real",mode:"payment",status:"complete",payment_status:"paid",livemode:true,amount_total:3900,currency:"usd",metadata,payment_intent:"pi_real"};
+  const intent={id:"pi_real",metadata,status:"succeeded",livemode:true,amount:3900,amount_received:3900,currency:"usd",application_fee_amount:195,latest_charge:{id:"ch_real",payment_intent:"pi_real",paid:true,captured:true,livemode:true,refunded:false,disputed:false}};
+  const stripe={webhooks:{constructEventAsync:async()=>{if(!validSignature)throw Error("bad signature");return {id:"evt_mock",type:"checkout.session.completed",livemode:mode,account:"acct_launch",created:1,data:{object:{id:"cs_real",mode:"payment"}}};}},checkout:{sessions:{retrieve:async()=>checkout,listLineItems:async()=>({has_more:false,data:[{quantity:1,price:{id:"price_real",product:"prod_real"},amount_total:3900,currency:"usd"}]})}},paymentIntents:{retrieve:async()=>intent}};
+  return {grants,rpc,checkout,intent,handler:load("supabase/functions/connect-payment-webhook/index.ts",stripe,admin)};
+}
+const webhookRequest=()=>new Request("https://mock.invalid/",{method:"POST",headers:{"stripe-signature":"mock"},body:"mock"});
+describe("actual one-time webhook handler (isolated)",()=>{
+  it("settles duplicate deliveries against the same canonical purchase",async()=>{const h=webhookHarness();for(let i=0;i<3;i++)expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.grants.size).toBe(1);expect(h.rpc.mock.calls[0][1].p_status).toBe("granted");});
+  it.each([[false,true],[true,false]])("rejects signature or environment mismatch",async(sig,mode)=>{const h=webhookHarness(sig,mode);expect((await h.handler(webhookRequest())).status).toBe(400);expect(h.rpc).not.toHaveBeenCalled();});
+  it("never fulfils unpaid or amount-mismatched checkouts",async()=>{const h=webhookHarness();h.checkout.payment_status="unpaid";expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc).not.toHaveBeenCalled();const g=webhookHarness();g.intent.amount_received=1;expect((await g.handler(webhookRequest())).status).toBe(500);expect(g.rpc).not.toHaveBeenCalled();});
+  it("keeps a canonically refunded charge revoked despite checkout delivery",async()=>{const h=webhookHarness();h.intent.latest_charge.refunded=true;expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc.mock.calls[0][1].p_status).toBe("refunded");});
+});
