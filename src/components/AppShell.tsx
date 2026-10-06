@@ -95,7 +95,7 @@ const AppShell = () => {
   }, [collapsed]);
 
   const sidebarItemClass = ({ isActive }: { isActive: boolean }) =>
-    `group flex h-10 w-full items-center gap-3 rounded-xl font-body text-sm font-medium transition ${collapsed ? "justify-center px-0" : "px-3"} ${
+    `group flex h-10 w-full items-center gap-3 rounded-xl font-body text-[13px] font-medium transition ${collapsed ? "justify-center px-0" : "px-3"} ${
       isActive
         ? "bg-neutral-900 text-white shadow-xs"
         : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950"
@@ -243,7 +243,7 @@ const AppShell = () => {
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
-          className={`mb-3 flex h-9 w-full items-center gap-2 rounded-xl font-body text-xs font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900 ${collapsed ? "justify-center px-0" : "px-3"}`}
+          className={`mb-3 flex h-9 w-full items-center gap-2 rounded-xl font-body text-[11px] font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900 ${collapsed ? "justify-center px-0" : "px-3"}`}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -259,7 +259,7 @@ const AppShell = () => {
           {sections.map((section) => (
             <div key={section.label}>
               {!collapsed && (
-                <p className="mb-2 px-3 text-xs font-semibold text-neutral-500">
+                <p className="mb-2 px-3 text-[11px] font-semibold text-neutral-500">
                   {section.label}
                 </p>
               )}
@@ -295,7 +295,7 @@ const AppShell = () => {
           ))}
           {!collapsed && (
             <div className="border-t border-neutral-200 pt-4">
-              <p className="mb-2 px-3 text-xs font-semibold text-neutral-500">
+              <p className="mb-2 px-3 text-[11px] font-semibold text-neutral-500">
                 Grow
               </p>
               {[
@@ -308,7 +308,7 @@ const AppShell = () => {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                  className="flex h-10 items-center gap-3 rounded-xl px-3 text-[13px] font-medium text-neutral-700 hover:bg-neutral-100"
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
                   <span>{label}</span>
@@ -319,12 +319,12 @@ const AppShell = () => {
           )}
           {!collapsed && (
             <div className="border-t border-neutral-200 pt-4">
-              <p className="mb-2 px-3 text-xs font-semibold text-neutral-500">Community</p>
+              <p className="mb-2 px-3 text-[11px] font-semibold text-neutral-500">Community</p>
               <a
                 href="https://discord.gg/aSkXPHhTjJ"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                className="flex h-10 items-center gap-3 rounded-xl px-3 text-[13px] font-medium text-neutral-700 hover:bg-neutral-100"
               >
                 <MessageCircle className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
                 <span>Discord</span>
