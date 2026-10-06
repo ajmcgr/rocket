@@ -119,3 +119,7 @@ verify_jwt = false
 
 [functions.rocket-stripe-revenue]
 verify_jwt = false
+
+[functions.launch-rocket-acceptance]
+# Normal actions verify Supabase user; proof verifies Rocket access token/client/scope plus Launch ES256 identity.
+verify_jwt = false

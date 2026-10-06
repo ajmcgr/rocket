@@ -46,6 +46,8 @@ export default function AppProfileBuyAction({
   const [canBuy, setCanBuy] = useState(false);
   const [entitlement, setEntitlement] = useState<Entitlement>(null);
   const [busy, setBusy] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const pilot = appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("acceptance") === "1";
   const [error, setError] = useState("");
   const processing =
     typeof window !== "undefined" &&
@@ -53,7 +55,13 @@ export default function AppProfileBuyAction({
       "processing";
   useEffect(() => {
     let cancelled = false;
-    request<{ plan: Plan | null }>("catalog", appId)
+    setCanBuy(false);
+    setPlan(null);
+    setAcceptedTerms(false);
+    const catalog = pilot
+      ? (userId ? supabase.functions.invoke("launch-rocket-acceptance", { body: { action: "status" } }).then(({ data, error }) => { if (error) throw error; return { plan: data?.available ? data.plan : null }; }) : Promise.resolve({ plan: null }))
+      : request<{ plan: Plan | null }>("catalog", appId);
+    catalog
       .then((result) => {
         if (!cancelled) {
           setCanBuy(!!result.plan);
@@ -66,7 +74,7 @@ export default function AppProfileBuyAction({
     return () => {
       cancelled = true;
     };
-  }, [appId]);
+  }, [appId, pilot, userId]);
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -117,7 +125,9 @@ export default function AppProfileBuyAction({
     setBusy(true);
     setError("");
     try {
-      const result = await request<{ checkout_url: string }>("checkout", appId);
+      const result = pilot
+        ? await supabase.functions.invoke("launch-rocket-acceptance", { body: { action: "checkout", confirm_purchase_terms: acceptedTerms ? "1 USD per month until canceled" : "", amount_limit_cents: 100 } }).then(({ data, error }) => { if (error || data?.error) throw new Error(data?.error || "Acceptance checkout unavailable"); return data; })
+        : await request<{ checkout_url: string }>("checkout", appId);
       window.location.assign(result.checkout_url);
     } catch (caught: unknown) {
       setError(
@@ -142,11 +152,12 @@ export default function AppProfileBuyAction({
           {entitlement.status.replaceAll("_", " ")}
         </span>
       )}
+      {canBuy && pilot && <label className="text-sm"><input type="checkbox" checked={acceptedTerms} onChange={event => setAcceptedTerms(event.target.checked)} /> I approve a new $1 USD/month acceptance subscription, recurring until canceled.</label>}
       {canBuy && (
         <button
           type="button"
           onClick={buy}
-          disabled={busy || processing}
+          disabled={busy || processing || (pilot && !acceptedTerms)}
           className="inline-flex min-h-11 items-center rounded-xl border border-[#167ac6] bg-transparent px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
         >
           {busy ? "Opening checkout…" : "Buy with Rocket"}
