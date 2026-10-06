@@ -5,6 +5,7 @@ const mock = vi.hoisted(() => ({ user: { id: "buyer" } as { id: string } | null,
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: mock.user }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke: mock.invoke } } }));
 import AppProfileBuyAction from "./AppProfileBuyAction";
+import "../../public/buttons/v1/rocket-buttons.js";
 const launch = "b202d75a-02ae-46e6-8419-5b3410cbaac8";
 describe("controlled acceptance Buy action", () => {
   it("shows only the server-eligible pilot and requires recurring-payment agreement", async () => {
@@ -15,7 +16,7 @@ describe("controlled acceptance Buy action", () => {
     const container = document.createElement("div"), root = createRoot(container);
     try {
       await act(async () => { root.render(<AppProfileBuyAction appId={launch} appName="Launch" websiteUrl="https://trylaunch.ai" />); });
-      const button = container.querySelector("button")!, checkbox = container.querySelector("input")!;
+      const button = container.querySelector("rocket-button")!.shadowRoot!.querySelector("button")!, checkbox = container.querySelector("input")!;
       expect(button.disabled).toBe(true);
       expect(container.textContent).toContain("$1 USD/month");
       await act(async () => checkbox.click());

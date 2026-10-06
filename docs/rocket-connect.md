@@ -58,3 +58,9 @@ The existing checkout contract, authorization-code PKCE flow, server-side produc
 The account surface marks the user’s authorization revoked and invalidates active opaque access tokens and unused codes for that authorization. Reauthorization creates a fresh grant and code. Roll back the frontend/functions first if needed; do not delete OAuth audit, code, or token records during an incident.
 
 Run `npm run test:rocket-connect` after deployment for public security smoke checks: discovery/JWKS availability, secret-free JWKS, strict redirects, invalid clients/scopes, and PKCE `S256` enforcement.
+
+## Official Rocket Buttons
+
+Use the versioned hosted kit at `https://tryrocket.ai/buttons/v1/rocket-buttons.js` for both fixed labels: **Continue with Rocket** and **Buy with Rocket**. The same implementation powers Rocket’s own controls. Preview the primary blue, dark, light, loading and disabled states at [Buy with Rocket](https://tryrocket.ai/buy-with-rocket#rocket-buttons). Follow the [brand usage spec](https://tryrocket.ai/buttons/v1/brand-usage.html).
+
+Attach your existing sign-in or purchase handler to `rocket-activate`. The kit owns presentation only, makes no OAuth/payment requests, and accepts no custom mark or wording. Keep existing OAuth and payment eligibility/entitlement checks. Set the boolean `loading` attribute during the existing handler and remove it when complete; set `disabled` when ineligible.

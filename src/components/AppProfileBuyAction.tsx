@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import RocketButton from "./RocketButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -154,14 +155,8 @@ export default function AppProfileBuyAction({
       )}
       {canBuy && pilot && <label className="text-sm"><input type="checkbox" checked={acceptedTerms} onChange={event => setAcceptedTerms(event.target.checked)} /> I approve a new $1 USD/month acceptance subscription, recurring until canceled.</label>}
       {canBuy && (
-        <button
-          type="button"
-          onClick={buy}
-          disabled={busy || processing || (pilot && !acceptedTerms)}
-          className="inline-flex min-h-11 items-center rounded-xl border border-[#167ac6] bg-transparent px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
-        >
-          {busy ? "Opening checkout…" : "Buy with Rocket"}
-        </button>
+        <RocketButton action="buy" onActivate={buy} loading={busy}
+          disabled={processing || (pilot && !acceptedTerms)} />
       )}
       {error && (
         <span role="alert" className="w-full text-sm text-red-600">

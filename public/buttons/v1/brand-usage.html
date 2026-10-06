@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Official Rocket Buttons — Brand usage</title>
+    <style>
+      body {
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        color: #172331;
+        max-width: 850px;
+        margin: 40px auto;
+        padding: 0 24px;
+      }
+      code,
+      pre {
+        background: #eef1f5;
+      }
+      pre {
+        padding: 16px;
+        overflow: auto;
+      }
+      section {
+        margin: 32px 0;
+      }
+      .previews {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      a {
+        color: #205e8a;
+      }
+    </style>
+    <script defer src="./rocket-buttons.js"></script>
+  </head>
+  <body>
+    <h1>Official Rocket Buttons</h1>
+    <p>
+      Version 1 · Rocket supplies the button; your application supplies its
+      existing authorization or purchase handler.
+    </p>
+    <section>
+      <h2>Approved variants</h2>
+      <div class="previews">
+        <rocket-button action="continue"></rocket-button
+        ><rocket-button action="buy"></rocket-button
+        ><rocket-button action="buy" variant="dark"></rocket-button
+        ><rocket-button action="buy" variant="light"></rocket-button>
+      </div>
+      <p>
+        Primary: Rocket blue <code>#469DDA</code>, white mark and text with a
+        dark contrast halo. Dark: <code>#172331</code>, white mark and text.
+        Light: white with <code>#172331</code> mark and text, visible border.
+        White on Rocket blue alone does not meet text contrast requirements;
+        retain the provided halo.
+      </p>
+    </section>
+    <section>
+      <h2>Integration</h2>
+      <pre>
+&lt;script defer src="https://tryrocket.ai/buttons/v1/rocket-buttons.js"&gt;&lt;/script&gt;
+&lt;rocket-button id="rocket-sign-in" action="continue" variant="primary"&gt;&lt;/rocket-button&gt;
+&lt;rocket-button id="rocket-buy" action="buy" variant="primary"&gt;&lt;/rocket-button&gt;</pre>
+      <pre>
+document.getElementById("rocket-sign-in")
+  .addEventListener("rocket-activate", startExistingRocketSignIn);
+document.getElementById("rocket-buy")
+  .addEventListener("rocket-activate", startExistingRocketPurchase);
+// While your existing handler is pending:
+button.setAttribute("loading", "");
+// On failure or completion:
+button.removeAttribute("loading");</pre>
+      <p>
+        The kit is a framework-independent custom element, works with React, Vue
+        and ordinary HTML, and makes no network requests for identity or
+        payment. Its mark is embedded. It uses a native button inside Shadow DOM
+        so host styles do not alter branding. Add
+        <code>https://tryrocket.ai</code> to your script policy and allow the
+        component's inline styles and data-image mask if your CSP restricts
+        them. Do not weaken an existing CSP: review your policy or self-host the
+        unmodified versioned file. Nothing else is loaded. Importing is safe
+        only in the browser; load after client hydration for SSR apps.
+      </p>
+      <p>
+        Supported attributes: <code>action="continue|buy"</code>,
+        <code>variant="primary|dark|light"</code>, boolean
+        <code>loading</code> and <code>disabled</code> (remove them to reset;
+        setting "false" still enables a boolean attribute). Listen for
+        <code>rocket-activate</code>, not both that and click. Action and
+        variant fall back to Continue with Rocket and primary when invalid. Set
+        a Buy control disabled until your existing eligibility checks pass. Keep
+        price, currency, recurrence and purchase terms beside the button.
+      </p>
+    </section>
+    <section>
+      <h2>Brand and accessibility rules</h2>
+      <ul>
+        <li>
+          Use exactly “Continue with Rocket” or “Buy with Rocket”. Do not
+          rename, translate, replace, tint, crop or animate the Rocket mark or
+          add icons. Labels and mark have no override API. Keep the component
+          unmodified, including internal styles and accessibility labels.
+        </li>
+        <li>
+          Keep the 48px minimum height, 24px mark, 10px mark/text gap, 20px
+          horizontal padding and 10px corner radius. Allow at least 8px clear
+          space around the control; do not shrink it or place overlays over it.
+        </li>
+        <li>
+          Use one of the three approved variants. Do not use disabled styling
+          merely as a decorative variant. Supply a visible reason for
+          unavailable purchases or sign-in beside the button.
+        </li>
+        <li>
+          Enter/Space use native button activation. Focus has a visible
+          dual-color ring. Loading blocks duplicate activation, retains the
+          fixed label and announces progress using a polite live region.
+          Disabled is natively unavailable. A reduced-motion preference removes
+          spinning and transitions; forced-colors uses system colors.
+        </li>
+        <li>
+          Do not present a preview as an active offer or imply that branding
+          establishes entitlement, security review or payment approval. The
+          button changes presentation only; retain all OAuth state/nonce/PKCE
+          checks and payment/entitlement authorization.
+        </li>
+      </ul>
+    </section>
+    <p><a href="/buy-with-rocket#rocket-buttons">Back to Buy with Rocket</a></p>
+  </body>
+</html>
