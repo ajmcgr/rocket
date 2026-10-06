@@ -137,7 +137,7 @@ export default function SiteHeader() {
         title={sidebarCompact ? label : undefined}
         aria-label={sidebarCompact ? label : undefined}
         aria-current={active ? "page" : undefined}
-        className={`flex min-h-9 items-center gap-3 rounded-lg text-sm font-medium transition-colors ${sidebarCompact ? "justify-center px-0" : "px-3"} ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
+        className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium transition-colors ${sidebarCompact ? "justify-center px-0" : "px-3"} ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
       >
         <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
         {!sidebarCompact && <span>{label}</span>}
@@ -183,12 +183,12 @@ export default function SiteHeader() {
           <nav aria-label="Marketplace" className="mt-1 space-y-4">
             {sidebarSections.map((section) => (
               <div key={section.heading}>
-                {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">{section.heading}</p>}
+                {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">{section.heading}</p>}
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
             <div>
-              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">Grow</p>}
+              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">Grow</p>}
               {[
                 { label: "Launch", href: "https://trylaunch.ai", icon: Send },
                 { label: "Post", href: "https://trypost.ai", icon: PenLine },
@@ -201,7 +201,7 @@ export default function SiteHeader() {
                   rel="noopener noreferrer"
                   title={sidebarCompact ? label : undefined}
                   aria-label={sidebarCompact ? `${label} (opens in a new tab)` : undefined}
-                  className={`flex min-h-9 items-center gap-3 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
+                  className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
                   {!sidebarCompact && <><span>{label}</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
@@ -209,14 +209,14 @@ export default function SiteHeader() {
               ))}
             </div>
             <div>
-              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-xs font-semibold text-neutral-500">Community</p>}
+              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">Community</p>}
               <a
                 href="https://discord.gg/aSkXPHhTjJ"
                 target="_blank"
                 rel="noopener noreferrer"
                 title={sidebarCompact ? "Discord" : undefined}
                 aria-label={sidebarCompact ? "Discord (opens in a new tab)" : undefined}
-                className={`flex min-h-9 items-center gap-3 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
+                className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
               >
                 <MessageCircle className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
                 {!sidebarCompact && <><span>Discord</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
