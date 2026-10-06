@@ -21,6 +21,8 @@ import {
   type DeveloperClient,
   type DeveloperBuyStatus,
 } from "@/lib/developerExperience";
+import RocketButton from "./RocketButton";
+import RocketButtonKit from "./RocketButtonKit";
 import "./developer-experience.css";
 
 export type DeveloperMembership = {
@@ -848,6 +850,8 @@ export default function DeveloperExperience({
           </section>
         )}
 
+        <RocketButtonKit />
+
         {showMarketing && (
           <>
             <section
@@ -919,9 +923,7 @@ export default function DeveloperExperience({
                   aria-label="Illustrative Rocket ID sign-in flow"
                 >
                   <p className="dev-small">THE SIGN-IN EXPERIENCE</p>
-                  <div className="dev-demo-button">
-                    <ShieldCheck size={20} /> Continue with Rocket
-                  </div>
+                  <RocketButton action="continue" />
                   <span className="dev-down" aria-hidden="true">
                     ↓
                   </span>
@@ -1004,7 +1006,7 @@ export default function DeveloperExperience({
                     <strong>
                       $19<span>/month</span>
                     </strong>
-                    <div className="dev-demo-button">Buy with Rocket</div>
+                    <RocketButton action="buy" />
                   </div>
                   <span className="dev-down" aria-hidden="true">
                     ↓
