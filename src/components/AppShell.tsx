@@ -15,7 +15,7 @@ import {
   useNavigate,
 } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
-import { myProfileHref } from "@/lib/myProfileNavigation";
+import { useMyProfileHref } from "@/hooks/useMyProfileHref";
 import Logo from "./Logo";
 import ShareExportModal from "./ShareExportModal";
 import OnboardingTour from "./OnboardingTour";
@@ -71,7 +71,7 @@ export function useAppShell(): AppShellOutletContext {
 
 const AppShell = () => {
   const { user, signOut } = useAuth();
-  const profileHref = myProfileHref(user?.user_metadata);
+  const profileHref = useMyProfileHref(user);
   const nav = useNavigate();
   const { pathname } = useLocation();
   const initial = (user?.email?.[0] || "U").toUpperCase();

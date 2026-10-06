@@ -10,6 +10,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 vi.mock("./LanguageSelector", () => ({ default: () => null }));
 vi.mock("./ThemeToggle", () => ({ default: () => null }));
 vi.mock("./Logo", () => ({ default: () => null }));
+vi.mock("@/hooks/useMyProfileHref", () => ({ useMyProfileHref: () => "/settings/profile" }));
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
