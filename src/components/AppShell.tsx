@@ -123,16 +123,16 @@ const AppShell = () => {
       ],
     },
     {
-      label: "Create",
-      items: [
-        ...createNavigationItems,
-      ],
-    },
-    {
       label: "Monetize",
       items: [
         { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
         { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
+      ],
+    },
+    {
+      label: "Create",
+      items: [
+        ...createNavigationItems,
       ],
     },
   ];

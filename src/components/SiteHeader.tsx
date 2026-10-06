@@ -76,15 +76,15 @@ const sections: { heading: string; items: NavItem[] }[] = [
     ],
   },
   {
-    heading: "Create",
-    items: createNavigationItems,
-  },
-  {
     heading: "Monetize",
     items: [
       { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
     ],
+  },
+  {
+    heading: "Create",
+    items: createNavigationItems,
   },
 ];
 export default function SiteHeader() {

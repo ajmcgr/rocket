@@ -232,6 +232,29 @@ const Pricing = () => {
         </div>
       </section>
 
+      <section id="buy-with-rocket" className="scroll-mt-24 border-t border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="text-center">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Monetize plans</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Submit, claim, manage, and verify your apps for free. Rocket Developer is the account-level membership for monetization.</p>
+          </div>
+          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+            <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
+            <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
+            <p className="mt-4 text-neutral-600">Monetize your apps with Rocket. One membership covers the apps you legitimately own.</p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into your app.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users buy access to your app. Rocket takes 5% per payment on new plans; Stripe processing fees are separate.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Workspaces</h4><p className="mt-2 text-sm text-neutral-600">Create shared workspaces and invite teammates. Included in your $99/year membership; the owner's subscription covers their team.</p><Link to="/settings/team" className="mt-3 inline-flex text-sm font-semibold text-[#167ac6]">Manage workspaces →</Link></div>
+            </div>
+            <p className="mt-5 text-sm text-neutral-600">Production activation requires verified ownership, a ready Stripe merchant, and a tested identity and entitlement integration. Live buying remains closed until acceptance testing is complete.</p>
+            <Link to="/settings/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
+          </div>
+          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
+        </div>
+      </section>
+
+
       {/* Create plans */}
       <section className="border-b border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 py-16 text-center">
@@ -344,27 +367,6 @@ const Pricing = () => {
         </div>
       </section>
 
-      <section id="buy-with-rocket" className="scroll-mt-24 border-t border-neutral-200/60">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Monetize plans</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Submit, claim, manage, and verify your apps for free. Rocket Developer is the account-level membership for monetization.</p>
-          </div>
-          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-            <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
-            <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
-            <p className="mt-4 text-neutral-600">Monetize your apps with Rocket. One membership covers the apps you legitimately own.</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into your app.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users buy access to your app. Rocket takes 5% per payment on new plans; Stripe processing fees are separate.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Workspaces</h4><p className="mt-2 text-sm text-neutral-600">Create shared workspaces and invite teammates. Included in your $99/year membership; the owner's subscription covers their team.</p><Link to="/settings/team" className="mt-3 inline-flex text-sm font-semibold text-[#167ac6]">Manage workspaces →</Link></div>
-            </div>
-            <p className="mt-5 text-sm text-neutral-600">Production activation requires verified ownership, a ready Stripe merchant, and a tested identity and entitlement integration. Live buying remains closed until acceptance testing is complete.</p>
-            <Link to="/settings/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
-          </div>
-          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
-        </div>
-      </section>
 
       <section className="border-t border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 py-20">
