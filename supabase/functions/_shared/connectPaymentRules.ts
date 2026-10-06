@@ -1,5 +1,17 @@
 export type AccessStatus = "active" | "canceling" | "past_due" | "expired" | "refunded" | "disputed";
 
+// Snapshot webhooks from Basil onward put periods on subscription items.
+// Resolve only the purchased price, never another item's billing period.
+export function verifiedSubscriptionPeriodEnd(
+  subscription: { current_period_end?: number; items?: { data?: Array<{ price?: { id?: string }; current_period_end?: number }> } },
+  priceId: string,
+): number | null {
+  const matches = subscription.items?.data?.filter((item) => item.price?.id === priceId) || [];
+  if (!priceId || matches.length !== 1) return null;
+  const end = matches[0].current_period_end ?? subscription.current_period_end;
+  return typeof end === "number" && Number.isSafeInteger(end) && end > 0 && end <= 8640000000000 ? end : null;
+}
+
 // USD plans use integer minor units. The registered rate also supports the
 // unchanged historical 10% sandbox ledger; never substitute today's rate.
 export function registeredApplicationFee(amountCents: number, basisPoints: number): number {

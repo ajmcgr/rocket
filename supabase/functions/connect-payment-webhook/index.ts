@@ -1,7 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
 import { getAdmin } from "../_shared/rocketConnect.ts";
 import { isolatedLiveWebhookSecret } from "../_shared/connectLiveConfiguration.ts";
-import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd, registeredApplicationFee } from "../_shared/connectPaymentRules.ts";
+import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd, registeredApplicationFee, verifiedSubscriptionPeriodEnd } from "../_shared/connectPaymentRules.ts";
 
 const testKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const liveKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -10,8 +10,6 @@ const liveSecret = isolatedLiveWebhookSecret(Deno.env.get("STRIPE_CONNECT_LIVE_W
 const testStripe = testKey?.startsWith("sk_test_") ? new Stripe(testKey, { apiVersion: "2024-06-20" }) : null;
 const liveStripe = liveKey?.startsWith("sk_live_") ? new Stripe(liveKey, { apiVersion: "2024-06-20" }) : null;
 const reply = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
-
-function periodEnd(subscription: any) { return subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null; }
 
 function subscriptionIdFrom(object: any) {
   if (object?.object === "subscription") return typeof object.id === "string" ? object.id : null;
@@ -181,9 +179,16 @@ Deno.serve(async (req) => {
     if (event.type === "invoice.payment_failed") status = "past_due";
     if (event.type === "customer.subscription.updated") {
       status = subscriptionAccessChange(object.status, !!object.cancel_at_period_end, transaction.status);
-      validUntil = periodEnd(object);
+      if (status === "active" || status === "canceling") {
+        const { data: purchasedProduct, error: purchasedProductError } = await admin.from("connect_products")
+          .select("stripe_price_id").eq("id", transaction.product_id).eq("client_id", transaction.client_id).maybeSingle();
+        if (purchasedProductError || !purchasedProduct) throw purchasedProductError || new Error("Missing registered price");
+        const end = verifiedSubscriptionPeriodEnd(object, purchasedProduct.stripe_price_id);
+        if (!end) throw new Error("Subscription did not match the recorded Rocket purchase period");
+        validUntil = new Date(end * 1000).toISOString();
+      }
     }
-    if (event.type === "customer.subscription.deleted") { status = "expired"; validUntil = periodEnd(object); }
+    if (event.type === "customer.subscription.deleted") status = "expired";
     if (event.type === "charge.refunded" && (
       isCurrentInvoiceFullyRefunded(!!object.refunded, resolvedInvoiceId, transaction.stripe_invoice_id) ||
       (!!object.refunded && !resolvedInvoiceId && typeof object.payment_intent === "string" && object.payment_intent === transaction.stripe_payment_intent_id)

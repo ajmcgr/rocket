@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd } from "../../supabase/functions/_shared/connectPaymentRules";
+import { isCurrentInvoiceFullyRefunded, subscriptionAccessChange, verifiedPaidInvoicePeriodEnd, verifiedSubscriptionPeriodEnd } from "../../supabase/functions/_shared/connectPaymentRules";
 
 describe("Connect payment access rules", () => {
+  it("uses the purchased item's period for modern snapshots and supports legacy periods", () => {
+    const items = { data: [
+      { price: { id: "price_other" }, current_period_end: 1900000000 },
+      { price: { id: "price_right" }, current_period_end: 1800000000 },
+    ] };
+    expect(verifiedSubscriptionPeriodEnd({ items }, "price_right")).toBe(1800000000);
+    expect(verifiedSubscriptionPeriodEnd({ current_period_end: 1800000000, items: { data: [{ price: { id: "price_right" } }] } }, "price_right")).toBe(1800000000);
+    expect(verifiedSubscriptionPeriodEnd({ items }, "price_missing")).toBeNull();
+    expect(verifiedSubscriptionPeriodEnd({ items: { data: [items.data[1], items.data[1]] } }, "price_right")).toBeNull();
+    expect(verifiedSubscriptionPeriodEnd({ items: { data: [{ price: { id: "price_right" } }] } }, "price_right")).toBeNull();
+    expect(verifiedSubscriptionPeriodEnd({ items: { data: [{ price: { id: "price_right" }, current_period_end: NaN }] } }, "price_right")).toBeNull();
+  });
   it("does not grant access from an unpaid or trialing subscription update", () => {
     expect(subscriptionAccessChange("active", false, "pending")).toBeNull();
     expect(subscriptionAccessChange("trialing", false, "pending")).toBeNull();
