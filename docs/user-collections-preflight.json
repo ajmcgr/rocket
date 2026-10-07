@@ -1,0 +1,270 @@
+{
+  "save_count": 4,
+  "captured_at": "2026-10-07T08:33:54.235352+00:00",
+  "public_apps": " SELECT a.id,\n    COALESCE(p.display_name, a.name) AS name,\n    a.tagline,\n    COALESCE(p.description, a.description) AS description,\n    a.website_url,\n    a.canonical_host,\n    COALESCE(p.logo_url, a.logo_url) AS logo_url,\n        CASE\n            WHEN p.category IS NOT NULL THEN ARRAY[p.category] || (ARRAY( SELECT unnest(a.categories) AS unnest\n            EXCEPT\n             SELECT p.category))\n            ELSE a.categories\n        END AS categories,\n    a.tags,\n    a.platforms,\n    a.launched_at,\n    a.discovered_at,\n    s.source_url AS launch_url,\n    a.claim_state,\n    a.slug\n   FROM app_graph.apps a\n     LEFT JOIN app_owner_presentations p ON p.app_id = a.id\n     LEFT JOIN app_graph.app_sources s ON s.app_id = a.id AND s.source_type = 'launch'::text AND s.status = 'active'::text AND s.match_state = 'attached'::text\n  WHERE a.is_public;",
+  "save_digest": "a0739665dd41f8b8868c54dad9407478",
+  "save_grants": [
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "TRUNCATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "REFERENCES",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "YES",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "TRIGGER",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "TRUNCATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "REFERENCES",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "TRIGGER",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "TRUNCATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "REFERENCES",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "postgres",
+      "table_name": "saved_apps",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "TRIGGER",
+      "with_hierarchy": "NO"
+    }
+  ],
+  "save_indexes": [
+    "CREATE UNIQUE INDEX saved_apps_pkey ON public.saved_apps USING btree (user_id, app_id)",
+    "CREATE INDEX saved_apps_user_date_idx ON public.saved_apps USING btree (user_id, saved_at DESC, app_id)",
+    "CREATE INDEX saved_apps_app_id_idx ON public.saved_apps USING btree (app_id)"
+  ],
+  "save_policies": [
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "saved_apps",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users save public apps",
+      "schemaname": "public",
+      "with_check": "((user_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM app_graph.apps a\n  WHERE ((a.id = saved_apps.app_id) AND a.is_public))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "saved_apps",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users see saved apps",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "saved_apps",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users unsave apps",
+      "schemaname": "public",
+      "with_check": null
+    }
+  ],
+  "save_triggers": [
+    "CREATE TRIGGER sync_app_save_count AFTER INSERT OR DELETE ON public.saved_apps FOR EACH ROW EXECUTE FUNCTION app_graph.sync_app_save_count()"
+  ],
+  "save_constraints": [
+    "FOREIGN KEY (app_id) REFERENCES app_graph.apps(id) ON DELETE CASCADE",
+    "PRIMARY KEY (user_id, app_id)",
+    "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  ],
+  "collections_preexisting": 0
+}

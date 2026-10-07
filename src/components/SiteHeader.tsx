@@ -51,6 +51,8 @@ export const isMarketplaceSidebarItemActive = (
     pathname + search === to ||
     (to === "/discover" && pathname === "/discover" && !search) ||
     (to === "/saved-apps" && pathname === "/saved-apps") ||
+    (to === '/collections' && pathname.startsWith('/collections/')) ||
+    (to === '/my-collections' && (pathname.startsWith('/my-collections/') || pathname === '/saved-apps')) ||
     (to === "/submit" && pathname === "/submit") ||
     (to === "/create" && pathname === "/create") ||
     (label === "Developer" && pathname.startsWith("/developer"))
@@ -62,9 +64,9 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "Discover", to: "/discover", icon: Compass },
       { label: "Rankings", to: "/discover?view=rankings", icon: TrendingUp },
+      { label: "Collections", to: "/collections", icon: Grid2X2 },
       { label: "New", to: "/discover?view=new", icon: Flame },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
-      { label: "Saved", to: "/saved-apps", icon: Bookmark },
     ],
   },
   {
@@ -72,6 +74,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
+      { label: "My Collections", to: "/my-collections", icon: Bookmark },
       { label: "Submit my app", to: "/submit", icon: Plus },
     ],
   },

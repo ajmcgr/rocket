@@ -39,12 +39,13 @@ describe("bookmark saving", () => {
     await waitFor(() => expect(change).toHaveBeenCalledWith(true));
     expect(mocks.insert).toHaveBeenCalledWith({ user_id: "user-1", app_id: "app-1" });
     expect(parent).not.toHaveBeenCalled();
-    expect(mocks.navigate).toHaveBeenCalledWith("/saved-apps");
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
   it("fills saved bookmarks and removes only the current user's app", async () => {
     const change = vi.fn();
     render(<SaveAppButton appId="app-1" saved onChange={change} />);
     const button = screen.getByRole("button", { name: "Unsave app" });
+    expect(screen.getByRole('button', { name: 'Add app to collections' })).toBeTruthy();
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect(button.querySelector("svg")?.getAttribute("fill")).toBe("currentColor");
     fireEvent.click(button);

@@ -64,8 +64,9 @@ export default function SavedApps() {
   }, [rows]);
 
   return <div className="mx-auto max-w-5xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-14">
-    <Link to="/discover" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">← Discover</Link>
-    <h1 className="mt-3 font-display text-4xl sm:text-5xl">Saved Apps</h1>
+    <Link to="/my-collections" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">← My Collections</Link>
+    <h1 className="mt-3 font-display text-4xl sm:text-5xl">Saved</h1>
+    <p className="mt-2 text-sm text-neutral-500">Private — only you. Your default collection.</p>
     <p className="mt-3 max-w-2xl text-neutral-600">Your shortlist of apps worth returning to. Looking for a design? <Link to="/saved" className="font-medium text-sky-800 hover:underline">Open Saved Designs in Create</Link>.</p>
     {loading && <div role="status" aria-label="Loading saved apps" aria-busy="true" className="mt-8 grid gap-4 sm:grid-cols-2">{[0, 1, 2, 3].map((item) => <AppCardSkeleton key={item} saved />)}</div>}
     {error && <p role="alert" className="mt-8 rounded-2xl border border-red-200 bg-white p-6 text-red-700">Saved Apps could not be loaded. Please reload.</p>}
