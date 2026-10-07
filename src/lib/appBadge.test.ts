@@ -10,7 +10,7 @@ describe("Rocket app badges", () => {
     expect(embed).toContain('href="https://tryrocket.ai/apps/app-1"');
     expect(embed).toContain(badgePath(theme));
     expect(embed).toContain('alt="Discover it on Rocket"');
-    expect(embed).toContain('width="220" height="68"');
+    expect(embed).toContain('width="160" height="50"');
     expect(embed).toContain('rel="noopener"');
   });
 });

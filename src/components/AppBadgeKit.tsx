@@ -19,7 +19,7 @@ export default function AppBadgeKit({ appId, appName }: { appId: string; appName
       </fieldset>
       <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-100 p-5">
         <a href={appBadgeUrl(appId)} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${appName} on Rocket`} className="inline-block focus-visible:outline-2 focus-visible:outline-sky-700">
-          <img src={badgePath(theme)} alt="Discover it on Rocket" width={220} height={68} className="h-auto max-w-full" />
+          <img src={badgePath(theme)} alt="Discover it on Rocket" width={160} height={50} className="h-auto max-w-full" />
         </a>
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
@@ -32,7 +32,7 @@ export default function AppBadgeKit({ appId, appName }: { appId: string; appName
       <label className="mt-4 block text-sm font-medium">Website embed code
         <textarea readOnly value={embed} aria-label={`${appName} Rocket badge embed code`} onFocus={(event) => event.currentTarget.select()} rows={4} className="mt-2 w-full rounded-lg border bg-neutral-50 p-3 font-mono text-xs" />
       </label>
-      <p className="mt-3 text-xs text-neutral-500">Keep the badge proportions, leave space around it, and display it at least 44px tall. Use the supplied artwork without animation or added claims. A listing badge does not imply Rocket endorsement or verification.</p>
+      <p className="mt-3 text-xs text-neutral-500">Hosted artwork updates automatically. To resize an existing badge, replace its embed code or change the image width to 160px. Self-hosted SVGs need replacing. Keep the badge proportions, leave space around it, and display it at least 44px tall. Use the supplied artwork without animation or added claims. A listing badge does not imply Rocket endorsement or verification.</p>
       {notice && <p role="status" className="mt-3 text-sm">{notice}</p>}
     </div>
   </section>;
