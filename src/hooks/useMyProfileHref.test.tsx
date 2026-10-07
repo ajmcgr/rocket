@@ -22,7 +22,7 @@ it("opens setup for a metadata username without a published profile", async () =
 it("uses the saved username rather than stale auth metadata", async () => {
   mocks.read.mockResolvedValue({ data: { username: "published_name" }, error: null });
   const { result } = renderHook(() => useMyProfileHref(owner));
-  await waitFor(() => expect(result.current).toBe("/u/published_name"));
+  await waitFor(() => expect(result.current).toBe("/@published_name"));
 });
 it("never reuses another user's destination and ignores stale responses", async () => {
   let resolveOld!: (value: unknown) => void;
@@ -44,5 +44,5 @@ it("refreshes the destination after the signed-in user is updated on save", asyn
   await waitFor(() => expect(mocks.read).toHaveBeenCalledOnce());
   mocks.read.mockResolvedValue({ data: { username: "alex" }, error: null });
   rerender({ user: { ...owner } });
-  await waitFor(() => expect(result.current).toBe("/u/alex"));
+  await waitFor(() => expect(result.current).toBe("/@alex"));
 });

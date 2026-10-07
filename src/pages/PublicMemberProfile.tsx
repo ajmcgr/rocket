@@ -1,5 +1,7 @@
 import SiteHeader from "@/components/SiteHeader";
 import PublicMemberApps from "@/components/PublicMemberApps";
+import MarketplaceFollow from "@/components/MarketplaceFollow";
+import ProfileAvatarImage from "@/components/ProfileAvatarImage";
 import { type MemberProfile, safeProfileUrl } from "@/lib/memberProfile";
 
 export default function PublicMemberProfile({ profile }: { profile: MemberProfile | null }) {
@@ -19,7 +21,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
         </div>
         <div className="px-6 pb-8 sm:px-10">
           <div className="relative -mt-10 mb-5 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-sky-100 text-3xl font-semibold dark:border-neutral-900 dark:bg-sky-900">
-            {safeProfileUrl(profile.avatar_url) ? <img src={safeProfileUrl(profile.avatar_url)} alt="" className="h-full w-full object-cover" /> : (profile.full_name || profile.username)[0].toUpperCase()}
+            <ProfileAvatarImage src={profile.avatar_url} alt={`${profile.full_name || profile.username}'s profile photo`} className="h-full w-full object-cover" fallback={(profile.full_name || profile.username)[0].toUpperCase()} />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">{profile.full_name || profile.username}</h1>
           <p className="mt-1 text-neutral-500">@{profile.username}</p>
@@ -28,6 +30,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
             {safeProfileUrl(profile.website) && <a href={safeProfileUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">Website ↗</a>}
             {socials.filter(([, handle]) => handle).map(([label, handle, base]) => <a key={label} href={`${base}${encodeURIComponent(handle)}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">{label} ↗</a>)}
           </div>
+          <MarketplaceFollow key={profile.username} target={`developer:${profile.username}`} label="developer" />
         </div>
       </article>}
       {profile && <PublicMemberApps key={profile.username} username={profile.username} />}

@@ -3,6 +3,7 @@ import { APP_URL, getAdmin, getRocketUser, getConnectToken, json } from "../_sha
 import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
 import { billingType, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
+import { libraryPurchases } from "../_shared/buyerLibrary.ts";
 
 const key = Deno.env.get("STRIPE_SECRET_KEY");
 const stripe = key?.startsWith("sk_live_") ? new Stripe(key, { apiVersion: "2024-06-20" }) : null;
@@ -81,7 +82,7 @@ Deno.serve(async (req) => {
       const user = await getRocketUser(req);
       if (!user) return json({ error: "unauthorized" }, 401);
       const { data: entitlements, error } = await admin.from("connect_entitlements")
-        .select("id,user_id,client_id,product_id,status,valid_until,updated_at")
+        .select("id,user_id,client_id,product_id,transaction_id,status,valid_until,updated_at")
         .eq("user_id", user.id).order("updated_at", { ascending: false });
       if (error) throw error;
       const { data: grants, error: grantsError } = await admin.from("connect_purchase_grants")
@@ -92,25 +93,19 @@ Deno.serve(async (req) => {
       const clientIds = [...new Set(entries.map((entry) => entry.client_id))];
       const productIds = [...new Set(entries.map((entry) => entry.product_id))];
       const [{ data: clients, error: clientsError }, { data: products, error: productsError }] = await Promise.all([
-        admin.from("rocket_oauth_clients").select("client_id,app_id,name,environment").in("client_id", clientIds).eq("environment", "production"),
+        admin.from("rocket_oauth_clients").select("client_id,app_id,name,environment,is_active").in("client_id", clientIds).eq("environment", "production"),
         admin.from("connect_products").select("id,client_id,name,amount_cents,currency,interval,billing_type").in("id", productIds),
       ]);
       if (clientsError || productsError) throw clientsError || productsError;
       const appIds = (clients || []).map((client) => client.app_id).filter(Boolean);
-      const { data: apps, error: appsError } = appIds.length
-        ? await admin.from("public_apps").select("id,name,website_url").in("id", appIds)
-        : { data: [], error: null };
-      if (appsError) throw appsError;
-      const clientMap = new Map((clients || []).map((client) => [client.client_id, client]));
-      const productMap = new Map((products || []).map((product) => [product.id, product]));
-      const appMap = new Map((apps || []).map((app) => [app.id, app]));
-      return json({ purchases: entries.flatMap((entry: any) => {
-        const client = clientMap.get(entry.client_id); const product = productMap.get(entry.product_id);
-        const app = client?.app_id ? appMap.get(client.app_id) : null;
-        return app && product && product.client_id === entry.client_id ? [{ app_id: app.id, app_name: app.name, website_url: app.website_url, plan: publicPlan(product), status: entry.status, valid_until: entry.valid_until,
-          ...(entry.one_time ? { purchase_id: entry.purchase_id } : {}),
-          active: entry.one_time ? entry.status === "granted" : ["active", "canceling"].includes(entry.status) && (!entry.valid_until || new Date(entry.valid_until).getTime() > Date.now()) }] : [];
-      }) });
+      const [appResult, orderResult, detailsResult] = await Promise.all([
+        appIds.length ? admin.from("public_apps").select("id,name,website_url").in("id", appIds) : { data: [], error: null },
+        admin.from("connect_transactions").select("id,client_id,product_id,amount_cents,currency,status,created_at")
+          .eq("user_id", user.id).in("client_id", clientIds).order("created_at", { ascending: false }),
+        appIds.length ? admin.from("public_marketplace_details").select("app_id,support_url").in("app_id", appIds) : { data: [], error: null },
+      ]);
+      if (appResult.error || orderResult.error || detailsResult.error) throw appResult.error || orderResult.error || detailsResult.error;
+      return json({ purchases: libraryPurchases(entries, clients || [], products || [], appResult.data || [], orderResult.data || [], detailsResult.data || []) });
     }
 
     const appId = text(body.app_id, 36);

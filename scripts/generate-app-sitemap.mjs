@@ -10,7 +10,7 @@ if (!url || !key) throw new Error("Public Supabase configuration is required to 
 
 const apps = [];
 for (let offset = 0; ; offset += 1000) {
-  const endpoint = new URL("/rest/v1/public_apps", url);
+  const endpoint = new URL("/rest/v1/public_discoverable_apps", url);
   endpoint.searchParams.set("select", "id,slug");
   endpoint.searchParams.set("order", "id.asc");
   endpoint.searchParams.set("limit", "1000");

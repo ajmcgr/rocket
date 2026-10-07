@@ -39,7 +39,7 @@ describe("marketplace content treatments", () => {
   it("shows only authoritative card counts and an owner-provided handle", () => {
     expect(renderToStaticMarkup(<AppCardByline />)).toBe("");
     const markup = renderToStaticMarkup(<AppCardByline metadata={{ app_id: app.id, save_count: 27, rating_count: 3, developer_handle: "maker" }} />);
-    expect(markup).toContain("@maker");
+    expect(markup).not.toContain("@maker"); // Unbacked presentation handles are not canonical attribution.
     expect(markup).toContain("27 saves");
     expect(markup).not.toContain("3 ratings");
     const rating = renderToStaticMarkup(<AppCardRating metadata={{ app_id: app.id, save_count: 27, rating_count: 3, average_rating: 4.3, developer_handle: "maker" }} />);

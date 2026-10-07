@@ -41,7 +41,8 @@ function AppCardIdentity({ app, rank, metadata }: { app: App; rank?: number; met
 export function AppCardByline({ metadata, light = false }: { metadata?: AppCardMetadata; light?: boolean }) {
   if (!metadata) return null;
   return <div className={`flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${light ? "text-white/85" : "text-neutral-500"}`}>
-    {metadata.developer_handle && <span className="truncate font-medium" title="Owner-provided developer handle">@{metadata.developer_handle}</span>}
+    {metadata.developer_profile_username && <Link to={`/@${metadata.developer_profile_username}`} className="truncate font-medium hover:underline" title="Ownership-backed public developer profile">@{metadata.developer_profile_username}</Link>}
+    {metadata.pricing_kind && <span title="Pricing supplied by the verified owner">{metadata.pricing_kind === 'unknown' ? 'Pricing unknown' : metadata.pricing_kind === 'free' ? 'Free · owner declared' : metadata.pricing_kind === 'freemium' ? 'Freemium' : 'Paid'}{metadata.billing_model && !['unknown','both'].includes(metadata.billing_model) ? ` · ${metadata.billing_model.replaceAll('_',' ')}` : ''}</span>}
     <span className="inline-flex items-center gap-1" title={`${metadata.save_count} saves`} aria-label={`${metadata.save_count} saves`}><Bookmark className="h-3.5 w-3.5" aria-hidden="true" />{metadata.save_count.toLocaleString()}</span>
   </div>;
 }
@@ -155,7 +156,6 @@ export function StandardAppCard({
         {hasCover && <Artwork app={app} media={media} className="h-40 w-full sm:h-44" />}
         <div className="px-3 pb-3 pt-4 sm:px-4">
           <AppCardIdentity app={app} rank={rank} metadata={metadata} />
-          <div className="mt-2"><AppCardByline metadata={metadata} /></div>
           <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">
             {app.tagline || app.description || "Explore this app."}
           </p>
@@ -166,6 +166,7 @@ export function StandardAppCard({
           )}
         </div>
       </Link>
+      <div className="px-3 pb-3 sm:px-4"><AppCardByline metadata={metadata} /></div>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 px-3 pb-3 text-xs text-neutral-500 sm:px-4">
         <span className="min-w-0 truncate">{app.canonical_host}</span>
         <div className="flex flex-wrap items-center gap-2">
@@ -201,7 +202,7 @@ export function RankedAppRow({
         src={app.logo_url}
         className="h-11 w-11"
       />
-      <Link to={`/apps/${app.slug || app.id}`} className="min-w-32 flex-1 focus-visible:outline-2 focus-visible:outline-[#167ac6]">
+      <div className="min-w-32 flex-1"><Link to={`/apps/${app.slug || app.id}`} className="block focus-visible:outline-2 focus-visible:outline-[#167ac6]">
         <strong className="block truncate text-base font-semibold text-neutral-950">
           {app.name}
         </strong>
@@ -213,8 +214,8 @@ export function RankedAppRow({
           {app.categories[0] || "App"}
           {eyebrow ? ` · ${eyebrow}` : ""}
         </span>
-        <AppCardByline metadata={metadata} />
       </Link>
+      <AppCardByline metadata={metadata} /></div>
       {onSave && <SaveAppButton appId={app.id} saved={Boolean(saved)} onChange={onSave} compact />}
       <AppPurchaseActions appId={app.id} compact />
     </article>
@@ -232,11 +233,11 @@ export function RisingAppCard({
     <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm">
       <Link to={`/apps/${app.slug || app.id}`} className="focus-visible:outline-2 focus-visible:outline-[#167ac6]">
       <AppCardIdentity app={app} rank={rank} metadata={metadata} />
-      <div className="mt-2"><AppCardByline metadata={metadata} /></div>
       <span className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-600">
         {app.tagline || app.description || app.canonical_host}
       </span>
       </Link>
+      <div className="mt-2"><AppCardByline metadata={metadata} /></div>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5 text-xs text-neutral-500">
         <span className="min-w-0 truncate">{app.canonical_host}</span>
         <div className="flex items-center gap-2">
@@ -256,6 +257,7 @@ export function MarketplaceListRow({
 }: BaseProps & SaveProps) {
   return (
     <article className="flex min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3">
+      <div className="min-w-0 flex-1">
       <Link
         to={`/apps/${app.slug || app.id}`}
         className="flex min-w-0 flex-1 items-center gap-3 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
@@ -272,9 +274,10 @@ export function MarketplaceListRow({
           <span className="mt-0.5 block truncate text-[13px] text-neutral-500">
             {app.categories[0] || "App"}
           </span>
-          <AppCardByline metadata={metadata} />
         </span>
       </Link>
+      <div className="ml-15"><AppCardByline metadata={metadata} /></div>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
       {onSave && (
         <SaveAppButton

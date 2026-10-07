@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@/lib/router-compat";
+import ProfileAvatarImage from "@/components/ProfileAvatarImage";
 import { normalizeProfile, profileFields, profileFromData, publicProfileColumns, safeProfileUrl } from "@/lib/memberProfile";
 
 const db = supabase as any;
@@ -67,7 +68,7 @@ export default function MemberProfileSettings() {
   };
   return <div className="space-y-6">
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Public profile</h2>{published && <Link to={`/u/${published}`} className="text-sm font-medium text-brand hover:underline">View public profile →</Link>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Public profile</h2>{published && <Link to={`/@${published}`} className="text-sm font-medium text-brand hover:underline">View public profile →</Link>}</div>
       <p className="mt-2 text-sm text-neutral-600">These fields are public when you save. Your email and account details stay private.</p>
       {loading && <p role="status" className="mt-4">Loading profile…</p>}
       {error && <p role="alert" className="mt-4 text-red-700">{error} <button onClick={() => setRetry(n => n + 1)} className="underline">Retry</button></p>}
@@ -75,10 +76,10 @@ export default function MemberProfileSettings() {
         {(["avatar_url", "banner_url"] as const).map(field => <div key={field}>
           <label htmlFor={field} className="text-sm font-medium">{field === "avatar_url" ? "Avatar" : "Profile banner"}</label>
           <p className="mt-1 text-xs text-neutral-500">{field === "banner_url" ? "Recommended 1500 × 400. " : ""}JPEG, PNG or WebP, max 5 MB.</p>
-          {safeProfileUrl(profile[field]) && <img src={safeProfileUrl(profile[field])} alt={field === "banner_url" ? "Profile banner preview" : "Avatar preview"} className={field === "banner_url" ? "mt-3 aspect-[15/4] w-full rounded-xl object-cover" : "mt-3 h-20 w-20 rounded-full object-cover"} />}
+          {safeProfileUrl(profile[field]) && (field === "banner_url" ? <img src={safeProfileUrl(profile[field])} alt="Profile banner preview" className="mt-3 aspect-[15/4] w-full rounded-xl object-cover" /> : <ProfileAvatarImage src={profile[field]} alt="Avatar preview" className="mt-3 h-20 w-20 rounded-full object-cover" />)}
           <div className="mt-3 flex flex-wrap items-center gap-3"><input id={field} type="file" accept="image/jpeg,image/png,image/webp" className="max-w-full text-sm" onChange={e => { const file = e.target.files?.[0]; if (file) void upload(file, field); e.target.value = ""; }} />{profile[field] && <button type="button" onClick={() => update(field, "")} className="rounded-lg border px-3 py-2 text-sm">Remove {field === "banner_url" ? "banner" : "avatar"}</button>}</div>
         </div>)}
-        <div><label htmlFor="member-username" className="text-sm font-medium">Username</label><input id="member-username" value={profile.username} maxLength={30} onChange={e => update("username", e.target.value)} className="mt-1 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" /><p className="mt-1 text-xs text-neutral-500">Your public link: tryrocket.ai/u/{profile.username.toLowerCase().replace(/^@/, "") || "username"}</p></div>
+        <div><label htmlFor="member-username" className="text-sm font-medium">Username</label><input id="member-username" value={profile.username} maxLength={30} onChange={e => update("username", e.target.value)} className="mt-1 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" /><p className="mt-1 text-xs text-neutral-500">Your public link: tryrocket.ai/@{profile.username.toLowerCase().replace(/^@/, "") || "username"}</p></div>
         {profileFields.map(([key, label, limit]) => <div key={key}><label htmlFor={`member-${key}`} className="text-sm font-medium">{label}</label>{key === "bio" ? <textarea id={`member-${key}`} rows={4} maxLength={limit} value={profile[key]} onChange={e => update(key, e.target.value)} className="mt-1 w-full rounded-lg border bg-transparent p-3 text-sm" /> : <input id={`member-${key}`} type="text" maxLength={limit} value={profile[key]} placeholder={key === "website" ? "https://example.com" : key === "full_name" ? "Your name" : "Handle, without @ or a URL"} onChange={e => update(key, e.target.value)} className="mt-1 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" />}</div>)}
         <button onClick={save} className="rounded-lg bg-brand px-5 py-3 text-sm font-semibold text-white hover:bg-brand-hover">Save profile</button>
       </fieldset>
