@@ -31,7 +31,7 @@ export default function AppAnalyticsPreview({ appId, appName }: { appId: string;
   const path = points.map((p, i) => `${i ? "L" : "M"}${4 + i * 592 / Math.max(1, points.length - 1)},${72 - p.views / max * 64}`).join(" ");
   return <section aria-label={`${appName} analytics preview`} className="mt-5 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h3 className="font-semibold">Analytics</h3>
+      <h3 className="font-semibold">Rocket Analytics</h3>
       <Link to={`/my-apps/${appId}/rocket-analytics`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-sky-800 hover:underline dark:text-sky-400">View analytics <ArrowRight size={16} aria-hidden="true" /></Link>
     </div>
     <p className="text-xs text-neutral-500 dark:text-neutral-400">Last 30 days · Activity on Rocket, not your website traffic</p>

@@ -6,6 +6,8 @@ import {
   useSearchParams,
 } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
+import AppMarketplaceContext from "@/components/AppMarketplaceContext";
+import { recordOutbound } from "@/lib/marketplace";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -104,7 +106,7 @@ export default function PublicAppProfile({
   const [error, setError] = useState(initialApp === null);
   const shareApp = async () => {
     if (!app) return;
-    const url = `https://tryrocket.ai/apps/${app.slug || app.id}`;
+    const url = `https://tryrocket.ai/apps/${app.slug || app.id}?utm_source=rocket_share`;
     setShareStatus("");
     if (navigator.share) {
       try {
@@ -403,9 +405,10 @@ export default function PublicAppProfile({
                   href={app.website_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() =>
-                    track("outbound_app_clicked", { app_id: app.id })
-                  }
+                  onClick={() => {
+                    track("outbound_app_clicked", { app_id: app.id });
+                    recordOutbound(app.id);
+                  }}
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
                 >
                   Visit website <span aria-hidden="true">→</span>
@@ -528,6 +531,7 @@ export default function PublicAppProfile({
                 </p>
               </section>
             )}
+            <AppMarketplaceContext key={app.id} appId={app.id} />
             <AppReviews appId={app.id} onSummary={setReviewSummary} />
             {trustLabels(trust).length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">

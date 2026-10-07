@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "@/test/MemoryRouter";
 import Discover from "./Discover";
 
-const mocks = vi.hoisted(() => ({ from: vi.fn(), queries: [] as { table: string; range?: number[]; orders: string[] }[] }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: mocks.from } }));
+const mocks = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), queries: [] as { table: string; range?: number[]; orders: string[] }[] }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: mocks.from, rpc:mocks.rpc } }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => null }));
@@ -24,6 +24,7 @@ describe("New app feed pagination", () => {
   it("shows 24 newest listings and navigates forward/back without requiring Launch signals", async () => {
     vi.stubGlobal("scrollTo", vi.fn());
     mocks.queries.length = 0;
+    mocks.rpc.mockImplementation((_name,args) => Promise.resolve({data:{apps:Array.from({length:Math.min(24,50-args.p_offset)},(_,i)=>({id:`app-${args.p_offset+i}`,name:`App ${args.p_offset+i+1}`})),total:50},error:null}));
     mocks.from.mockImplementation((table: string) => {
       const query = { table, orders: [] as string[], range: undefined as number[] | undefined };
       mocks.queries.push(query);
@@ -46,12 +47,13 @@ describe("New app feed pagination", () => {
     await screen.findByText("App 1");
     expect(screen.getAllByRole("article")).toHaveLength(24);
     expect(screen.getByText("Page 1 of 3")).toBeTruthy();
-    expect(mocks.queries.find((q) => q.table === "public_discoverable_apps")).toMatchObject({ range: [0, 23], orders: ["discovered_at", "id"] });
+    expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace",expect.objectContaining({p_offset:0,p_limit:24,p_sort:"discovered"}));
     expect(mocks.queries.some((q) => q.table === "public_discoverable_app_intelligence")).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await screen.findByText("App 25");
     expect(screen.getAllByRole("article")).toHaveLength(24);
     expect(screen.getByText("Page 2 of 3")).toBeTruthy();
+    expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace",expect.objectContaining({p_offset:24}));
     expect(screen.queryByText("App 1")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Previous" }));
     await screen.findByText("App 1");

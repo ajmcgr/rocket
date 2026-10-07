@@ -19,6 +19,7 @@ import {
 import { track } from "@/lib/analytics";
 import { availableCategories } from "@/lib/appCategories";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
+import { marketplaceRpc } from "@/lib/marketplace";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -59,6 +60,8 @@ export default function Discover() {
   const category = params.get("category") || "";
   const platform = params.get("platform") || "";
   const source = params.get("source") || "";
+  const pricing = params.get("pricing") || "";
+  const billing = params.get("billing") || "";
   const sort = params.get("sort") === "discovered" ? "discovered" : "launched";
   const page = Math.max(
     0,
@@ -78,6 +81,7 @@ export default function Discover() {
     !category &&
     !platform &&
     !source &&
+    !pricing && !billing &&
     page === 0;
 
   useEffect(() => {
@@ -152,29 +156,14 @@ export default function Discover() {
           setMedia(new Map());
         }
       } else {
-        let request = supabase
-          .from(search ? "public_apps" : "public_discoverable_apps")
-          .select("*", { count: "exact" });
-        if (search)
-          request = request.or(
-            `name.ilike.%${search}%,tagline.ilike.%${search}%,description.ilike.%${search}%`,
-          );
-        if (category) request = request.contains("categories", [category]);
-        if (platform) request = request.contains("platforms", [platform]);
-        if (source === "launch")
-          request = request.not("launch_url", "is", null);
-        const {
-          data,
-          error: queryError,
-          count: total,
-        } = await publicMarketplaceRead("catalogue", JSON.stringify({view,search,category,platform,source,sort,page}), () => request
-          .order(view === "new" || sort === "discovered" ? "discovered_at" : "launched_at", {
-            ascending: false,
-            nullsFirst: false,
-          })
-          .order("id", { ascending: true })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1));
-        if (queryError) throw queryError;
+        const result = await marketplaceRpc("search_marketplace", {
+          p_query: search, p_category: category, p_platform: platform, p_pricing: pricing,
+          p_billing: billing, p_source: source, p_sort: view === "new" ? "discovered" : sort,
+          p_offset: page * PAGE_SIZE, p_limit: PAGE_SIZE,
+        });
+        if (result.error) throw result.error;
+        const data: App[] = result.data?.apps || [];
+        const total: number = result.data?.total || 0;
         const ids = (data || []).map((app) => app.id);
         if (!canceled) {
           setApps(data || []);
@@ -216,7 +205,7 @@ export default function Discover() {
     return () => {
       canceled = true;
     };
-  }, [search, category, platform, source, sort, page, view, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
+  }, [search, category, platform, source, pricing, billing, sort, page, view, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
 
   useEffect(() => {
     if (!user || apps.length === 0) {
@@ -416,6 +405,13 @@ export default function Discover() {
               Filters and sorting
             </summary>
             <div className="mt-4 flex flex-wrap gap-3">
+              <select aria-label="Price" value={pricing} onChange={e => change("pricing",e.target.value)} className="min-h-11 rounded-lg border bg-white px-3 text-sm">
+                <option value="">All prices</option><option value="free">Free (owner declared)</option><option value="freemium">Freemium</option><option value="paid">Paid</option><option value="unknown">Pricing unknown</option>
+              </select>
+              <select aria-label="Billing type" value={billing} onChange={e => change("billing",e.target.value)} className="min-h-11 rounded-lg border bg-white px-3 text-sm">
+                <option value="">All billing types</option><option value="one_time">One-time</option><option value="subscription">Subscription</option>
+              </select>
+              {search && <p className="w-full text-sm text-neutral-500">Matches are ranked by relevance before date.</p>}
               <select
                 aria-label="Category"
                 value={category}
@@ -449,7 +445,7 @@ export default function Discover() {
                 onChange={(event) => change("sort", event.target.value)}
                 className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
               >
-                <option value="launched">Newest launches</option>
+                <option value="launched">Reported release date</option>
                 <option value="discovered">Recently discovered</option>
               </select>
             </div>

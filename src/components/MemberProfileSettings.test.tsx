@@ -26,7 +26,7 @@ describe("member settings", () => {
     fireEvent.change(ui.getByLabelText("Website"), { target: { value: "example.com" } });
     fireEvent.click(ui.getByText("Save profile"));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ user_id: "owner-id", full_name: "Alex", website: "https://example.com/" }), { onConflict: "user_id" }));
-    expect(ui.getByRole("link", { name: "View public profile →" }).getAttribute("href")).toBe("/u/alex");
+    expect(ui.getByRole("link", { name: "View public profile →" }).getAttribute("href")).toBe("/@alex");
   });
   it("blocks saving after load errors", async () => {
     mocks.read.mockResolvedValue({ error: { message: "unavailable" } });

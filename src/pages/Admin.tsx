@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
 import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
+import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketplaceOps";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -111,6 +112,7 @@ export default function Admin() {
       <Panel title="Outreach"><StatGrid data={obj(data.outreach)} /><p className="rocket-admin-muted">Founder sending remains disabled in test mode.</p></Panel>
     </>}
     {data && section === "ops" && <>
+      <AdminMarketplaceOps />
       <Panel title={`Claims awaiting action · ${rows(data.claims).filter(row => row.status === "review").length} need review`}>
         <p className="rocket-admin-note">Manual requests are prioritized. A Rocket account alone is not ownership proof. Approval marks an app as claimed, not domain verified, and never replaces an active owner.</p>
         {rows(data.claims).length ? <div className="rocket-admin-list">{rows(data.claims).map(row => <article key={String(row.id)} id={`claim-${row.id}`} className={row.id === claimId ? "rocket-admin-claim-selected" : undefined}>
@@ -138,6 +140,7 @@ export default function Admin() {
       <Panel title="Recent members">{rows(data.members).length ? <div className="rocket-admin-list">{rows(data.members).map((row) => <article key={String(row.id)}><strong>{String(row.email || "No email")}</strong><p>Joined {when(row.created_at)} · {row.email_confirmed_at ? "Confirmed" : "Unconfirmed"}</p></article>)}</div> : <Empty />}</Panel>
     </>}
     {data && section === "marketing" && <>
+      <Panel title="Task collections">{picks.map(row => <div key={String(row.id)} className="mb-4"><strong>{String(row.name)}</strong><PickCollection appId={String(row.app_id)} /></div>)}</Panel>
       <p className="rocket-admin-note">Signals nominate candidates; only a deliberate Feature action creates a Rocket Pick. Private metrics are not used here.</p>
       <Panel title="Rocket Picks">{picks.length ? <div className="rocket-admin-list">{picks.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link> · {String(row.placement)}</strong><p>{String(row.headline || "No editorial headline")}</p><button disabled={busy} onClick={() => void act("unfeature", String(row.app_id))}>Unfeature</button></article>)}</div> : <Empty>No Rocket Picks yet.</Empty>}</Panel>
       <Panel title="Candidates from public Launch activity">{candidates.length ? <div className="rocket-admin-list">{candidates.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link></strong><p>{String(row.tagline || "No description")} · {Array.isArray(row.categories) ? row.categories.join(", ") : "Uncategorized"}</p><p>Signal: {String(row.signal_type || "New listing")} · public Launch votes: {count(row.net_votes)}</p><div className="rocket-admin-actions"><a href={String(row.website_url)} target="_blank" rel="noopener noreferrer">External app ↗</a><button disabled={busy || picks.some((pick) => pick.app_id === row.id)} onClick={() => { const headline = window.prompt("Optional factual headline for this Rocket Pick:") || ""; void act("feature", String(row.id), null, { placement: "standard", headline }); }}>Feature</button></div></article>)}</div> : <Empty />}</Panel>

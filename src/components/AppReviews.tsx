@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "@/lib/router-compat";
 import { Star } from "lucide-react";
+import { marketplaceRpc, marketplaceTable } from "@/lib/marketplace";
 
 type Review = {
   id: string;
@@ -30,6 +31,37 @@ export default function AppReviews({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [labels,setLabels] = useState<Record<string,string>>({});
+  const [responses,setResponses] = useState<Record<string,string>>({});
+  const [canRespond,setCanRespond] = useState(false);
+  const [responseDraft,setResponseDraft] = useState<Record<string,string>>({});
+  useEffect(() => {
+    let alive=true; setLabels({}); setResponses({}); setCanRespond(false);
+    async function loadExtras() { const [p,o] = await Promise.all([
+      marketplaceRpc("get_app_review_purchase_labels", { p_app_id: appId }),
+      user ? supabase.from("app_owners").select("verification_level").eq("app_id",appId).eq("user_id",user.id).is("revoked_at",null).maybeSingle() : Promise.resolve({ data:null }),
+    ]); if (!alive) return;
+      if (!p.error) setLabels(Object.fromEntries((p.data || []).map((v: {review_id:string;purchase_label:string}) => [v.review_id,v.purchase_label])));
+      setCanRespond(o.data?.verification_level==='domain_verified');
+    }
+    void loadExtras().catch(() => {});
+    return () => { alive=false; };
+  }, [appId,user?.id]);
+  useEffect(() => {
+    let alive = true;
+    const ids = reviews.filter(r => r.app_id === appId).map(r => r.id);
+    if (ids.length) void marketplaceTable("app_review_responses").select("review_id,body").in("review_id",ids).limit(50)
+      .then((r) => { if (alive && !r.error) setResponses(Object.fromEntries((r.data || []).map(v => [v.review_id,v.body]))); });
+    return () => { alive = false; };
+  }, [appId,reviews]);
+  async function respond(id: string,remove=false) {
+    setBusy(true); setError("");
+    const body=remove ? null : (responseDraft[id] ?? responses[id] ?? '').trim();
+    const r=await marketplaceRpc("respond_app_review", { p_review_id:id,p_body:body });
+    if (r.error) setError("Response could not be saved. Verified ownership and 10–1000 characters are required.");
+    else { setResponses(prior => ({...prior,[id]:body || ''})); setNotice(remove ? "Response removed." : "Developer response saved."); }
+    setBusy(false);
+  }
   const load = useCallback(async () => {
     const [list, aggregate] = await Promise.all([
       supabase
@@ -162,6 +194,9 @@ export default function AppReviews({
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">
                 {review.body}
               </p>
+              {labels[review.id] && <p className="mt-2 text-xs font-semibold">{labels[review.id]} · Not verified usage</p>}
+              {responses[review.id] && <div className="mt-3 rounded-lg border p-3"><h4 className="text-sm font-semibold">Developer response</h4><p className="mt-1 whitespace-pre-wrap text-sm">{responses[review.id]}</p></div>}
+              {canRespond && <details className="mt-3"><summary className="min-h-11 cursor-pointer text-sm">Respond as developer</summary><label className="block text-sm">Response<textarea minLength={10} maxLength={1000} value={responseDraft[review.id] ?? responses[review.id] ?? ''} onChange={e => setResponseDraft(d => ({...d,[review.id]:e.target.value}))} className="mt-2 w-full rounded-lg border p-3" /></label><button disabled={busy || !(responseDraft[review.id] || responses[review.id])} onClick={() => { if (!responseDraft[review.id]) setResponseDraft(d => ({...d,[review.id]:responses[review.id]})); void respond(review.id); }} className="min-h-11 px-3 text-sm underline">Save response</button>{responses[review.id] && <button disabled={busy} onClick={() => void respond(review.id,true)} className="min-h-11 px-3 text-sm underline">Remove response</button>}</details>}
               {user && user.id !== review.user_id && (
                 <button
                   type="button"

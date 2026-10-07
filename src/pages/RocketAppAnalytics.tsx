@@ -11,6 +11,7 @@ export type RocketAnalytics = {
   daily_views: { day: string; views: number }[];
   rating_distribution: { stars: number; count: number }[];
   reviews: { id: string; rating: number; body: string; created_at: string }[];
+  commerce?: { outbound_clicks: number; checkout_starts: number; verified_purchases: number; refunds: number; outbound_sources: Record<string,number> };
 };
 const number = (n: number) => n.toLocaleString();
 const date = (d: string) => new Date(d.length === 10 ? `${d}T00:00:00Z` : d).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
@@ -75,6 +76,12 @@ export default function RocketAppAnalytics() {
           { label: "Saves", value: number(data.save_count), note: "Currently bookmarked by Rocket users", Icon: Bookmark },
         ].map(({ label, value, note, Icon }) => <section key={label} className={panel}><p className="flex items-center gap-2 text-sm font-medium text-neutral-600"><Icon size={18} aria-hidden="true" />{label}</p><p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p><p className="mt-2 text-xs text-neutral-500">{note}</p></section>)}
       </div>
+      {data.commerce && <section className={`${panel} mt-6`} aria-label="Commerce funnel">
+        <h2 className="text-lg font-semibold">Discovery to purchase</h2>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">{[["Outbound clicks",data.commerce.outbound_clicks],["Checkout starts",data.commerce.checkout_starts],["Verified purchases",data.commerce.verified_purchases],["Refunds",data.commerce.refunds]].map(([label,value]) => <div key={label}><p className="text-sm text-neutral-500">{label}</p><p className="mt-2 text-2xl font-semibold">{Number(value).toLocaleString()}</p></div>)}</div>
+        <p className="mt-3 text-xs text-neutral-500">Production records only. Clicks are deduplicated per app/browser/network/day, not installs. Checkouts may be abandoned. Purchases are webhook-confirmed order records, not unique customers. Refunds count orders with confirmed full-refund events by event date; purchases use order date. Older events without an exact order binding are excluded; this is not a complete accounting report.</p>
+        {Object.entries(data.commerce.outbound_sources).length>0 && <p className="mt-3 text-sm">Outbound click source: {Object.entries(data.commerce.outbound_sources).map(([s,n]) => `${s.replaceAll('_',' ')}: ${n}`).join(' · ')}</p>}
+      </section>}
       <div className="mt-6 grid gap-5 lg:grid-cols-[2fr_1fr]">
         <section className={panel}><h2 className="text-lg font-semibold">Profile views over time</h2>{data.profile_views === 0 && <p className="mt-2 text-sm text-neutral-500">No recorded views in this period yet.</p>}<ViewTrend points={data.daily_views} /><p className="mt-3 text-xs text-neutral-500">Repeat visits from the same browser/network count once per app per UTC day. These are deduplicated views, not unique people across the whole period.</p></section>
         <section className={panel}><h2 className="text-lg font-semibold">Star rating breakdown</h2><p className="mt-1 text-sm text-neutral-500">All published reviews</p><div className="mt-6 space-y-4">{data.rating_distribution.map((row) => <div key={row.stars} className="flex items-center gap-3 text-sm" aria-label={`${row.stars} stars: ${row.count} reviews`}><span className="inline-flex w-10 items-center gap-1">{row.stars}<Star size={15} className="fill-amber-400 text-amber-500" aria-hidden="true" /></span><div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100"><div className="h-full rounded-full bg-amber-400" style={{ width: `${data.review_count ? row.count / data.review_count * 100 : 0}%` }} /></div><span className="w-8 text-right">{number(row.count)}</span></div>)}</div></section>

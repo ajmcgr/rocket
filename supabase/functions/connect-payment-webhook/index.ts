@@ -276,10 +276,10 @@ Deno.serve(async (req) => {
     if (!existingEntitlementEvent) {
       const { error: entitlementEventError } = await admin
         .from("connect_entitlement_events")
-        .insert({ entitlement_id: saved.id, event_type: event.type, detail: { status, stripe_event_id: event.id } });
+        .insert({ entitlement_id: saved.id, event_type: event.type, detail: { status, stripe_event_id: event.id, transaction_id: transaction.id } });
       if (entitlementEventError) throw entitlementEventError;
     }
-    await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status } }).eq("event_id", event.id);
+    await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status, transaction_id: transaction.id } }).eq("event_id", event.id);
     return reply({ received: true });
   } catch (error) {
     console.error("connect-payment-webhook", error);

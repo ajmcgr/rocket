@@ -4,6 +4,7 @@ import {
   X as ControlX,
 } from "lucide-react";
 import { useState, useMemo } from "react";
+import MarketplaceFollowSettings from "@/components/MarketplaceFollowSettings";
 import { Link } from "@/lib/router-compat";
 import {
   Bell,
@@ -85,6 +86,7 @@ const Notifications = () => {
 
   return (
     <div className="notification-surface mx-auto w-full max-w-3xl px-6 py-10">
+      <MarketplaceFollowSettings />
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">

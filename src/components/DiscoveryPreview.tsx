@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import RocketPicks from "./RocketPicks";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -14,9 +15,7 @@ import {
 } from "./MarketplaceCards";
 
 type App = Tables<"public_apps">;
-type Signal = Tables<"public_app_intelligence">;
 type Category = Tables<"public_app_categories">;
-type Preview = { app: App; signal: Signal };
 const categoryGradients = [
   "rocket-category-ocean",
   "rocket-category-orchid",
@@ -56,8 +55,8 @@ function SectionHeading({ id, title, description, href, action, emoji }: {
 
 export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
   const [rankings, setRankings] = useState<App[]>([]);
-  const [fresh, setFresh] = useState<Preview[]>([]);
-  const saveControls = useSavedAppControls([...rankings.map((app) => app.id), ...fresh.map(({ app }) => app.id)]);
+  const [fresh, setFresh] = useState<App[]>([]);
+  const saveControls = useSavedAppControls([...rankings.map((app) => app.id), ...fresh.map(app => app.id)]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [media, setMedia] = useState<Map<string, PublicAppMedia[]>>(new Map());
   const [metadata, setMetadata] = useState<Map<string, AppCardMetadata>>(new Map());
@@ -76,12 +75,11 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           .order("launched_at", { ascending: false, nullsFirst: false })
           .order("app_id", { ascending: true })
           .limit(20)),
-        publicMarketplaceRead("preview", "new", () => supabase
-          .from("public_discoverable_app_intelligence")
+        publicMarketplaceRead("preview", "new-to-rocket", () => supabase
+          .from("public_discoverable_apps")
           .select("*")
-          .eq("signal_type", "new_interesting")
-          .order("percentile_rank", { ascending: false })
-          .order("net_votes", { ascending: false })
+          .order("discovered_at", { ascending: false })
+          .order("id", { ascending: true })
           .limit(4)),
         publicMarketplaceRead("categories", "home", () => supabase
           .from("public_app_categories")
@@ -93,10 +91,10 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
       if (rankingResult.error && newResult.error && categoryResult.error)
         throw rankingResult.error;
       const rankingRows = rankingResult.error ? [] : rankingResult.data || [];
-      const freshSignals = newResult.error ? [] : newResult.data || [];
+      const freshApps = newResult.error ? [] : newResult.data || [];
       const ids = [
         ...new Set(
-          [...rankingRows, ...freshSignals].map((signal) => signal.app_id),
+          [...rankingRows.map(row => row.app_id), ...freshApps.map(app => app.id)],
         ),
       ];
       // Start enrichment together, but do not make core cards wait for it.
@@ -107,13 +105,8 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
           : Promise.resolve({ data: [] as App[] }));
       if (!active) return;
       const apps = new Map((appResult.data || []).map((app) => [app.id, app]));
-      const mapRows = (signals: Signal[]) =>
-        signals.flatMap((signal) => {
-          const app = apps.get(signal.app_id);
-          return app ? [{ app, signal }] : [];
-        });
       setRankings(rankingRows.flatMap((row) => apps.get(row.app_id) ? [apps.get(row.app_id)!] : []));
-      setFresh(mapRows(freshSignals));
+      setFresh(freshApps);
       setCategories(categoryResult.error ? [] : categoryResult.data || []);
       setLoading(false);
       void mediaPromise.then((result) => {
@@ -135,6 +128,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
     return (
       <div className={intro ? "pt-6 lg:pt-10" : ""}>
         <div className="mx-auto max-w-4xl">{intro}</div>
+        <RocketPicks />
         <div role="status" aria-label="Finding apps worth exploring" aria-busy="true" className="mt-6 space-y-10">
           {intro && <div className="rocket-skeleton-surface mx-auto h-[22rem] max-w-4xl animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100" aria-hidden="true" />}
           <section aria-hidden="true">
@@ -157,7 +151,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
     );
   if (failed)
     return (
-      <div
+      <><RocketPicks /><div
         role="status"
         className="mt-12 rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-600"
       >
@@ -168,12 +162,13 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         >
           Open Discover
         </Link>
-      </div>
+      </div></>
     );
   return (
     <>
+      <RocketPicks />
       {(() => {
-        const visual = [...rankings, ...fresh.map(({ app }) => app)].find((app) => coverMedia(media.get(app.id)));
+        const visual = [...rankings, ...fresh].find((app) => coverMedia(media.get(app.id)));
         if (!intro) return null;
         return (
           <div className="pt-6 lg:pt-10">
@@ -208,16 +203,16 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         ) : <p className="text-sm text-neutral-500">Rankings are unavailable right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="new-heading">
-        <SectionHeading id="new-heading" title="New" description="Recently listed apps with public Launch activity." href="/discover?view=new" action="See all New" emoji="🔥" />
+        <SectionHeading id="new-heading" title="New to Rocket" description="Recently added to Rocket, not necessarily newly released. Imported Launch activity elsewhere is not verified usage." href="/discover?view=new" action="See new listings" emoji="🔥" />
         {fresh.length > 0 ? (
           <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
-            {fresh.map(({ app }) => (
+            {fresh.map(app => (
               <div key={app.id} className="w-[min(75vw,19rem)] shrink-0 snap-start sm:w-auto">
                 <StandardAppCard app={app} {...saveControls(app.id)} media={media.get(app.id)} metadata={metadata.get(app.id)} />
               </div>
             ))}
           </div>
-        ) : <p className="text-sm text-neutral-500">No new apps with Launch activity are available right now.</p>}
+        ) : <p className="text-sm text-neutral-500">No newly listed apps are available right now.</p>}
       </section>
       <section className="mt-12 sm:mt-16" aria-labelledby="categories-heading">
         <SectionHeading id="categories-heading" title="Categories" description="Browse apps by what you want to do." href="/discover?view=categories" action="All categories" emoji="🗂️" />

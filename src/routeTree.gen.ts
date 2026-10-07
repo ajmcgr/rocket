@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AtChar123usernameChar125RouteImport } from './routes/@{$username}'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AiInfoRouteImport } from './routes/ai-info'
@@ -128,6 +129,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtChar123usernameChar125Route =
+  AtChar123usernameChar125RouteImport.update({
+    id: '/@{$username}',
+    path: '/@{$username}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -693,6 +700,7 @@ const AppProjectsIdWebsitesRoute = AppProjectsIdWebsitesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/@{$username}': typeof AtChar123usernameChar125Route
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
@@ -807,6 +815,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/@{$username}': typeof AtChar123usernameChar125Route
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
@@ -920,6 +929,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/@{$username}': typeof AtChar123usernameChar125Route
   '/_app': typeof AppRouteWithChildren
   '/about': typeof AboutRoute
   '/ai-info': typeof AiInfoRoute
@@ -1037,6 +1047,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/@{$username}'
     | '/about'
     | '/ai-info'
     | '/brand-kit'
@@ -1151,6 +1162,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/@{$username}'
     | '/about'
     | '/ai-info'
     | '/brand-kit'
@@ -1263,6 +1275,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/@{$username}'
     | '/_app'
     | '/about'
     | '/ai-info'
@@ -1379,6 +1392,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AtChar123usernameChar125Route: typeof AtChar123usernameChar125Route
   AppRoute: typeof AppRouteWithChildren
   AboutRoute: typeof AboutRoute
   AiInfoRoute: typeof AiInfoRoute
@@ -1434,6 +1448,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/@{$username}': {
+      id: '/@{$username}'
+      path: '/@{$username}'
+      fullPath: '/@{$username}'
+      preLoaderRoute: typeof AtChar123usernameChar125RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -2395,6 +2416,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AtChar123usernameChar125Route: AtChar123usernameChar125Route,
   AppRoute: AppRouteWithChildren,
   AboutRoute: AboutRoute,
   AiInfoRoute: AiInfoRoute,
