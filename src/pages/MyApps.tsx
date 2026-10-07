@@ -19,10 +19,20 @@ export default function MyApps() {
   useEffect(() => {
     supabase.functions
       .invoke("rocket-apps", { body: { action: "my_apps" } })
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error || !Array.isArray(data))
           throw error || new Error("My Apps unavailable");
-        setItems(data);
+        // Resolve canonical URLs from the public catalogue in one batch.
+        // Keep management and integration identifiers as UUIDs.
+        const ids = data.filter((item) => item.app).map((item) => item.app_id);
+        const { data: publicApps } = ids.length
+          ? await supabase.from("public_apps").select("id,slug").in("id", ids)
+          : { data: [] };
+        const slugs = new Map((publicApps || []).map((app) => [app.id, app.slug]));
+        setItems(data.map((item) => ({
+          ...item,
+          app: item.app ? { ...item.app, slug: slugs.get(item.app_id) || item.app.slug } : null,
+        })));
       })
       .catch(() =>
         setError("My apps could not be loaded right now. Please try again."),
@@ -134,7 +144,7 @@ export default function MyApps() {
                 </Link>
                 {item.app && (
                   <Link
-                    to={`/apps/${item.app_id}`}
+                    to={`/apps/${item.app?.slug || item.app_id}`}
                     className="font-medium text-sky-800 hover:underline"
                   >
                     View public profile
@@ -215,7 +225,7 @@ export default function MyApps() {
                   )}
                 </div>
               )}
-              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appName={item.app.name || "your app"} />}
+              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appSlug={item.app.slug} appName={item.app.name || "your app"} />}
               <AppDisconnectControls item={item} onDisconnected={() => {
                 setItems((current) => current.filter((app) => app.app_id !== item.app_id));
                 setNotice("App disconnected from your account. Its public listing has been preserved.");
