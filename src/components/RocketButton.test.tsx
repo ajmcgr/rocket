@@ -9,6 +9,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("official Rocket button", () => {
+  it("matches standard social sign-in typography without losing its accessible target", () => {
+    const host = document.createElement("rocket-button");
+    document.body.append(host);
+    const styles = host.shadowRoot!.querySelector("style")!.textContent!;
+    expect(styles).toContain("font-size:14px;font-weight:500;line-height:20px");
+    expect(styles).toContain("font-family:inherit");
+    expect(styles).toContain("width:16px;height:16px");
+    expect(styles).toContain("min-height:48px");
+    expect(styles).not.toContain("font:700 16px");
+  });
   it("keeps branding fixed and blocks loading/disabled activation in both integrations", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
