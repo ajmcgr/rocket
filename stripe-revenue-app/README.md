@@ -23,7 +23,7 @@ The connected Chrome tool denied `https://dashboard.stripe.com` with “A saved 
 
 Once access is genuinely permitted:
 
-1. Confirm an existing dedicated Stripe App developer account, separate from the Rocket payments platform. A Connect platform account cannot publish Marketplace apps. Do not open another financial/business account without the user's action.
+1. In an authorized connected browser, verify the exact publisher account ID is `acct_1UNYZnLTVhRPFrYe` (Rocket App) before CLI authentication, upload, app/version registration or distribution changes. A matching account name alone is insufficient; stop on any mismatch. Keep Main Rocket `acct_1TfvwfL9pkHWyRRu` exclusively for SaaS/Developer billing, Connect and Buy with Rocket. Never load or change its credentials for this App. Do not open another financial/business account without the user's action. If this publisher account asks for a Stripe Apps Agreement, stop for action-time owner acceptance; prior acceptance in another account is not sufficient.
 2. Ask the user to complete CLI login approval for that account. Never load existing billing credentials as a shortcut. Discover current commands with `stripe --help`, `stripe plugin install --help`, `stripe apps --help` and `stripe apps upload --help`.
 3. Use the supported manifest and perform Stripe upload validation from this directory. Do not declare upload readiness until Stripe accepts it. Any required package/artwork changes remain local until reviewed.
 4. Open Created apps → this app → External test → Get started. Use an independent controlled tester account. Obtain its Test OAuth authorize link, and the matching app developer test-mode key. Ask at action time before granting the App access.
