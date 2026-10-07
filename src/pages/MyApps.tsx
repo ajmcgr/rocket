@@ -155,7 +155,6 @@ export default function MyApps() {
                 setItems((current) => current.filter((app) => app.app_id !== item.app_id));
                 setNotice("App disconnected from your account. Its public listing has been preserved.");
               }} />
-              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appName={item.app.name || "your app"} />}
               {item.owned && <AppAnalyticsPreview appId={item.app_id} appName={item.app?.name || "App"} />}
               {item.owned && <DeveloperProductCards appId={item.app_id} />}
               {item.owned && (
@@ -220,6 +219,7 @@ export default function MyApps() {
                   )}
                 </div>
               )}
+              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appName={item.app.name || "your app"} />}
             </div>
           ))}
         </div>

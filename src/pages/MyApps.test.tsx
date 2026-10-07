@@ -31,7 +31,8 @@ describe("My Apps next actions", () => {
       expect(badge.closest('details')).toBeNull();
       expect(badge.textContent).toContain('dofollow link to your website');
       expect(connections.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(badge.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(preview.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(badge.parentElement?.lastElementChild).toBe(badge);
       expect(container.querySelector('[aria-label="Pending app analytics preview"]')).toBeNull();
       expect(container.querySelector('a[href="/my-apps/app-pending/rocket-analytics"]')).toBeNull();
     } finally { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); }
