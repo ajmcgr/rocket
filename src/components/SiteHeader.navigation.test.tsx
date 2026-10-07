@@ -25,8 +25,8 @@ describe("Create sidebar destinations", () => {
         expect((await screen.findByRole("link", { name: "Brand Studio" })).getAttribute("href")).toBe("/create");
         expect(screen.queryByRole("link", { name: "Saved Designs" })).toBeNull();
         expect(screen.queryByText("Logos/Icons")).toBeNull();
-        const apps = screen.getAllByRole("link", { name: "Your Apps" })[0];
-        const subscriptions = screen.getByRole("link", { name: "Your Subscriptions" });
+        const apps = screen.getAllByRole("link", { name: "My Apps" })[0];
+        const subscriptions = screen.getByRole("link", { name: "My Purchases" });
         expect(subscriptions.getAttribute("href")).toBe("/library");
         expect(apps.compareDocumentPosition(subscriptions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         expect(screen.queryByRole("link", { name: "Library" })).toBeNull();

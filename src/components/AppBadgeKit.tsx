@@ -5,11 +5,11 @@ export default function AppBadgeKit({ appId, appName }: { appId: string; appName
   const [theme, setTheme] = useState<BadgeTheme>("black");
   const [notice, setNotice] = useState("");
   const embed = appBadgeEmbed(appId, theme);
-  return <details className="mt-5 border-t border-neutral-100 pt-4">
-    <summary className="cursor-pointer text-sm font-semibold">Promote {appName} · Rocket badge</summary>
-    <div className="mt-4">
+  return <section aria-label={`${appName} Rocket badge`} className="mt-5 border-t border-neutral-100 pt-4">
+    <div>
       <h3 className="text-lg font-semibold">Discover it on Rocket</h3>
       <p className="mt-2 text-sm text-neutral-600">Add a Rocket badge to your website, footer or launch page. It links directly to your app’s public listing.</p>
+      <p className="mt-2 text-sm text-neutral-600">Your public Rocket listing includes a dofollow link to your website.</p>
       <fieldset className="mt-4 flex flex-wrap items-center gap-4 text-sm">
         <legend className="mb-2 font-medium">Badge appearance</legend>
         {(["black", "white"] as const).map((value) => <label key={value} className="flex min-h-11 items-center gap-2">
@@ -35,5 +35,5 @@ export default function AppBadgeKit({ appId, appName }: { appId: string; appName
       <p className="mt-3 text-xs text-neutral-500">Keep the badge proportions, leave space around it, and display it at least 44px tall. Use the supplied artwork without animation or added claims. A listing badge does not imply Rocket endorsement or verification.</p>
       {notice && <p role="status" className="mt-3 text-sm">{notice}</p>}
     </div>
-  </details>;
+  </section>;
 }

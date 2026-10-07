@@ -13,7 +13,7 @@ describe('notification categories',()=>{
  it('renders and filters real app, monetization and billing events with their destinations',async()=>{
  const ui=render(<MemoryRouter><Notifications/></MemoryRouter>);
  await waitFor(()=>expect(ui.getByRole('link',{name:/App published/}).getAttribute('href')).toBe('/apps/example'));
- fireEvent.click(ui.getByRole('button',{name:'Your Apps'}));expect(ui.queryByText('Merchant account ready')).toBeNull();expect(ui.getByText('App published')).toBeTruthy();
+ fireEvent.click(ui.getByRole('button',{name:'My Apps'}));expect(ui.queryByText('Merchant account ready')).toBeNull();expect(ui.getByText('App published')).toBeTruthy();
  fireEvent.click(ui.getByRole('button',{name:'Monetize'}));expect(ui.getByRole('link',{name:/Merchant account ready/}).getAttribute('href')).toBe('/buy-with-rocket');
  fireEvent.click(ui.getByRole('button',{name:'Billing'}));expect(ui.getByRole('link',{name:/Rocket Developer cancellation scheduled/}).getAttribute('href')).toBe('/settings/developer');
  });

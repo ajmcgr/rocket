@@ -661,7 +661,7 @@ export default function DeveloperExperience({
               </div>
             ) : appsError ? (
               <p role="alert">
-                Your apps couldn’t load.{" "}
+                My apps couldn’t load.{" "}
                 <button className="dev-text-button" onClick={onRefresh}>
                   Try again
                 </button>
@@ -1109,7 +1109,7 @@ export default function DeveloperExperience({
                     ]}
                   />
                   <Link className="dev-text-link" to="/submit">
-                    Submit your app <ArrowRight size={17} />
+                    Submit my app <ArrowRight size={17} />
                   </Link>
                 </article>
                 <article>

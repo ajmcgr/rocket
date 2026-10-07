@@ -25,7 +25,7 @@ export default function MyApps() {
         setItems(data);
       })
       .catch(() =>
-        setError("Your apps could not be loaded right now. Please try again."),
+        setError("My apps could not be loaded right now. Please try again."),
       )
       .finally(() => setLoading(false));
   }, []);
@@ -36,7 +36,7 @@ export default function MyApps() {
           <p className="text-sm font-semibold text-sky-800">
             Your software
           </p>
-          <h1 className="mt-3 font-display text-4xl sm:text-5xl">Your Apps</h1>
+          <h1 className="mt-3 font-display text-4xl sm:text-5xl">My Apps</h1>
           <p className="mt-2 text-neutral-600">
             Manage the apps you have brought to Rocket.
           </p>
@@ -45,7 +45,7 @@ export default function MyApps() {
           to="/submit"
           className="inline-flex min-h-11 items-center rounded-xl bg-neutral-900 px-4 text-sm font-semibold text-white transition hover:bg-neutral-700"
         >
-          Submit your app
+          Submit my app
         </Link>
       </div>
       {loading && (
@@ -151,13 +151,13 @@ export default function MyApps() {
                   )}
               </div>
               <AppJourney item={item} />
-              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appName={item.app.name || "your app"} />}
-              {item.owned && <AppAnalyticsPreview appId={item.app_id} appName={item.app?.name || "App"} />}
-              {item.owned && <DeveloperProductCards appId={item.app_id} />}
               <AppDisconnectControls item={item} onDisconnected={() => {
                 setItems((current) => current.filter((app) => app.app_id !== item.app_id));
                 setNotice("App disconnected from your account. Its public listing has been preserved.");
               }} />
+              {item.owned && item.app && <AppBadgeKit appId={item.app_id} appName={item.app.name || "your app"} />}
+              {item.owned && <AppAnalyticsPreview appId={item.app_id} appName={item.app?.name || "App"} />}
+              {item.owned && <DeveloperProductCards appId={item.app_id} />}
               {item.owned && (
                 <div className="mt-4 text-sm">
                   <button

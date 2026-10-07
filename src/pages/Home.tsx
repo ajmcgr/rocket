@@ -65,7 +65,7 @@ export default function Home() {
                   to="/submit"
                   className="inline-flex min-h-11 items-center rounded-xl border border-neutral-200 bg-white px-5 text-neutral-800 hover:bg-neutral-50"
                 >
-                  Submit your app
+                  Submit my app
                 </Link>
               </div>
             </section>
@@ -126,7 +126,7 @@ export default function Home() {
             to="/submit"
             className="mt-9 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white transition hover:bg-[#1268aa] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-300"
           >
-            Submit your app <span aria-hidden="true">→</span>
+            Submit my app <span aria-hidden="true">→</span>
           </Link>
         </section>
       </main>

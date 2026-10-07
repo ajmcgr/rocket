@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-describe("Your Subscriptions", () => {
+describe("My Purchases", () => {
   it("shows separate one-time purchases without recurring or cancellation claims", async () => {
     const purchase = { app_id: "app-1", app_name: "Launch", website_url: "https://trylaunch.ai", plan: { name: "Launch Pro", amount_cents: 3900, currency: "usd", interval: null, billing_type: "one_time" }, status: "granted", active: true, valid_until: null };
     mocks.invoke.mockResolvedValue({ data: { purchases: [{ ...purchase, purchase_id: "purchase-1" }, { ...purchase, purchase_id: "purchase-2", status: "refunded", active: false }] }, error: null });
@@ -27,7 +27,7 @@ describe("Your Subscriptions", () => {
   it("uses the existing buyer library endpoint and explains the empty state", async () => {
     render(<MemoryRouter><Library /></MemoryRouter>);
     expect(await screen.findByText("No purchases yet.")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Your Subscriptions" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "My Purchases" })).toBeTruthy();
     expect(mocks.invoke).toHaveBeenCalledWith("rocket-buy", { body: { action: "library", app_id: undefined } });
   });
   it("shows active app access and cancellation controls", async () => {

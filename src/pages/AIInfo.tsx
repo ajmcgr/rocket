@@ -90,7 +90,7 @@ export default function AIInfo() {
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Pricing and availability</h2>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
-                ["Your apps", "Submitting and managing an app listing on Rocket are free."],
+                ["My apps", "Submitting and managing an app listing on Rocket are free."],
                 ["Create", "Optional logo and icon tools have subscriptions and generation credits."],
                 ["Monetize", "Rocket Developer costs $99/year per developer account, separate from Create. Production Rocket ID requires membership and verified app ownership. Buy with Rocket still requires live merchant, plan, and entitlement activation; its current Connect pilot is test-mode only. Submission, claiming, and verification remain free."],
                 ["Grow and Community", "Launch, Post and Media have separate pricing on their own sites. Rocket's Discord community is free."],
