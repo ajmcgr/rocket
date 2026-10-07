@@ -84,12 +84,16 @@ Deno.serve(async (req) => {
         .select("id,user_id,client_id,product_id,status,valid_until,updated_at")
         .eq("user_id", user.id).order("updated_at", { ascending: false });
       if (error) throw error;
-      if (!entitlements?.length) return json({ purchases: [] });
-      const clientIds = [...new Set(entitlements.map((entry) => entry.client_id))];
-      const productIds = [...new Set(entitlements.map((entry) => entry.product_id))];
+      const { data: grants, error: grantsError } = await admin.from("connect_purchase_grants")
+        .select("purchase_id,client_id,product_id,status,created_at").eq("user_id", user.id).order("created_at", { ascending: false });
+      if (grantsError) throw grantsError;
+      const entries = [ ...(entitlements || []), ...(grants || []).map((entry) => ({ ...entry, valid_until: null, one_time: true })) ];
+      if (!entries.length) return json({ purchases: [] });
+      const clientIds = [...new Set(entries.map((entry) => entry.client_id))];
+      const productIds = [...new Set(entries.map((entry) => entry.product_id))];
       const [{ data: clients, error: clientsError }, { data: products, error: productsError }] = await Promise.all([
         admin.from("rocket_oauth_clients").select("client_id,app_id,name,environment").in("client_id", clientIds).eq("environment", "production"),
-        admin.from("connect_products").select("id,name,amount_cents,currency,interval,billing_type").in("id", productIds),
+        admin.from("connect_products").select("id,client_id,name,amount_cents,currency,interval,billing_type").in("id", productIds),
       ]);
       if (clientsError || productsError) throw clientsError || productsError;
       const appIds = (clients || []).map((client) => client.app_id).filter(Boolean);
@@ -100,11 +104,12 @@ Deno.serve(async (req) => {
       const clientMap = new Map((clients || []).map((client) => [client.client_id, client]));
       const productMap = new Map((products || []).map((product) => [product.id, product]));
       const appMap = new Map((apps || []).map((app) => [app.id, app]));
-      return json({ purchases: entitlements.flatMap((entry) => {
+      return json({ purchases: entries.flatMap((entry: any) => {
         const client = clientMap.get(entry.client_id); const product = productMap.get(entry.product_id);
         const app = client?.app_id ? appMap.get(client.app_id) : null;
-        return app && product ? [{ app_id: app.id, app_name: app.name, website_url: app.website_url, plan: publicPlan(product), status: entry.status, valid_until: entry.valid_until,
-          active: ["active", "canceling"].includes(entry.status) && (!entry.valid_until || new Date(entry.valid_until).getTime() > Date.now()) }] : [];
+        return app && product && product.client_id === entry.client_id ? [{ app_id: app.id, app_name: app.name, website_url: app.website_url, plan: publicPlan(product), status: entry.status, valid_until: entry.valid_until,
+          ...(entry.one_time ? { purchase_id: entry.purchase_id } : {}),
+          active: entry.one_time ? entry.status === "granted" : ["active", "canceling"].includes(entry.status) && (!entry.valid_until || new Date(entry.valid_until).getTime() > Date.now()) }] : [];
       }) });
     }
 

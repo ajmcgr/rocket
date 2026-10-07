@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 type Purchase = {
+  purchase_id?: string;
   app_id: string;
   app_name: string;
   website_url: string;
@@ -11,7 +12,8 @@ type Purchase = {
     name: string;
     amount_cents: number;
     currency: string;
-    interval: string;
+    interval: string | null;
+    billing_type?: "one_time" | "subscription";
   };
   status: string;
   valid_until: string | null;
@@ -90,8 +92,8 @@ export default function Library() {
     <main className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8 sm:pt-14">
       <h1 className="font-display text-4xl sm:text-5xl">Your Subscriptions</h1>
       <p className="mt-3 text-neutral-600">
-        Access the apps you subscribe to through Buy with Rocket, see your
-        subscription status, and manage cancellation. This is separate from
+        Access your subscriptions and one-time purchases through Buy with Rocket,
+        see payment status, and manage subscriptions. This is separate from
         your own apps and Rocket Developer membership.
       </p>
       {(loading || authLoading) && (
@@ -121,8 +123,8 @@ export default function Library() {
       )}
       {!loading && !error && user && !purchases.length && (
         <div className="mt-8 rounded-2xl border border-neutral-200 p-6">
-          <p>No subscriptions yet.</p>
-          <p className="mt-2 text-sm text-neutral-600">App subscriptions purchased through Buy with Rocket will appear here once payment is confirmed.</p>
+          <p>No purchases yet.</p>
+          <p className="mt-2 text-sm text-neutral-600">Subscriptions and one-time purchases through Buy with Rocket appear here once payment is confirmed.</p>
           <Link
             to="/discover"
             className="mt-3 inline-block font-semibold text-[#167ac6]"
@@ -135,7 +137,7 @@ export default function Library() {
         <div className="mt-8 space-y-4">
           {purchases.map((purchase) => (
             <article
-              key={purchase.app_id}
+              key={purchase.purchase_id || `${purchase.app_id}:${purchase.plan.name}`}
               className="rounded-2xl border border-neutral-200 p-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -147,15 +149,14 @@ export default function Library() {
                     {purchase.app_name}
                   </Link>
                   <p className="mt-1 text-sm text-neutral-600">
-                    {purchase.plan.name} · $
-                    {(purchase.plan.amount_cents / 100).toFixed(2)}/
-                    {purchase.plan.interval === "year" ? "year" : "month"}
+                    {purchase.plan.name} · {new Intl.NumberFormat("en-US", { style: "currency", currency: purchase.plan.currency }).format(purchase.plan.amount_cents / 100)}
+                    {purchase.plan.billing_type === "one_time" ? " · One-time" : `/${purchase.plan.interval === "year" ? "year" : "month"}`}
                   </p>
                   <p className="mt-1 text-sm text-neutral-600">
                     {purchase.status === "canceling" && purchase.valid_until
                       ? `Cancels on ${new Date(purchase.valid_until).toLocaleDateString()}`
                       : purchase.active
-                        ? "Active"
+                        ? purchase.plan.billing_type === "one_time" ? "Purchased" : "Active"
                         : purchase.status.replaceAll("_", " ")}
                   </p>
                 </div>
@@ -170,7 +171,7 @@ export default function Library() {
                       Open App
                     </a>
                   )}
-                  {purchase.status === "active" && (
+                  {purchase.plan.billing_type !== "one_time" && purchase.status === "active" && (
                     <button
                       type="button"
                       onClick={() => cancel(purchase)}

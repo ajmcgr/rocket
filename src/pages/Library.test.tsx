@@ -15,9 +15,18 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("Your Subscriptions", () => {
+  it("shows separate one-time purchases without recurring or cancellation claims", async () => {
+    const purchase = { app_id: "app-1", app_name: "Launch", website_url: "https://trylaunch.ai", plan: { name: "Launch Pro", amount_cents: 3900, currency: "usd", interval: null, billing_type: "one_time" }, status: "granted", active: true, valid_until: null };
+    mocks.invoke.mockResolvedValue({ data: { purchases: [{ ...purchase, purchase_id: "purchase-1" }, { ...purchase, purchase_id: "purchase-2", status: "refunded", active: false }] }, error: null });
+    render(<MemoryRouter><Library /></MemoryRouter>);
+    expect(await screen.findByText("Purchased")).toBeTruthy();
+    expect(screen.getAllByText(/Launch Pro · \$39.00 · One-time/)).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Open App" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Cancel at period end" })).toBeNull();
+  });
   it("uses the existing buyer library endpoint and explains the empty state", async () => {
     render(<MemoryRouter><Library /></MemoryRouter>);
-    expect(await screen.findByText("No subscriptions yet.")).toBeTruthy();
+    expect(await screen.findByText("No purchases yet.")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Your Subscriptions" })).toBeTruthy();
     expect(mocks.invoke).toHaveBeenCalledWith("rocket-buy", { body: { action: "library", app_id: undefined } });
   });
@@ -37,6 +46,6 @@ describe("Your Subscriptions", () => {
     mocks.invoke.mockResolvedValue({ data: null, error: { message: "Unavailable" } });
     render(<MemoryRouter><Library /></MemoryRouter>);
     expect(await screen.findByRole("alert")).toBeTruthy();
-    expect(screen.queryByText("No subscriptions yet.")).toBeNull();
+    expect(screen.queryByText("No purchases yet.")).toBeNull();
   });
 });

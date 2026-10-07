@@ -336,7 +336,7 @@ export default function DeveloperExperience({
   );
   const prompt =
     active && selectedClient
-      ? integrationPrompt(selectedClient, selected)
+      ? integrationPrompt(selectedClient, selected, statuses[selected]?.products || [])
       : null;
   async function copyPrompt() {
     if (!prompt) return;

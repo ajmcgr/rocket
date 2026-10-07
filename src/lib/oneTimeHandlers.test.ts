@@ -45,6 +45,16 @@ describe("actual production merchant registration (isolated)",()=>{
   it.each([{client_id:"other"},{payment_return_uri:"https://other.invalid"}])("rejects cross-client registration and unapproved origins %j",async patch=>{const h=registration();expect((await h.handler(request({...registrationBody,...patch}))).status).toBeGreaterThanOrEqual(400);expect(h.stripe.products.create).not.toHaveBeenCalled();});
 });
 describe("actual production checkout handler (isolated)",()=>{
+  it("Library includes buyer-scoped one-time grants without exposing test clients", async()=>{
+    const filters: any[]=[];
+    const admin={from:(table:string)=>{
+      const q=query(table==="connect_entitlements"?[]:table==="connect_purchase_grants"?[{purchase_id:"purchase",client_id:"launch",product_id:"product",status:"granted"}]:table==="rocket_oauth_clients"?[{client_id:"launch",app_id:body.app_id}]:table==="connect_products"?[product]:table==="public_apps"?[{id:body.app_id,name:"Launch",website_url:"https://trylaunch.ai"}]:[]);
+      q.eq=(...args:any[])=>{filters.push([table,...args]);return q;};return q;
+    }};
+    const handler=load("supabase/functions/rocket-buy/index.ts",{},admin);const response=await handler(request({action:"library"}));expect(response.status).toBe(200);
+    expect((await response.json()).purchases[0]).toMatchObject({purchase_id:"purchase",active:true,plan:{billing_type:"one_time"}});
+    expect(filters).toContainEqual(["connect_purchase_grants","user_id","buyer"]);expect(filters).toContainEqual(["rocket_oauth_clients","environment","production"]);
+  });
   it("creates payment mode, one unit, exact approved URI and $1.95 fee",async()=>{
     const h=checkoutHarness(); expect((await h.handler(request(body))).status).toBe(200);
     const [params,options]=h.create.mock.calls[0]; expect(params.mode).toBe("payment"); expect(params.payment_intent_data.application_fee_amount).toBe(195); expect(params.subscription_data).toBeUndefined(); expect(params.line_items).toEqual([{price:"price_real",quantity:1}]); expect(params.success_url).toBe(body.return_uri); expect(options.stripeAccount).toBe("acct_launch"); expect(options.idempotencyKey).toContain(body.purchase_request_id);

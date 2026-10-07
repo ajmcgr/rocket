@@ -10,7 +10,8 @@ type Plan = {
   id: string;
   name: string;
   amount_cents: number;
-  interval: "month" | "year";
+  interval: "month" | "year" | null;
+  billing_type?: "subscription" | "one_time";
   platform_fee_bps: number;
   is_active: boolean;
   integration_confirmed_at?: string | null;
@@ -57,7 +58,8 @@ export default function ProductionBuySetup({
   const [country, setCountry] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [interval, setInterval] = useState<"month" | "year">("month");
+  const [interval, setInterval] = useState<"month" | "year" | "one_time">("month");
+  const [paymentReturn, setPaymentReturn] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const refresh = useCallback(async () => {
@@ -108,6 +110,8 @@ export default function ProductionBuySetup({
         name,
         amount_cents: cents,
         interval,
+        billing_type: interval === "one_time" ? "one_time" : "subscription",
+        ...(interval === "one_time" ? { payment_return_uri: paymentReturn } : {}),
       });
       setName("");
       setPrice("");
@@ -139,8 +143,8 @@ export default function ProductionBuySetup({
     <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6">
       <h2 className="text-xl font-semibold">Buy with Rocket</h2>
       <p className="mt-2 text-sm text-neutral-600">
-        Connect your own Stripe merchant account, then set one monthly or annual
-        access plan. Rocket&apos;s platform fee is{" "}
+        Connect your own Stripe merchant account, then register a one-time,
+        monthly or annual access product. Rocket&apos;s platform fee is{" "}
         {status
           ? `${status.platform_fee_bps / 100}%`
           : "shown once setup loads"}{" "}
@@ -214,8 +218,8 @@ export default function ProductionBuySetup({
             </p>
             {status.products.map((plan) => (
               <p key={plan.id} className="mt-3 text-sm">
-                {plan.name} · ${(plan.amount_cents / 100).toFixed(2)}/
-                {plan.interval === "year" ? "year" : "month"} ·{" "}
+                {plan.name} · ${(plan.amount_cents / 100).toFixed(2)}
+                {plan.billing_type === "one_time" ? " one-time" : `/${plan.interval === "year" ? "year" : "month"}`} ·{" "}
                 {plan.is_active ? "Active" : "Not active"}
               </p>
             ))}
@@ -251,14 +255,19 @@ export default function ProductionBuySetup({
                 <select
                   value={interval}
                   onChange={(event) =>
-                    setInterval(event.target.value as "month" | "year")
+                    setInterval(event.target.value as "month" | "year" | "one_time")
                   }
                   className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
                 >
                   <option value="month">Monthly</option>
                   <option value="year">Annual</option>
+                  <option value="one_time">One-time</option>
                 </select>
               </label>
+              {interval === "one_time" && <label className="text-sm">
+                Approved payment-return URL
+                <input required type="url" value={paymentReturn} onChange={(event) => setPaymentReturn(event.target.value)} className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3" />
+              </label>}
               <button
                 disabled={busy || !status.merchant?.ready}
                 className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"

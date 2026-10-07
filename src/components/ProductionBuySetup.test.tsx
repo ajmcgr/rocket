@@ -51,6 +51,29 @@ async function render(launchReady: boolean, confirmed: boolean) {
   };
 }
 describe("Buy with Rocket activation UI", () => {
+  it("registers one-time pricing and the merchant's exact return URI without activating it", async () => {
+    const { container, cleanup } = await render(false, false);
+    try {
+      const billing = container.querySelectorAll("select")[1];
+      await act(async () => {
+        billing.value = "one_time";
+        billing.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      const inputs = container.querySelectorAll("input");
+      const values = ["Launch Pro", "39.00", "https://trylaunch.ai/my-products?success=true"];
+      await act(async () => {
+        inputs.forEach((input, index) => {
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, values[index]);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+      });
+      await act(async () => container.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+      expect(invoke).toHaveBeenCalledWith("rocket-buy-developer", {
+        body: { action: "create_plan", app_id: "owned-app", name: "Launch Pro", amount_cents: 3900, interval: "one_time", billing_type: "one_time", payment_return_uri: values[2] },
+      });
+      expect(invoke.mock.calls.some(([, options]) => options.body.action === "activate_plan")).toBe(false);
+    } finally { await cleanup(); }
+  });
   it("keeps activation disabled until both live readiness and entitlement verification are server-confirmed", async () => {
     for (const [ready, confirmed] of [
       [false, true],

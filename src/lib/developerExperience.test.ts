@@ -52,6 +52,11 @@ describe("Developer readiness", () => {
   });
 });
 describe("Safe app-specific integration prompt", () => {
+  it("includes only registered product facts and replay-safe one-time semantics", () => {
+    const prompt = integrationPrompt(client, "owned-app", [{ id: "real-product", product_key: "real-key", name: "Actual product", amount_cents: 3900, currency: "usd", billing_type: "one_time", interval: null, is_active: false, secret_key: "NEVER_COPY" } as any])!;
+    expect(prompt).toContain("real-key"); expect(prompt).toContain('"amount_cents":3900'); expect(prompt).toContain('"billing_type":"one_time"'); expect(prompt).toContain('"enabled":false'); expect(prompt).toContain("purchase_id"); expect(prompt).toContain("Do not activate inactive products"); expect(prompt).not.toContain("NEVER_COPY");
+    expect(integrationPrompt(client, "owned-app")!).toContain("Do not invent a plan or enable payments.");
+  });
   it("selects public fields only and instructs fail-closed identity and access checks", () => {
     const prompt = integrationPrompt(
       {
