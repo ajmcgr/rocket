@@ -27,12 +27,12 @@ describe("My Apps next actions", () => {
       const connections = container.querySelector('[aria-label="Connect analytics and revenue"]')!;
       const badge = container.querySelector('[aria-label="Owned app Rocket badge"]')!;
       const manageConnections = Array.from(container.querySelectorAll('h3')).find((element) => element.textContent === 'Manage connections')!;
-      expect(manageConnections.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(badge.compareDocumentPosition(manageConnections) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(badge.closest('details')).toBeNull();
       expect(badge.textContent).toContain('dofollow link to your website');
       expect(connections.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(preview.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(badge.parentElement?.lastElementChild).toBe(badge);
+      expect(badge.parentElement?.lastElementChild).toBe(container.querySelector('[aria-label="Manage app connections"]'));
       expect(container.querySelector('[aria-label="Pending app analytics preview"]')).toBeNull();
       expect(container.querySelector('a[href="/my-apps/app-pending/rocket-analytics"]')).toBeNull();
     } finally { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); }
