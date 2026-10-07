@@ -52,16 +52,17 @@ describe("Rocket's own account entry", () => {
     expect(buttons().slice(0, 4).map(button => button.textContent)).toEqual([
       "Continue with Rocket", "Continue with Google", "Continue with X", "Continue with GitHub",
     ]);
-    expect(container.querySelector("form")!.hidden).toBe(true);
+    expect(container.querySelector("form")!.hidden).toBe(false);
+    expect(container.querySelector("form")!.hasAttribute("hidden")).toBe(false);
     await clickRocket();
     expect(container.querySelector("form")!.hidden).toBe(false);
-    expect(buttons()[0].getAttribute("aria-expanded")).toBe("true");
+    expect(buttons()[0].hasAttribute("aria-expanded")).toBe(false);
     expect(document.activeElement).toBe(container.querySelector('[aria-label="Email"]'));
     expect(mocks.oauth).not.toHaveBeenCalled(); expect(mocks.password).not.toHaveBeenCalled();
   });
   it("uses existing verified email login and preserves the safe return path", async () => {
     mocks.password.mockResolvedValue({ data: { user: { id: "buyer", email_confirmed_at: "2026-10-07", app_metadata: { provider: "email" } } }, error: null });
-    await render(); await clickRocket(); await fillAndSubmit();
+    await render(); await fillAndSubmit();
     expect(mocks.password).toHaveBeenCalledWith({ email: "buyer@example.com", password: "secure-password" });
     expect(mocks.nav).toHaveBeenCalledWith("/connect/authorize?client_id=example", { replace: true });
     expect(mocks.oauth).not.toHaveBeenCalled();

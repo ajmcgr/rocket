@@ -20,7 +20,6 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [emailFormOpen, setEmailFormOpen] = useState(false);
   const emailInput = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState<OAuthProvider | null>(null);
@@ -32,10 +31,6 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
   const next = safeReturnPath(loc.state?.from || queryNext);
   const isSignup = mode === "signup";
   const authSwitchHref = `${isSignup ? "/login" : "/signup"}?next=${encodeURIComponent(next)}`;
-
-  useEffect(() => {
-    if (emailFormOpen) emailInput.current?.focus();
-  }, [emailFormOpen]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -154,14 +149,12 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
           <Button
             type="button"
             onClick={() => {
-              setEmailFormOpen(true);
               emailInput.current?.focus();
             }}
             disabled={loading || !!oauthLoading}
             variant="outline"
             size="lg"
             className="w-full gap-2"
-            aria-expanded={emailFormOpen}
             aria-controls="rocket-email-form"
             aria-describedby="rocket-email-description"
           >
@@ -190,7 +183,10 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
           )}
           </div>
 
-          <form id="rocket-email-form" aria-label="Rocket email sign-in" hidden={!emailFormOpen} onSubmit={submit} className="mt-6 space-y-3">
+          <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
+            <div className="h-px flex-1 bg-neutral-200" /> or use email <div className="h-px flex-1 bg-neutral-200" />
+          </div>
+          <form id="rocket-email-form" aria-label="Rocket email sign-in" onSubmit={submit} className="space-y-3">
             {isSignup && (
               <div className="flex items-center rounded-lg border border-neutral-200 bg-white pl-3 ring-neutral-300 transition focus-within:ring-2">
                 <span className="text-sm text-neutral-400">@</span>
