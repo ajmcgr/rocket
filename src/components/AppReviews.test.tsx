@@ -74,12 +74,15 @@ describe("real app reviews", () => {
         id: "review-1",
         app_id: "app-1",
         user_id: "owner-1",
+        author_username: "alex",
         rating: 4,
         body: "A genuinely useful product.",
         created_at: "2026-09-30T00:00:00Z",
         updated_at: "2026-09-30T00:00:00Z",
       },
     ];
+    mocks.reviews.push({ ...mocks.reviews[0], id: "review-2", user_id: "missing-profile", author_username: null });
+    mocks.reviews.push({ ...mocks.reviews[0], id: "review-3", user_id: "invalid-profile", author_username: "../../private" });
     mocks.summary = { rating_count: 1, average_rating: 4 };
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -95,6 +98,14 @@ describe("real app reviews", () => {
       expect(container.textContent).toContain("from 1 review");
       expect(container.textContent).toContain("A genuinely useful product.");
       expect(container.textContent).toContain("Edit your review");
+      const author = container.querySelector('article a[href="/u/alex"]');
+      expect(author?.textContent).toBe("@alex");
+      expect(author?.previousElementSibling?.textContent).toContain("★★★★");
+      expect(author?.nextElementSibling?.textContent).toBe("A genuinely useful product.");
+      expect(container.querySelectorAll("article a")).toHaveLength(1);
+      expect(container.querySelectorAll("article")).toHaveLength(3);
+      expect(container.textContent).not.toContain("missing-profile");
+      expect(container.textContent).not.toContain("../../private");
       expect(container.querySelector("select")).toBeNull();
       expect(container.querySelectorAll('input[type="radio"]')).toHaveLength(5);
       expect(container.querySelector<HTMLInputElement>('input[value="4"]')?.checked).toBe(true);

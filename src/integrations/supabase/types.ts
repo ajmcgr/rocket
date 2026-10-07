@@ -144,6 +144,7 @@ export type Database = {
       };
       public_app_reviews: {
         Row: {
+          author_username: string | null;
           id: string;
           app_id: string;
           user_id: string;
