@@ -93,13 +93,14 @@ export function EditorialAppCard({
   metadata,
   saved,
   onSave,
-}: BaseProps & SaveProps) {
+  priority = true,
+}: BaseProps & SaveProps & { priority?: boolean }) {
   return (
     <article className="group relative min-h-[22rem] overflow-hidden rounded-[1.25rem] border border-neutral-200 bg-[#167ac6] text-white">
       <Artwork
         app={app}
         media={media}
-        priority
+        priority={priority}
         className="absolute inset-0 h-full w-full opacity-75 transition duration-500 group-hover:scale-[1.03]"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[#167ac6] via-[#167ac6]/60 to-transparent" />
