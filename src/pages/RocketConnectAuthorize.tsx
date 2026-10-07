@@ -68,7 +68,7 @@ export default function RocketConnectAuthorize() {
     let cancelled = false;
     // Read only the existing public logo after the authorization request passed
     // inspection. No client configuration or authorization records are changed.
-    supabase.from("public_apps").select("logo_url").eq("id", appId).maybeSingle()
+    Promise.resolve(supabase.from("public_apps").select("logo_url").eq("id", appId).maybeSingle())
       .then(({ data }) => { if (!cancelled) setPublicLogo(publicLogoUrl(data?.logo_url)); })
       .catch(() => { /* Keep the configured icon or safe fallback on read failure. */ });
     return () => { cancelled = true; };
