@@ -27,10 +27,12 @@ import { Route as JoinRouteImport } from './routes/join'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MediaKitRouteImport } from './routes/media-kit'
+import { Route as PicksRouteImport } from './routes/picks'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RisingRouteImport } from './routes/rising'
 import { Route as RocketIdRouteImport } from './routes/rocket-id'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StartRouteImport } from './routes/start'
@@ -214,6 +216,11 @@ const MediaKitRoute = MediaKitRouteImport.update({
   path: '/media-kit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PicksRoute = PicksRouteImport.update({
+  id: '/picks',
+  path: '/picks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -232,6 +239,11 @@ const ReserveRoute = ReserveRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RisingRoute = RisingRouteImport.update({
+  id: '/rising',
+  path: '/rising',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RocketIdRoute = RocketIdRouteImport.update({
@@ -716,10 +728,12 @@ export interface FileRoutesByFullPath {
   '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
+  '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
@@ -831,10 +845,12 @@ export interface FileRoutesByTo {
   '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
+  '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
@@ -946,10 +962,12 @@ export interface FileRoutesById {
   '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
   '/media-kit': typeof MediaKitRoute
+  '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
@@ -1063,10 +1081,12 @@ export interface FileRouteTypes {
     | '/launch'
     | '/login'
     | '/media-kit'
+    | '/picks'
     | '/pricing'
     | '/privacy'
     | '/reserve'
     | '/reset-password'
+    | '/rising'
     | '/rocket-id'
     | '/signup'
     | '/start'
@@ -1178,10 +1198,12 @@ export interface FileRouteTypes {
     | '/launch'
     | '/login'
     | '/media-kit'
+    | '/picks'
     | '/pricing'
     | '/privacy'
     | '/reserve'
     | '/reset-password'
+    | '/rising'
     | '/rocket-id'
     | '/signup'
     | '/start'
@@ -1292,10 +1314,12 @@ export interface FileRouteTypes {
     | '/launch'
     | '/login'
     | '/media-kit'
+    | '/picks'
     | '/pricing'
     | '/privacy'
     | '/reserve'
     | '/reset-password'
+    | '/rising'
     | '/rocket-id'
     | '/signup'
     | '/start'
@@ -1409,10 +1433,12 @@ export interface RootRouteChildren {
   LaunchRoute: typeof LaunchRoute
   LoginRoute: typeof LoginRoute
   MediaKitRoute: typeof MediaKitRoute
+  PicksRoute: typeof PicksRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ReserveRoute: typeof ReserveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RisingRoute: typeof RisingRoute
   RocketIdRoute: typeof RocketIdRoute
   SignupRoute: typeof SignupRoute
   StartRoute: typeof StartRoute
@@ -1569,6 +1595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MediaKitRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/picks': {
+      id: '/picks'
+      path: '/picks'
+      fullPath: '/picks'
+      preLoaderRoute: typeof PicksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -1595,6 +1628,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rising': {
+      id: '/rising'
+      path: '/rising'
+      fullPath: '/rising'
+      preLoaderRoute: typeof RisingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rocket-id': {
@@ -2433,10 +2473,12 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchRoute: LaunchRoute,
   LoginRoute: LoginRoute,
   MediaKitRoute: MediaKitRoute,
+  PicksRoute: PicksRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ReserveRoute: ReserveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RisingRoute: RisingRoute,
   RocketIdRoute: RocketIdRoute,
   SignupRoute: SignupRoute,
   StartRoute: StartRoute,
