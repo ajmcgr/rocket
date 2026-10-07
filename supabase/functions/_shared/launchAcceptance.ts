@@ -1,23 +1,20 @@
 export const LAUNCH_APP_ID = "b202d75a-02ae-46e6-8419-5b3410cbaac8";
 export const LAUNCH_CLIENT_ID = "rocket-dev-fZfbAEjB3Kp_eroMLQ_y4_fn";
-export const LAUNCH_ACCESS_URL = "https://gzpypxgdkxdynovploxn.supabase.co/functions/v1/launch-rocket-access";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export function pilotBuyer(userId: string | undefined, ownerId: string | undefined, configuredBuyer: string | undefined) {
   return !!configuredBuyer && uuid.test(configuredBuyer) && !!ownerId && userId === configuredBuyer && userId !== ownerId;
 }
 export function acceptancePlan(plan: any, planId: string | undefined, accountId: string, ownerId: string) {
   return !!planId && uuid.test(planId) && !!plan && plan.id === planId && plan.client_id === LAUNCH_CLIENT_ID &&
-    plan.developer_account_id === accountId && plan.developer_user_id === ownerId && plan.amount_cents === 100 &&
-    plan.currency === "usd" && plan.interval === "month" && plan.platform_fee_bps === 500;
+    plan.developer_account_id === accountId && plan.developer_user_id === ownerId && plan.amount_cents === 3900 &&
+    plan.currency === "usd" && plan.billing_type === "one_time" && plan.interval === null && plan.platform_fee_bps === 500 &&
+    Array.isArray(plan.checkout_return_uris) && plan.checkout_return_uris.includes("https://trylaunch.ai/my-products?success=true");
 }
-export function paidAcceptanceProof(transaction: any, entitlement: any, buyer: string, plan: any, merchant: string, now = Date.now()) {
-  return !!transaction && transaction.user_id === buyer && transaction.client_id === LAUNCH_CLIENT_ID &&
-    transaction.product_id === plan.id && transaction.developer_account_id === plan.developer_account_id &&
-    transaction.stripe_account_id === merchant && transaction.status === "paid" && transaction.amount_cents === 100 &&
-    transaction.application_fee_cents === 5 && transaction.currency === "usd" &&
-    typeof transaction.stripe_checkout_session_id === "string" && transaction.stripe_checkout_session_id.startsWith("cs_live_") &&
-    typeof transaction.stripe_invoice_id === "string" && typeof transaction.stripe_subscription_id === "string" &&
-    !!entitlement && entitlement.user_id === buyer && entitlement.client_id === LAUNCH_CLIENT_ID &&
-    entitlement.product_id === plan.id && entitlement.transaction_id === transaction.id && entitlement.status === "active" &&
-    !entitlement.revoked_at && typeof entitlement.valid_until === "string" && Number.isFinite(Date.parse(entitlement.valid_until)) && Date.parse(entitlement.valid_until) > now;
+export function paidProProof(t: any, g: any, userId: string, p: any, merchant: string) {
+  return !!t && !!g && t.user_id === userId && t.client_id === LAUNCH_CLIENT_ID && t.product_id === p.id &&
+    t.developer_account_id === p.developer_account_id && t.stripe_account_id === merchant && t.status === 'paid' &&
+    t.amount_cents === 3900 && t.application_fee_cents === 195 && t.currency === 'usd' && t.stripe_subscription_id === null &&
+    typeof t.stripe_checkout_session_id === 'string' && t.stripe_checkout_session_id.startsWith('cs_live_') &&
+    typeof t.stripe_payment_intent_id === 'string' && t.stripe_payment_intent_id.startsWith('pi_') &&
+    g.purchase_id === t.id && g.user_id === userId && g.client_id === LAUNCH_CLIENT_ID && g.product_id === p.id && g.quantity === 1 && g.status === 'granted';
 }
