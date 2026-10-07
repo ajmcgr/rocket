@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { loadAppMedia } from "@/lib/appMedia";
 import { availableCategories } from "@/lib/appCategories";
+import MarketplaceDetailsEditor from "@/components/MarketplaceDetailsEditor";
 
 type App = Tables<"public_apps">;
 
@@ -282,6 +283,7 @@ export default function EditAppProfile() {
           </div>
         </form>
       )}
+      {!loading && allowed && app && id && <MarketplaceDetailsEditor key={id} appId={id} />}
     </main>
   );
 }

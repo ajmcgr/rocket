@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,11 @@ type Purchase = {
   purchase_id?: string;
   app_id: string;
   app_name: string;
-  website_url: string;
+  website_url: string | null;
+  listing_available?: boolean;
+  support_url?: string | null;
+  receipt_url?: string | null;
+  order?: { id: string; date: string; status: string; amount_cents: number; currency: string } | null;
   plan: {
     name: string;
     amount_cents: number;
@@ -32,13 +36,16 @@ async function request<T>(action: string, appId?: string): Promise<T> {
 export default function Library() {
   const { user, loading: authLoading } = useAuth();
   const userId = user?.id;
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [loaded, setLoaded] = useState<{owner:string; purchases:Purchase[]} | null>(null);
+  const purchases = loaded && loaded.owner === userId ? loaded.purchases : [];
+  const currentUser = useRef(userId); currentUser.current=userId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   useEffect(() => {
-    setPurchases([]);
+    setLoaded(null);
     setError("");
+    setBusy("");
     if (!userId) {
       setLoading(false);
       return;
@@ -47,7 +54,7 @@ export default function Library() {
     let cancelled = false;
     request<{ purchases: Purchase[] }>("library")
       .then((result) => {
-        if (!cancelled) setPurchases(result.purchases || []);
+        if (!cancelled) setLoaded({owner:userId,purchases:result.purchases || []});
       })
       .catch((caught: unknown) => {
         if (!cancelled)
@@ -63,6 +70,7 @@ export default function Library() {
     };
   }, [userId]);
   const cancel = async (purchase: Purchase) => {
+    if (!userId) return;
     if (
       !window.confirm(
         `Cancel ${purchase.app_name} at the end of the paid period?`,
@@ -76,16 +84,17 @@ export default function Library() {
         "cancel",
         purchase.app_id,
       );
+      if (currentUser.current!==userId) return;
       const result = await request<{ purchases: Purchase[] }>("library");
-      setPurchases(result.purchases || []);
+      if (currentUser.current===userId) setLoaded({owner:userId,purchases:result.purchases || []});
     } catch (caught: unknown) {
-      setError(
+      if (currentUser.current===userId) setError(
         caught instanceof Error
           ? caught.message
           : "Could not request cancellation",
       );
     } finally {
-      setBusy("");
+      if (currentUser.current===userId) setBusy("");
     }
   };
   return (
@@ -100,7 +109,7 @@ export default function Library() {
         <div
           role="status"
           className="mt-8 space-y-4 animate-pulse"
-          aria-label="Loading subscriptions"
+          aria-label="Loading your library"
         >
           <div className="h-28 rounded-2xl bg-neutral-100" />
           <div className="h-28 rounded-2xl bg-neutral-100" />
@@ -112,7 +121,7 @@ export default function Library() {
             to="/login?next=%2Flibrary"
             className="font-semibold text-[#167ac6] underline"
           >
-            Log in to see your subscriptions
+            Log in to see your library
           </Link>
         </p>
       )}
@@ -142,16 +151,24 @@ export default function Library() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <Link
+                  {purchase.listing_available === false ? <h2 className="text-lg font-semibold">{purchase.app_name}</h2> : <Link
                     to={`/apps/${purchase.app_id}`}
                     className="text-lg font-semibold hover:text-[#167ac6]"
                   >
                     {purchase.app_name}
-                  </Link>
+                  </Link>}
                   <p className="mt-1 text-sm text-neutral-600">
                     {purchase.plan.name} · {new Intl.NumberFormat("en-US", { style: "currency", currency: purchase.plan.currency }).format(purchase.plan.amount_cents / 100)}
                     {purchase.plan.billing_type === "one_time" ? " · One-time" : `/${purchase.plan.interval === "year" ? "year" : "month"}`}
                   </p>
+                  {purchase.active && <p className="mt-2 text-sm font-semibold">{purchase.listing_available === false ? 'Payment confirmed · listing unavailable' : 'Payment-verified access'}</p>}
+                  {purchase.listing_available === false && <p className="mt-2 text-sm">This listing is unavailable. Your purchase record is retained; opening it is disabled.</p>}
+                  <details className="mt-3 text-sm">
+                    <summary className="min-h-11 cursor-pointer font-semibold">Order details and support</summary>
+                    {purchase.order ? <dl className="space-y-1"><dt>Order</dt><dd className="break-all">{purchase.order.id}</dd><dt>Date</dt><dd>{new Date(purchase.order.date).toLocaleDateString()}</dd><dt>Payment status</dt><dd>{purchase.order.status}</dd></dl> : <p>No order details are available.</p>}
+                    {purchase.support_url && <a className="block min-h-11 underline" href={purchase.support_url} target="_blank" rel="noopener noreferrer">Merchant support</a>}
+                    {purchase.receipt_url ? <a className="block min-h-11 underline" href={purchase.receipt_url} target="_blank" rel="noopener noreferrer">View receipt</a> : <p className="mt-2 text-neutral-600">Receipt access is not available in Rocket. Check your payment confirmation or contact the merchant.</p>}
+                  </details>
                   <p className="mt-1 text-sm text-neutral-600">
                     {purchase.status === "canceling" && purchase.valid_until
                       ? `Cancels on ${new Date(purchase.valid_until).toLocaleDateString()}`
@@ -161,7 +178,7 @@ export default function Library() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  {purchase.active && (
+                  {purchase.active && purchase.website_url && purchase.listing_available !== false && (
                     <a
                       href={purchase.website_url}
                       target="_blank"

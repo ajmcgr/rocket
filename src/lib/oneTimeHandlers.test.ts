@@ -4,6 +4,7 @@ import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
 import * as payments from "../../supabase/functions/_shared/oneTimePayments";
 import * as rules from "../../supabase/functions/_shared/connectPaymentRules";
+import * as library from "../../supabase/functions/_shared/buyerLibrary";
 
 function load(path: string, stripe: any, admin: any, gate = true) {
   let handler!: (req: Request) => Promise<Response>;
@@ -11,7 +12,7 @@ function load(path: string, stripe: any, admin: any, gate = true) {
   runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText, {
     exports: {}, Request, Response, URL, Date, console, crypto,
     Deno:{env:{get:(key: string)=>key === "STRIPE_SECRET_KEY" ? "sk_live_mock_only" : key === "STRIPE_CONNECT_LIVE_WEBHOOK_SECRET" ? "whsec_mock_only" : undefined},serve:(fn: typeof handler)=>handler=fn},
-    require:(name: string)=> name.startsWith("npm:stripe") ? {default: class { constructor(){return stripe;} }} : name.includes("oneTimePayments") ? payments : name.includes("connectPaymentRules") ? rules : name.includes("connectLiveConfiguration") ? {isolatedLiveWebhookSecret:()=>"whsec_mock_only",liveWebhookConfigured:()=>gate} : name.includes("stripeConnectV2") ? {retrieveStripeConnectV2Merchant:async()=>({}),stripeConnectV2Ready:()=>true,StripeConnectV2Error:class extends Error {}} : {APP_URL:"https://tryrocket.ai",getAdmin:()=>admin,getRocketUser:async()=>({id:"buyer"}),getConnectToken:async()=>null,base64url:(bytes:Uint8Array)=>Buffer.from(bytes).toString("base64url"),json},
+    require:(name: string)=> name.includes("buyerLibrary") ? library : name.startsWith("npm:stripe") ? {default: class { constructor(){return stripe;} }} : name.includes("oneTimePayments") ? payments : name.includes("connectPaymentRules") ? rules : name.includes("connectLiveConfiguration") ? {isolatedLiveWebhookSecret:()=>"whsec_mock_only",liveWebhookConfigured:()=>gate} : name.includes("stripeConnectV2") ? {retrieveStripeConnectV2Merchant:async()=>({}),stripeConnectV2Ready:()=>true,StripeConnectV2Error:class extends Error {}} : {APP_URL:"https://tryrocket.ai",getAdmin:()=>admin,getRocketUser:async()=>({id:"buyer"}),getConnectToken:async()=>null,base64url:(bytes:Uint8Array)=>Buffer.from(bytes).toString("base64url"),json},
   });
   return handler;
 }
@@ -48,7 +49,7 @@ describe("actual production checkout handler (isolated)",()=>{
   it("Library includes buyer-scoped one-time grants without exposing test clients", async()=>{
     const filters: any[]=[];
     const admin={from:(table:string)=>{
-      const q=query(table==="connect_entitlements"?[]:table==="connect_purchase_grants"?[{purchase_id:"purchase",client_id:"launch",product_id:"product",status:"granted"}]:table==="rocket_oauth_clients"?[{client_id:"launch",app_id:body.app_id}]:table==="connect_products"?[product]:table==="public_apps"?[{id:body.app_id,name:"Launch",website_url:"https://trylaunch.ai"}]:[]);
+      const q=query(table==="connect_entitlements"?[]:table==="connect_purchase_grants"?[{purchase_id:"purchase",client_id:"launch",product_id:"product",status:"granted"}]:table==="rocket_oauth_clients"?[{client_id:"launch",app_id:body.app_id,environment:"production"}]:table==="connect_products"?[product]:table==="public_apps"?[{id:body.app_id,name:"Launch",website_url:"https://trylaunch.ai"}]:[]);
       q.eq=(...args:any[])=>{filters.push([table,...args]);return q;};return q;
     }};
     const handler=load("supabase/functions/rocket-buy/index.ts",{},admin);const response=await handler(request({action:"library"}));expect(response.status).toBe(200);

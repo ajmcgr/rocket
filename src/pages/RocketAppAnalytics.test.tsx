@@ -9,6 +9,13 @@ const data: RocketAnalytics = { app_id: "app-1", app_name: "Example", from: "202
 beforeEach(() => { mocks.user={id:"owner"}; mocks.id="app-1"; mocks.invoke.mockReset(); mocks.invoke.mockResolvedValue({ data, error: null }); });
 afterEach(cleanup);
 describe("Rocket app analytics", () => {
+  it("extends the same owner dashboard with distinct commerce events and honest attribution",async()=>{
+    mocks.invoke.mockResolvedValue({data:{...data,commerce:{outbound_clicks:6,checkout_starts:4,verified_purchases:2,refunds:1,outbound_sources:{rocket_badge:3}}},error:null});
+    render(<RocketAppAnalytics/>);await screen.findByText('Discovery to purchase');
+    for(const label of ['Outbound clicks','Checkout starts','Verified purchases','Refunds'])expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.getByText(/not installs/)).toBeTruthy();expect(screen.getByText(/not unique customers/)).toBeTruthy();
+    expect(screen.getByText(/rocket badge: 3/)).toBeTruthy();
+  });
   it("shows Rocket metrics, rating stars, review comments and distinct measurement scopes", async () => {
     render(<RocketAppAnalytics />);
     expect(await screen.findByRole("heading", { name: "Example" })).toBeTruthy();

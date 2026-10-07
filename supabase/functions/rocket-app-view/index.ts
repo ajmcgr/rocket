@@ -37,15 +37,20 @@ Deno.serve(async (req) => {
     return response(415, origin, { error: "Invalid content type" });
 
   let appId: string;
+  let kind = "view", source = "direct";
   try {
     const raw = await req.text();
     if (raw.length > 200) return response(413, origin, { error: "Invalid request" });
-    appId = JSON.parse(raw)?.app_id;
+    const body = JSON.parse(raw);
+    appId = body?.app_id;
+    kind = body?.kind || "view";
+    source = ["rocket_badge","rocket_share"].includes(body?.source) ? body.source : "direct";
   } catch {
     return response(400, origin, { error: "Invalid request" });
   }
   if (typeof appId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId))
     return response(400, origin, { error: "Invalid app" });
+  if (!["view","outbound"].includes(kind)) return response(400,origin,{error:"Invalid event"});
 
   const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
@@ -54,7 +59,9 @@ Deno.serve(async (req) => {
   try {
     const day = new Date().toISOString().slice(0, 10);
     const hash = await dailyVisitorHash(day, ip, (req.headers.get("user-agent") || "").slice(0, 256));
-    const { data, error } = await admin.rpc("record_app_profile_view", {
+    const { data, error } = kind === "outbound" ? await admin.rpc("record_marketplace_click", {
+      p_app_id: appId, p_source: source, p_visitor_hash: hash,
+    }) : await admin.rpc("record_app_profile_view", {
       p_app_id: appId, p_view_day: day, p_viewer_hash: hash,
     });
     if (error) throw error;
