@@ -1,4 +1,5 @@
 import SiteHeader from "@/components/SiteHeader";
+import PublicMemberApps from "@/components/PublicMemberApps";
 import { type MemberProfile, safeProfileUrl } from "@/lib/memberProfile";
 
 export default function PublicMemberProfile({ profile }: { profile: MemberProfile | null }) {
@@ -9,7 +10,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
     ["YouTube", profile.youtube_channel, "https://www.youtube.com/@"],
     ["Telegram", profile.telegram_username, "https://t.me/"],
   ] : [];
-  return <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+  return <div className="marketplace-page min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
     <SiteHeader />
     <main className="mx-auto max-w-4xl px-4 py-12">
       {!profile ? <h1 className="text-3xl font-semibold">Profile not found</h1> : <article className="overflow-hidden rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
@@ -29,6 +30,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
           </div>
         </div>
       </article>}
+      {profile && <PublicMemberApps key={profile.username} username={profile.username} />}
     </main>
   </div>;
 }
