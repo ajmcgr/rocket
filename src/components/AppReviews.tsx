@@ -12,6 +12,7 @@ type Review = {
   body: string;
   created_at: string;
   updated_at: string;
+  author_username?: string | null;
 };
 type Summary = { rating_count: number; average_rating: number };
 
@@ -34,7 +35,7 @@ export default function AppReviews({
     const [list, aggregate] = await Promise.all([
       supabase
         .from("public_app_reviews")
-        .select("id,app_id,user_id,rating,body,created_at,updated_at")
+        .select("id,app_id,user_id,rating,body,created_at,updated_at,author_username")
         .eq("app_id", appId)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -159,6 +160,14 @@ export default function AppReviews({
                   {new Date(review.created_at).toLocaleDateString()}
                 </time>
               </div>
+              {review.author_username && /^[a-z0-9_]{2,30}$/.test(review.author_username) && (
+                <Link
+                  to={`/u/${review.author_username}`}
+                  className="mt-1 inline-block text-sm font-medium text-sky-800 hover:underline focus-visible:underline"
+                >
+                  @{review.author_username}
+                </Link>
+              )}
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">
                 {review.body}
               </p>
