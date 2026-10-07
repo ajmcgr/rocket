@@ -3,7 +3,7 @@ import rocketColor from "@/assets/rocket-logo-color.png.asset.json";
 import { Button } from "@/components/ui/button";
 
 const colors = [
-  { name: "Brand Blue", hex: "#1676e3", swatch: "bg-brand" },
+  { name: "Brand Blue", hex: "#167ac6", swatch: "bg-brand" },
   { name: "Ink", hex: "#0A0A0A", swatch: "bg-neutral-900" },
   { name: "Paper", hex: "#FFFFFF", swatch: "bg-white border border-neutral-200" },
   { name: "Smoke", hex: "#F5F5F5", swatch: "bg-neutral-100" },

@@ -178,7 +178,7 @@ export default function AddApp() {
         <p className="mt-3 text-neutral-600">Value:</p><code className="block break-all">{challenge.value}</code>
         <button onClick={() => navigator.clipboard.writeText(challenge.value || "")} className="mt-2 text-sky-700">Copy value</button>
         <p className="mt-3 text-xs text-neutral-500">Expires {new Date(challenge.expires_at || "").toLocaleString()}.</p>
-        <button disabled={busy} onClick={verify} className="mt-4 rounded-lg bg-sky-600 px-4 py-2 text-white disabled:opacity-50">{busy ? "Checking…" : "Verify"}</button>
+        <button disabled={busy} onClick={verify} className="mt-4 rounded-lg bg-brand hover:bg-brand-hover px-4 py-2 text-white disabled:opacity-50">{busy ? "Checking…" : "Verify"}</button>
       </div>}
     </div>}
   </main>;

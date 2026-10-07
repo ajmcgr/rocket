@@ -106,7 +106,7 @@ export default function AppRevenue() {
       {prices.length > 0 && <button disabled={busy} onClick={() => run(async () => {
         await request("save_mapping", { price_ids: selected }); await refresh();
         setNotice("Price mapping saved. Sync again before relying on a verified MRR point.");
-      })} className="mt-4 rounded-xl bg-sky-600 px-4 py-2 text-sm text-white disabled:opacity-50">Save price mapping</button>}
+      })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Save price mapping</button>}
       {status.mappings.length > 0 && <button disabled={busy} onClick={() => run(async () => {
         await request("sync"); await refresh(); setNotice("Subscription MRR was recalculated from Stripe. Sandbox figures remain private and cannot appear as production-verified revenue.");
       })} className="ml-2 mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Sync MRR</button>}

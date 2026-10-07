@@ -1,5 +1,5 @@
 .dev-page {
-  --dev-blue: #469dda;
+  --dev-blue: var(--brand);
   --dev-text: #15191d;
   --dev-muted: #58616b;
   --dev-line: #e5e9ed;

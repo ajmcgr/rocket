@@ -128,7 +128,7 @@ const IconDesigner = () => {
           <button
             type="submit"
             disabled={!prompt.trim()}
-            className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#1676e3] px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0d5ec5] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-brand px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             <ControlSend className="h-4 w-4" /> Generate
           </button>
