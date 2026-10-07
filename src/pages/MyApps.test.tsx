@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import AppJourney from "@/components/AppJourney";
 import MyApps from "./MyApps";
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "owner" }, loading: false }) }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke: vi.fn(async (_endpoint, options) => ({ data: options.body.action === "my_apps" ? [{ id: "claim-owned", app_id: "app-owned", owned: true, owner_verification_level: "domain_verified", status: "verified", app: { name: "Owned app" } }, { id: "claim-pending", app_id: "app-pending", owned: false, status: "pending", app: { name: "Pending app" } }] : { ga4: false, posthog: false, stripe_revenue: false, stripe_payments: false }, error: null })) } } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: vi.fn(() => ({ select: () => ({ in: async () => ({ data: [{ id: "app-owned", slug: "owned-app" }], error: null }) }) })), functions: { invoke: vi.fn(async (_endpoint, options) => ({ data: options.body.action === "my_apps" ? [{ id: "claim-owned", app_id: "app-owned", owned: true, owner_verification_level: "domain_verified", status: "verified", app: { name: "Owned app" } }, { id: "claim-pending", app_id: "app-pending", owned: false, status: "pending", app: { name: "Pending app" } }] : { ga4: false, posthog: false, stripe_revenue: false, stripe_payments: false }, error: null })) } } }));
 
 const item = {
   id: "claim-1", app_id: "app-1", status: "verified", verification_state: "domain_verified",
@@ -29,6 +29,9 @@ describe("My Apps next actions", () => {
       const manageConnections = Array.from(container.querySelectorAll('h3')).find((element) => element.textContent === 'Manage connections')!;
       expect(badge.compareDocumentPosition(manageConnections) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(badge.closest('details')).toBeNull();
+      expect(badge.querySelector('a[aria-label="Preview Owned app on Rocket"]')?.getAttribute('href')).toBe('https://tryrocket.ai/apps/owned-app');
+      expect((badge.querySelector('textarea') as HTMLTextAreaElement).value).toContain('href="https://tryrocket.ai/apps/owned-app"');
+      expect(container.querySelector('a[href="/apps/owned-app"]')?.textContent).toBe('View public profile');
       expect(badge.textContent).toContain('dofollow link to your website');
       expect(connections.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(preview.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { appBadgeEmbed, appBadgeUrl, badgePath, type BadgeTheme } from "@/lib/appBadge";
 
-export default function AppBadgeKit({ appId, appName }: { appId: string; appName: string }) {
+export default function AppBadgeKit({ appId, appName, appSlug }: { appId: string; appName: string; appSlug?: string | null }) {
   const [theme, setTheme] = useState<BadgeTheme>("black");
   const [notice, setNotice] = useState("");
-  const embed = appBadgeEmbed(appId, theme);
+  const embed = appBadgeEmbed(appId, theme, appSlug);
   return <section aria-label={`${appName} Rocket badge`} className="mt-5 border-t border-neutral-100 pt-4">
     <div>
       <h3 className="text-lg font-semibold">Discover it on Rocket</h3>
@@ -18,7 +18,7 @@ export default function AppBadgeKit({ appId, appName }: { appId: string; appName
         </label>)}
       </fieldset>
       <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-100 p-5">
-        <a href={appBadgeUrl(appId)} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${appName} on Rocket`} className="inline-block focus-visible:outline-2 focus-visible:outline-sky-700">
+        <a href={appBadgeUrl(appId, appSlug)} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${appName} on Rocket`} className="inline-block focus-visible:outline-2 focus-visible:outline-sky-700">
           <img src={badgePath(theme)} alt="Discover it on Rocket" width={160} height={50} className="h-auto max-w-full" />
         </a>
       </div>

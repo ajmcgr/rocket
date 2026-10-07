@@ -4,7 +4,7 @@ import IntegrationLogo from "@/components/IntegrationLogo";
 export type MyApp = { id: string; app_id: string; status: string; verification_state: string;
   review_reason?: string | null; completed_at?: string | null; rejected_at?: string | null;
   owned: boolean; owner_verification_level: string | null;
-  app: { name?: string; website_url?: string; logo_url?: string | null; claim_state?: string } | null };
+  app: { slug?: string; name?: string; website_url?: string; logo_url?: string | null; claim_state?: string } | null };
 
 export default function AppJourney({ item }: { item: MyApp }) {
   const domainVerified = item.owned && item.owner_verification_level === "domain_verified";
