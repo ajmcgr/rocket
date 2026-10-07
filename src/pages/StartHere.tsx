@@ -11,7 +11,7 @@ const steps = {
   builders: [
     { title: "Submit", body: "Paste your app URL. Rocket checks whether the app is already indexed before preparing a new listing, so you do not have to start from scratch." },
     { title: "Claim and verify", body: "Sign in to claim the right app. Domain ownership can be verified with a challenge; claiming alone is not the same as verification." },
-    { title: "Tell your story", body: "Manage your public profile in Your Apps. Add accurate details and choose which supported evidence, if any, to make visible." },
+    { title: "Tell your story", body: "Manage your public profile in My Apps. Add accurate details and choose which supported evidence, if any, to make visible." },
     { title: "Connect where supported", body: "Rocket identity and payment integrations are available for apps that explicitly integrate them. They are not automatically enabled for every listing." },
   ],
 };
@@ -56,7 +56,7 @@ const StartHere = () => {
           <section className="rounded-2xl border border-neutral-200 bg-white p-7 dark:border-neutral-800 dark:bg-neutral-900 sm:p-9">
             <h2 className="text-2xl font-bold tracking-tight">Building an app?</h2>
             <StepList items={steps.builders} />
-            <Link to="/submit" className="mt-9 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Submit your app</Link>
+            <Link to="/submit" className="mt-9 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Submit my app</Link>
           </section>
         </div>
 

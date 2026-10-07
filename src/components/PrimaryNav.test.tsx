@@ -21,8 +21,8 @@ describe("platform primary navigation", () => {
         );
       });
       const expected = [
-        ["Discover", "Saved", "Your Apps", "Submit", "Create"],
-        ["Discover", "Search", "Saved", "Submit", "Your Apps", "Account"],
+        ["Discover", "Saved", "My Apps", "Submit", "Create"],
+        ["Discover", "Search", "Saved", "Submit", "My Apps", "Account"],
       ];
       [...container.querySelectorAll("nav")].forEach((nav, index) => {
         expect(
@@ -70,7 +70,7 @@ describe("platform primary navigation", () => {
         "Search",
         "Saved",
         "Submit",
-        "Your Apps",
+        "My Apps",
         "Account",
       ]);
       expect(

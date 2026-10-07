@@ -41,7 +41,7 @@ const mount = async () => {
       <LaunchPreview />
     </MemoryRouter>,
   );
-  await screen.findByText("Submit your app.");
+  await screen.findByText("Submit my app.");
   return result;
 };
 describe("Rocket app submission", () => {

@@ -402,7 +402,7 @@ export default function PublicAppProfile({
                 <a
                   href={app.website_url}
                   target="_blank"
-                  rel="noopener noreferrer nofollow"
+                  rel="noopener noreferrer"
                   onClick={() =>
                     track("outbound_app_clicked", { app_id: app.id })
                   }

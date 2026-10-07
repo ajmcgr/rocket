@@ -68,11 +68,11 @@ const sections: { heading: string; items: NavItem[] }[] = [
     ],
   },
   {
-    heading: "Your apps",
+    heading: "My apps",
     items: [
-      { label: "Your Apps", to: "/your-apps", icon: Layers3 },
-      { label: "Your Subscriptions", to: "/library", icon: CreditCard },
-      { label: "Submit your app", to: "/submit", icon: Plus },
+      { label: "My Apps", to: "/your-apps", icon: Layers3 },
+      { label: "My Purchases", to: "/library", icon: CreditCard },
+      { label: "Submit my app", to: "/submit", icon: Plus },
     ],
   },
   {
@@ -92,9 +92,9 @@ export default function SiteHeader() {
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
   const profileHref = useMyProfileHref(user);
-  const sidebarSections = sections.map((section) => section.heading !== "Your apps" || !user ? section : {
+  const sidebarSections = sections.map((section) => section.heading !== "My apps" || !user ? section : {
     ...section,
-    items: section.items.flatMap((item) => item.label === "Submit your app"
+    items: section.items.flatMap((item) => item.label === "Submit my app"
       ? [{ label: "My Profile", to: profileHref, icon: UserRound }, item] : [item]),
   });
   const navigate = useNavigate();

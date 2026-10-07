@@ -90,7 +90,7 @@ export default function Library() {
   };
   return (
     <main className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8 sm:pt-14">
-      <h1 className="font-display text-4xl sm:text-5xl">Your Subscriptions</h1>
+      <h1 className="font-display text-4xl sm:text-5xl">My Purchases</h1>
       <p className="mt-3 text-neutral-600">
         Access your subscriptions and one-time purchases through Buy with Rocket,
         see payment status, and manage subscriptions. This is separate from

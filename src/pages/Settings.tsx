@@ -255,7 +255,7 @@ export const BillingSettings = () => {
         Subscriptions to third-party apps purchased with Buy with Rocket are separate from Rocket plans.
         Manage those in{" "}
         <NavLink to="/library" className="font-medium text-brand hover:underline">
-          Your Subscriptions
+          My Purchases
         </NavLink>.
       </p>
     </section>

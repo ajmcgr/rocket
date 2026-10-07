@@ -465,7 +465,7 @@ export default function LaunchPreview() {
             For vibe coders and developers
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            Submit your app.
+            Submit my app.
           </h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             Add your app to Rocket for free. Start with AI-assisted details or
@@ -934,7 +934,7 @@ export default function LaunchPreview() {
             to="/your-apps"
             className="font-semibold text-[#167ac6] underline"
           >
-            Open Your Apps
+            Open My Apps
           </Link>
         </p>
       </main>

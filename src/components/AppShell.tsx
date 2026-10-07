@@ -114,12 +114,12 @@ const AppShell = () => {
       ],
     },
     {
-      label: "Your apps",
+      label: "My apps",
       items: [
-        { label: "Your Apps", to: "/your-apps", icon: Layers3 },
-        { label: "Your Subscriptions", to: "/library", icon: CreditCard },
+        { label: "My Apps", to: "/your-apps", icon: Layers3 },
+        { label: "My Purchases", to: "/library", icon: CreditCard },
         { label: "My Profile", to: profileHref, icon: UserRound },
-        { label: "Submit your app", to: "/submit", icon: Plus },
+        { label: "Submit my app", to: "/submit", icon: Plus },
       ],
     },
     {

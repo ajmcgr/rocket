@@ -19,10 +19,10 @@ const sections = [
   {
     title: "Launching and managing an app",
     questions: [
-      { q: "How do I add my app?", a: "Open Submit your app and paste its public URL. Rocket first looks for an existing canonical listing. You can review the result before signing in to continue a claim or submission." },
+      { q: "How do I add my app?", a: "Open Submit my app and paste its public URL. Rocket first looks for an existing canonical listing. You can review the result before signing in to continue a claim or submission." },
       { q: "What if my app is already listed?", a: "Claim the existing app rather than creating a duplicate. If multiple records might match, Rocket asks you to resolve the ambiguity instead of guessing." },
       { q: "Does claiming my app verify that I own it?", a: "Not by itself. A claim starts the ownership process. Domain verification uses a real DNS or website challenge before Rocket marks domain ownership as verified." },
-      { q: "Can I edit my app profile?", a: "Verified owners can manage supported public presentation details in Your Apps. Owner edits do not replace Rocket's source provenance, public evidence, user reviews, or verification history." },
+      { q: "Can I edit my app profile?", a: "Verified owners can manage supported public presentation details in My Apps. Owner edits do not replace Rocket's source provenance, public evidence, user reviews, or verification history." },
       { q: "Can I connect Rocket Login or payments?", a: "Supported developers can configure Rocket identity and payments for apps they own. These capabilities require a deliberate integration and are not turned on for every indexed app." },
       { q: "Can I show traffic or revenue on my profile?", a: "Only supported, connected evidence can be shown as verified. Provider metrics are private by default, and owners choose supported public visibility. Availability and verification depend on the specific integration and account." },
     ],
@@ -40,7 +40,7 @@ const sections = [
       { q: "Do I need an account to browse Rocket?", a: "No. Discovery and public app profiles are available without signing in. An account is needed to save apps, claim an app, manage a listing, or use account-based tools." },
       { q: "What can I create on Rocket?", a: "Rocket also offers logo, icon, design, and Brand Kit tools. These are separate from browsing or claiming an app and may use credits or a paid plan." },
       { q: "Where can I see pricing and manage billing?", a: "Current Rocket plans and credits are listed on Pricing. Signed-in users can manage their Rocket billing from Settings. An independent app's own subscription is separate unless it explicitly uses Rocket payments." },
-      { q: "Can I disconnect a provider or revoke an app?", a: "Supported provider connections and sharing controls live with the relevant app in Your Apps. You can view and revoke third-party app authorization from Connected Apps in your Rocket account." },
+      { q: "Can I disconnect a provider or revoke an app?", a: "Supported provider connections and sharing controls live with the relevant app in My Apps. You can view and revoke third-party app authorization from Connected Apps in your Rocket account." },
       { q: "How do I get help?", a: "Send us a message through Contact. Include the relevant Rocket or app URL and a short description, but never send passwords, API keys, or payment-card details." },
     ],
   },

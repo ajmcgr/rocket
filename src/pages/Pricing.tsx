@@ -213,20 +213,20 @@ const Pricing = () => {
 
       <section className="border-b border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 pb-20 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your apps</h2>
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">My apps</h2>
           <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Your Rocket listing and app workspace are free.</p>
           <div className="mt-10 grid gap-5 text-left md:grid-cols-2">
             <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-              <h3 className="text-2xl font-semibold tracking-tight">Your Apps</h3>
+              <h3 className="text-2xl font-semibold tracking-tight">My Apps</h3>
               <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
               <p className="mt-4 flex-1 text-neutral-600">See apps you own or claim, improve public profiles, and manage available trust connections.</p>
-              <Link to="/your-apps" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Open Your Apps →</Link>
+              <Link to="/your-apps" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Open My Apps →</Link>
             </div>
             <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-              <h3 className="text-2xl font-semibold tracking-tight">Submit your app</h3>
+              <h3 className="text-2xl font-semibold tracking-tight">Submit my app</h3>
               <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
               <p className="mt-4 flex-1 text-neutral-600">Add an app to Rocket for discovery. Claiming and verification follow the existing ownership checks.</p>
-              <Link to="/submit" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Submit your app →</Link>
+              <Link to="/submit" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Submit my app →</Link>
             </div>
           </div>
         </div>
@@ -443,7 +443,7 @@ const Pricing = () => {
           <p className="mx-auto mt-4 max-w-xl text-neutral-600">Discover useful apps, submit your own for free, and choose the tools you need to create, monetize, and grow.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="bg-brand text-white hover:bg-brand/90">
-              <Link to="/submit">Submit your app</Link>
+              <Link to="/submit">Submit my app</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to="/discover">Explore apps</Link>

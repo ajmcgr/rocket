@@ -95,7 +95,7 @@ const Blog = () => {
               Explore apps →
             </Link>
             <Link to="/submit" className="text-[#075985] hover:underline">
-              Submit your app →
+              Submit my app →
             </Link>
           </div>
         </header>

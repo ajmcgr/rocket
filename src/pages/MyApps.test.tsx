@@ -13,7 +13,7 @@ const item = {
   app: { name: "Example", website_url: "https://example.com" },
 };
 
-describe("Your Apps next actions", () => {
+describe("My Apps next actions", () => {
   it("links Analytics and previews owned apps, not pending claims", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.stubGlobal("scrollTo", vi.fn());
@@ -25,7 +25,11 @@ describe("Your Apps next actions", () => {
       expect(container.querySelector('[aria-label="Owned app analytics preview"]')).not.toBeNull();
       const preview = container.querySelector('[aria-label="Owned app analytics preview"]')!;
       const connections = container.querySelector('[aria-label="Connect analytics and revenue"]')!;
-      const badge = Array.from(container.querySelectorAll("summary")).find((element) => element.textContent?.includes("Rocket badge"))!;
+      const badge = container.querySelector('[aria-label="Owned app Rocket badge"]')!;
+      const manageConnections = Array.from(container.querySelectorAll('h3')).find((element) => element.textContent === 'Manage connections')!;
+      expect(manageConnections.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(badge.closest('details')).toBeNull();
+      expect(badge.textContent).toContain('dofollow link to your website');
       expect(connections.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(badge.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(container.querySelector('[aria-label="Pending app analytics preview"]')).toBeNull();

@@ -57,7 +57,7 @@ export default function RocketAppAnalytics() {
   }, [id, user?.id, authLoading, days, page, refresh]);
   const pages = data ? Math.max(1, Math.ceil(data.period_review_count / data.page_size)) : 1;
   return <main className="mx-auto max-w-6xl px-5 pb-24 pt-10 sm:px-8 sm:pt-14">
-    <Link to="/your-apps" className="text-sm font-medium text-sky-800 hover:underline">← Your Apps</Link>
+    <Link to="/your-apps" className="text-sm font-medium text-sky-800 hover:underline">← My Apps</Link>
     <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
       <div><p className="flex items-center gap-2 text-sm font-semibold text-sky-800"><BarChart3 size={18} aria-hidden="true" />Rocket Analytics</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{data?.app_name || "App analytics"}</h1><p className="mt-2 text-neutral-600">See how people discover and review your app on Rocket.</p></div>
       <div className="flex flex-wrap items-center gap-3"><div role="group" aria-label="Analytics date range" className="flex gap-1 rounded-xl border bg-white p-1">{[7,30,90].map((n) => <button key={n} disabled={loading} aria-pressed={days === n} onClick={() => { setDays(n); setPage(1); }} className={`min-h-10 rounded-lg px-3 text-sm font-medium disabled:opacity-60 ${days === n ? "bg-sky-700 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}>{n} days</button>)}</div><button disabled={loading} onClick={() => setRefresh((v) => v+1)} className="min-h-11 rounded-xl border bg-white px-4 text-sm font-medium disabled:opacity-60">Refresh</button></div>

@@ -10,7 +10,7 @@ const consequences: Record<Action, string> = {
   posthog: "Rocket will stop syncing PostHog and remove its public traffic verification. Private history stays. Revoke Rocket’s grant in PostHog as well if you want to remove provider-side access.",
   stripe_revenue: "Rocket will stop verifying this app’s revenue. Private history stays. This does not disconnect Buy with Rocket payments or other apps using the same Stripe account. Uninstall the Stripe App separately if no longer needed.",
   stripe_payments: "This app will stop accepting new Buy with Rocket payments. Your Stripe account will not be deleted. Apps with purchases or open checkouts require support so customers are not disrupted.",
-  app: "Remove this app from Your Apps and release your ownership claim. Its public listing stays. You will need to verify ownership again to reconnect. Disconnect integrations first; apps with customers or connected Rocket ID users require support.",
+  app: "Remove this app from My Apps and release your ownership claim. Its public listing stays. You will need to verify ownership again to reconnect. Disconnect integrations first; apps with customers or connected Rocket ID users require support.",
 };
 
 async function request(appId: string, action: string, endpoint = "rocket-app-disconnect") {

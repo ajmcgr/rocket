@@ -125,7 +125,7 @@ export default function EditAppProfile() {
   return (
     <main className="mx-auto max-w-3xl px-5 pb-24 pt-10 sm:px-8">
       <Link to="/your-apps" className="text-sm text-sky-800 hover:underline">
-        ← Your Apps
+        ← My Apps
       </Link>
       <h1 className="mt-4 font-display text-4xl">Edit app profile</h1>
       <p className="mt-2 text-sm text-neutral-600">

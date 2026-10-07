@@ -32,7 +32,9 @@ it("includes useful profile identity in server-rendered HTML", () => {
 it("does not hide the profile while optional queries remain pending", () => {
   render(<PublicAppProfile initialApp={app} />);
   expect(screen.getByRole("heading", { name: "Whisperit", level: 1 })).toBeTruthy();
-  expect(screen.getByRole("link", { name: /Visit website/ })).toBeTruthy();
+  const website = screen.getByRole("link", { name: /Visit website/ });
+  expect(website.getAttribute('href')).toBe(app.website_url);
+  expect(website.getAttribute('rel')).toBe('noopener noreferrer');
 });
 it("places public traffic and revenue before the screenshot gallery", async () => {
   vi.mocked(supabase.from).mockImplementation((table) => {

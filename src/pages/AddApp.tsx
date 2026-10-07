@@ -113,7 +113,7 @@ export default function AddApp() {
       if (result.outcome === "verified") {
         track("app_verification_completed", { app_id: app?.id, method: challenge.method });
         track("app_claim_completed", { app_id: app?.id, method: challenge.method });
-        setSuccess("Domain verified. This app is now in Your Apps."); setChallenge(null);
+        setSuccess("Domain verified. This app is now in My Apps."); setChallenge(null);
       }
       else setError("Ownership needs manual review.");
     } catch (cause) { setError(friendlyError((cause as Error).message)); }
@@ -121,7 +121,7 @@ export default function AddApp() {
   };
 
   return <main className="mx-auto max-w-3xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-16">
-    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold tracking-[0.14em] text-sky-800">Rocket submission</p><h1 className="mt-3 font-display text-4xl sm:text-5xl">Submit your app.</h1></div><Link to="/your-apps" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">Your Apps</Link></div>
+    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold tracking-[0.14em] text-sky-800">Rocket submission</p><h1 className="mt-3 font-display text-4xl sm:text-5xl">Submit my app.</h1></div><Link to="/your-apps" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">My Apps</Link></div>
     {!appId && <form onSubmit={submit} className="mt-8 rounded-[1.75rem] border border-neutral-200 bg-white p-6 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.35)] sm:p-9">
       <label htmlFor="app-url" className="block font-display text-2xl text-neutral-950 sm:text-3xl">Already launched somewhere?<span className="block">Paste the URL.</span></label>
       <input id="app-url" type="text" inputMode="url" required value={url} onChange={(event) => setUrl(event.target.value)}
