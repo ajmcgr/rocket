@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "@/lib/router-compat";
-import { Bookmark, Compass, Layers3, Plus, Search, User } from "lucide-react";
+import { Bookmark, Compass, Grid2X2, Layers3, Plus, User } from "lucide-react";
 import { destinations } from "./primaryDestinations";
 
 export function PrimaryNav({ className = "" }: { className?: string }) {
@@ -24,8 +24,8 @@ export function MobilePrimaryNav() {
   const { pathname } = useLocation();
   const mobile = [
     { label: "Discover", to: "/discover", Icon: Compass },
-    { label: "Search", to: "/discover#search-apps", Icon: Search },
-    { label: "Saved", to: "/saved-apps", Icon: Bookmark },
+    { label: "Collections", to: "/collections", Icon: Grid2X2 },
+    { label: "My Collections", to: "/my-collections", Icon: Bookmark },
     { label: "Submit", to: "/submit", Icon: Plus },
     { label: "My Apps", to: "/your-apps", Icon: Layers3 },
     { label: "Account", to: "/settings", Icon: User },
@@ -55,8 +55,8 @@ export function PublicMobileNav() {
   const { pathname } = useLocation();
   const items = [
     { label: "Discover", to: "/discover", Icon: Compass },
-    { label: "Search", to: "/discover#search-apps", Icon: Search },
-    { label: "Saved", to: "/saved-apps", Icon: Bookmark },
+    { label: "Collections", to: "/collections", Icon: Grid2X2 },
+    { label: "My Collections", to: "/my-collections", Icon: Bookmark },
     { label: "Submit", to: "/submit", Icon: Plus },
     { label: "My Apps", to: "/your-apps", Icon: Layers3 },
     { label: "Account", to: "/login", Icon: User },

@@ -320,7 +320,7 @@ export default function PublicAppProfile({
           setSaved(true);
           if (!result.error)
             track("app_saved", { app_id: app.id, after_auth: true });
-          navigate("/saved-apps", { replace: true });
+          setSearchParams({}, { replace: true });
           return;
         }
         if (!canceled) setSearchParams({}, { replace: true });

@@ -44,6 +44,7 @@ import {
   MessageCircle,
   CreditCard,
   UserRound,
+  Grid2X2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -109,8 +110,8 @@ const AppShell = () => {
       items: [
         { label: "Discover", to: "/discover", icon: Compass },
         { label: "Rankings", to: "/discover?view=rankings", icon: BarChart3 },
+        { label: "Collections", to: "/collections", icon: Grid2X2 },
         { label: "Categories", to: "/discover?view=categories", icon: Layers3 },
-        { label: "Saved Apps", to: "/saved-apps", icon: Bookmark },
       ],
     },
     {
@@ -118,6 +119,7 @@ const AppShell = () => {
       items: [
         { label: "My Apps", to: "/your-apps", icon: Layers3 },
         { label: "My Purchases", to: "/library", icon: CreditCard },
+        { label: "My Collections", to: "/my-collections", icon: Bookmark },
         { label: "My Profile", to: profileHref, icon: UserRound },
         { label: "Submit my app", to: "/submit", icon: Plus },
       ],

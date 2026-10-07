@@ -21,8 +21,8 @@ describe("platform primary navigation", () => {
         );
       });
       const expected = [
-        ["Discover", "Saved", "My Apps", "Submit", "Create"],
-        ["Discover", "Search", "Saved", "Submit", "My Apps", "Account"],
+        ["Discover", "Collections", "My Collections", "My Apps", "Submit", "Create"],
+        ["Discover", "Collections", "My Collections", "Submit", "My Apps", "Account"],
       ];
       [...container.querySelectorAll("nav")].forEach((nav, index) => {
         expect(
@@ -38,7 +38,7 @@ describe("platform primary navigation", () => {
       const mobileNav = container.querySelector('nav[aria-label="Mobile primary"]');
       expect(mobileNav?.querySelectorAll("a > svg")).toHaveLength(6);
       expect(mobileNav?.querySelector('a[href="/discover"] svg')?.getAttribute("class")).toContain("lucide-compass");
-      expect(mobileNav?.querySelector('a[href="/saved-apps"] svg')?.getAttribute("class")).toContain("lucide-bookmark");
+      expect(mobileNav?.querySelector('a[href="/my-collections"] svg')?.getAttribute("class")).toContain("lucide-bookmark");
       expect(mobileNav?.querySelector('a[href="/your-apps"] svg')?.getAttribute("class")).toContain("lucide-layers");
     } finally {
       await act(async () => root.unmount());
@@ -67,8 +67,8 @@ describe("platform primary navigation", () => {
         ),
       ).toEqual([
         "Discover",
-        "Search",
-        "Saved",
+        "Collections",
+        "My Collections",
         "Submit",
         "My Apps",
         "Account",

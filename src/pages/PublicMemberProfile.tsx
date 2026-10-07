@@ -1,5 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import PublicMemberApps from "@/components/PublicMemberApps";
+import PublicMemberCollections from '@/components/PublicMemberCollections';
 import MarketplaceFollow from "@/components/MarketplaceFollow";
 import ProfileAvatarImage from "@/components/ProfileAvatarImage";
 import { type MemberProfile, safeProfileUrl } from "@/lib/memberProfile";
@@ -34,6 +35,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
         </div>
       </article>}
       {profile && <PublicMemberApps key={profile.username} username={profile.username} />}
+      {profile && <PublicMemberCollections key={`collections:${profile.username}`} username={profile.username} />}
     </main>
   </div>;
 }

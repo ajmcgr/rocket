@@ -5,6 +5,7 @@
   <url><loc>https://tryrocket.ai/pricing</loc><priority>0.9</priority></url>
   <url><loc>https://tryrocket.ai/buy-with-rocket</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/rocket-id</loc><priority>0.8</priority></url>
+  <url><loc>https://tryrocket.ai/collections</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/start</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/submit</loc><priority>0.8</priority></url>
   <url><loc>https://tryrocket.ai/faq</loc><priority>0.8</priority></url>

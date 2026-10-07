@@ -62,6 +62,8 @@ import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as BrandTemplatesIndexRouteImport } from './routes/brand-templates.index'
 import { Route as BrandTemplatesIdRouteImport } from './routes/brand-templates.$id'
+import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
+import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as CompareIndexRouteImport } from './routes/compare.index'
 import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as ConnectAuthorizeRouteImport } from './routes/connect.authorize'
@@ -88,6 +90,8 @@ import { Route as AppDesignsIndexRouteImport } from './routes/_app/designs.index
 import { Route as AppDesignsIdRouteImport } from './routes/_app/designs.$id'
 import { Route as AppDeveloperActivateRouteImport } from './routes/_app/developer.activate'
 import { Route as AppMyAppsIndexRouteImport } from './routes/_app/my-apps.index'
+import { Route as AppMyCollectionsIndexRouteImport } from './routes/_app/my-collections.index'
+import { Route as AppMyCollectionsSlugRouteImport } from './routes/_app/my-collections.$slug'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app/projects.index'
 import { Route as AppProjectsIdRouteImport } from './routes/_app/projects.$id'
 import { Route as AppProjectsNewRouteImport } from './routes/_app/projects.new'
@@ -389,6 +393,16 @@ const BrandTemplatesIdRoute = BrandTemplatesIdRouteImport.update({
   path: '/brand-templates/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
+  id: '/collections/',
+  path: '/collections/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
+  id: '/collections/$slug',
+  path: '/collections/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompareIndexRoute = CompareIndexRouteImport.update({
   id: '/compare/',
   path: '/compare/',
@@ -517,6 +531,16 @@ const AppDeveloperActivateRoute = AppDeveloperActivateRouteImport.update({
 const AppMyAppsIndexRoute = AppMyAppsIndexRouteImport.update({
   id: '/my-apps/',
   path: '/my-apps/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMyCollectionsIndexRoute = AppMyCollectionsIndexRouteImport.update({
+  id: '/my-collections/',
+  path: '/my-collections/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMyCollectionsSlugRoute = AppMyCollectionsSlugRouteImport.update({
+  id: '/my-collections/$slug',
+  path: '/my-collections/$slug',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
@@ -749,6 +773,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/brand-templates/$id': typeof BrandTemplatesIdRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/compare/$slug': typeof CompareSlugRoute
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
@@ -759,6 +784,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/blog/': typeof BlogIndexRoute
   '/brand-templates/': typeof BrandTemplatesIndexRoute
+  '/collections/': typeof CollectionsIndexRoute
   '/compare/': typeof CompareIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -771,6 +797,7 @@ export interface FileRoutesByFullPath {
   '/create/generate': typeof AppCreateGenerateRoute
   '/designs/$id': typeof AppDesignsIdRoute
   '/developer/activate': typeof AppDeveloperActivateRoute
+  '/my-collections/$slug': typeof AppMyCollectionsSlugRoute
   '/projects/$id': typeof AppProjectsIdRoute
   '/projects/new': typeof AppProjectsNewRoute
   '/rocket/$id': typeof AppRocketIdRoute
@@ -791,6 +818,7 @@ export interface FileRoutesByFullPath {
   '/create/': typeof AppCreateIndexRoute
   '/designs/': typeof AppDesignsIndexRoute
   '/my-apps/': typeof AppMyAppsIndexRoute
+  '/my-collections/': typeof AppMyCollectionsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/studio/': typeof AppStudioIndexRoute
@@ -863,6 +891,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/brand-templates/$id': typeof BrandTemplatesIdRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/compare/$slug': typeof CompareSlugRoute
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
@@ -873,6 +902,7 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/blog': typeof BlogIndexRoute
   '/brand-templates': typeof BrandTemplatesIndexRoute
+  '/collections': typeof CollectionsIndexRoute
   '/compare': typeof CompareIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/tools': typeof ToolsIndexRoute
@@ -884,6 +914,7 @@ export interface FileRoutesByTo {
   '/create/generate': typeof AppCreateGenerateRoute
   '/designs/$id': typeof AppDesignsIdRoute
   '/developer/activate': typeof AppDeveloperActivateRoute
+  '/my-collections/$slug': typeof AppMyCollectionsSlugRoute
   '/projects/$id': typeof AppProjectsIdRoute
   '/projects/new': typeof AppProjectsNewRoute
   '/rocket/$id': typeof AppRocketIdRoute
@@ -904,6 +935,7 @@ export interface FileRoutesByTo {
   '/create': typeof AppCreateIndexRoute
   '/designs': typeof AppDesignsIndexRoute
   '/my-apps': typeof AppMyAppsIndexRoute
+  '/my-collections': typeof AppMyCollectionsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/studio': typeof AppStudioIndexRoute
@@ -979,6 +1011,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/brand-templates/$id': typeof BrandTemplatesIdRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
   '/compare/$slug': typeof CompareSlugRoute
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create_/branding': typeof CreateBrandingRoute
@@ -989,6 +1022,7 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/blog/': typeof BlogIndexRoute
   '/brand-templates/': typeof BrandTemplatesIndexRoute
+  '/collections/': typeof CollectionsIndexRoute
   '/compare/': typeof CompareIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -1001,6 +1035,7 @@ export interface FileRoutesById {
   '/_app/create/generate': typeof AppCreateGenerateRoute
   '/_app/designs/$id': typeof AppDesignsIdRoute
   '/_app/developer/activate': typeof AppDeveloperActivateRoute
+  '/_app/my-collections/$slug': typeof AppMyCollectionsSlugRoute
   '/_app/projects/$id': typeof AppProjectsIdRoute
   '/_app/projects/new': typeof AppProjectsNewRoute
   '/_app/rocket/$id': typeof AppRocketIdRoute
@@ -1021,6 +1056,7 @@ export interface FileRoutesById {
   '/_app/create/': typeof AppCreateIndexRoute
   '/_app/designs/': typeof AppDesignsIndexRoute
   '/_app/my-apps/': typeof AppMyAppsIndexRoute
+  '/_app/my-collections/': typeof AppMyCollectionsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/studio/': typeof AppStudioIndexRoute
@@ -1096,6 +1132,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/brand-templates/$id'
+    | '/collections/$slug'
     | '/compare/$slug'
     | '/connect/authorize'
     | '/create/branding'
@@ -1106,6 +1143,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/blog/'
     | '/brand-templates/'
+    | '/collections/'
     | '/compare/'
     | '/resources/'
     | '/tools/'
@@ -1118,6 +1156,7 @@ export interface FileRouteTypes {
     | '/create/generate'
     | '/designs/$id'
     | '/developer/activate'
+    | '/my-collections/$slug'
     | '/projects/$id'
     | '/projects/new'
     | '/rocket/$id'
@@ -1138,6 +1177,7 @@ export interface FileRouteTypes {
     | '/create/'
     | '/designs/'
     | '/my-apps/'
+    | '/my-collections/'
     | '/projects/'
     | '/settings/'
     | '/studio/'
@@ -1210,6 +1250,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/brand-templates/$id'
+    | '/collections/$slug'
     | '/compare/$slug'
     | '/connect/authorize'
     | '/create/branding'
@@ -1220,6 +1261,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/blog'
     | '/brand-templates'
+    | '/collections'
     | '/compare'
     | '/resources'
     | '/tools'
@@ -1231,6 +1273,7 @@ export interface FileRouteTypes {
     | '/create/generate'
     | '/designs/$id'
     | '/developer/activate'
+    | '/my-collections/$slug'
     | '/projects/$id'
     | '/projects/new'
     | '/rocket/$id'
@@ -1251,6 +1294,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/designs'
     | '/my-apps'
+    | '/my-collections'
     | '/projects'
     | '/settings'
     | '/studio'
@@ -1325,6 +1369,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/$slug'
     | '/brand-templates/$id'
+    | '/collections/$slug'
     | '/compare/$slug'
     | '/connect/authorize'
     | '/create_/branding'
@@ -1335,6 +1380,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/blog/'
     | '/brand-templates/'
+    | '/collections/'
     | '/compare/'
     | '/resources/'
     | '/tools/'
@@ -1347,6 +1393,7 @@ export interface FileRouteTypes {
     | '/_app/create/generate'
     | '/_app/designs/$id'
     | '/_app/developer/activate'
+    | '/_app/my-collections/$slug'
     | '/_app/projects/$id'
     | '/_app/projects/new'
     | '/_app/rocket/$id'
@@ -1367,6 +1414,7 @@ export interface FileRouteTypes {
     | '/_app/create/'
     | '/_app/designs/'
     | '/_app/my-apps/'
+    | '/_app/my-collections/'
     | '/_app/projects/'
     | '/_app/settings/'
     | '/_app/studio/'
@@ -1423,6 +1471,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BrandTemplatesIdRoute: typeof BrandTemplatesIdRoute
+  CollectionsSlugRoute: typeof CollectionsSlugRoute
   CompareSlugRoute: typeof CompareSlugRoute
   ConnectAuthorizeRoute: typeof ConnectAuthorizeRoute
   CreateBrandingRoute: typeof CreateBrandingRoute
@@ -1433,6 +1482,7 @@ export interface RootRouteChildren {
   UUsernameRoute: typeof UUsernameRoute
   BlogIndexRoute: typeof BlogIndexRoute
   BrandTemplatesIndexRoute: typeof BrandTemplatesIndexRoute
+  CollectionsIndexRoute: typeof CollectionsIndexRoute
   CompareIndexRoute: typeof CompareIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
@@ -1814,6 +1864,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrandTemplatesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/collections/': {
+      id: '/collections/'
+      path: '/collections'
+      fullPath: '/collections/'
+      preLoaderRoute: typeof CollectionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/$slug': {
+      id: '/collections/$slug'
+      path: '/collections/$slug'
+      fullPath: '/collections/$slug'
+      preLoaderRoute: typeof CollectionsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/compare/': {
       id: '/compare/'
       path: '/compare'
@@ -1994,6 +2058,20 @@ declare module '@tanstack/react-router' {
       path: '/my-apps'
       fullPath: '/my-apps/'
       preLoaderRoute: typeof AppMyAppsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/my-collections/': {
+      id: '/_app/my-collections/'
+      path: '/my-collections'
+      fullPath: '/my-collections/'
+      preLoaderRoute: typeof AppMyCollectionsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/my-collections/$slug': {
+      id: '/_app/my-collections/$slug'
+      path: '/my-collections/$slug'
+      fullPath: '/my-collections/$slug'
+      preLoaderRoute: typeof AppMyCollectionsSlugRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/projects/': {
@@ -2330,6 +2408,7 @@ interface AppRouteChildren {
   AppCreateGenerateRoute: typeof AppCreateGenerateRoute
   AppDesignsIdRoute: typeof AppDesignsIdRoute
   AppDeveloperActivateRoute: typeof AppDeveloperActivateRoute
+  AppMyCollectionsSlugRoute: typeof AppMyCollectionsSlugRoute
   AppProjectsIdRoute: typeof AppProjectsIdRoute
   AppProjectsNewRoute: typeof AppProjectsNewRoute
   AppRocketIdRoute: typeof AppRocketIdRoute
@@ -2340,6 +2419,7 @@ interface AppRouteChildren {
   AppCreateIndexRoute: typeof AppCreateIndexRoute
   AppDesignsIndexRoute: typeof AppDesignsIndexRoute
   AppMyAppsIndexRoute: typeof AppMyAppsIndexRoute
+  AppMyCollectionsIndexRoute: typeof AppMyCollectionsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
   AppStudioIndexRoute: typeof AppStudioIndexRoute
   AppDeveloperAppsClientIdRoute: typeof AppDeveloperAppsClientIdRoute
@@ -2385,6 +2465,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCreateGenerateRoute: AppCreateGenerateRoute,
   AppDesignsIdRoute: AppDesignsIdRoute,
   AppDeveloperActivateRoute: AppDeveloperActivateRoute,
+  AppMyCollectionsSlugRoute: AppMyCollectionsSlugRoute,
   AppProjectsIdRoute: AppProjectsIdRoute,
   AppProjectsNewRoute: AppProjectsNewRoute,
   AppRocketIdRoute: AppRocketIdRoute,
@@ -2395,6 +2476,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCreateIndexRoute: AppCreateIndexRoute,
   AppDesignsIndexRoute: AppDesignsIndexRoute,
   AppMyAppsIndexRoute: AppMyAppsIndexRoute,
+  AppMyCollectionsIndexRoute: AppMyCollectionsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppStudioIndexRoute: AppStudioIndexRoute,
   AppDeveloperAppsClientIdRoute: AppDeveloperAppsClientIdRoute,
@@ -2447,6 +2529,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   BlogSlugRoute: BlogSlugRoute,
   BrandTemplatesIdRoute: BrandTemplatesIdRoute,
+  CollectionsSlugRoute: CollectionsSlugRoute,
   CompareSlugRoute: CompareSlugRoute,
   ConnectAuthorizeRoute: ConnectAuthorizeRoute,
   CreateBrandingRoute: CreateBrandingRoute,
@@ -2457,6 +2540,7 @@ const rootRouteChildren: RootRouteChildren = {
   UUsernameRoute: UUsernameRoute,
   BlogIndexRoute: BlogIndexRoute,
   BrandTemplatesIndexRoute: BrandTemplatesIndexRoute,
+  CollectionsIndexRoute: CollectionsIndexRoute,
   CompareIndexRoute: CompareIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
