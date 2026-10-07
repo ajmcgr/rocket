@@ -302,7 +302,7 @@ export default function ProductionBuySetup({
                     !status.merchant?.ready ||
                     !plan.integration_confirmed_at
                   }
-                  className="rounded-lg border border-[#469DDA] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                  className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold disabled:opacity-50"
                 >
                   {plan.is_active ? "Live" : "Activate Buy with Rocket"}
                 </button>

@@ -84,7 +84,7 @@ export default function AppAnalytics() {
           {propertyId && streams.length > 0 && !streams.some((item) => item.matches_app) && <p className="text-sm text-amber-700">No web stream matches this app’s verified domain. This property cannot be verified for this app.</p>}
           <button disabled={busy || !streamId} onClick={() => run(async () => { const result = await request("select_property", { property_id: propertyId, stream_id: streamId });
             setNotice(`Verified and backfilled ${result.sync.days} days of traffic. All metrics remain private.`); await refresh(); })}
-            className="rounded-xl bg-sky-600 px-4 py-2 text-sm text-white disabled:opacity-50">Verify and backfill traffic</button>
+            className="rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Verify and backfill traffic</button>
         </div>}
         {status.connection && ["active", "error"].includes(status.connection.status) && <button disabled={busy} onClick={() => run(async () => {
           await request("retry_sync"); setNotice("Traffic synced."); await refresh();
