@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Tables } from "@/integrations/supabase/types";
@@ -10,7 +10,8 @@ vi.mock("@/lib/router-compat", () => ({
   useNavigate: () => vi.fn(),
   useSearchParams: () => [new URLSearchParams(), vi.fn()],
 }));
-vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
+const auth = vi.hoisted(() => ({ user: null as null | { id: string } }));
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => auth }));
 vi.mock("@/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/components/SiteFooter", () => ({ default: () => null }));
@@ -22,7 +23,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
 import PublicAppProfile from "./PublicAppProfile";
 import { supabase } from "@/integrations/supabase/client";
 const app = { id: "app1", slug: "whisperit", name: "Whisperit", tagline: "Useful software", description: "Real description", categories: ["Productivity"], tags: [], platforms: ["web"], website_url: "https://whisperit.ai", canonical_host: "whisperit.ai", logo_url: null } as Tables<"public_apps">;
-afterEach(cleanup);
+afterEach(() => { cleanup(); auth.user = null; });
 it("includes useful profile identity in server-rendered HTML", () => {
   const html = renderToStaticMarkup(<PublicAppProfile initialApp={app} />);
   expect(html).toContain("Whisperit");
@@ -57,4 +58,19 @@ it("places public traffic and revenue before the screenshot gallery", async () =
   const gallery = screen.getByRole("heading", { name: "See Whisperit in action" });
   expect(traffic.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(revenue.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+it("checks saved status with the resolved UUID on a slug URL", async () => {
+  auth.user = { id: "viewer" };
+  const eq = vi.fn();
+  vi.mocked(supabase.from).mockImplementation(() => {
+    const result = Promise.resolve({ data: null, error: null });
+    const q: Record<string, unknown> = { then: result.then.bind(result) };
+    for (const key of ["select", "in", "order", "limit", "contains", "neq", "maybeSingle"]) q[key] = () => q;
+    q.eq = (...args: unknown[]) => { eq(...args); return q; };
+    return q as never;
+  });
+  render(<PublicAppProfile initialApp={app} />);
+  await waitFor(() => expect(eq).toHaveBeenCalledWith("app_id", "app1"));
+  expect(eq).not.toHaveBeenCalledWith("app_id", "whisperit");
 });

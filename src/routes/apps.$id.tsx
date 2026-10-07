@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeletons";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/apps/$id")({
   staleTime: 60_000,
   preloadStaleTime: 30_000,
   pendingComponent: AppProfileRouteSkeleton,
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     const isId = /^[0-9a-f-]{36}$/i.test(params.id);
     const { data, error } = await supabase
       .from("public_apps")
@@ -29,6 +29,13 @@ export const Route = createFileRoute("/apps/$id")({
       .eq(isId ? "id" : "slug", params.id)
       .maybeSingle();
     if (error) throw error;
+    if (isId && data?.slug) {
+      throw redirect({
+        href: `/apps/${encodeURIComponent(data.slug)}${location.searchStr}${location.hash ? `#${location.hash}` : ""}`,
+        statusCode: 301,
+        replace: true,
+      });
+    }
     // Primary gallery metadata reserves its final geometry in the SSR response.
     // Images still load responsively/lazily; reviews/evidence remain independent.
     const media = data ? (await loadAppMedia([data.id], false)).get(data.id) || [] : [];

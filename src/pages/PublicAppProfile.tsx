@@ -304,7 +304,7 @@ export default function PublicAppProfile({
   }, [similar]);
 
   useEffect(() => {
-    if (!id || !user) {
+    if (!app?.id || !user) {
       setSaved(false);
       return;
     }
@@ -313,11 +313,11 @@ export default function PublicAppProfile({
       if (saveAfterAuth) {
         const result = await supabase
           .from("saved_apps")
-          .insert({ user_id: user.id, app_id: id });
+          .insert({ user_id: user.id, app_id: app.id });
         if (!canceled && (!result.error || result.error.code === "23505")) {
           setSaved(true);
           if (!result.error)
-            track("app_saved", { app_id: id, after_auth: true });
+            track("app_saved", { app_id: app.id, after_auth: true });
           navigate("/saved-apps", { replace: true });
           return;
         }
@@ -327,7 +327,7 @@ export default function PublicAppProfile({
           .from("saved_apps")
           .select("app_id")
           .eq("user_id", user.id)
-          .eq("app_id", id)
+          .eq("app_id", app.id)
           .maybeSingle();
         if (!canceled) setSaved(Boolean(data));
       }
@@ -336,7 +336,7 @@ export default function PublicAppProfile({
     return () => {
       canceled = true;
     };
-  }, [id, user, saveAfterAuth, setSearchParams, navigate]);
+  }, [app?.id, user, saveAfterAuth, setSearchParams, navigate]);
 
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
