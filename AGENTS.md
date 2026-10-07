@@ -7,3 +7,4 @@
 - MetaMask/extension error suppression is an inline head script in `__root.tsx`; keep it.
 - Protected pages are gated by `ProtectedRoute` in `src/routes/_app.tsx`.
 - All 37 Supabase edge functions remain on Supabase (classification in `.lovable/migrate-to-tanstack/edge-function-classification.json`); do not delete them.
+- Consent logos prefer the inspected client icon and may fall back to an exact client-to-public-app binding; never infer identity from names or request URLs, so presentation fixes cannot change OAuth validation or ownership.
