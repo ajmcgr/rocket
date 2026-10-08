@@ -12,8 +12,8 @@ afterEach(() => {
 
 describe("sidebar resolved theme", () => {
   it("has a theme-aware sidebar surface instead of a hardcoded utility", () => {
-    const shell = readFileSync("src/components/AppShell.tsx", "utf8");
-    expect(shell).toContain('className="app-shell-sidebar ');
+    const shell = readFileSync("src/components/SiteHeader.tsx", "utf8");
+    expect(shell).toContain('className="marketplace-sidebar app-shell-sidebar ');
     expect(shell).not.toContain("bg-[#fcfdff]");
     expect(rules).toHaveLength(2);
   });

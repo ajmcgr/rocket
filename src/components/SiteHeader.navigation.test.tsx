@@ -9,6 +9,9 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 vi.mock("./LanguageSelector", () => ({ default: () => null }));
 vi.mock("./ThemeToggle", () => ({ default: () => null }));
+vi.mock("./WorkspaceSwitcher", () => ({ default: () => <button>Personal workspace</button> }));
+vi.mock("./NotificationsBell", () => ({ default: () => <button aria-label="Notifications">Notifications</button> }));
+vi.mock("./ShareExportModal", () => ({ default: () => null }));
 vi.mock("./Logo", () => ({ default: () => null }));
 vi.mock("@/hooks/useMyProfileHref", () => ({ useMyProfileHref: () => "/settings/profile" }));
 

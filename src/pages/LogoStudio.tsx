@@ -49,7 +49,7 @@ const LogoStudio = () => {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10">
+    <div className="flex min-h-[calc(100vh-65px)] items-center justify-center px-4 py-10">
       <div className="grid w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-20px_rgba(15,23,42,0.15)] md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_88px]">
         {/* Left: prompt / intro */}
         <div className="flex flex-col justify-center gap-4 bg-[#1676e3] p-10 text-white sm:p-12">

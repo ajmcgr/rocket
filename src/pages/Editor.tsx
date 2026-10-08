@@ -2335,7 +2335,7 @@ const Editor = () => {
   };
 
   return (
-    <div ref={editorShellRef} className="relative flex h-[calc(100vh-3.5rem)] w-full overflow-hidden bg-neutral-100">
+    <div ref={editorShellRef} className="relative flex h-[calc(100vh-65px)] w-full overflow-hidden bg-neutral-100">
       {/* Mobile warning */}
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white p-8 text-center md:hidden">
         <LayoutTemplate className="mb-3 h-8 w-8 text-neutral-400" />
