@@ -8,7 +8,8 @@ type Plan = {
   name: string;
   amount_cents: number;
   currency: string;
-  interval: "month" | "year";
+  interval: "month" | "year" | null;
+  billing_type?: "one_time" | "subscription";
 };
 type Entitlement = {
   status: string;
@@ -20,6 +21,11 @@ const money = (plan: Plan) =>
     style: "currency",
     currency: plan.currency.toUpperCase(),
   }).format(plan.amount_cents / 100);
+
+const billingPeriod = (plan: Plan) =>
+  plan.billing_type === "one_time" || plan.interval === null
+    ? "one-time"
+    : plan.interval;
 
 async function request<T>(action: string, appId: string): Promise<T> {
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
@@ -48,7 +54,10 @@ export default function AppProfileBuyAction({
   const [entitlement, setEntitlement] = useState<Entitlement>(null);
   const [busy, setBusy] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const pilot = appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("acceptance") === "1";
+  const pilot =
+    appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("acceptance") === "1";
   const [error, setError] = useState("");
   const processing =
     typeof window !== "undefined" &&
@@ -60,7 +69,14 @@ export default function AppProfileBuyAction({
     setPlan(null);
     setAcceptedTerms(false);
     const catalog = pilot
-      ? (userId ? supabase.functions.invoke("launch-rocket-acceptance", { body: { action: "status" } }).then(({ data, error }) => { if (error) throw error; return { plan: data?.available ? data.plan : null }; }) : Promise.resolve({ plan: null }))
+      ? userId
+        ? supabase.functions
+            .invoke("launch-rocket-acceptance", { body: { action: "status" } })
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return { plan: data?.available ? data.plan : null };
+            })
+        : Promise.resolve({ plan: null })
       : request<{ plan: Plan | null }>("catalog", appId);
     catalog
       .then((result) => {
@@ -105,8 +121,7 @@ export default function AppProfileBuyAction({
         role="status"
       >
         <span className="font-semibold">You&apos;re in.</span> {appName} ·{" "}
-        {plan.name} · {money(plan)}/
-        {plan.interval === "year" ? "year" : "month"}
+        {plan.name} · {money(plan)}/{billingPeriod(plan)}
         <a
           href={websiteUrl}
           target="_blank"
@@ -127,7 +142,23 @@ export default function AppProfileBuyAction({
     setError("");
     try {
       const result = pilot
-        ? await supabase.functions.invoke("launch-rocket-acceptance", { body: { action: "checkout", confirm_purchase_terms: acceptedTerms ? "1 USD per month until canceled" : "", amount_limit_cents: 100 } }).then(({ data, error }) => { if (error || data?.error) throw new Error(data?.error || "Acceptance checkout unavailable"); return data; })
+        ? await supabase.functions
+            .invoke("launch-rocket-acceptance", {
+              body: {
+                action: "checkout",
+                confirm_purchase_terms: acceptedTerms
+                  ? "39 USD one-time for one Launch Pro"
+                  : "",
+                amount_limit_cents: 3900,
+              },
+            })
+            .then(({ data, error }) => {
+              if (error || data?.error)
+                throw new Error(
+                  data?.error || "Acceptance checkout unavailable",
+                );
+              return data;
+            })
         : await request<{ checkout_url: string }>("checkout", appId);
       window.location.assign(result.checkout_url);
     } catch (caught: unknown) {
@@ -145,18 +176,30 @@ export default function AppProfileBuyAction({
         </span>
       )}
       <span className="text-sm font-medium">
-        {plan.name} · {money(plan)}/
-        {plan.interval === "year" ? "year" : "month"}
+        {plan.name} · {money(plan)}/{billingPeriod(plan)}
       </span>
       {!canBuy && entitlement && (
         <span className="text-sm text-neutral-600">
           {entitlement.status.replaceAll("_", " ")}
         </span>
       )}
-      {canBuy && pilot && <label className="text-sm"><input type="checkbox" checked={acceptedTerms} onChange={event => setAcceptedTerms(event.target.checked)} /> I approve a new $1 USD/month acceptance subscription, recurring until canceled.</label>}
+      {canBuy && pilot && (
+        <label className="text-sm">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(event) => setAcceptedTerms(event.target.checked)}
+          />{" "}
+          I approve a new $39 USD one-time Launch Pro acceptance purchase.
+        </label>
+      )}
       {canBuy && (
-        <RocketButton action="buy" onActivate={buy} loading={busy}
-          disabled={processing || (pilot && !acceptedTerms)} />
+        <RocketButton
+          action="buy"
+          onActivate={buy}
+          loading={busy}
+          disabled={processing || (pilot && !acceptedTerms)}
+        />
       )}
       {error && (
         <span role="alert" className="w-full text-sm text-red-600">
