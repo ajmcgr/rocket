@@ -125,7 +125,7 @@ const before = JSON.stringify(
 );
 const migration = await readFile(
   new URL(
-    "../supabase/migrations/20261008084856_rocket_engagement_rankings.sql",
+    "../supabase/migrations/20261008093200_rocket_engagement_rankings.sql",
     import.meta.url,
   ),
   "utf8",
