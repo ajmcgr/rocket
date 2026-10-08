@@ -21,7 +21,7 @@ describe("platform primary navigation", () => {
         );
       });
       const expected = [
-        ["Discover", "Collections", "Saved", "My Apps", "Submit", "Create"],
+        ["Discover", "Rising", "Collections", "Saved", "My Apps", "Submit", "Create"],
         ["Discover", "Collections", "Submit", "My Apps", "Account"],
       ];
       [...container.querySelectorAll("nav")].forEach((nav, index) => {

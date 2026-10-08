@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "@/lib/router-compat";
 import {
   Bookmark,
   Compass,
+  Zap,
   ExternalLink,
   Layers3,
   Plus,
@@ -64,6 +65,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     heading: "Discover",
     items: [
       { label: "Discover", to: "/discover", icon: Compass },
+      { label: "Rising", to: "/rising", icon: Zap },
       { label: "Rankings", to: "/discover?view=rankings", icon: TrendingUp },
       { label: "Collections", to: "/collections", icon: Bookmark },
       { label: "New", to: "/discover?view=new", icon: Flame },
