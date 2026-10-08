@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { rankingsQuery } from "@/lib/homeMerchandising";
 import RocketPicks from "./RocketPicks";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,14 +68,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
     let active = true;
     const load = async () => {
       const [rankingResult, newResult, categoryResult] = await Promise.all([
-        publicMarketplaceRead("preview", "rankings-top20", () => supabase
-          .from("public_app_rankings")
-          .select("app_id,rocket_view_count")
-          .order("rocket_view_count", { ascending: false })
-          .order("last_viewed_at", { ascending: false, nullsFirst: false })
-          .order("launched_at", { ascending: false, nullsFirst: false })
-          .order("app_id", { ascending: true })
-          .limit(20)),
+        publicMarketplaceRead("preview", "engagement-rankings-top20", () => rankingsQuery(20)),
         publicMarketplaceRead("preview", "new-to-rocket", () => supabase
           .from("public_discoverable_apps")
           .select("*")
@@ -182,7 +176,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
                   metadata={metadata.get(visual.id)}
                   eyebrow={
                     rankings.some((app) => app.id === visual.id)
-                      ? "Most viewed on Rocket"
+                      ? "Top Ranked on Rocket"
                       : "New with Launch activity"
                   }
                 />
@@ -193,7 +187,7 @@ export default function DiscoveryPreview({ intro }: { intro?: ReactNode }) {
         );
       })()}
       <section className="mt-10 sm:mt-12" aria-labelledby="rankings-heading">
-        <SectionHeading id="rankings-heading" title="Rankings" description="Most viewed app profiles on Rocket since view tracking began. Repeat visits from the same browser/network in a day count once." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
+        <SectionHeading id="rankings-heading" title="Top Ranked Apps" description="Ranked by reviews, bookmarks and verified purchases." href="/discover?view=rankings" action="See all Rankings" emoji="🏆" />
         {rankings.length > 0 ? (
           <div className="grid gap-x-7 sm:grid-cols-2">
             {rankings.map((app, index) => (

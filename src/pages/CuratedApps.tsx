@@ -1,6 +1,7 @@
 import SiteHeader from "@/components/SiteHeader";
 import { RankedAppRow, StandardAppCard } from "@/components/MarketplaceCards";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
+import { rocketViewsLabel } from "@/lib/homeMerchandising";
 import type { ShelfItem } from "@/lib/homeMerchandising";
 
 export default function CuratedApps({
@@ -24,7 +25,7 @@ export default function CuratedApps({
         </h1>
         <p className="mt-3 text-sm text-neutral-600">
           {kind === "rising"
-            ? "Cohort-relative public Launch vote activity. These are imported Launch signals, not Rocket traffic or usage."
+            ? "Most viewed app pages on Rocket. Views are counted since tracking began; repeat visits from the same browser/network to an app in a day count once."
             : "Human-selected apps from Rocket’s editorial team."}
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -35,7 +36,7 @@ export default function CuratedApps({
                 app={row.app}
                 rank={index + 1}
                 {...save(row.app.id)}
-                eyebrow={`${row.signal!.net_votes} net Launch votes`}
+                eyebrow={rocketViewsLabel(row.viewCount)}
               />
             ) : (
               <div key={row.app.id}>

@@ -69,10 +69,10 @@ export default function Discover() {
   );
   const rawSearch = params.get("q") || "";
   const search = safeSearch(rawSearch);
-  const view = ["rising", "rankings", "new", "categories", "all"].includes(
+  const view = ["rankings", "new", "categories", "all"].includes(
     params.get("view") || "",
   )
-    ? params.get("view") === "rising" ? "rankings" : params.get("view")!
+    ? params.get("view")!
     : "all";
   const pageTitle = view === "rankings" ? "Rankings" : view === "new" ? "New" : view === "categories" ? "Categories" : "Discover";
   const showOverview =
@@ -132,16 +132,9 @@ export default function Discover() {
       if (view === "rankings") {
         if (rankingCategoriesLoading) return;
         const eligibleCategory = rankingCategories.some((item) => item.category === category) ? category : "";
-        let request = supabase
-          .from("public_app_rankings")
-          .select("app_id,rocket_view_count,last_viewed_at")
-          .order("rocket_view_count", { ascending: false })
-          .order("last_viewed_at", { ascending: false, nullsFirst: false })
-          .order("launched_at", { ascending: false, nullsFirst: false })
-          .order("app_id", { ascending: true })
-          .limit(RANKING_SIZE);
-        if (eligibleCategory) request = request.contains("categories", [eligibleCategory]);
-        const { data: rankingRows, error: rankingError } = await request;
+        const { data: rankingRows, error: rankingError } = await marketplaceRpc("get_public_app_rankings", {
+          p_category: eligibleCategory, p_limit: RANKING_SIZE,
+        });
         if (rankingError) throw rankingError;
         const ids = (rankingRows || []).map((row) => row.app_id);
         const appResult = ids.length
@@ -342,8 +335,8 @@ export default function Discover() {
         </div>
         {view === "rankings" && (
           <section className="mt-6" aria-labelledby="ranking-categories-heading">
-            <h2 id="ranking-categories-heading" className="text-lg font-bold">Top 20 by Rocket views</h2>
-            <p className="mt-1 text-sm text-neutral-600">Visits to app profiles on Rocket since view tracking began. Repeat visits from the same browser/network to an app in a day count once; ties use the most recent view, then newer listings. Views are not verified users, revenue or a Rocket endorsement.</p>
+            <h2 id="ranking-categories-heading" className="text-lg font-bold">Top Ranked Apps</h2>
+            <p className="mt-1 text-sm text-neutral-600">Published reviews, current bookmarks and verified purchases each count equally. Purchases count once per buyer per app; refunded or disputed purchases do not count. Ties use reviews, then bookmarks, then app name. Rankings are not a Rocket endorsement.</p>
             <label className="mt-4 flex flex-wrap items-center gap-3 text-sm text-neutral-600">
               Category
               <select
@@ -461,7 +454,7 @@ export default function Discover() {
                   ? `Top ${count} apps`
                 : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}
           </span>
-          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by Rocket app-profile views" : view === "new" ? "Newest listings on Rocket" : "Public Launch activity"}</span>
+          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by reviews, bookmarks and verified purchases" : view === "new" ? "Newest listings on Rocket" : "Public Launch activity"}</span>
         </div>
         {error && (
           <div

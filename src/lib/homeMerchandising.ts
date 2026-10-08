@@ -1,8 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
+import { marketplaceRpc } from "./marketplace";
 import type { Tables } from "@/integrations/supabase/types";
 import { loadAppMedia, coverMedia, type PublicAppMedia } from "./appMedia";
 
 export type HomeApp = Tables<"public_apps">;
+export type RocketViewRanking = Pick<
+  Tables<"public_app_rankings">,
+  "app_id" | "rocket_view_count"
+>;
 export type HomeSignal = Tables<"public_app_intelligence">;
 export type HomePick = {
   app_id: string;
@@ -16,6 +21,7 @@ export type ShelfItem = {
   app: HomeApp;
   pick?: HomePick;
   signal?: HomeSignal;
+  viewCount?: number;
   evidence?: HomeEvidence;
 };
 export type EditorialShelf = { name: string; items: ShelfItem[] };
@@ -51,16 +57,26 @@ async function optionalRows<T>(
   }
 }
 export function risingQuery(limit = 6) {
-  // Preserve the approved cohort percentile / net Launch votes methodology.
   return supabase
-    .from("public_discoverable_app_intelligence")
-    .select("*")
-    .eq("signal_type", "rising")
-    .order("percentile_rank", { ascending: false })
-    .order("net_votes", { ascending: false })
+    .from("public_app_rankings")
+    .select("app_id,rocket_view_count")
+    .gt("rocket_view_count", 0)
+    .order("rocket_view_count", { ascending: false })
+    .order("last_viewed_at", { ascending: false, nullsFirst: false })
+    .order("launched_at", { ascending: false, nullsFirst: false })
     .order("app_id", { ascending: true })
     .limit(limit);
 }
+export function rankingsQuery(limit = 8, category = "") {
+  return marketplaceRpc("get_public_app_rankings", {
+    p_category: category,
+    p_limit: limit,
+  });
+}
+export function rocketViewsLabel(count = 0) {
+  return `${count.toLocaleString("en-US")} Rocket app-page ${count === 1 ? "view" : "views"}`;
+}
+
 export function picksQuery(collection?: string, limit = 24) {
   let query = (supabase as any)
     .from("public_rocket_picks")
@@ -100,7 +116,7 @@ export function tractionLabel(e: HomeEvidence) {
 export function composeHome(input: {
   apps: HomeApp[];
   picks: HomePick[];
-  rising: HomeSignal[];
+  rising: RocketViewRanking[];
   fresh: HomeSignal[];
   rankedIds: string[];
   evidence: HomeEvidence[];
@@ -164,7 +180,7 @@ export function composeHome(input: {
     rising: input.rising
       .flatMap((signal) => {
         const row = item(signal.app_id);
-        return row ? [{ ...row, signal }] : [];
+        return row ? [{ ...row, viewCount: signal.rocket_view_count }] : [];
       })
       .slice(0, 6),
     fresh: fresh.slice(0, 4),
@@ -198,16 +214,7 @@ export async function loadHomeMerchandising(): Promise<HomeMerchandising> {
           .order("app_id", { ascending: true })
           .limit(4),
       ),
-      optionalRows(
-        supabase
-          .from("public_app_rankings")
-          .select("app_id")
-          .order("rocket_view_count", { ascending: false })
-          .order("last_viewed_at", { ascending: false, nullsFirst: false })
-          .order("launched_at", { ascending: false, nullsFirst: false })
-          .order("app_id", { ascending: true })
-          .limit(8),
-      ),
+      optionalRows(rankingsQuery()),
       optionalRows(
         supabase
           .from("public_app_traction")
@@ -274,7 +281,7 @@ export async function loadCuratedApps(
       ? [
           {
             app,
-            signal: signals.find((s) => s.app_id === id),
+            viewCount: signals.find((s) => s.app_id === id)?.rocket_view_count,
             pick: picks.find((p) => p.app_id === id),
           },
         ]
