@@ -850,7 +850,7 @@ export default function DeveloperExperience({
           </section>
         )}
 
-        <RocketButtonKit />
+        <RocketButtonKit action={view === "buy" ? "buy" : view === "id" ? "continue" : undefined} />
 
         {showMarketing && (
           <>

@@ -1,15 +1,14 @@
 import { useState } from "react";
 import RocketButton from "./RocketButton";
 
-const snippet = `<script defer src="https://tryrocket.ai/buttons/v1/rocket-buttons.js"></script>
-<rocket-button action="continue" variant="primary" id="rocket-sign-in"></rocket-button>
-<rocket-button action="buy" variant="primary" id="rocket-buy"></rocket-button>
+export default function RocketButtonKit({ action }: { action?: "continue" | "buy" }) {
+  const actions: Array<"continue" | "buy"> = action ? [action] : ["continue", "buy"];
+  const snippet = `<script defer src="https://tryrocket.ai/buttons/v1/rocket-buttons.js"></script>
+${actions.map(value => `<rocket-button action="${value}" variant="primary" id="rocket-${value}"></rocket-button>`).join("\n")}
 <script>
-  // Attach your existing authorization/checkout handlers; the kit sends no requests.
-  document.getElementById("rocket-sign-in").addEventListener("rocket-activate", startExistingRocketSignIn);
-  document.getElementById("rocket-buy").addEventListener("rocket-activate", startExistingRocketPurchase);
+  // Attach your existing handlers; the kit sends no requests.
+${actions.map(value => `  document.getElementById("rocket-${value}").addEventListener("rocket-activate", ${value === "buy" ? "startExistingRocketPurchase" : "startExistingRocketSignIn"});`).join("\n")}
 </script>`;
-export default function RocketButtonKit() {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   return (
@@ -28,19 +27,18 @@ export default function RocketButtonKit() {
             <p className="text-sm font-semibold capitalize">
               {variant === "primary" ? "Rocket blue" : variant}
             </p>
-            <RocketButton action="continue" variant={variant} />
-            <RocketButton action="buy" variant={variant} />
+            {actions.map(value => <RocketButton key={value} action={value} variant={variant} />)}
           </div>
         ))}
       </div>
       <div className="mt-5 flex flex-wrap gap-4">
         <div>
           <p className="mb-2 text-sm">Loading</p>
-          <RocketButton action="buy" loading />
+          <RocketButton action={action || "buy"} loading />
         </div>
         <div>
           <p className="mb-2 text-sm">Disabled</p>
-          <RocketButton action="buy" disabled />
+          <RocketButton action={action || "buy"} disabled />
         </div>
       </div>
       <details className="mt-5">
