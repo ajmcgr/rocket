@@ -30,6 +30,7 @@ import { Route as MediaKitRouteImport } from './routes/media-kit'
 import { Route as PicksRouteImport } from './routes/picks'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RisingRouteImport } from './routes/rising'
@@ -233,6 +234,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingsRoute = RankingsRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReserveRoute = ReserveRouteImport.update({
@@ -755,6 +761,7 @@ export interface FileRoutesByFullPath {
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/rankings': typeof RankingsRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
@@ -876,6 +883,7 @@ export interface FileRoutesByTo {
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/rankings': typeof RankingsRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
@@ -997,6 +1005,7 @@ export interface FileRoutesById {
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/rankings': typeof RankingsRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
@@ -1120,6 +1129,7 @@ export interface FileRouteTypes {
     | '/picks'
     | '/pricing'
     | '/privacy'
+    | '/rankings'
     | '/reserve'
     | '/reset-password'
     | '/rising'
@@ -1241,6 +1251,7 @@ export interface FileRouteTypes {
     | '/picks'
     | '/pricing'
     | '/privacy'
+    | '/rankings'
     | '/reserve'
     | '/reset-password'
     | '/rising'
@@ -1361,6 +1372,7 @@ export interface FileRouteTypes {
     | '/picks'
     | '/pricing'
     | '/privacy'
+    | '/rankings'
     | '/reserve'
     | '/reset-password'
     | '/rising'
@@ -1484,6 +1496,7 @@ export interface RootRouteChildren {
   PicksRoute: typeof PicksRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  RankingsRoute: typeof RankingsRoute
   ReserveRoute: typeof ReserveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RisingRoute: typeof RisingRoute
@@ -1664,6 +1677,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rankings': {
+      id: '/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof RankingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reserve': {
@@ -2558,6 +2578,7 @@ const rootRouteChildren: RootRouteChildren = {
   PicksRoute: PicksRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  RankingsRoute: RankingsRoute,
   ReserveRoute: ReserveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RisingRoute: RisingRoute,

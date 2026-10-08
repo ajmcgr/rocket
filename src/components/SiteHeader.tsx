@@ -123,21 +123,25 @@ export default function SiteHeader({
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
   const profileHref = useMyProfileHref(user);
-  const sidebarSections = sections.map((section) =>
-    section.heading !== "My apps" || !user
-      ? section
-      : {
-          ...section,
-          items: section.items.flatMap((item) =>
-            item.label === "Submit my app"
-              ? [
-                  { label: "My Profile", to: profileHref, icon: UserRound },
-                  item,
-                ]
-              : [item],
-          ),
-        },
-  );
+  const sidebarSections = sections
+    .filter(
+      (section) => user || !["Monetize", "Create"].includes(section.heading),
+    )
+    .map((section) =>
+      section.heading !== "My apps" || !user
+        ? section
+        : {
+            ...section,
+            items: section.items.flatMap((item) =>
+              item.label === "Submit my app"
+                ? [
+                    { label: "My Profile", to: profileHref, icon: UserRound },
+                    item,
+                  ]
+                : [item],
+            ),
+          },
+    );
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
   const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)
