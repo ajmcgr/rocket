@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "@/test/MemoryRouter";
 import SiteHeader from "./SiteHeader";
@@ -15,6 +15,19 @@ vi.mock("@/hooks/useMyProfileHref", () => ({ useMyProfileHref: () => "/settings/
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("Create sidebar destinations", () => {
+  it("places the collapse control in the logo row and keeps expansion available", async () => {
+    vi.stubGlobal("scrollTo", vi.fn());
+    vi.stubGlobal("localStorage", { getItem: vi.fn(() => null), setItem: vi.fn() });
+    auth.user = null;
+    render(<MemoryRouter initialEntries={["/"]}><SiteHeader /></MemoryRouter>);
+    const collapse = await screen.findByRole("button", { name: "Collapse sidebar" });
+    expect(collapse.parentElement?.className).toContain("h-[65px]");
+    expect(collapse.closest("nav")).toBeNull();
+    fireEvent.click(collapse);
+    expect(screen.getByRole("button", { name: "Expand sidebar" }).className).toContain("left-full");
+    fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }));
+    expect(screen.getByRole("button", { name: "Collapse sidebar" })).toBeTruthy();
+  });
   for (const signedIn of [false, true]) {
     for (const path of ["/", "/discover", "/pricing", "/submit"]) {
       it(`keeps Brand Studio without a duplicate Saved Designs link on ${path} when ${signedIn ? "signed in" : "signed out"}`, async () => {
