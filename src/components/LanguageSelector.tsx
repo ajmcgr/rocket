@@ -60,14 +60,14 @@ export default function LanguageSelector() {
           <DropdownMenuItem
             key={item.code}
             onSelect={() => select(item)}
-            className={`min-h-11 gap-2 rounded-lg px-2 text-base font-medium text-neutral-800 focus:bg-neutral-100 dark:text-neutral-100 dark:focus:bg-neutral-800 ${item.code === lang.code ? "bg-neutral-200" : ""}`}
+            className={`min-h-11 gap-2 rounded-lg px-2 text-sm font-normal text-neutral-800 focus:bg-neutral-100 dark:text-neutral-100 dark:focus:bg-neutral-800 ${item.code === lang.code ? "bg-neutral-200" : ""}`}
           >
             {item.code === lang.code ? (
               <Check className="h-[18px] w-[18px] shrink-0 stroke-[1.8]" aria-hidden="true" />
             ) : (
               <span className="w-[18px] shrink-0" aria-hidden="true" />
             )}
-            <span className="w-6 shrink-0 text-xl leading-none" aria-hidden="true">{item.flag}</span>
+            <span className="w-5 shrink-0 text-[18px] leading-none" aria-hidden="true">{item.flag}</span>
             <span className="truncate">{item.label}</span>
           </DropdownMenuItem>
         ))}
