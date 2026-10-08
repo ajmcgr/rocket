@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
+import { SHOW_GROW_SECTION } from "./sidebarVisibility";
 import sidebarIconWhite from "@/assets/rocket-sidebar-icon-white.png.asset.json";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfileHref } from "@/hooks/useMyProfileHref";
@@ -64,7 +65,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "Discover", to: "/discover", icon: Compass },
       { label: "Rankings", to: "/discover?view=rankings", icon: TrendingUp },
-      { label: "Collections", to: "/collections", icon: Grid2X2 },
+      { label: "Collections", to: "/collections", icon: Bookmark },
       { label: "New", to: "/discover?view=new", icon: Flame },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
     ],
@@ -188,7 +189,7 @@ export default function SiteHeader() {
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
-            <div>
+            {SHOW_GROW_SECTION && <div>
               {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">Grow</p>}
               {[
                 { label: "Launch", href: "https://trylaunch.ai", icon: Send },
@@ -208,7 +209,7 @@ export default function SiteHeader() {
                   {!sidebarCompact && <><span>{label}</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
                 </a>
               ))}
-            </div>
+            </div>}
             <div>
               {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">Community</p>}
               <a

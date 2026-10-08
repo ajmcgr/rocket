@@ -144,11 +144,11 @@ describe("homepage section gates", () => {
         "Rocket Picks",
         "Rising on Rocket",
         "New & Noteworthy",
-        "Top Apps",
+        "Top Ranked Apps",
         "Categories",
       ]);
       expect(view.container.textContent).toContain(
-        "Imported Launch votes—not Rocket traffic",
+        "public community votes",
       );
       expect(view.container.textContent).toContain("Actual editorial reason");
       expect(view.container.textContent).not.toContain("Proven Traction");
@@ -170,7 +170,7 @@ describe("homepage section gates", () => {
     });
     const view = await render({ ...emptyMerchandising(), top: [{ app }] });
     try {
-      expect(view.container.textContent).toContain("Top Apps");
+      expect(view.container.textContent).toContain("Top Ranked Apps");
       expect(view.container.textContent).not.toContain("Continue exploring");
       expect(view.container.textContent).not.toContain(
         "From developers you follow",
