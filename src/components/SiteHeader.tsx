@@ -153,7 +153,7 @@ export default function SiteHeader() {
     <>
       <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>header,body:has(.marketplace-sidebar) .global-site-footer{margin-left:${sidebarWidth}px}}`}</style>
       <aside className="marketplace-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] bg-[#f9fbfd] transition-[width] duration-200 lg:flex" style={{ width: sidebarWidth }}>
-        <div className={`flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "px-4"}`}>
+        <div className={`relative flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "gap-2 px-4"}`}>
           {sidebarCompact ? (
             <Link to="/" aria-label="Rocket home" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100">
               <img
@@ -169,22 +169,20 @@ export default function SiteHeader() {
               />
             </Link>
           ) : (
-            <Logo size="md" className="max-w-[190px]" />
+            <Logo size="md" className="min-w-0 max-w-[150px]" />
           )}
-        </div>
-        <div className={`min-h-0 flex-1 overflow-y-auto pb-5 ${sidebarCompact ? "px-2" : "px-3"}`}>
-          <div className={`flex h-12 items-center ${sidebarCompact ? "justify-center" : "justify-end px-1"}`}>
             <button
               type="button"
               onClick={toggleSidebar}
               aria-label={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
               title={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6]"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6] ${sidebarCompact ? 'absolute left-full ml-2' : 'ml-auto'}`}
             >
               {sidebarCompact ? <PanelLeftOpen className="h-5 w-5" aria-hidden="true" /> : <PanelLeftClose className="h-5 w-5" aria-hidden="true" />}
             </button>
-          </div>
-          <nav aria-label="Marketplace" className="mt-1 space-y-4">
+        </div>
+        <div className={`min-h-0 flex-1 overflow-y-auto pb-5 ${sidebarCompact ? "px-2" : "px-3"}`}>
+          <nav aria-label="Marketplace" className="mt-4 space-y-4">
             {sidebarSections.map((section) => (
               <div key={section.heading}>
                 {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">{section.heading}</p>}

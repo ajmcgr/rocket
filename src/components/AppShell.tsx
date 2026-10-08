@@ -147,6 +147,15 @@ const AppShell = () => {
       >
         <div className="relative flex h-14 w-full items-center px-4 sm:px-5">
           <Logo to="/" size="md" className="shrink-0" />
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="ml-2 hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6] lg:flex"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeftOpen className="h-5 w-5" aria-hidden="true" /> : <PanelLeftClose className="h-5 w-5" aria-hidden="true" />}
+          </button>
           {headerLeft && (
             <div className="ml-2 flex shrink-0 items-center gap-2">
               {headerLeft}
@@ -242,21 +251,6 @@ const AppShell = () => {
         className="app-shell-sidebar fixed bottom-0 left-0 top-14 z-40 hidden flex-col overflow-y-auto border-r border-neutral-200 py-3 px-3 font-body lg:flex transition-[width] duration-200"
         style={{ width: sidebarWidth }}
       >
-        <button
-          type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          className={`mb-3 flex h-9 w-full items-center gap-2 rounded-xl font-body text-[11px] font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900 ${collapsed ? "justify-center px-0" : "px-3"}`}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-          {!collapsed && <span>Collapse</span>}
-        </button>
-
         <nav className="flex flex-col gap-4" aria-label="Primary">
           {sections.map((section) => (
             <div key={section.label}>
