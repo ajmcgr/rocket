@@ -75,7 +75,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
-      { label: "My Collections", to: "/my-collections", icon: Bookmark },
+      { label: "Saved", to: "/my-collections", icon: Bookmark },
       { label: "Submit my app", to: "/submit", icon: Plus },
     ],
   },

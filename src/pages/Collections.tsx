@@ -95,6 +95,7 @@ function CollectionsContent({
             key={row.id || "saved"}
             collection={row}
             personal={personal}
+            onUpdated={() => setRefresh((value) => value + 1)}
           />
         ))}
       </div>

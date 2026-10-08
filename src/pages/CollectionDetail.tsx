@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@/lib/router-compat";
+import CollectionOptions from "@/components/CollectionOptions";
 import SiteHeader from "@/components/SiteHeader";
 import { StandardAppCard } from "@/components/MarketplaceCards";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
@@ -142,9 +143,20 @@ function CollectionDetailContent({
       </Link>
       {collection && (
         <>
-          <h1 className="mt-3 break-words font-display text-4xl sm:text-5xl">
-            {collection.name}
-          </h1>
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <h1 className="break-words font-display text-4xl sm:text-5xl">
+              {collection.name}
+            </h1>
+            {personal && (
+              <CollectionOptions
+                collection={collection}
+                onUpdated={() => {
+                  setPage(0);
+                  setRefresh((value) => value + 1);
+                }}
+              />
+            )}
+          </div>
           <p className="mt-3 text-neutral-500">
             {collection.app_count} apps
             {personal
@@ -271,6 +283,7 @@ function CollectionDetailContent({
               <div key={app.id} className="min-w-0">
                 <StandardAppCard
                   app={app}
+                  showCollectionPicker={false}
                   {...savedControls(app.id)}
                   media={media.get(app.id)}
                   metadata={metadata.get(app.id)}

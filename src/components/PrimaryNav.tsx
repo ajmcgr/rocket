@@ -25,7 +25,6 @@ export function MobilePrimaryNav() {
   const mobile = [
     { label: "Discover", to: "/discover", Icon: Compass },
     { label: "Collections", to: "/collections", Icon: Bookmark },
-    { label: "My Collections", to: "/my-collections", Icon: Bookmark },
     { label: "Submit", to: "/submit", Icon: Plus },
     { label: "My Apps", to: "/your-apps", Icon: Layers3 },
     { label: "Account", to: "/settings", Icon: User },
@@ -33,7 +32,7 @@ export function MobilePrimaryNav() {
   return (
     <nav
       aria-label="Mobile primary"
-      className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.5)] backdrop-blur-sm lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.5)] backdrop-blur-sm lg:hidden"
     >
       {mobile.map(({ label, to, Icon }) => (
         <NavLink
@@ -56,7 +55,6 @@ export function PublicMobileNav() {
   const items = [
     { label: "Discover", to: "/discover", Icon: Compass },
     { label: "Collections", to: "/collections", Icon: Bookmark },
-    { label: "My Collections", to: "/my-collections", Icon: Bookmark },
     { label: "Submit", to: "/submit", Icon: Plus },
     { label: "My Apps", to: "/your-apps", Icon: Layers3 },
     { label: "Account", to: "/login", Icon: User },
@@ -64,7 +62,7 @@ export function PublicMobileNav() {
   return (
     <nav
       aria-label="Mobile primary"
-      className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.5)] backdrop-blur-sm lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.5)] backdrop-blur-sm lg:hidden"
     >
       {items.map(({ label, to, Icon }) => (
         <NavLink

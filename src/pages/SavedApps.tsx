@@ -3,6 +3,7 @@ import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import CollectionOptions from "@/components/CollectionOptions";
 import SaveAppButton from "@/components/SaveAppButton";
 import { signalExplanation, signalLabel, type AppSignal } from "@/lib/appIntelligence";
 import AppTrustBadges from "@/components/AppTrustBadges";
@@ -65,7 +66,7 @@ export default function SavedApps() {
 
   return <div className="mx-auto max-w-5xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-14">
     <Link to="/my-collections" className="inline-flex min-h-11 items-center text-sm font-medium text-sky-800 hover:underline">← My Collections</Link>
-    <h1 className="mt-3 font-display text-4xl sm:text-5xl">Saved</h1>
+    <div className="mt-3 flex items-start justify-between gap-4"><h1 className="font-display text-4xl sm:text-5xl">Saved</h1><CollectionOptions key={user?.id} collection={{ name: "Saved", slug: "saved", visibility: "private", app_count: rows.length, logos: [], updated_at: null }} /></div>
     <p className="mt-2 text-sm text-neutral-500">Private — only you. Your default collection.</p>
     <p className="mt-3 max-w-2xl text-neutral-600">Your shortlist of apps worth returning to. Looking for a design? <Link to="/saved" className="font-medium text-sky-800 hover:underline">Open Saved Designs in Create</Link>.</p>
     {loading && <div role="status" aria-label="Loading saved apps" aria-busy="true" className="mt-8 grid gap-4 sm:grid-cols-2">{[0, 1, 2, 3].map((item) => <AppCardSkeleton key={item} saved />)}</div>}
@@ -79,7 +80,7 @@ export default function SavedApps() {
         <AppTrustBadges trust={trust} compact className="mt-3" />
         {signal && <p className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signal)}</strong><br />{signalExplanation(signal)}</p>}
         <p className="mt-4 text-xs text-neutral-500">Saved {new Date(saved.saved_at).toLocaleDateString()}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4"><SaveAppButton appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /><AppPurchaseActions appId={app.id} /></div>
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4"><SaveAppButton showCollectionPicker={false} appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /><AppPurchaseActions appId={app.id} /></div>
       </article>)}</div>}
   </div>;
 }

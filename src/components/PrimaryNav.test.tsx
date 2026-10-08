@@ -21,8 +21,8 @@ describe("platform primary navigation", () => {
         );
       });
       const expected = [
-        ["Discover", "Collections", "My Collections", "My Apps", "Submit", "Create"],
-        ["Discover", "Collections", "My Collections", "Submit", "My Apps", "Account"],
+        ["Discover", "Collections", "Saved", "My Apps", "Submit", "Create"],
+        ["Discover", "Collections", "Submit", "My Apps", "Account"],
       ];
       [...container.querySelectorAll("nav")].forEach((nav, index) => {
         expect(
@@ -36,9 +36,9 @@ describe("platform primary navigation", () => {
         expect(nav.querySelector('a[href="/submit"]')?.className).toContain("bg-neutral-200");
       });
       const mobileNav = container.querySelector('nav[aria-label="Mobile primary"]');
-      expect(mobileNav?.querySelectorAll("a > svg")).toHaveLength(6);
+      expect(mobileNav?.querySelectorAll("a > svg")).toHaveLength(5);
       expect(mobileNav?.querySelector('a[href="/discover"] svg')?.getAttribute("class")).toContain("lucide-compass");
-      expect(mobileNav?.querySelector('a[href="/my-collections"] svg')?.getAttribute("class")).toContain("lucide-bookmark");
+      expect(mobileNav?.querySelector('a[href="/my-collections"]')).toBeNull();
       expect(mobileNav?.querySelector('a[href="/your-apps"] svg')?.getAttribute("class")).toContain("lucide-layers");
     } finally {
       await act(async () => root.unmount());
@@ -68,7 +68,6 @@ describe("platform primary navigation", () => {
       ).toEqual([
         "Discover",
         "Collections",
-        "My Collections",
         "Submit",
         "My Apps",
         "Account",
@@ -79,7 +78,7 @@ describe("platform primary navigation", () => {
           ?.getAttribute("aria-current"),
       ).toBe("page");
       expect(container.querySelector('a[href="/discover"]')?.className).toContain("bg-neutral-200");
-      expect(container.querySelectorAll('nav[aria-label="Mobile primary"] a > svg')).toHaveLength(6);
+      expect(container.querySelectorAll('nav[aria-label="Mobile primary"] a > svg')).toHaveLength(5);
     } finally {
       await act(async () => root.unmount());
       container.remove();
