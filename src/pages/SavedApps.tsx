@@ -80,7 +80,7 @@ export default function SavedApps() {
         <AppTrustBadges trust={trust} compact className="mt-3" />
         {signal && <p className="mt-3 rounded-lg bg-sky-50 p-3 text-xs text-sky-900"><strong>{signalLabel(signal)}</strong><br />{signalExplanation(signal)}</p>}
         <p className="mt-4 text-xs text-neutral-500">Saved {new Date(saved.saved_at).toLocaleDateString()}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4"><SaveAppButton showCollectionPicker={false} appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /><AppPurchaseActions appId={app.id} /></div>
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4"><SaveAppButton appId={app.id} saved onChange={(isSaved) => { if (!isSaved) setRows((current) => current.filter((item) => item.app.id !== app.id)); }} /><AppPurchaseActions appId={app.id} /></div>
       </article>)}</div>}
   </div>;
 }

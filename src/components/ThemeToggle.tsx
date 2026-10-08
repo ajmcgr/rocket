@@ -82,8 +82,8 @@ const ThemeToggle = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-40 rounded-xl border border-neutral-200 bg-white p-1.5 text-neutral-800 shadow-[0_10px_28px_rgba(0,0,0,0.16)] dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
         {(["light", "dark", "system"] as const).map((option) => (
-          <DropdownMenuItem key={option} onSelect={() => choose(option)} aria-current={preference === option ? "true" : undefined} className={`min-h-10 gap-3 rounded-lg px-2.5 text-base font-medium text-neutral-800 focus:bg-neutral-100 dark:text-neutral-100 dark:focus:bg-neutral-800 ${preference === option ? "bg-neutral-200" : ""}`}>
-            {option === "light" ? <Sun className="h-5 w-5 stroke-[1.8]" aria-hidden="true" /> : option === "dark" ? <Moon className="h-5 w-5 stroke-[1.8]" aria-hidden="true" /> : <Monitor className="h-5 w-5 stroke-[1.8]" aria-hidden="true" />}
+          <DropdownMenuItem key={option} onSelect={() => choose(option)} aria-current={preference === option ? "true" : undefined} className={`min-h-10 gap-3 rounded-lg px-2.5 text-sm font-normal text-neutral-800 focus:bg-neutral-100 dark:text-neutral-100 dark:focus:bg-neutral-800 ${preference === option ? "bg-neutral-200" : ""}`}>
+            {option === "light" ? <Sun className="h-4 w-4 stroke-[1.8]" aria-hidden="true" /> : option === "dark" ? <Moon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" /> : <Monitor className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />}
             <span className="capitalize">{option}</span>
           </DropdownMenuItem>
         ))}

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-const db = vi.hoisted(() => ({ from: vi.fn() }));
+const db = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { from: db.from },
+  supabase: { from: db.from, rpc: db.rpc },
 }));
 vi.mock("./appMedia", () => ({
   loadAppMedia: vi.fn(() => Promise.resolve(new Map())),
@@ -15,6 +15,8 @@ import {
   emptyMerchandising,
   tractionLabel,
   loadHomeMerchandising,
+  risingQuery,
+  rocketViewsLabel,
 } from "./homeMerchandising";
 const now = Date.parse("2026-10-07T12:00:00Z");
 const app = (id: string) =>
@@ -64,10 +66,14 @@ const base = () => ({
 });
 describe("truthful homepage merchandising", () => {
   it("keeps public rankings and categories when optional editorial/signals queries fail", async () => {
+    db.rpc.mockResolvedValue({
+      data: [{ app_id: "b", rank_position: 1 }],
+      error: null,
+    });
     db.from.mockImplementation((table) => {
       const rows =
         table === "public_app_rankings"
-          ? [{ app_id: "b" }]
+          ? [{ app_id: "b", rocket_view_count: 12 }]
           : table === "public_discoverable_apps"
             ? [app("b")]
             : table === "public_app_categories"
@@ -84,6 +90,7 @@ describe("truthful homepage merchandising", () => {
       const chain: any = {
         select: () => chain,
         eq: () => chain,
+        gt: () => chain,
         in: () => chain,
         order: () => chain,
         limit: () => chain,
@@ -95,7 +102,11 @@ describe("truthful homepage merchandising", () => {
     expect(result.top.map((row) => row.app.id)).toEqual(["b"]);
     expect(result.categories[0].category).toBe("Productivity");
     expect(result.picks).toEqual([]);
-    expect(result.rising).toEqual([]);
+    expect(result.rising[0].viewCount).toBe(12);
+    expect(db.rpc).toHaveBeenCalledWith("get_public_app_rankings", {
+      p_category: "",
+      p_limit: 8,
+    });
     expect(
       db.from.mock.calls.every(([table]) => table.startsWith("public_")),
     ).toBe(true);
@@ -105,14 +116,18 @@ describe("truthful homepage merchandising", () => {
       ...emptyMerchandising(),
       media: Object.fromEntries(base().media),
     }));
-  it("keeps existing ranking order and Launch signal evidence without fabricated growth", () => {
+  it("keeps engagement ranking order and Rocket view evidence separate", () => {
     const result = composeHome({
       ...base(),
       rankedIds: ["b", "a"],
-      rising: [signal("c"), signal("a")],
+      rising: [
+        { app_id: "c", rocket_view_count: 21 },
+        { app_id: "a", rocket_view_count: 10 },
+      ],
     });
     expect(result.top.map((r) => r.app.id)).toEqual(["b", "a"]);
-    expect(result.rising[0].signal?.net_votes).toBe(21);
+    expect(result.rising[0].viewCount).toBe(21);
+    expect(result.rising[0].signal).toBeUndefined();
   });
   it("only accepts human-controlled picks for currently discoverable apps", () => {
     const result = composeHome({
@@ -178,4 +193,23 @@ describe("truthful homepage merchandising", () => {
     expect(result.collections.map((c) => c.name)).toEqual(["Editors shelf"]);
     expect(result.collections[0].items).toHaveLength(2);
   });
+});
+
+it("Rising queries positive Rocket views with deterministic ordering", () => {
+  const chain: any = {};
+  for (const name of ["select", "gt", "order", "limit"])
+    chain[name] = vi.fn(() => chain);
+  db.from.mockReturnValue(chain);
+  risingQuery(24);
+  expect(db.from).toHaveBeenLastCalledWith("public_app_rankings");
+  expect(chain.gt).toHaveBeenCalledWith("rocket_view_count", 0);
+  expect(chain.order.mock.calls.map(([column]: string[]) => column)).toEqual([
+    "rocket_view_count",
+    "last_viewed_at",
+    "launched_at",
+    "app_id",
+  ]);
+  expect(chain.limit).toHaveBeenCalledWith(24);
+  expect(rocketViewsLabel(1)).toBe("1 Rocket app-page view");
+  expect(rocketViewsLabel(2000)).toBe("2,000 Rocket app-page views");
 });

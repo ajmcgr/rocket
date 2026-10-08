@@ -15,7 +15,7 @@ export default function OutreachUnsubscribe() {
       setMessage("This unsubscribe link is incomplete. Contact Rocket if you need help.");
       return;
     }
-    const unsubscribe = supabase.rpc as unknown as (name: string, args: Record<string, string>) => Promise<{
+    const unsubscribe = supabase.rpc.bind(supabase) as unknown as (name: string, args: Record<string, string>) => Promise<{
       error: { message: string } | null;
     }>;
     void unsubscribe("rocket_unsubscribe_founder_outreach", { p_token: token })

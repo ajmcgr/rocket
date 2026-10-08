@@ -8,7 +8,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 describe("site share card", () => {
   it("shares the exact new tagline with the site link", async () => {
-    const source = readFileSync("src/components/AppShell.tsx", "utf8");
+    const source = readFileSync("src/components/SiteHeader.tsx", "utf8");
     const title = source.match(/id: "site", title: "([^"]+)"/)?.[1];
     expect(title).toBe("The open app platform.");
     const open = vi.spyOn(window, "open").mockReturnValue(null);

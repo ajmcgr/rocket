@@ -39,7 +39,7 @@ export default function ClaimInvitation() {
     if (loading || !user || !invitation || redeeming.current) return;
     redeeming.current = true;
     setMessage("Confirming your Launch founder invitation…");
-    const redeem = supabase.rpc as unknown as (name: string, args: Record<string, string>) => Promise<{
+    const redeem = supabase.rpc.bind(supabase) as unknown as (name: string, args: Record<string, string>) => Promise<{
       data: { app_id?: string } | null; error: { message: string } | null;
     }>;
     void redeem("rocket_redeem_claim_invitation", {

@@ -1,4 +1,11 @@
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Link, useLocation, useNavigate } from "@/lib/router-compat";
 import {
   Bookmark,
@@ -21,6 +28,7 @@ import {
   MessageCircle,
   CreditCard,
   UserRound,
+  Share2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -38,6 +46,9 @@ import {
 } from "./ui/dropdown-menu";
 import { MobilePrimaryNav, PublicMobileNav } from "./PrimaryNav";
 import ThemeToggle from "./ThemeToggle";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
+import NotificationsBell from "./NotificationsBell";
+const ShareExportModal = lazy(() => import("./ShareExportModal"));
 import LanguageSelector from "./LanguageSelector";
 import { createNavigationItems } from "@/lib/createNavigation";
 
@@ -48,13 +59,16 @@ export const isMarketplaceSidebarItemActive = (
   pathname: string,
   search: string,
 ) => {
-  if (label === "Buy with Rocket" || label === "Rocket ID") return pathname === to;
+  if (label === "Buy with Rocket" || label === "Rocket ID")
+    return pathname === to;
   return (
     pathname + search === to ||
     (to === "/discover" && pathname === "/discover" && !search) ||
     (to === "/saved-apps" && pathname === "/saved-apps") ||
-    (to === '/collections' && pathname.startsWith('/collections/')) ||
-    (to === '/my-collections' && (pathname.startsWith('/my-collections/') || pathname === '/saved-apps')) ||
+    (to === "/collections" && pathname.startsWith("/collections/")) ||
+    (to === "/my-collections" &&
+      (pathname.startsWith("/my-collections/") ||
+        pathname === "/saved-apps")) ||
     (to === "/submit" && pathname === "/submit") ||
     (to === "/create" && pathname === "/create") ||
     (label === "Developer" && pathname.startsWith("/developer"))
@@ -93,16 +107,37 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: createNavigationItems,
   },
 ];
-export default function SiteHeader() {
+type SiteHeaderProps = {
+  headerLeft?: ReactNode;
+  headerCenter?: ReactNode;
+  headerActions?: ReactNode;
+};
+
+export default function SiteHeader({
+  headerLeft,
+  headerCenter,
+  headerActions,
+}: SiteHeaderProps = {}) {
+  const [shareOpen, setShareOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
   const profileHref = useMyProfileHref(user);
-  const sidebarSections = sections.map((section) => section.heading !== "My apps" || !user ? section : {
-    ...section,
-    items: section.items.flatMap((item) => item.label === "Submit my app"
-      ? [{ label: "My Profile", to: profileHref, icon: UserRound }, item] : [item]),
-  });
+  const sidebarSections = sections.map((section) =>
+    section.heading !== "My apps" || !user
+      ? section
+      : {
+          ...section,
+          items: section.items.flatMap((item) =>
+            item.label === "Submit my app"
+              ? [
+                  { label: "My Profile", to: profileHref, icon: UserRound },
+                  item,
+                ]
+              : [item],
+          ),
+        },
+  );
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
   const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)
@@ -110,7 +145,9 @@ export default function SiteHeader() {
   const initial = (user?.email?.[0] || "U").toUpperCase();
 
   useEffect(() => {
-    setSidebarCompact(window.localStorage.getItem("rocket:marketplace-sidebar-compact") === "1");
+    setSidebarCompact(
+      window.localStorage.getItem("rocket:marketplace-sidebar-compact") === "1",
+    );
     const syncSidebarPreference = (event: StorageEvent) => {
       if (event.key === "rocket:marketplace-sidebar-compact") {
         setSidebarCompact(event.newValue === "1");
@@ -122,7 +159,10 @@ export default function SiteHeader() {
 
   const toggleSidebar = () => {
     const next = !sidebarCompact;
-    window.localStorage.setItem("rocket:marketplace-sidebar-compact", next ? "1" : "0");
+    window.localStorage.setItem(
+      "rocket:marketplace-sidebar-compact",
+      next ? "1" : "0",
+    );
     setSidebarCompact(next);
   };
 
@@ -135,7 +175,12 @@ export default function SiteHeader() {
   };
 
   const navItem = ({ label, to, icon: Icon }: NavItem) => {
-    const active = isMarketplaceSidebarItemActive(label, to, pathname, locationSearch);
+    const active = isMarketplaceSidebarItemActive(
+      label,
+      to,
+      pathname,
+      locationSearch,
+    );
     return (
       <Link
         key={label}
@@ -154,10 +199,19 @@ export default function SiteHeader() {
   return (
     <>
       <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>header,body:has(.marketplace-sidebar) .global-site-footer{margin-left:${sidebarWidth}px}}`}</style>
-      <aside className="marketplace-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] bg-[#f9fbfd] transition-[width] duration-200 lg:flex" style={{ width: sidebarWidth }}>
-        <div className={`relative flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "gap-2 px-4"}`}>
+      <aside
+        className="marketplace-sidebar app-shell-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] transition-[width] duration-200 lg:flex"
+        style={{ width: sidebarWidth }}
+      >
+        <div
+          className={`relative flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "gap-2 px-4"}`}
+        >
           {sidebarCompact ? (
-            <Link to="/" aria-label="Rocket home" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100">
+            <Link
+              to="/"
+              aria-label="Rocket home"
+              className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100"
+            >
               <img
                 src="/rocket-sidebar-icon.png"
                 alt=""
@@ -173,57 +227,124 @@ export default function SiteHeader() {
           ) : (
             <Logo size="md" className="min-w-0 max-w-[150px]" />
           )}
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              aria-label={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
-              title={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6] ${sidebarCompact ? 'absolute left-full ml-2' : 'ml-auto'}`}
-            >
-              {sidebarCompact ? <PanelLeftOpen className="h-5 w-5" aria-hidden="true" /> : <PanelLeftClose className="h-5 w-5" aria-hidden="true" />}
-            </button>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6] ${sidebarCompact ? "absolute left-full ml-2" : "ml-auto"}`}
+          >
+            {sidebarCompact ? (
+              <PanelLeftOpen className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
         </div>
-        <div className={`min-h-0 flex-1 overflow-y-auto pb-5 ${sidebarCompact ? "px-2" : "px-3"}`}>
+        <div
+          className={`min-h-0 flex-1 overflow-y-auto pb-5 ${sidebarCompact ? "px-2" : "px-3"}`}
+        >
           <nav aria-label="Marketplace" className="mt-4 space-y-4">
             {sidebarSections.map((section) => (
               <div key={section.heading}>
-                {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">{section.heading}</p>}
+                {sidebarCompact ? (
+                  <div
+                    className="mx-2 mb-2 border-t border-neutral-200"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
+                    {section.heading}
+                  </p>
+                )}
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
-            {SHOW_GROW_SECTION && <div>
-              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">Grow</p>}
-              {[
-                { label: "Launch", href: "https://trylaunch.ai", icon: Send },
-                { label: "Post", href: "https://trypost.ai", icon: PenLine },
-                { label: "Media", href: "https://trymedia.ai", icon: Database },
-              ].map(({ label, href, icon: Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={sidebarCompact ? label : undefined}
-                  aria-label={sidebarCompact ? `${label} (opens in a new tab)` : undefined}
-                  className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
-                >
-                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                  {!sidebarCompact && <><span>{label}</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
-                </a>
-              ))}
-            </div>}
+            {SHOW_GROW_SECTION && (
+              <div>
+                {sidebarCompact ? (
+                  <div
+                    className="mx-2 mb-2 border-t border-neutral-200"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
+                    Grow
+                  </p>
+                )}
+                {[
+                  { label: "Launch", href: "https://trylaunch.ai", icon: Send },
+                  { label: "Post", href: "https://trypost.ai", icon: PenLine },
+                  {
+                    label: "Media",
+                    href: "https://trymedia.ai",
+                    icon: Database,
+                  },
+                ].map(({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={sidebarCompact ? label : undefined}
+                    aria-label={
+                      sidebarCompact
+                        ? `${label} (opens in a new tab)`
+                        : undefined
+                    }
+                    className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
+                  >
+                    <Icon
+                      className="h-[18px] w-[18px] shrink-0"
+                      aria-hidden="true"
+                    />
+                    {!sidebarCompact && (
+                      <>
+                        <span>{label}</span>
+                        <ExternalLink
+                          className="ml-auto h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />
+                      </>
+                    )}
+                  </a>
+                ))}
+              </div>
+            )}
             <div>
-              {sidebarCompact ? <div className="mx-2 mb-2 border-t border-neutral-200" aria-hidden="true" /> : <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">Community</p>}
+              {sidebarCompact ? (
+                <div
+                  className="mx-2 mb-2 border-t border-neutral-200"
+                  aria-hidden="true"
+                />
+              ) : (
+                <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
+                  Community
+                </p>
+              )}
               <a
                 href="https://discord.gg/aSkXPHhTjJ"
                 target="_blank"
                 rel="noopener noreferrer"
                 title={sidebarCompact ? "Discord" : undefined}
-                aria-label={sidebarCompact ? "Discord (opens in a new tab)" : undefined}
+                aria-label={
+                  sidebarCompact ? "Discord (opens in a new tab)" : undefined
+                }
                 className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
               >
-                <MessageCircle className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                {!sidebarCompact && <><span>Discord</span><ExternalLink className="ml-auto h-3.5 w-3.5" aria-hidden="true" /></>}
+                <MessageCircle
+                  className="h-[18px] w-[18px] shrink-0"
+                  aria-hidden="true"
+                />
+                {!sidebarCompact && (
+                  <>
+                    <span>Discord</span>
+                    <ExternalLink
+                      className="ml-auto h-3.5 w-3.5"
+                      aria-hidden="true"
+                    />
+                  </>
+                )}
               </a>
             </div>
           </nav>
@@ -234,23 +355,36 @@ export default function SiteHeader() {
           <div className="flex h-full shrink-0 items-center lg:hidden">
             <Logo size="md" />
           </div>
-          <form
-            onSubmit={submitSearch}
-            role="search"
-            className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#167ac6] sm:flex lg:mx-auto xl:col-start-2 xl:w-full"
-          >
-            <span className="mr-2 text-base" aria-hidden="true">🔎</span>
-            <input
-              aria-label="Search apps and categories"
-              placeholder="Search apps, categories..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-500"
-            />
-            <kbd className="hidden rounded border border-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-400 xl:block">
-              ↵
-            </kbd>
-          </form>
+          {headerLeft && (
+            <div className="hidden shrink-0 items-center md:flex">
+              {headerLeft}
+            </div>
+          )}
+          {headerCenter ? (
+            <div className="hidden min-w-0 flex-1 items-center justify-center md:flex xl:col-start-2">
+              {headerCenter}
+            </div>
+          ) : (
+            <form
+              onSubmit={submitSearch}
+              role="search"
+              className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#167ac6] sm:flex lg:mx-auto xl:col-start-2 xl:w-full"
+            >
+              <span className="mr-2 text-base" aria-hidden="true">
+                🔎
+              </span>
+              <input
+                aria-label="Search apps and categories"
+                placeholder="Search apps, categories..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-500"
+              />
+              <kbd className="hidden rounded border border-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-400 xl:block">
+                ↵
+              </kbd>
+            </form>
+          )}
           <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap xl:col-start-3 xl:ml-0 xl:justify-self-end">
             <Link
               to="/discover"
@@ -259,8 +393,28 @@ export default function SiteHeader() {
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
+            {headerActions}
             <LanguageSelector />
             <ThemeToggle />
+            {user && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShareOpen(true)}
+                  aria-label="Share Rocket"
+                  className="hidden items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
+                >
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                  Share
+                </button>
+                <div
+                  data-tour="nav-notifications"
+                  className="hidden md:inline-flex"
+                >
+                  <NotificationsBell />
+                </div>
+              </>
+            )}
             {loading ? (
               <div className="h-8 w-8 rounded-full bg-neutral-100" />
             ) : user ? (
@@ -278,7 +432,17 @@ export default function SiteHeader() {
                   <p className="truncate px-2 py-1.5 text-xs text-neutral-500">
                     {user.email}
                   </p>
+                  <div className="px-2 py-1.5">
+                    <p className="mb-1 text-xs text-neutral-500">Workspace</p>
+                    <WorkspaceSwitcher />
+                  </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/notifications">Notifications</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShareOpen(true)}>
+                    Share Rocket
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to={profileHref}>My Profile</Link>
                   </DropdownMenuItem>
@@ -317,6 +481,20 @@ export default function SiteHeader() {
           </div>
         </div>
       </header>
+      {shareOpen && (
+        <Suspense fallback={null}>
+          <ShareExportModal
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            asset={{ id: "site", title: "The open app platform." }}
+            onCreateShareLink={async () =>
+              typeof window !== "undefined"
+                ? window.location.origin
+                : "https://tryrocket.ai"
+            }
+          />
+        </Suspense>
+      )}
       {user ? <MobilePrimaryNav /> : <PublicMobileNav />}
     </>
   );

@@ -5,7 +5,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const facts = [
   "Browse independent apps by category and supported platform: web, iOS, Android or hardware.",
-  "Rankings use views of app profiles on Rocket, not Launch votes or verified customer growth.",
+  "Rising uses views of app pages on Rocket. Top Ranked Apps combines published reviews, current bookmarks and verified purchases with equal weight; purchases count once per buyer per app and exclude refunds and disputes.",
   "Signed-in users can save apps and leave star ratings on individual app pages.",
   "Developers can submit an app and manage or claim its listing after applicable ownership checks.",
   "Logo and icon creation tools are optional. Launch, Post and Media are separate linked products.",
@@ -64,7 +64,7 @@ export default function AIInfo() {
 
         <section className="mx-auto max-w-4xl px-6 py-16 sm:py-20">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">What Rocket is</h2>
-          <p className="mt-6 text-lg leading-8 text-neutral-600">Rocket is a web-based directory and workspace for independent apps. Visitors can explore new listings and Rocket-view rankings, search and browse by category or platform, and open individual app profiles. A public listing is not a Rocket endorsement.</p>
+          <p className="mt-6 text-lg leading-8 text-neutral-600">Rocket is a web-based directory and workspace for independent apps. Visitors can explore new listings and rankings based on reviews, bookmarks and verified purchases, search and browse by category or platform, and open individual app profiles. A public listing is not a Rocket endorsement.</p>
         </section>
 
         <section className="border-y border-neutral-200/70 bg-neutral-50/70">

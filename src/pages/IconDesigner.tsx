@@ -49,7 +49,7 @@ const IconDesigner = () => {
 
   return (
     <ChatsPanelLayout>
-    <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col">
+    <div className="relative flex min-h-[calc(100vh-65px)] flex-col">
       {/* Centered hero */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-40 text-center">
         <div className="mb-4 flex h-14 w-14 items-center justify-center text-[#1676e3]">

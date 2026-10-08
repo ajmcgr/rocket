@@ -21,6 +21,20 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: { from: m.from },
 }));
 import CollectionPicker from "./CollectionPicker";
+import { useState } from "react";
+function PickerFixture({ appId }: { appId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <CollectionPicker
+      appId={appId}
+      open={open}
+      onOpenChange={setOpen}
+      trigger={<button>Add app to collections</button>}
+      saved
+      onSavedChange={vi.fn()}
+    />
+  );
+}
 beforeEach(() => {
   vi.clearAllMocks();
   m.myCollections.mockResolvedValue([
@@ -45,7 +59,7 @@ it("loads only when opened, stops card clicks, and supports independent membersh
   const parent = vi.fn();
   render(
     <div onClick={parent}>
-      <CollectionPicker appId="app1" />
+      <PickerFixture appId="app1" />
     </div>,
   );
   expect(m.myCollections).not.toHaveBeenCalled();
@@ -67,11 +81,12 @@ it("loads only when opened, stops card clicks, and supports independent membersh
   );
 });
 it("creates private by default and never grants public visibility implicitly", async () => {
-  render(<CollectionPicker appId="app1" />);
+  render(<PickerFixture appId="app1" />);
   fireEvent.click(
     screen.getByRole("button", { name: "Add app to collections" }),
   );
   await screen.findByRole("checkbox", { name: /AI tools/ });
+  fireEvent.click(screen.getByRole("button", { name: "New collection" }));
   fireEvent.change(screen.getByLabelText("Collection name"), {
     target: { value: "New shortlist" },
   });
@@ -85,7 +100,7 @@ it("creates private by default and never grants public visibility implicitly", a
 });
 it("reports membership failure without changing checked state", async () => {
   m.membership.mockRejectedValue(new Error("denied"));
-  render(<CollectionPicker appId="app1" />);
+  render(<PickerFixture appId="app1" />);
   fireEvent.click(
     screen.getByRole("button", { name: "Add app to collections" }),
   );

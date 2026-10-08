@@ -116,22 +116,11 @@ describe("homepage section gates", () => {
       await view.close();
     }
   });
-  it("keeps the approved order and labels imported signals accurately", async () => {
+  it("keeps section order and distinguishes views from engagement rankings", async () => {
     const data = {
       ...emptyMerchandising(),
       picks: [{ app, pick: { headline: "Actual editorial reason" } }],
-      rising: [
-        {
-          app,
-          signal: {
-            net_votes: 20,
-            percentile_rank: 0.9,
-            cohort_size: 10,
-            age_band: "30",
-            cohort_category: null,
-          },
-        },
-      ],
+      rising: [{ app, viewCount: 20 }],
       fresh: [{ app }],
       top: [{ app }],
       categories: [{ category: "Productivity", app_count: 8 }],
@@ -148,8 +137,12 @@ describe("homepage section gates", () => {
         "Categories",
       ]);
       expect(view.container.textContent).toContain(
-        "public community votes",
+        "Most viewed app pages on Rocket.",
       );
+      expect(view.container.textContent).toContain(
+        "Ranked by reviews, bookmarks and verified purchases.",
+      );
+      expect(view.container.textContent).not.toContain("community votes");
       expect(view.container.textContent).toContain("Actual editorial reason");
       expect(view.container.textContent).not.toContain("Proven Traction");
     } finally {

@@ -14,7 +14,7 @@ const sections: Array<{ id: Section; label: string }> = [
   { id: "outreach", label: "Outreach" },
   { id: "developer-testing", label: "Developer testing" },
 ];
-const adminRpc = supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+const adminRpc = supabase.rpc.bind(supabase) as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 const rows = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
 const obj = (value: unknown): Row => value && typeof value === "object" && !Array.isArray(value) ? value as Row : {};
 const label = (name: string) => name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());

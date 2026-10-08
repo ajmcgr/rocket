@@ -1,3 +1,4 @@
+import { rocketViewsLabel } from "@/lib/homeMerchandising";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
@@ -124,7 +125,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           <Heading
             id="home-rising"
             title="Rising on Rocket"
-            description="Apps gaining attention through public community votes."
+            description="Most viewed app pages on Rocket."
             href="/rising"
             action="View rising apps"
           />
@@ -136,9 +137,8 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                   {...save(row.app.id)}
                   rank={index + 1}
                   metadata={metadata.get(row.app.id)}
-                  eyebrow={`${row.signal!.net_votes} net community votes`}
+                  eyebrow={rocketViewsLabel(row.viewCount)}
                 />
-                <p className="sr-only">Community votes compared with apps of a similar age and category.</p>
               </div>
             ))}
           </div>
@@ -177,7 +177,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           <Heading
             id="home-top"
             title="Top Ranked Apps"
-            description="Most viewed app profiles on Rocket."
+            description="Ranked by reviews, bookmarks and verified purchases."
             href="/discover?view=rankings"
             action="View rankings"
           />
