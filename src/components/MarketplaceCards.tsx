@@ -12,7 +12,7 @@ import { Bookmark } from "lucide-react";
 
 type App = Tables<"public_apps">;
 type BaseProps = { app: App; media?: PublicAppMedia[]; eyebrow?: string; trend?: "up" | "down"; metadata?: AppCardMetadata; rank?: number };
-type SaveProps = { saved?: boolean; onSave?: (saved: boolean) => void };
+type SaveProps = { saved?: boolean; onSave?: (saved: boolean) => void; showCollectionPicker?: boolean };
 
 export function AppCardRating({ metadata, light = false, larger = false }: { metadata?: AppCardMetadata; light?: boolean; larger?: boolean }) {
   if (!metadata) return null;
@@ -138,6 +138,7 @@ export function EditorialAppCard({
 }
 
 export function StandardAppCard({
+  showCollectionPicker,
   app,
   media,
   saved,
@@ -176,6 +177,7 @@ export function StandardAppCard({
             appId={app.id}
             saved={Boolean(saved)}
             onChange={onSave}
+            showCollectionPicker={showCollectionPicker}
           />
         )}
         <AppPurchaseActions appId={app.id} />

@@ -33,6 +33,7 @@ import {
   ExternalLink,
   Bookmark,
   Compass,
+  Zap,
   Layers3,
   Plus,
   PanelLeftClose,
@@ -109,6 +110,7 @@ const AppShell = () => {
       label: "Discover",
       items: [
         { label: "Discover", to: "/discover", icon: Compass },
+        { label: "Rising", to: "/rising", icon: Zap },
         { label: "Rankings", to: "/discover?view=rankings", icon: BarChart3 },
         { label: "Collections", to: "/collections", icon: Bookmark },
         { label: "Categories", to: "/discover?view=categories", icon: Layers3 },
@@ -119,7 +121,7 @@ const AppShell = () => {
       items: [
         { label: "My Apps", to: "/your-apps", icon: Layers3 },
         { label: "My Purchases", to: "/library", icon: CreditCard },
-        { label: "My Collections", to: "/my-collections", icon: Bookmark },
+        { label: "Saved", to: "/my-collections", icon: Bookmark },
         { label: "My Profile", to: profileHref, icon: UserRound },
         { label: "Submit my app", to: "/submit", icon: Plus },
       ],
