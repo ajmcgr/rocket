@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfileHref } from "@/hooks/useMyProfileHref";
 import Logo from "./Logo";
+import { SHOW_GROW_SECTION } from "./sidebarVisibility";
 import ShareExportModal from "./ShareExportModal";
 import OnboardingTour from "./OnboardingTour";
 import NotificationsBell from "./NotificationsBell";
@@ -44,7 +45,6 @@ import {
   MessageCircle,
   CreditCard,
   UserRound,
-  Grid2X2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -110,7 +110,7 @@ const AppShell = () => {
       items: [
         { label: "Discover", to: "/discover", icon: Compass },
         { label: "Rankings", to: "/discover?view=rankings", icon: BarChart3 },
-        { label: "Collections", to: "/collections", icon: Grid2X2 },
+        { label: "Collections", to: "/collections", icon: Bookmark },
         { label: "Categories", to: "/discover?view=categories", icon: Layers3 },
       ],
     },
@@ -295,7 +295,7 @@ const AppShell = () => {
               </div>
             </div>
           ))}
-          {!collapsed && (
+          {SHOW_GROW_SECTION && !collapsed && (
             <div className="border-t border-neutral-200 pt-4">
               <p className="mb-2 px-3 text-[11px] font-semibold text-neutral-500">
                 Grow

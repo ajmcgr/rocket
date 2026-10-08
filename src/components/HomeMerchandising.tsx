@@ -13,7 +13,6 @@ import {
   type ShelfItem,
   tractionLabel,
 } from "@/lib/homeMerchandising";
-import { signalExplanation } from "@/lib/appIntelligence";
 import {
   EditorialAppCard,
   StandardAppCard,
@@ -125,7 +124,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           <Heading
             id="home-rising"
             title="Rising on Rocket"
-            description="Notable public Launch activity. Imported Launch votes—not Rocket traffic or usage."
+            description="Apps gaining attention through public community votes."
             href="/rising"
             action="View rising apps"
           />
@@ -137,9 +136,9 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                   {...save(row.app.id)}
                   rank={index + 1}
                   metadata={metadata.get(row.app.id)}
-                  eyebrow={`${row.signal!.net_votes} net Launch votes`}
+                  eyebrow={`${row.signal!.net_votes} net community votes`}
                 />
-                <p className="sr-only">{signalExplanation(row.signal!)}</p>
+                <p className="sr-only">Community votes compared with apps of a similar age and category.</p>
               </div>
             ))}
           </div>
@@ -150,7 +149,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           <Heading
             id="home-new"
             title="New & Noteworthy"
-            description="New to Rocket in the last 30 days, with product imagery and public Launch activity."
+            description="New to Rocket in the last 30 days, with product imagery and community interest."
             href="/discover?view=new"
             action="All new apps"
           />
@@ -177,7 +176,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-12 sm:mt-16" aria-labelledby="home-top">
           <Heading
             id="home-top"
-            title="Top Apps"
+            title="Top Ranked Apps"
             description="Most viewed app profiles on Rocket."
             href="/discover?view=rankings"
             action="View rankings"
