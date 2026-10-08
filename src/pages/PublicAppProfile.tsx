@@ -369,7 +369,7 @@ export default function PublicAppProfile({
         )}
         {app && !loading && !error && (
           <>
-            <div className="mt-7 border-b border-neutral-200 pb-6 sm:pb-8">
+            <div className="mt-7 pb-6 sm:pb-8">
               <div className="flex items-start gap-4 sm:gap-6">
                 <AppLogo
                   name={app.name}
