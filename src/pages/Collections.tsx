@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import CollectionCard from "@/components/CollectionCard";
-import CollectionForm from "@/components/CollectionForm";
+import NewCollectionButton from "@/components/NewCollectionButton";
 import {
   COLLECTION_PAGE_SIZE,
   myCollections,
@@ -67,16 +67,11 @@ function CollectionsContent({
           : "Discover software through people’s taste. Community collections, recently updated."}
       </p>
       {personal && (
-        <details className="mt-6 rounded-2xl border p-5">
-          <summary className="cursor-pointer font-semibold text-[#469DDA]">
-            New collection
-          </summary>
-          <div className="mt-4 max-w-lg">
-            <CollectionForm
-              onCreated={() => setRefresh((value) => value + 1)}
-            />
-          </div>
-        </details>
+        <div className="mt-6">
+          <NewCollectionButton
+            onCreated={() => setRefresh((value) => value + 1)}
+          />
+        </div>
       )}
       {error && (
         <p role="alert" className="mt-6">

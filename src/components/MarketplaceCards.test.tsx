@@ -28,7 +28,7 @@ describe("marketplace content treatments", () => {
       <RisingAppCard app={app} rank={1} {...controls} />
       <MarketplaceListRow app={app} {...controls} />
     </MemoryRouter>);
-    const buttons = await screen.findAllByRole("button", { name: "Unsave app" });
+    const buttons = await screen.findAllByRole("button", { name: "Manage saved app" });
     expect(buttons).toHaveLength(5);
     for (const button of buttons) {
       expect(button.getAttribute("aria-pressed")).toBe("true");

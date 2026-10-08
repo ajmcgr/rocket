@@ -9,8 +9,6 @@ import {
   collectionApps,
   collectionDetail,
   collectionPath,
-  deleteCollection,
-  updateCollection,
   setCollectionMembership,
   COLLECTION_PAGE_SIZE,
   type Collection,
@@ -53,7 +51,6 @@ function CollectionDetailContent({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [name, setName] = useState(initial?.collection?.name || "");
   const savedControls = useSavedAppControls(apps.map((app) => app.id));
   useEffect(() => {
     let active = true;
@@ -70,7 +67,6 @@ function CollectionDetailContent({
         : [];
       if (!active) return;
       setCollection(next);
-      setName(next?.name || "");
       setHasMore(rows.length > COLLECTION_PAGE_SIZE);
       setApps((current) =>
         page === 0
@@ -150,6 +146,7 @@ function CollectionDetailContent({
             {personal && (
               <CollectionOptions
                 collection={collection}
+                onDeleted={() => navigate("/my-collections")}
                 onUpdated={() => {
                   setPage(0);
                   setRefresh((value) => value + 1);
@@ -198,92 +195,15 @@ function CollectionDetailContent({
               Share collection
             </button>
           )}
-          {personal && (
-            <details className="mt-6 rounded-2xl border p-5">
-              <summary className="cursor-pointer font-semibold">
-                Manage collection
-              </summary>
-              <form
-                className="mt-4 flex flex-wrap gap-3"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void mutate(() =>
-                    updateCollection(collection.id!, { name: name.trim() }),
-                  );
-                }}
-              >
-                <label className="sr-only" htmlFor="collection-name">
-                  Collection name
-                </label>
-                <input
-                  id="collection-name"
-                  required
-                  maxLength={80}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="min-h-11 min-w-0 rounded-xl border bg-transparent px-3"
-                />
-                <button
-                  disabled={busy || !name.trim()}
-                  className="min-h-11 rounded-xl border px-4"
-                >
-                  Rename
-                </button>
-              </form>
-              <p className="mt-4 text-sm text-neutral-500">
-                Public collections can be seen by anyone. Private collections
-                cannot be shared.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-3">
-                <button
-                  disabled={busy}
-                  className="min-h-11 rounded-xl border px-4"
-                  onClick={() => {
-                    const visibility =
-                      collection.visibility === "public" ? "private" : "public";
-                    if (
-                      visibility === "public" &&
-                      !confirm(
-                        "Make this collection and its visible apps public?",
-                      )
-                    )
-                      return;
-                    void mutate(() =>
-                      updateCollection(collection.id!, { visibility }),
-                    );
-                  }}
-                >
-                  {collection.visibility === "public"
-                    ? "Make private"
-                    : "Make public to share"}
-                </button>
-                <button
-                  disabled={busy}
-                  className="min-h-11 rounded-xl border px-4 text-red-600"
-                  onClick={() => {
-                    if (
-                      !confirm(
-                        `Delete “${collection.name}”? This removes only this collection, not Saved, apps or purchases.`,
-                      )
-                    )
-                      return;
-                    void mutate(async () => {
-                      await deleteCollection(collection.id!);
-                      navigate("/my-collections");
-                    });
-                  }}
-                >
-                  Delete collection
-                </button>
-              </div>
-            </details>
-          )}
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {apps.map((app) => (
               <div key={app.id} className="min-w-0">
                 <StandardAppCard
                   app={app}
-                  showCollectionPicker={false}
+                  onCollectionsChanged={() => {
+                    setPage(0);
+                    setRefresh((value) => value + 1);
+                  }}
                   {...savedControls(app.id)}
                   media={media.get(app.id)}
                   metadata={metadata.get(app.id)}
@@ -307,7 +227,7 @@ function CollectionDetailContent({
           {!loading && apps.length === 0 && (
             <p className="mt-8 text-neutral-500">
               {personal
-                ? "Save an app, then use Add to collection to curate this shortlist. Unavailable listings are not shown."
+                ? "Save an app, then use its bookmark to curate this shortlist. Unavailable listings are not shown."
                 : "No available apps in this collection."}
             </p>
           )}
