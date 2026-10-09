@@ -73,10 +73,6 @@ export function rankingsQuery(limit = 8, category = "") {
     p_limit: limit,
   });
 }
-export function rocketViewsLabel(count = 0) {
-  return `${count.toLocaleString("en-US")} Rocket app-page ${count === 1 ? "view" : "views"}`;
-}
-
 export function picksQuery(collection?: string, limit = 24) {
   let query = (supabase as any)
     .from("public_rocket_picks")

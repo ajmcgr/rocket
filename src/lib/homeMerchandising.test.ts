@@ -16,7 +16,6 @@ import {
   tractionLabel,
   loadHomeMerchandising,
   risingQuery,
-  rocketViewsLabel,
 } from "./homeMerchandising";
 const now = Date.parse("2026-10-07T12:00:00Z");
 const app = (id: string) =>
@@ -210,6 +209,4 @@ it("Rising queries positive Rocket views with deterministic ordering", () => {
     "app_id",
   ]);
   expect(chain.limit).toHaveBeenCalledWith(24);
-  expect(rocketViewsLabel(1)).toBe("1 Rocket app-page view");
-  expect(rocketViewsLabel(2000)).toBe("2,000 Rocket app-page views");
 });

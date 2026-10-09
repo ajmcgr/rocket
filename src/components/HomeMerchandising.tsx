@@ -1,4 +1,3 @@
-import { rocketViewsLabel } from "@/lib/homeMerchandising";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
@@ -137,7 +136,6 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                   {...save(row.app.id)}
                   rank={index + 1}
                   metadata={metadata.get(row.app.id)}
-                  eyebrow={rocketViewsLabel(row.viewCount)}
                 />
               </div>
             ))}

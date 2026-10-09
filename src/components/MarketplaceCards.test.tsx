@@ -78,6 +78,21 @@ describe("marketplace content treatments", () => {
     expect(rating).toContain("★");
     expect(renderToStaticMarkup(<AppCardRating />)).toBe("");
   });
+  it("omits unknown pricing while retaining an owner-declared price", () => {
+    const metadata = {
+      app_id: app.id,
+      save_count: 2,
+      rating_count: 0,
+      pricing_kind: "unknown",
+    };
+    const unknown = renderToStaticMarkup(<AppCardByline metadata={metadata} />);
+    expect(unknown).not.toContain("Pricing unknown");
+    expect(unknown).toContain("2 saves");
+    const declared = renderToStaticMarkup(
+      <AppCardByline metadata={{ ...metadata, pricing_kind: "free" }} />,
+    );
+    expect(declared).toContain("Free · owner declared");
+  });
   it("uses colored text arrows only for supplied trend directions", () => {
     expect(renderToStaticMarkup(<TrendArrow direction="up" />)).toContain(
       "text-green-700",

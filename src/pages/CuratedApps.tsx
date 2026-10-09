@@ -1,7 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import { RankedAppRow, StandardAppCard } from "@/components/MarketplaceCards";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
-import { rocketViewsLabel } from "@/lib/homeMerchandising";
 import type { ShelfItem } from "@/lib/homeMerchandising";
 
 export default function CuratedApps({
@@ -36,7 +35,6 @@ export default function CuratedApps({
                 app={row.app}
                 rank={index + 1}
                 {...save(row.app.id)}
-                eyebrow={rocketViewsLabel(row.viewCount)}
               />
             ) : (
               <div key={row.app.id}>

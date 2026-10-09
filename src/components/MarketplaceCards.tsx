@@ -111,11 +111,9 @@ export function AppCardByline({
           @{metadata.developer_profile_username}
         </Link>
       )}
-      {metadata.pricing_kind && (
+      {metadata.pricing_kind && metadata.pricing_kind !== "unknown" && (
         <span title="Pricing supplied by the verified owner">
-          {metadata.pricing_kind === "unknown"
-            ? "Pricing unknown"
-            : metadata.pricing_kind === "free"
+          {metadata.pricing_kind === "free"
               ? "Free · owner declared"
               : metadata.pricing_kind === "freemium"
                 ? "Freemium"
