@@ -20,13 +20,29 @@ const obj = (value: unknown): Row => value && typeof value === "object" && !Arra
 const label = (name: string) => name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
 const count = (value: unknown) => typeof value === "number" ? value.toLocaleString() : "Not tracked";
+const statEmojis: Record<string, string> = {
+  indexed: "📚", discoverable: "🧭", claimed: "✅", domain_verified: "🌐",
+  traffic_verified: "📈", revenue_verified: "💵", held_ambiguous: "⚠️",
+  rocket_id_connected: "🪪", buy_enabled: "🛒", usage_verified: "📊",
+  members: "👥", new_members: "🎉", developer_members: "🧑‍💻",
+  profile_views: "👀", saves: "🔖", reviews: "⭐", searches: "🔎",
+  outbound_clicks: "↗️", submissions: "🚀", claims: "🤝",
+  ga4_connections: "📈", revenue_connections: "💳", claim_review: "📋",
+  review_reports: "🚩", failed_imports: "⚠️", provider_failures: "🔌",
+  site_failures: "🛠️", eligible: "✨", queued: "📬", sent: "📤",
+  delivered: "✅", clicked: "👆", verified: "✔️", connected: "🔗",
+  bounced: "↩️", suppressed: "🔕", skipped: "⏭️", failed: "⚠️",
+};
 const when = (value: unknown) => typeof value === "string" ? new Date(value).toLocaleString() : "—";
 const appUrl = (row: Row) => `/apps/${encodeURIComponent(String(row.slug || row.id))}`;
 const outreachStatuses = ["eligible", "queued", "sent", "delivered", "clicked", "claimed", "verified", "connected", "bounced", "suppressed", "skipped", "failed"];
 
 function StatGrid({ data }: { data: Row }) {
   return <div className="rocket-admin-stats">{Object.entries(data).map(([name, value]) =>
-    <div className="rocket-admin-stat" key={name}><span>{label(name)}</span><strong>{count(value)}</strong></div>)}</div>;
+    <div className="rocket-admin-stat" key={name}>
+      <div className="rocket-admin-stat-header"><span>{label(name)}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
+      <div className={`rocket-admin-stat-figure${typeof value === "number" ? "" : " rocket-admin-stat-figure-untracked"}`}><span aria-hidden="true">{statEmojis[name] || "📊"}</span><strong>{count(value)}</strong></div>
+    </div>)}</div>;
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
