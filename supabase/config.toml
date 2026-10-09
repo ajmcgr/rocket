@@ -123,6 +123,9 @@ verify_jwt = false
 [functions.rocket-stripe-revenue]
 verify_jwt = false
 
+[functions.rocket-app-provider-selection]
+verify_jwt = false # Auth.getUser verifies each request; the service-only RPC rechecks ownership.
+
 [functions.launch-rocket-acceptance]
 # Normal actions verify Supabase user; proof verifies Rocket access token/client/scope plus Launch ES256 identity.
 verify_jwt = false
