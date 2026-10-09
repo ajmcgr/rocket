@@ -85,8 +85,21 @@ describe("marketplace content treatments", () => {
         }}
       />,
     );
-    expect(rating).toContain("4.3 out of 5 stars from 3 ratings");
+    expect(rating).toContain("4.3 out of 5 stars");
     expect(rating).toContain("★");
+    expect(rating).not.toContain("(3)");
+    expect(
+      renderToStaticMarkup(
+        <AppCardRating
+          metadata={{
+            app_id: app.id,
+            save_count: 0,
+            rating_count: 0,
+            average_rating: null,
+          }}
+        />,
+      ),
+    ).toBe("");
     expect(renderToStaticMarkup(<AppCardRating />)).toBe("");
   });
   it("uses colored text arrows only for supplied trend directions", () => {
