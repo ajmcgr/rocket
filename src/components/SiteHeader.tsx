@@ -403,21 +403,21 @@ export default function SiteHeader({
             <ThemeToggle />
             {user && (
               <>
-                <button
-                  type="button"
-                  onClick={() => setShareOpen(true)}
-                  aria-label="Share Rocket"
-                  className="hidden items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
-                >
-                  <Share2 className="h-4 w-4" aria-hidden="true" />
-                  Share
-                </button>
                 <div
                   data-tour="nav-notifications"
                   className="hidden md:inline-flex"
                 >
                   <NotificationsBell />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShareOpen(true)}
+                  aria-label="Share Rocket"
+                  title="Share Rocket"
+                  className="hidden items-center rounded-lg p-2 text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
+                >
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                </button>
               </>
             )}
             {loading ? (
@@ -442,12 +442,6 @@ export default function SiteHeader({
                     <WorkspaceSwitcher />
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/notifications">Notifications</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setShareOpen(true)}>
-                    Share Rocket
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to={profileHref}>My Profile</Link>
                   </DropdownMenuItem>

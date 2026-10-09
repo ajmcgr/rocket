@@ -27,6 +27,24 @@ afterEach(() => {
 });
 
 describe("Sidebar destinations", () => {
+  it("shows notifications before Share in the signed-in header", async () => {
+    vi.stubGlobal("scrollTo", vi.fn());
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+    });
+    auth.user = { email: "owner@example.com" };
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SiteHeader />
+      </MemoryRouter>,
+    );
+    const bell = await screen.findByRole("button", { name: "Notifications" });
+    const share = screen.getByRole("button", { name: "Share Rocket" });
+    expect(share.textContent).toBe("");
+    expect(bell.compareDocumentPosition(share) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("places the collapse control in the logo row and keeps expansion available", async () => {
     vi.stubGlobal("scrollTo", vi.fn());
     vi.stubGlobal("localStorage", {
