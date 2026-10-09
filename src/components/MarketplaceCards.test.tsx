@@ -63,6 +63,17 @@ describe("marketplace content treatments", () => {
     expect(markup).not.toContain("@maker"); // Unbacked presentation handles are not canonical attribution.
     expect(markup).toContain("27 saves");
     expect(markup).not.toContain("3 ratings");
+    const unknownPricing = renderToStaticMarkup(
+      <AppCardByline
+        metadata={{
+          app_id: app.id,
+          save_count: 0,
+          rating_count: 0,
+          pricing_kind: "unknown",
+        }}
+      />,
+    );
+    expect(unknownPricing).not.toContain("Pricing unknown");
     const rating = renderToStaticMarkup(
       <AppCardRating
         metadata={{
