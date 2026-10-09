@@ -922,7 +922,7 @@ export default function LaunchPreview() {
             URLs Rocket can use to submit apps
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Use your app website, a trylaunch.ai product page, a GitHub
+            Use your app website, a product directory launch page, a GitHub
             repository with a product website, or a Hacker News story linking to
             the app. Product Hunt, Apple App Store, and Google Play listing URLs
             are not supported yet. Paste the app’s own website URL instead.
