@@ -1,6 +1,6 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, getAdmin, getRocketUser, getConnectToken, json } from "../_shared/rocketConnect.ts";
-import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
 import { billingType, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 import { libraryPurchases } from "../_shared/buyerLibrary.ts";
@@ -25,12 +25,11 @@ async function offer(appId: string) {
   if (ownerError) throw ownerError;
   if (!permitted) return null;
   const { data: account, error: accountError } = await admin.from("connect_developer_accounts")
-    .select("id,stripe_account_id,status,charges_enabled,payouts_enabled,stripe_api_version")
+    .select("id,stripe_account_id,status,charges_enabled,payouts_enabled,stripe_api_version,account_configuration")
     .eq("client_id", client.client_id).eq("developer_user_id", client.created_by).eq("is_current", true).maybeSingle();
   if (accountError) throw accountError;
-  if (!account || account.stripe_api_version !== "v2" || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
-  const merchant = await retrieveStripeConnectV2Merchant(account.stripe_account_id, "production");
-  if (!stripeConnectV2Ready(merchant)) return null;
+  if (!account || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
+  if (!(await buyMerchantReadiness(account, stripe)).ready) return null;
   const { data: products, error: productError } = await admin.from("connect_products")
     .select("id,client_id,developer_account_id,developer_user_id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,checkout_return_uris,stripe_product_id,stripe_price_id,is_active,activated_at,integration_confirmed_at")
     .eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("developer_user_id", client.created_by)

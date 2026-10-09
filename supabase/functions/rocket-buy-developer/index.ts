@@ -1,7 +1,8 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, base64url, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
-import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
-import { approvedPaymentReturn, priceMatches } from "../_shared/oneTimePayments.ts";
+import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
+import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
+import { approvedPaymentReturn, importableStripePrice, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 
 const liveKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -29,20 +30,20 @@ async function context(req: Request, appId: string) {
 
 async function currentAccount(admin: ReturnType<typeof getAdmin>, clientId: string, userId: string) {
   const { data, error } = await admin.from("connect_developer_accounts")
-    .select("id,client_id,developer_user_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version")
+    .select("id,client_id,developer_user_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version,account_configuration")
     .eq("client_id", clientId).eq("developer_user_id", userId).eq("is_current", true).maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  if (data.stripe_api_version !== "v2") return { ...data, ready: false };
-  const remote = await retrieveStripeConnectV2Merchant(data.stripe_account_id, "production");
-  const ready = stripeConnectV2Ready(remote);
-  if (data.charges_enabled !== ready || data.payouts_enabled !== ready || data.status !== (ready ? "active" : "pending")) {
+  if (!stripe) return { ...data, ready: false };
+  const merchant = await buyMerchantReadiness(data, stripe);
+  const ready = merchant.ready;
+  if (data.charges_enabled !== merchant.chargesEnabled || data.payouts_enabled !== merchant.payoutsEnabled || data.status !== (ready ? "active" : "pending")) {
     const { error: updateError } = await admin.from("connect_developer_accounts")
-      .update({ status: ready ? "active" : "pending", charges_enabled: ready, payouts_enabled: ready, updated_at: new Date().toISOString(), account_configuration: { dashboard: remote.dashboard || null, defaults: remote.defaults || {}, requirements: remote.requirements || null } })
+      .update({ status: ready ? "active" : "pending", charges_enabled: merchant.chargesEnabled, payouts_enabled: merchant.payoutsEnabled, updated_at: new Date().toISOString(), account_configuration: merchant.configuration })
       .eq("id", data.id);
     if (updateError) throw updateError;
   }
-  return { ...data, status: ready ? "active" : "pending", charges_enabled: ready, payouts_enabled: ready, ready };
+  return { ...data, status: ready ? "active" : "pending", charges_enabled: merchant.chargesEnabled, payouts_enabled: merchant.payoutsEnabled, ready };
 }
 
 Deno.serve(async (req) => {
@@ -69,13 +70,14 @@ Deno.serve(async (req) => {
       const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
         .select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
       if (configurationError) throw configurationError;
-      return json({ app_id: appId, client_id: client.client_id, merchant: account ? { ready: account.ready, status: account.status, stripe_api_version: account.stripe_api_version } : null,
+      return json({ app_id: appId, client_id: client.client_id, merchant: account ? { ready: account.ready, status: account.status, stripe_api_version: account.stripe_api_version, stripe_account_id: account.stripe_account_id, connection_method: account.account_configuration?.connection_method || "rocket" } : null,
         products: (products || []).filter((p) => p.developer_account_id === account?.id), platform_fee_bps: configuration.platform_fee_bps,
         launch_ready: configuration.live_checkout_enabled && liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET")) });
     }
 
     if (action === "stripe_onboarding") {
       let account = await currentAccount(admin, client.client_id, user.id);
+      if (account?.account_configuration?.connection_method === "oauth") return json({ error: "existing_account_uses_stripe_dashboard" }, 409);
       if (!account) {
         const country = shortText(body.country, 2);
         if (!country || !/^[A-Za-z]{2}$/.test(country)) return json({ error: "invalid_business_country" }, 400);
@@ -91,6 +93,56 @@ Deno.serve(async (req) => {
       const destination = `${APP_URL}/buy-with-rocket?app=${encodeURIComponent(appId)}&stripe=return`;
       const onboardingUrl = await createStripeHostedOnboardingLink(account.stripe_account_id, `${destination}&refresh=1`, destination, "production");
       return json({ onboarding_url: onboardingUrl, merchant_ready: account.ready });
+    }
+
+    if (action === "stripe_catalog") {
+      const account = await currentAccount(admin, client.client_id, user.id);
+      if (!account?.ready) return json({ error: "merchant_onboarding_incomplete" }, 409);
+      const cursor = body.starting_after;
+      if (cursor !== undefined && (typeof cursor !== "string" || !/^price_[A-Za-z0-9]+$/.test(cursor))) return json({ error: "invalid_cursor" }, 400);
+      const page = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"],
+        ...(cursor ? { starting_after: cursor } : {}) }, { stripeAccount: account.stripe_account_id });
+      const { data: mapped, error } = page.data.length
+        ? await admin.from("connect_products").select("stripe_price_id")
+          .eq("developer_account_id", account.id).in("stripe_price_id", page.data.map((price) => price.id))
+        : { data: [], error: null };
+      if (error) throw error;
+      const registered = new Set((mapped || []).map((entry) => entry.stripe_price_id));
+      return json({ prices: page.data.flatMap((price) => {
+        const eligible = importableStripePrice(price);
+        return eligible ? [{ ...eligible, registered: registered.has(eligible.stripe_price_id) }] : [];
+      }), next_cursor: page.has_more ? page.data.at(-1)?.id || null : null });
+    }
+
+    if (action === "import_price") {
+      const account = await currentAccount(admin, client.client_id, user.id);
+      if (!account?.ready) return json({ error: "merchant_onboarding_incomplete" }, 409);
+      const priceId = body.stripe_price_id;
+      if (typeof priceId !== "string" || !/^price_[A-Za-z0-9]+$/.test(priceId)) return json({ error: "invalid_price" }, 400);
+      const accessKey = body.product_key;
+      if (accessKey !== undefined && (typeof accessKey !== "string" || !/^[a-z0-9][a-z0-9_-]{2,80}$/.test(accessKey)))
+        return json({ error: "invalid_product_key" }, 400);
+      const price = await stripe.prices.retrieve(priceId, { expand: ["product"] }, { stripeAccount: account.stripe_account_id });
+      const selected = importableStripePrice(price);
+      if (!selected || selected.stripe_price_id !== priceId) return json({ error: "stripe_price_not_importable" }, 409);
+      const returnUri = selected.billing_type === "one_time" ? body.payment_return_uri : APP_URL;
+      if (selected.billing_type === "one_time" && !approvedPaymentReturn(returnUri, client.redirect_uris))
+        return json({ error: "approved_payment_return_uri_required" }, 400);
+      const { data: existing, error: existingError } = await admin.from("connect_products")
+        .select("id").eq("stripe_price_id", priceId).limit(1);
+      if (existingError) throw existingError;
+      if (existing?.length) return json({ error: "stripe_price_already_registered" }, 409);
+      const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
+        .select("platform_fee_bps").eq("singleton", true).single();
+      if (configurationError) throw configurationError;
+      if (configuration.platform_fee_bps !== 500) return json({ error: "platform_fee_configuration_invalid" }, 409);
+      const { data: saved, error } = await admin.from("connect_products").insert({
+        id: crypto.randomUUID(), client_id: client.client_id, developer_account_id: account.id, developer_user_id: user.id,
+        product_key: accessKey || productKey(selected.name), ...selected,
+        platform_fee_bps: configuration.platform_fee_bps, is_active: false, checkout_return_uris: [returnUri],
+      }).select("id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active").single();
+      if (error) throw error;
+      return json({ plan: saved }, 201);
     }
 
     if (action === "create_plan" || action === "create_product") {

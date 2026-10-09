@@ -8,11 +8,26 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: { functions: { invoke } },
 }));
 
-async function render(launchReady: boolean, confirmed: boolean) {
+async function render(
+  launchReady: boolean,
+  confirmed: boolean,
+  pendingAccount: null | {
+    id: string;
+    stripe_account_id: string;
+    stripe_account_name: string;
+    stripe_account_country: string;
+    charges_enabled: boolean;
+    payouts_enabled: boolean;
+  } = null,
+) {
   invoke.mockClear();
-  invoke.mockResolvedValue({
+  const status = {
     data: {
-      merchant: { ready: true, status: "active" },
+      merchant: {
+        ready: true,
+        status: "active",
+        stripe_account_id: "acct_prior",
+      },
       platform_fee_bps: 825,
       launch_ready: launchReady,
       products: [
@@ -28,7 +43,17 @@ async function render(launchReady: boolean, confirmed: boolean) {
       ],
     },
     error: null,
-  });
+  };
+  invoke.mockImplementation(
+    (name: string, options: { body: { action: string } }) =>
+      name === "rocket-buy-stripe-oauth"
+        ? Promise.resolve(
+            options.body.action === "status"
+              ? { data: { pending_account: pendingAccount }, error: null }
+              : { data: { connected: true }, error: null },
+          )
+        : Promise.resolve(status),
+  );
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal("scrollTo", vi.fn());
   const container = document.createElement("div");
@@ -51,6 +76,39 @@ async function render(launchReady: boolean, confirmed: boolean) {
   };
 }
 describe("Buy with Rocket activation UI", () => {
+  it("shows a selected Stripe account for explicit owner review before switching merchants", async () => {
+    const pending = {
+      id: "attempt-id",
+      stripe_account_id: "acct_launch",
+      stripe_account_name: "Launch",
+      stripe_account_country: "US",
+      charges_enabled: true,
+      payouts_enabled: true,
+    };
+    const { container, cleanup } = await render(false, false, pending);
+    try {
+      expect(container.textContent).toContain("acct_launch");
+      expect(container.textContent).toContain("acct_prior");
+      expect(
+        invoke.mock.calls.some(
+          ([, options]) => options.body.action === "activate",
+        ),
+      ).toBe(false);
+      const button = [...container.querySelectorAll("button")].find(
+        (item) => item.textContent === "Use this account for Buy with Rocket",
+      )!;
+      await act(async () => button.click());
+      expect(invoke).toHaveBeenCalledWith("rocket-buy-stripe-oauth", {
+        body: {
+          action: "activate",
+          app_id: "owned-app",
+          attempt_id: "attempt-id",
+        },
+      });
+    } finally {
+      await cleanup();
+    }
+  });
   it("registers one-time pricing and the merchant's exact return URI without activating it", async () => {
     const { container, cleanup } = await render(false, false);
     try {
@@ -60,19 +118,46 @@ describe("Buy with Rocket activation UI", () => {
         billing.dispatchEvent(new Event("change", { bubbles: true }));
       });
       const inputs = container.querySelectorAll("input");
-      const values = ["Launch Pro", "39.00", "https://trylaunch.ai/my-products?success=true"];
+      const values = [
+        "Launch Pro",
+        "39.00",
+        "https://trylaunch.ai/my-products?success=true",
+      ];
       await act(async () => {
         inputs.forEach((input, index) => {
-          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, values[index]);
+          Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            "value",
+          )!.set!.call(input, values[index]);
           input.dispatchEvent(new Event("input", { bubbles: true }));
         });
       });
-      await act(async () => container.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+      await act(async () =>
+        container
+          .querySelector("form")!
+          .dispatchEvent(
+            new Event("submit", { bubbles: true, cancelable: true }),
+          ),
+      );
       expect(invoke).toHaveBeenCalledWith("rocket-buy-developer", {
-        body: { action: "create_plan", app_id: "owned-app", name: "Launch Pro", amount_cents: 3900, interval: "one_time", billing_type: "one_time", payment_return_uri: values[2] },
+        body: {
+          action: "create_plan",
+          app_id: "owned-app",
+          name: "Launch Pro",
+          amount_cents: 3900,
+          interval: "one_time",
+          billing_type: "one_time",
+          payment_return_uri: values[2],
+        },
       });
-      expect(invoke.mock.calls.some(([, options]) => options.body.action === "activate_plan")).toBe(false);
-    } finally { await cleanup(); }
+      expect(
+        invoke.mock.calls.some(
+          ([, options]) => options.body.action === "activate_plan",
+        ),
+      ).toBe(false);
+    } finally {
+      await cleanup();
+    }
   });
   it("keeps activation disabled until both live readiness and entitlement verification are server-confirmed", async () => {
     for (const [ready, confirmed] of [

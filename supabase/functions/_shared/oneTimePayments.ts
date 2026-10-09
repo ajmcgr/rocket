@@ -1,6 +1,35 @@
 export type BillingType = "subscription" | "one_time";
 export const billingType = (product: { billing_type?: string }) => product.billing_type || "subscription";
 
+// Only fixed, active prices on the connected live merchant account can be
+// registered. Importing a price records a mapping; it never activates checkout.
+export function importableStripePrice(price: any) {
+  const product = price?.product;
+  if (price?.livemode !== true || price?.active !== true ||
+    typeof price.id !== "string" || !/^price_[A-Za-z0-9]+$/.test(price.id) ||
+    !product || typeof product !== "object" || product.deleted ||
+    product.active !== true || product.livemode !== true ||
+    typeof product.id !== "string" || !/^prod_[A-Za-z0-9]+$/.test(product.id) ||
+    typeof product.name !== "string" || !product.name.trim() || product.name.trim().length > 120 ||
+    price.currency !== "usd" || !Number.isInteger(price.unit_amount) ||
+    price.unit_amount < 100 || price.unit_amount > 100000 ||
+    price.billing_scheme !== "per_unit" || price.custom_unit_amount) return null;
+  const oneTime = price.type === "one_time" && !price.recurring;
+  const subscription = price.type === "recurring" &&
+    ["month", "year"].includes(price.recurring?.interval) &&
+    price.recurring?.interval_count === 1 && price.recurring?.usage_type === "licensed";
+  if (!oneTime && !subscription) return null;
+  return {
+    stripe_price_id: price.id,
+    stripe_product_id: product.id,
+    name: product.name.trim(),
+    amount_cents: price.unit_amount,
+    currency: "usd" as const,
+    billing_type: oneTime ? "one_time" as const : "subscription" as const,
+    interval: oneTime ? null : price.recurring.interval as "month" | "year",
+  };
+}
+
 export function approvedPaymentReturn(uri: unknown, redirects: string[]): uri is string {
   if (typeof uri !== "string" || uri.length > 2048) return false;
   try {
