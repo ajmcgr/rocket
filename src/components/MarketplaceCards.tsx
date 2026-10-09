@@ -35,27 +35,16 @@ export function AppCardRating({
   larger?: boolean;
 }) {
   if (!metadata) return null;
-  if (!metadata.rating_count || metadata.average_rating == null)
-    return (
-      <span
-        className={`block ${larger ? "text-sm" : "text-xs"} ${light ? "text-white/80" : "text-neutral-500"}`}
-        aria-label="No ratings yet"
-      >
-        ☆ No ratings yet
-      </span>
-    );
+  if (!metadata.rating_count || metadata.average_rating == null) return null;
   return (
     <span
       className={`block ${larger ? "text-sm" : "text-xs"} ${light ? "text-white" : "text-neutral-600"}`}
-      aria-label={`${metadata.average_rating} out of 5 stars from ${metadata.rating_count} ratings`}
+      aria-label={`${metadata.average_rating} out of 5 stars`}
     >
       <span className="text-amber-500" aria-hidden="true">
         ★
       </span>{" "}
-      {metadata.average_rating.toFixed(1)}{" "}
-      <span className={light ? "text-white/80" : "text-neutral-500"}>
-        ({metadata.rating_count.toLocaleString()})
-      </span>
+      {metadata.average_rating.toFixed(1)}
     </span>
   );
 }
