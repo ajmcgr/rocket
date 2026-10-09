@@ -19,7 +19,7 @@ const Terms = () => {
       <section>
         <h2>2. The platform</h2>
         <p>Rocket helps people discover apps and lets developers submit, claim and manage listings. We also offer creation tools and, where enabled, Rocket ID and Buy with Rocket. A listing, ranking, review, rating, verification label or link is not Rocket's endorsement or a guarantee of an app's quality, safety, ownership, performance or legality. Third-party apps have their own terms and privacy practices; review them before using or buying an app.</p>
-        <p>Features may be experimental, limited by country or account, or unavailable. In particular, Buy with Rocket's Stripe Connect integration is currently a limited test-mode pilot, not a generally available live payment service. We will identify any live offering and its applicable price and terms before charging you.</p>
+        <p>Features may be experimental, limited by country or account, or unavailable. In particular, Buy with Rocket's Stripe Connect integration is currently a limited pilot with public live checkout disabled, not a generally available payment service. We will identify any live offering and its applicable price and terms before charging you.</p>
       </section>
 
       <section>

@@ -225,8 +225,8 @@ export default function ProductionBuySetup({
     <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6">
       <h2 className="text-xl font-semibold">Buy with Rocket</h2>
       <p className="mt-2 text-sm text-neutral-600">
-        Connect your own Stripe merchant account, then register a one-time,
-        monthly or annual access product. Rocket&apos;s platform fee is{" "}
+        Complete Rocket&apos;s Stripe merchant onboarding, then map an eligible
+        fixed price on that account or create a new one. Rocket&apos;s platform fee is{" "}
         {status
           ? `${status.platform_fee_bps / 100}%`
           : "shown once setup loads"}{" "}
@@ -254,11 +254,11 @@ export default function ProductionBuySetup({
       {status && (
         <div className="mt-6 space-y-6">
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">1. Connect Stripe</h3>
+            <h3 className="font-semibold">1. Set up a Stripe merchant account</h3>
             <p className="mt-1 text-sm text-neutral-600">
               {status.merchant?.ready
                 ? "Merchant ready for card payments and payouts."
-                : "Stripe-hosted business verification is required before a plan can be sold."}
+                : "This setup creates a Rocket-connected Stripe merchant account. It does not link an existing Stripe account used elsewhere. Stripe-hosted business verification is required before a plan can be sold."}
             </p>
             {!status.merchant?.ready && (
               <div className="mt-4 flex flex-wrap items-end gap-3">
@@ -286,7 +286,7 @@ export default function ProductionBuySetup({
                     ? "Opening…"
                     : status.merchant
                       ? "Continue Stripe setup"
-                      : "Connect Stripe"}
+                      : "Start Stripe setup"}
                 </button>
               </div>
             )}
@@ -301,9 +301,9 @@ export default function ProductionBuySetup({
               and entitlement integration is verified.
             </p>
             <p className="mt-2 text-sm text-neutral-600">
-              Import an existing fixed price from the Stripe account connected
-              above. Rocket reads that account&apos;s catalog only; imported
-              plans remain inactive.
+              Import an existing fixed price from this Rocket-connected merchant
+              account. Prices on another Stripe account are not available here.
+              Imported plans remain inactive.
             </p>
             <button
               type="button"
@@ -459,7 +459,7 @@ export default function ProductionBuySetup({
                 disabled={busy || !status.merchant?.ready}
                 className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
               >
-                Create plan
+                Create a new price and inactive plan
               </button>
             </form>
           </div>

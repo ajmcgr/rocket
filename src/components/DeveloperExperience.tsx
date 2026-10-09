@@ -126,7 +126,7 @@ function RocketIdSetup({
       <p>Use the exact HTTPS URL where your app handles Rocket sign-in.</p>
       <p className="dev-small">
         Rocket ID can be used on its own. To sell paid access with Buy with
-        Rocket, set up Rocket ID first, then connect Stripe and create an access plan.
+        Rocket, set up Rocket ID first, then connect Stripe and map an eligible price to app access.
       </p>
       <form onSubmit={register} className="dev-form">
         <label>
@@ -562,7 +562,7 @@ export default function DeveloperExperience({
                   : view === "id"
                     ? "Let Rocket users sign into your app with a secure, connected identity."
                     : view === "buy"
-                      ? "Connect Stripe, create an access plan, and sell directly from your Rocket app page."
+                      ? "Connect a Stripe merchant account, map an eligible price to app access, and verify the integration before live buying."
                       : active
                         ? "Identity and payments for the apps you own. Choose an app to get started."
                         : "Add identity and payments to your apps with one developer membership."}
@@ -835,8 +835,8 @@ export default function DeveloperExperience({
                           <Link to={`/rocket-id?app=${selected}`}>
                             Connect Rocket ID
                           </Link>{" "}
-                          first, then connect Stripe and create your access
-                          plan. Rocket ID identifies the buyer so your app can
+                          first, then connect Stripe and map a price to app
+                          access. Rocket ID identifies the buyer so your app can
                           check their paid access. The two integrations work together;
                           they are not alternatives.
                         </p>
@@ -953,12 +953,14 @@ export default function DeveloperExperience({
                   </p>
                   <h2>Sell access to your app.</h2>
                   <p className="dev-lead">
-                    Create a plan, connect Stripe, and let Rocket users buy
-                    access directly from your Rocket app page.
+                    Connect a Stripe merchant account, map an eligible existing
+                    price or create a new one, and verify paid access before
+                    buying appears on your Rocket app page.
                   </p>
                   <Benefits
                     items={[
-                      "Sell monthly or annual access",
+                      "Prepare one-time, monthly, or annual access",
+                      "Map eligible prices from your Rocket-connected Stripe account",
                       "Stripe-hosted payment flow",
                       "Rocket records purchase entitlements",
                       "Works with Rocket ID",
@@ -967,8 +969,9 @@ export default function DeveloperExperience({
                     ]}
                   />
                   <p>
-                    Buy with Rocket lets Rocket users purchase access to your
-                    app.
+                    Imported prices stay inactive until payment and entitlement
+                    integration is verified. A Stripe revenue connection alone
+                    does not enable checkout.
                   </p>
                   <a
                     className="dev-button dev-button-outline"

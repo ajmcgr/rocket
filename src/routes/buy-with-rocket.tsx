@@ -2,7 +2,7 @@ import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
 export const Route = createFileRoute("/buy-with-rocket")({
   head: () => ({ meta: [
     { title: "Buy with Rocket — Rocket" },
-    { name: "description", content: "Sell access to your app with Buy with Rocket, connected payments and app entitlements." },
+    { name: "description", content: "Map eligible Stripe prices to app access with Buy with Rocket. Plans stay inactive until payment and entitlement integration is verified." },
   ] }),
   component: lazyRouteComponent(
     () => import("@/pages/Developer"),
