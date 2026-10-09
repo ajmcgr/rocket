@@ -124,7 +124,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
           <Heading
             id="home-rising"
-            title="Rising on Rocket"
+            title="Rising"
             description="Most viewed app pages on Rocket."
             href="/rising"
             action="View rising apps"
@@ -176,7 +176,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-12 sm:mt-16" aria-labelledby="home-top">
           <Heading
             id="home-top"
-            title="Top Ranked Apps"
+            title="Top Ranked"
             description="Ranked by reviews, bookmarks and verified purchases."
             href="/discover?view=rankings"
             action="View rankings"

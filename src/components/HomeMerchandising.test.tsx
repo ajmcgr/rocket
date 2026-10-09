@@ -131,9 +131,9 @@ describe("homepage section gates", () => {
         [...view.container.querySelectorAll("h2")].map((h) => h.textContent),
       ).toEqual([
         "Rocket Picks",
-        "Rising on Rocket",
+        "Rising",
         "New & Noteworthy",
-        "Top Ranked Apps",
+        "Top Ranked",
         "Categories",
       ]);
       expect(view.container.textContent).toContain(
@@ -163,7 +163,7 @@ describe("homepage section gates", () => {
     });
     const view = await render({ ...emptyMerchandising(), top: [{ app }] });
     try {
-      expect(view.container.textContent).toContain("Top Ranked Apps");
+      expect(view.container.textContent).toContain("Top Ranked");
       expect(view.container.textContent).not.toContain("Continue exploring");
       expect(view.container.textContent).not.toContain(
         "From developers you follow",
