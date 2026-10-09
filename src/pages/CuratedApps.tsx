@@ -1,7 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import { RankedAppRow, StandardAppCard } from "@/components/MarketplaceCards";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
-import { rocketViewsLabel } from "@/lib/homeMerchandising";
 import type { ShelfItem } from "@/lib/homeMerchandising";
 
 export default function CuratedApps({
@@ -19,9 +18,7 @@ export default function CuratedApps({
       <SiteHeader />
       <main className="mx-auto max-w-[90rem] px-5 py-10 sm:px-8">
         <h1 className="text-3xl font-bold tracking-tight">
-          {kind === "rising"
-            ? "Rising on Rocket"
-            : collection || "Our picks"}
+          {kind === "rising" ? "Rising on Rocket" : collection || "Our picks"}
         </h1>
         <p className="mt-3 text-sm text-neutral-600">
           {kind === "rising"
@@ -36,7 +33,6 @@ export default function CuratedApps({
                 app={row.app}
                 rank={index + 1}
                 {...save(row.app.id)}
-                eyebrow={rocketViewsLabel(row.viewCount)}
               />
             ) : (
               <div key={row.app.id}>
