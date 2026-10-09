@@ -95,7 +95,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-10 sm:mt-12" aria-labelledby="home-picks">
           <Heading
             id="home-picks"
-            title="Rocket Picks"
+            title="Our picks"
             description="Apps worth knowing about right now."
             href="/picks"
           />

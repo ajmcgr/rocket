@@ -21,7 +21,7 @@ export default function CuratedApps({
         <h1 className="text-3xl font-bold tracking-tight">
           {kind === "rising"
             ? "Rising on Rocket"
-            : collection || "Rocket Picks"}
+            : collection || "Our picks"}
         </h1>
         <p className="mt-3 text-sm text-neutral-600">
           {kind === "rising"

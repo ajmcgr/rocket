@@ -64,7 +64,7 @@ export default function RocketPicks() {
   return (
     <section className="mb-10" aria-labelledby="rocket-picks-title">
       <h2 id="rocket-picks-title" className="text-2xl font-bold">
-        Rocket Picks
+        Our picks
       </h2>
       <p className="mt-2 text-sm text-neutral-600">
         Selected by Rocket’s editor, with a reason for each pick. Not verified
