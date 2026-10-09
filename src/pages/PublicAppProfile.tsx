@@ -46,6 +46,7 @@ type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
 type Traction = Tables<"public_app_traction">;
 type Revenue = Tables<"public_app_revenue">;
+type AlternativeRevenue = Tables<"public_app_verified_revenue">;
 const date = (value: string | null) =>
   value
     ? new Date(value).toLocaleDateString(undefined, {
@@ -81,6 +82,7 @@ export default function PublicAppProfile({
   const [sources, setSources] = useState<Source[]>([]);
   const [traction, setTraction] = useState<Traction[]>([]);
   const [revenue, setRevenue] = useState<Revenue[]>([]);
+  const [alternativeRevenue, setAlternativeRevenue] = useState<AlternativeRevenue[]>([]);
   const [signals, setSignals] = useState<AppSignal[]>([]);
   const [trust, setTrust] = useState<AppTrust | null>(null);
   const [media, setMedia] = useState<PublicAppMedia[]>(initialMedia || []);
@@ -176,6 +178,7 @@ export default function PublicAppProfile({
       setSources([]);
       setTraction([]);
       setRevenue([]);
+      setAlternativeRevenue([]);
       setSignals([]);
       setTrust(null);
       setMedia(matchesInitial ? initialMedia || [] : []);
@@ -185,6 +188,7 @@ export default function PublicAppProfile({
         sourceResult,
         tractionResult,
         revenueResult,
+        alternativeRevenueResult,
         signalResult,
         trustResult,
         mediaResult,
@@ -194,6 +198,7 @@ export default function PublicAppProfile({
         supabase.from("public_app_sources").select("*").eq("app_id", appId),
         supabase.from("public_app_traction").select("*").eq("app_id", appId),
         supabase.from("public_app_revenue").select("*").eq("app_id", appId),
+        supabase.from("public_app_verified_revenue").select("*").eq("app_id", appId),
         supabase
           .from("public_app_intelligence")
           .select("*")
@@ -222,6 +227,7 @@ export default function PublicAppProfile({
       setSources(sourceResult.data || []);
       setTraction(tractionResult.data || []);
       setRevenue(revenueResult.data || []);
+      setAlternativeRevenue(alternativeRevenueResult.data || []);
       setSignals(signalResult.data || []);
       setTrust(trustResult.data);
       setMedia(mediaResult.get(appId) || []);
@@ -480,7 +486,26 @@ export default function PublicAppProfile({
                 </div>
               </section>
             )}
-            {revenue.length > 0 && (
+            {alternativeRevenue.length > 0 && (
+              <section className="mt-8 border-t border-neutral-200 pt-6">
+                <h2 className="text-xl font-semibold tracking-tight">Verified revenue</h2>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {alternativeRevenue.map((point) => (
+                    <PublicMetricCard
+                      key={`${point.provider}-${point.currency}`}
+                      label={point.metric_type === "gross_revenue_30d"
+                        ? `Project gross revenue · previous 30 complete days · ${point.currency}`
+                        : `Subscription MRR · ${point.currency}`}
+                      icon={DollarSign}
+                      value={publicRevenueValue(point.visibility, point.value_minor,
+                        point.range_lower_minor, point.range_upper_minor, point.currency)}
+                      details={`Verified with ${point.provider === "revenuecat" ? "RevenueCat" : point.provider} · ${point.period_start || ""} to ${point.period_end || ""} · Updated ${date(point.verified_at)}`}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+            {alternativeRevenue.length === 0 && revenue.length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
                 <h2 className="text-xl font-semibold tracking-tight">
                   Subscription revenue

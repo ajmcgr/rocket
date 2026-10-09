@@ -42,6 +42,21 @@ Deno.serve(async (request) => {
       const allowed: readonly string[] = providers[kind];
       if (body.provider !== null && !allowed.includes(body.provider))
         return json({ error: "Invalid provider" }, 400);
+      if (kind === "revenue" && (body.provider === "polar" || body.provider === "dodo"))
+        return json({ error: "This revenue provider is coming soon" }, 400);
+      if (kind === "revenue" && body.provider === "revenuecat") {
+        const source = await service.from("app_verified_revenue_sources")
+          .select("connection_id")
+          .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id)
+          .eq("provider", "revenuecat").maybeSingle();
+        if (source.error || !source.data)
+          return json({ error: "Connect and map RevenueCat first" }, 400);
+        const connection = await service.from("app_verified_revenue_connections")
+          .select("status").eq("id", source.data.connection_id)
+          .eq("owner_user_id", user.data.user.id).maybeSingle();
+        if (connection.error || connection.data?.status !== "active")
+          return json({ error: "RevenueCat verification needs attention" }, 400);
+      }
       const result = await service.rpc("set_app_provider_selection", {
         p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
         p_kind: kind, p_provider: body.provider,
@@ -51,15 +66,18 @@ Deno.serve(async (request) => {
       return json({ error: "Invalid action" }, 400);
     }
 
-    const [selection, traffic, revenue] = await Promise.all([
+    const [selection, traffic, revenue, alternative] = await Promise.all([
       service.from("app_provider_selection").select("analytics_provider,revenue_provider")
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id).maybeSingle(),
       service.from("app_data_connections").select("provider,status")
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id),
       service.from("app_revenue_bindings").select("connection_id")
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id).maybeSingle(),
+      service.from("app_verified_revenue_sources").select("provider,connection_id")
+        .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id).maybeSingle(),
     ]);
-    if (selection.error || traffic.error || revenue.error) throw new Error("Connection status unavailable");
+    if (selection.error || traffic.error || revenue.error || alternative.error)
+      throw new Error("Connection status unavailable");
     let stripe = false;
     if (revenue.data?.connection_id) {
       const connected = await service.from("app_revenue_connections").select("status")
@@ -67,13 +85,21 @@ Deno.serve(async (request) => {
       if (connected.error) throw connected.error;
       stripe = connected.data?.status === "active";
     }
+    let revenuecat = false;
+    if (alternative.data?.provider === "revenuecat") {
+      const linked = await service.from("app_verified_revenue_connections").select("status")
+        .eq("id", alternative.data.connection_id)
+        .eq("owner_user_id", user.data.user.id).maybeSingle();
+      if (linked.error) throw linked.error;
+      revenuecat = linked.data?.status === "active";
+    }
     return json({
       analytics_provider: selection.data?.analytics_provider ?? null,
       revenue_provider: selection.data?.revenue_provider ?? null,
       connected: {
         ga4: traffic.data?.some((item) => item.provider === "ga4" && item.status === "active") ?? false,
         posthog: traffic.data?.some((item) => item.provider === "posthog" && item.status === "active") ?? false,
-        stripe, revenuecat: false, polar: false, dodo: false,
+        stripe, revenuecat, polar: false, dodo: false,
       },
     });
   } catch {

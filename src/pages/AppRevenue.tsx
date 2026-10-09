@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
+import { RevenueCatConnection } from "@/components/RevenueCatConnection";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Price = { id: string; product_id: string; product_name: string; currency: string;
@@ -67,7 +68,8 @@ export default function AppRevenue() {
   return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Revenue verification</h1>
-    <p className="mt-2 text-sm text-neutral-600">Connect this domain-verified app to its own Stripe account. Rocket reads subscriptions and selected prices only; it never handles payments here. Revenue is private by default.</p>
+    <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue stays private until you explicitly change its visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
+    {id && <RevenueCatConnection appId={id} />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
@@ -127,5 +129,9 @@ export default function AppRevenue() {
       {!status.connection.livemode && <p className="mt-3 text-sm text-amber-700">This is a sandbox Stripe connection. Visibility settings are saved, but no test revenue will be published.</p>}
       <Link to={`/apps/${id}`} className="mt-4 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
+    <section className="mt-6 rounded-2xl border bg-white p-6 text-sm text-neutral-600">
+      <h2 className="font-semibold text-neutral-900">Other revenue providers</h2>
+      <p className="mt-2">Polar and Dodo Payments: coming soon. Neither is connected or verified yet.</p>
+    </section>
   </main>;
 }
