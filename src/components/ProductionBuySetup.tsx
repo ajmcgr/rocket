@@ -23,6 +23,14 @@ type BuyStatus = {
   platform_fee_bps: number;
   launch_ready: boolean;
 };
+type StripePrice = {
+  stripe_price_id: string;
+  name: string;
+  amount_cents: number;
+  billing_type: "one_time" | "subscription";
+  interval: "month" | "year" | null;
+  registered: boolean;
+};
 
 async function request<T>(
   action: string,
@@ -58,8 +66,15 @@ export default function ProductionBuySetup({
   const [country, setCountry] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [interval, setInterval] = useState<"month" | "year" | "one_time">("month");
+  const [interval, setInterval] = useState<"month" | "year" | "one_time">(
+    "month",
+  );
   const [paymentReturn, setPaymentReturn] = useState("");
+  const [importReturn, setImportReturn] = useState("");
+  const [importKey, setImportKey] = useState("");
+  const [catalog, setCatalog] = useState<StripePrice[] | null>(null);
+  const [catalogCursor, setCatalogCursor] = useState<string | null>(null);
+  const [selectedPrice, setSelectedPrice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const refresh = useCallback(async () => {
@@ -81,6 +96,71 @@ export default function ProductionBuySetup({
   useEffect(() => {
     refresh();
   }, [refresh]);
+  useEffect(() => {
+    setCatalog(null);
+    setCatalogCursor(null);
+    setSelectedPrice("");
+    setImportKey("");
+  }, [appId]);
+  const loadCatalog = async (cursor?: string) => {
+    setBusy(true);
+    setError("");
+    try {
+      const page = await request<{
+        prices: StripePrice[];
+        next_cursor: string | null;
+      }>("stripe_catalog", appId, cursor ? { starting_after: cursor } : {});
+      setCatalog((previous) =>
+        cursor ? [...(previous || []), ...page.prices] : page.prices,
+      );
+      setCatalogCursor(page.next_cursor);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not read Stripe prices",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const importPlan = async (event: FormEvent) => {
+    event.preventDefault();
+    const selected = catalog?.find(
+      (price) => price.stripe_price_id === selectedPrice && !price.registered,
+    );
+    if (!selected) return;
+    setBusy(true);
+    setError("");
+    try {
+      await request("import_price", appId, {
+        stripe_price_id: selected.stripe_price_id,
+        ...(importKey ? { product_key: importKey } : {}),
+        ...(selected.billing_type === "one_time"
+          ? { payment_return_uri: importReturn }
+          : {}),
+      });
+      setCatalog(
+        (previous) =>
+          previous?.map((price) =>
+            price.stripe_price_id === selected.stripe_price_id
+              ? { ...price, registered: true }
+              : price,
+          ) || null,
+      );
+      setSelectedPrice("");
+      setImportKey("");
+      await refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not import Stripe price",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
   const onboard = async () => {
     setBusy(true);
     setError("");
@@ -111,7 +191,9 @@ export default function ProductionBuySetup({
         amount_cents: cents,
         interval,
         billing_type: interval === "one_time" ? "one_time" : "subscription",
-        ...(interval === "one_time" ? { payment_return_uri: paymentReturn } : {}),
+        ...(interval === "one_time"
+          ? { payment_return_uri: paymentReturn }
+          : {}),
       });
       setName("");
       setPrice("");
@@ -210,19 +292,114 @@ export default function ProductionBuySetup({
             )}
           </div>
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">2. Create access plan</h3>
+            <h3 className="font-semibold">
+              2. Map a Stripe price to an access plan
+            </h3>
             <p className="mt-1 text-sm text-neutral-600">
               Your price and Rocket&apos;s {status.platform_fee_bps / 100}% fee
               are recorded server-side. A plan stays private until its payment
               and entitlement integration is verified.
             </p>
+            <p className="mt-2 text-sm text-neutral-600">
+              Import an existing fixed price from the Stripe account connected
+              above. Rocket reads that account&apos;s catalog only; imported
+              plans remain inactive.
+            </p>
+            <button
+              type="button"
+              onClick={() => void loadCatalog()}
+              disabled={busy || !status.merchant?.ready}
+              className="mt-4 h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
+            >
+              {catalog ? "Refresh Stripe prices" : "Load Stripe prices"}
+            </button>
+            {catalog && (
+              <form
+                onSubmit={importPlan}
+                className="mt-3 flex flex-wrap items-end gap-3"
+              >
+                <label className="text-sm">
+                  Existing Stripe price
+                  <select
+                    value={selectedPrice}
+                    onChange={(event) => setSelectedPrice(event.target.value)}
+                    className="mt-1 block h-10 max-w-full rounded-lg border border-neutral-200 px-3"
+                  >
+                    <option value="">Select a price</option>
+                    {catalog.map((item) => (
+                      <option
+                        key={item.stripe_price_id}
+                        value={item.stripe_price_id}
+                        disabled={item.registered}
+                      >
+                        {item.name} · ${(item.amount_cents / 100).toFixed(2)}{" "}
+                        {item.billing_type === "one_time"
+                          ? "one-time"
+                          : `/${item.interval}`}
+                        {item.registered ? " · Already mapped" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm">
+                  Access key for your app
+                  <input
+                    value={importKey}
+                    onChange={(event) => setImportKey(event.target.value)}
+                    pattern="[a-z0-9][a-z0-9_-]{2,80}"
+                    placeholder="e.g. grow-access"
+                    className="mt-1 block h-10 min-w-48 rounded-lg border border-neutral-200 px-3"
+                  />
+                </label>
+                {catalog.find((item) => item.stripe_price_id === selectedPrice)
+                  ?.billing_type === "one_time" && (
+                  <label className="text-sm">
+                    Approved payment-return URL
+                    <input
+                      required
+                      type="url"
+                      value={importReturn}
+                      onChange={(event) => setImportReturn(event.target.value)}
+                      className="mt-1 block h-10 min-w-72 rounded-lg border border-neutral-200 px-3"
+                    />
+                  </label>
+                )}
+                <button
+                  disabled={busy || !selectedPrice}
+                  className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
+                >
+                  Import inactive plan
+                </button>
+                {catalogCursor && (
+                  <button
+                    type="button"
+                    onClick={() => void loadCatalog(catalogCursor)}
+                    disabled={busy}
+                    className="h-10 rounded-lg border border-neutral-200 px-4 text-sm disabled:opacity-50"
+                  >
+                    More prices
+                  </button>
+                )}
+                {!catalog.length && (
+                  <p className="text-sm text-neutral-600">
+                    No eligible fixed USD prices found on this connected Stripe
+                    account.
+                  </p>
+                )}
+              </form>
+            )}
             {status.products.map((plan) => (
               <p key={plan.id} className="mt-3 text-sm">
                 {plan.name} · ${(plan.amount_cents / 100).toFixed(2)}
-                {plan.billing_type === "one_time" ? " one-time" : `/${plan.interval === "year" ? "year" : "month"}`} ·{" "}
-                {plan.is_active ? "Active" : "Not active"}
+                {plan.billing_type === "one_time"
+                  ? " one-time"
+                  : `/${plan.interval === "year" ? "year" : "month"}`}{" "}
+                · {plan.is_active ? "Active" : "Not active"}
               </p>
             ))}
+            <p className="mt-5 text-sm font-medium">
+              Or create a new Stripe price
+            </p>
             <form
               onSubmit={createPlan}
               className="mt-4 flex flex-wrap items-end gap-3"
@@ -255,7 +432,9 @@ export default function ProductionBuySetup({
                 <select
                   value={interval}
                   onChange={(event) =>
-                    setInterval(event.target.value as "month" | "year" | "one_time")
+                    setInterval(
+                      event.target.value as "month" | "year" | "one_time",
+                    )
                   }
                   className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
                 >
@@ -264,10 +443,18 @@ export default function ProductionBuySetup({
                   <option value="one_time">One-time</option>
                 </select>
               </label>
-              {interval === "one_time" && <label className="text-sm">
-                Approved payment-return URL
-                <input required type="url" value={paymentReturn} onChange={(event) => setPaymentReturn(event.target.value)} className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3" />
-              </label>}
+              {interval === "one_time" && (
+                <label className="text-sm">
+                  Approved payment-return URL
+                  <input
+                    required
+                    type="url"
+                    value={paymentReturn}
+                    onChange={(event) => setPaymentReturn(event.target.value)}
+                    className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
+                  />
+                </label>
+              )}
               <button
                 disabled={busy || !status.merchant?.ready}
                 className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
