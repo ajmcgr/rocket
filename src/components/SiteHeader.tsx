@@ -87,7 +87,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     ],
   },
   {
-    heading: "My apps",
+    heading: "Apps",
     items: [
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
@@ -127,21 +127,22 @@ export default function SiteHeader({
     .filter(
       (section) => user || !["Monetize", "Create"].includes(section.heading),
     )
-    .map((section) =>
-      section.heading !== "My apps" || !user
-        ? section
-        : {
-            ...section,
-            items: section.items.flatMap((item) =>
-              item.label === "Submit my app"
-                ? [
-                    { label: "My Profile", to: profileHref, icon: UserRound },
-                    item,
-                  ]
-                : [item],
-            ),
-          },
-    );
+    .map((section) => {
+      if (section.heading !== "Apps") return section;
+      if (!user)
+        return {
+          ...section,
+          items: section.items.filter((item) => item.label === "Submit my app"),
+        };
+      return {
+        ...section,
+        items: section.items.flatMap((item) =>
+          item.label === "Submit my app"
+            ? [{ label: "My Profile", to: profileHref, icon: UserRound }, item]
+            : [item],
+        ),
+      };
+    });
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
   const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)

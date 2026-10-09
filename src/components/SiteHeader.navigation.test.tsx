@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "@/test/MemoryRouter";
 import SiteHeader from "./SiteHeader";
@@ -55,7 +55,7 @@ describe("Sidebar destinations", () => {
   });
   for (const signedIn of [false, true]) {
     for (const path of ["/", "/discover", "/pricing", "/submit"]) {
-      it(`${signedIn ? "shows" : "hides"} Monetize and Create on ${path} when ${signedIn ? "signed in" : "signed out"}`, async () => {
+      it(`shows the right sidebar sections on ${path} when ${signedIn ? "signed in" : "signed out"}`, async () => {
         vi.stubGlobal("scrollTo", vi.fn());
         vi.stubGlobal("localStorage", {
           getItem: vi.fn(() => null),
@@ -67,41 +67,44 @@ describe("Sidebar destinations", () => {
             <SiteHeader />
           </MemoryRouter>,
         );
-        const apps = (
-          await screen.findAllByRole("link", { name: "My Apps" })
-        )[0];
+        const appsHeading = await screen.findByText("Apps");
+        const sidebar = within(appsHeading.closest("aside")!);
         if (signedIn) {
+          const apps = sidebar.getByRole("link", { name: "My Apps" });
+          const purchases = sidebar.getByRole("link", { name: "My Purchases" });
+          expect(sidebar.getByRole("link", { name: "Saved" })).toBeTruthy();
+          expect(purchases.getAttribute("href")).toBe("/library");
+          expect(
+            apps.compareDocumentPosition(purchases) &
+              Node.DOCUMENT_POSITION_FOLLOWING,
+          ).toBeTruthy();
           expect(
             (
-              await screen.findByRole("link", { name: "Brand Studio" })
+              await sidebar.findByRole("link", { name: "Brand Studio" })
             ).getAttribute("href"),
           ).toBe("/create");
-          expect(screen.getByText("Monetize")).toBeTruthy();
-          expect(screen.getByText("Create")).toBeTruthy();
+          expect(sidebar.getByText("Monetize")).toBeTruthy();
+          expect(sidebar.getByText("Create")).toBeTruthy();
         } else {
+          for (const label of ["My Apps", "My Purchases", "Saved"]) {
+            expect(sidebar.queryByRole("link", { name: label })).toBeNull();
+          }
+          expect(sidebar.getByRole("link", { name: "Submit my app" })).toBeTruthy();
           expect(
-            screen.queryByRole("link", { name: "Brand Studio" }),
+            sidebar.queryByRole("link", { name: "Brand Studio" }),
           ).toBeNull();
           expect(
-            screen.queryByRole("link", { name: "Buy with Rocket" }),
+            sidebar.queryByRole("link", { name: "Buy with Rocket" }),
           ).toBeNull();
-          expect(screen.queryByRole("link", { name: "Rocket ID" })).toBeNull();
-          expect(screen.queryByText("Monetize")).toBeNull();
-          expect(screen.queryByText("Create")).toBeNull();
+          expect(sidebar.queryByRole("link", { name: "Rocket ID" })).toBeNull();
+          expect(sidebar.queryByText("Monetize")).toBeNull();
+          expect(sidebar.queryByText("Create")).toBeNull();
         }
         expect(
-          screen.queryByRole("link", { name: "Saved Designs" }),
+          sidebar.queryByRole("link", { name: "Saved Designs" }),
         ).toBeNull();
-        expect(screen.queryByText("Logos/Icons")).toBeNull();
-        const subscriptions = screen.getByRole("link", {
-          name: "My Purchases",
-        });
-        expect(subscriptions.getAttribute("href")).toBe("/library");
-        expect(
-          apps.compareDocumentPosition(subscriptions) &
-            Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
-        expect(screen.queryByRole("link", { name: "Library" })).toBeNull();
+        expect(sidebar.queryByText("Logos/Icons")).toBeNull();
+        expect(sidebar.queryByRole("link", { name: "Library" })).toBeNull();
       });
     }
   }
