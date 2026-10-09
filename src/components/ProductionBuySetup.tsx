@@ -110,6 +110,8 @@ export default function ProductionBuySetup({
   const [importKey, setImportKey] = useState("");
   const [catalog, setCatalog] = useState<StripePrice[] | null>(null);
   const [catalogCursor, setCatalogCursor] = useState<string | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -119,6 +121,30 @@ export default function ProductionBuySetup({
       setError("");
       const next = await request<BuyStatus>("status", appId);
       setStatus(next);
+      if (next.merchant?.ready) {
+        setCatalogLoading(true);
+        setCatalogError("");
+        try {
+          const page = await request<{
+            prices: StripePrice[];
+            next_cursor: string | null;
+          }>("stripe_catalog", appId);
+          setCatalog(page.prices);
+          setCatalogCursor(page.next_cursor);
+        } catch (caught) {
+          setCatalog(null);
+          setCatalogError(
+            caught instanceof Error
+              ? caught.message
+              : "Could not read Stripe prices",
+          );
+        } finally {
+          setCatalogLoading(false);
+        }
+      } else {
+        setCatalog(null);
+        setCatalogCursor(null);
+      }
       try {
         const pending = await oauthRequest<{
           pending_account: PendingStripeAccount | null;
@@ -191,8 +217,8 @@ export default function ProductionBuySetup({
     }
   };
   const loadCatalog = async (cursor?: string) => {
-    setBusy(true);
-    setError("");
+    setCatalogLoading(true);
+    setCatalogError("");
     try {
       const page = await request<{
         prices: StripePrice[];
@@ -203,13 +229,13 @@ export default function ProductionBuySetup({
       );
       setCatalogCursor(page.next_cursor);
     } catch (caught) {
-      setError(
+      setCatalogError(
         caught instanceof Error
           ? caught.message
           : "Could not read Stripe prices",
       );
     } finally {
-      setBusy(false);
+      setCatalogLoading(false);
     }
   };
   const importPlan = async (event: FormEvent) => {
@@ -351,10 +377,10 @@ export default function ProductionBuySetup({
       {status && (
         <div className="mt-6 space-y-6">
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">1. Connect your Stripe account</h3>
+            <h3 className="font-semibold">1. Stripe account</h3>
             <p className="mt-1 text-sm text-neutral-600">
               {status.merchant?.ready
-                ? `Merchant ready for card payments and payouts. Account: ${status.merchant.stripe_account_id}.`
+                ? `Connected and ready for payments: ${status.merchant.stripe_account_id}.`
                 : "Use Stripe Dashboard to select the account that holds your products. You can review the selected account before Rocket uses it for new checkout."}
             </p>
             <button
@@ -363,7 +389,9 @@ export default function ProductionBuySetup({
               disabled={busy}
               className="mt-4 h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
             >
-              Connect existing Stripe account
+              {status.merchant?.ready
+                ? "Change Stripe account"
+                : "Connect existing Stripe account"}
             </button>
             {pendingAccount && (
               <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-neutral-800">
@@ -442,27 +470,32 @@ export default function ProductionBuySetup({
             )}
           </div>
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">
-              2. Map a Stripe price to an access plan
-            </h3>
+            <h3 className="font-semibold">2. Choose a Stripe price</h3>
             <p className="mt-1 text-sm text-neutral-600">
-              Your price and Rocket&apos;s {status.platform_fee_bps / 100}% fee
-              are recorded server-side. A plan stays private until its payment
-              and entitlement integration is verified.
+              Rocket loads eligible prices from your connected Stripe account
+              automatically. Choose the one you want to offer; it stays inactive
+              until the payment and entitlement integration is verified.
             </p>
-            <p className="mt-2 text-sm text-neutral-600">
-              Import an existing fixed price from this Rocket-connected merchant
-              account. Prices on another Stripe account are not available here.
-              Imported plans remain inactive.
-            </p>
-            <button
-              type="button"
-              onClick={() => void loadCatalog()}
-              disabled={busy || !status.merchant?.ready}
-              className="mt-4 h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
-            >
-              {catalog ? "Refresh Stripe prices" : "Load Stripe prices"}
-            </button>
+            {catalogLoading && (
+              <p role="status" className="mt-3 text-sm text-neutral-600">
+                Loading Stripe prices…
+              </p>
+            )}
+            {catalogError && (
+              <p role="alert" className="mt-3 text-sm text-red-600">
+                {developerMessage(catalogError)}
+              </p>
+            )}
+            {status.merchant?.ready && (
+              <button
+                type="button"
+                onClick={() => void loadCatalog()}
+                disabled={catalogLoading || busy}
+                className="mt-3 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
+              >
+                Refresh prices
+              </button>
+            )}
             {catalog && (
               <form
                 onSubmit={importPlan}
@@ -491,20 +524,25 @@ export default function ProductionBuySetup({
                     ))}
                   </select>
                 </label>
-                <label className="text-sm">
-                  Access key for your app
-                  <input
-                    value={importKey}
-                    onChange={(event) => setImportKey(event.target.value)}
-                    pattern="[a-z0-9][a-z0-9_-]{2,80}"
-                    placeholder="e.g. grow-access"
-                    className="mt-1 block h-10 min-w-48 rounded-lg border border-neutral-200 px-3"
-                  />
-                </label>
+                <details className="w-full text-sm">
+                  <summary className="cursor-pointer text-neutral-600">
+                    Advanced: custom access key
+                  </summary>
+                  <label className="mt-2 block">
+                    Access key for your app
+                    <input
+                      value={importKey}
+                      onChange={(event) => setImportKey(event.target.value)}
+                      pattern="[a-z0-9][a-z0-9_-]{2,80}"
+                      placeholder="Rocket generates one if blank"
+                      className="mt-1 block h-10 min-w-48 rounded-lg border border-neutral-200 px-3"
+                    />
+                  </label>
+                </details>
                 {catalog.find((item) => item.stripe_price_id === selectedPrice)
                   ?.billing_type === "one_time" && (
                   <label className="text-sm">
-                    Approved payment-return URL
+                    Where should buyers return after payment?
                     <input
                       required
                       type="url"
@@ -515,16 +553,16 @@ export default function ProductionBuySetup({
                   </label>
                 )}
                 <button
-                  disabled={busy || !selectedPrice}
+                  disabled={busy || catalogLoading || !selectedPrice}
                   className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
                 >
-                  Import inactive plan
+                  Add selected price
                 </button>
                 {catalogCursor && (
                   <button
                     type="button"
                     onClick={() => void loadCatalog(catalogCursor)}
-                    disabled={busy}
+                    disabled={busy || catalogLoading}
                     className="h-10 rounded-lg border border-neutral-200 px-4 text-sm disabled:opacity-50"
                   >
                     More prices
@@ -547,71 +585,73 @@ export default function ProductionBuySetup({
                 · {plan.is_active ? "Active" : "Not active"}
               </p>
             ))}
-            <p className="mt-5 text-sm font-medium">
-              Or create a new Stripe price
-            </p>
-            <form
-              onSubmit={createPlan}
-              className="mt-4 flex flex-wrap items-end gap-3"
-            >
-              <label className="text-sm">
-                Plan name
-                <input
-                  required
-                  maxLength={120}
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
-                />
-              </label>
-              <label className="text-sm">
-                Price (USD)
-                <input
-                  required
-                  type="number"
-                  min="1"
-                  max="1000"
-                  step="0.01"
-                  value={price}
-                  onChange={(event) => setPrice(event.target.value)}
-                  className="mt-1 block h-10 w-28 rounded-lg border border-neutral-200 px-3"
-                />
-              </label>
-              <label className="text-sm">
-                Billing
-                <select
-                  value={interval}
-                  onChange={(event) =>
-                    setInterval(
-                      event.target.value as "month" | "year" | "one_time",
-                    )
-                  }
-                  className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
-                >
-                  <option value="month">Monthly</option>
-                  <option value="year">Annual</option>
-                  <option value="one_time">One-time</option>
-                </select>
-              </label>
-              {interval === "one_time" && (
+            <details className="mt-5">
+              <summary className="cursor-pointer text-sm font-medium">
+                Need a new Stripe price?
+              </summary>
+              <form
+                onSubmit={createPlan}
+                className="mt-4 flex flex-wrap items-end gap-3"
+              >
                 <label className="text-sm">
-                  Approved payment-return URL
+                  Plan name
                   <input
                     required
-                    type="url"
-                    value={paymentReturn}
-                    onChange={(event) => setPaymentReturn(event.target.value)}
+                    maxLength={120}
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
                     className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
                   />
                 </label>
-              )}
-              <button
-                disabled={busy || !status.merchant?.ready}
-                className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
-              >
-                Create a new price and inactive plan
-              </button>
-            </form>
+                <label className="text-sm">
+                  Price (USD)
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    max="1000"
+                    step="0.01"
+                    value={price}
+                    onChange={(event) => setPrice(event.target.value)}
+                    className="mt-1 block h-10 w-28 rounded-lg border border-neutral-200 px-3"
+                  />
+                </label>
+                <label className="text-sm">
+                  Billing
+                  <select
+                    value={interval}
+                    onChange={(event) =>
+                      setInterval(
+                        event.target.value as "month" | "year" | "one_time",
+                      )
+                    }
+                    className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
+                  >
+                    <option value="month">Monthly</option>
+                    <option value="year">Annual</option>
+                    <option value="one_time">One-time</option>
+                  </select>
+                </label>
+                {interval === "one_time" && (
+                  <label className="text-sm">
+                    Approved payment-return URL
+                    <input
+                      required
+                      type="url"
+                      value={paymentReturn}
+                      onChange={(event) => setPaymentReturn(event.target.value)}
+                      className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
+                    />
+                  </label>
+                )}
+                <button
+                  disabled={busy || !status.merchant?.ready}
+                  className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
+                >
+                  Create a new price and inactive plan
+                </button>
+              </form>
+            </details>
           </div>
           <div className="rounded-xl border border-neutral-200 p-4">
             <h3 className="font-semibold">3. Integrate, test and activate</h3>
