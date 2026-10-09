@@ -130,7 +130,7 @@ describe("homepage section gates", () => {
       expect(
         [...view.container.querySelectorAll("h2")].map((h) => h.textContent),
       ).toEqual([
-        "Rocket Picks",
+        "Our picks",
         "Rising",
         "New & Noteworthy",
         "Top Ranked",

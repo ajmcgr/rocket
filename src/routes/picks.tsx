@@ -15,8 +15,8 @@ export const Route = createFileRoute("/picks")({
     meta: [
       {
         title: loaderData?.collection
-          ? `${loaderData.collection} | Rocket Picks`
-          : "Rocket Picks | Rocket",
+          ? `${loaderData.collection} | Our picks`
+          : "Our picks | Rocket",
       },
     ],
     links: [
