@@ -18,10 +18,23 @@ type Plan = {
   activated_at?: string | null;
 };
 type BuyStatus = {
-  merchant: { ready: boolean; status: string } | null;
+  merchant: {
+    ready: boolean;
+    status: string;
+    stripe_account_id: string;
+    connection_method: string;
+  } | null;
   products: Plan[];
   platform_fee_bps: number;
   launch_ready: boolean;
+};
+type PendingStripeAccount = {
+  id: string;
+  stripe_account_id: string;
+  stripe_account_name: string | null;
+  stripe_account_country: string | null;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
 };
 type StripePrice = {
   stripe_price_id: string;
@@ -48,6 +61,26 @@ async function request<T>(
   return data as T;
 }
 
+async function oauthRequest<T>(
+  action: string,
+  appId: string,
+  extras: Record<string, unknown> = {},
+): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(
+    "rocket-buy-stripe-oauth",
+    {
+      body: { action, app_id: appId, ...extras },
+    },
+  );
+  if (error || data?.error)
+    throw new Error(
+      data?.error ||
+        error?.message ||
+        "Stripe account connection is unavailable",
+    );
+  return data as T;
+}
+
 export default function ProductionBuySetup({
   ownedApps,
   onStatus,
@@ -57,12 +90,15 @@ export default function ProductionBuySetup({
 }) {
   const [params] = useSearchParams();
   const requestedApp = params.get("app");
+  const stripeReturn = params.get("stripe");
   const [appId, setAppId] = useState(
     ownedApps.find((app) => app.app_id === requestedApp)?.app_id ||
       ownedApps[0]?.app_id ||
       "",
   );
   const [status, setStatus] = useState<BuyStatus | null>(null);
+  const [pendingAccount, setPendingAccount] =
+    useState<PendingStripeAccount | null>(null);
   const [country, setCountry] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -83,9 +119,18 @@ export default function ProductionBuySetup({
       setError("");
       const next = await request<BuyStatus>("status", appId);
       setStatus(next);
+      try {
+        const pending = await oauthRequest<{
+          pending_account: PendingStripeAccount | null;
+        }>("status", appId);
+        setPendingAccount(pending.pending_account);
+      } catch {
+        setPendingAccount(null);
+      }
       onStatus?.(next);
     } catch (caught: unknown) {
       setStatus(null);
+      setPendingAccount(null);
       setError(
         caught instanceof Error
           ? caught.message
@@ -102,6 +147,49 @@ export default function ProductionBuySetup({
     setSelectedPrice("");
     setImportKey("");
   }, [appId]);
+  const connectExisting = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await oauthRequest<{ authorization_url: string }>(
+        "start",
+        appId,
+      );
+      const destination = new URL(result.authorization_url);
+      if (
+        destination.origin !== "https://connect.stripe.com" ||
+        destination.pathname !== "/oauth/authorize"
+      )
+        throw new Error("Invalid Stripe authorization URL");
+      window.location.assign(destination.toString());
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not connect Stripe account",
+      );
+      setBusy(false);
+    }
+  };
+  const selectAccount = async () => {
+    if (!pendingAccount) return;
+    setBusy(true);
+    setError("");
+    try {
+      await oauthRequest("activate", appId, { attempt_id: pendingAccount.id });
+      setPendingAccount(null);
+      setCatalog(null);
+      await refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not select Stripe account",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
   const loadCatalog = async (cursor?: string) => {
     setBusy(true);
     setError("");
@@ -225,8 +313,8 @@ export default function ProductionBuySetup({
     <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6">
       <h2 className="text-xl font-semibold">Buy with Rocket</h2>
       <p className="mt-2 text-sm text-neutral-600">
-        Complete Rocket&apos;s Stripe merchant onboarding, then map an eligible
-        fixed price on that account or create a new one. Rocket&apos;s platform fee is{" "}
+        Connect the Stripe account that holds your products, then map eligible
+        fixed prices from that account. Rocket&apos;s platform fee is{" "}
         {status
           ? `${status.platform_fee_bps / 100}%`
           : "shown once setup loads"}{" "}
@@ -251,17 +339,79 @@ export default function ProductionBuySetup({
           {developerMessage(error)}
         </p>
       )}
+      {!error &&
+        ["connection_failed", "connection_denied"].includes(
+          stripeReturn || "",
+        ) && (
+          <p role="alert" className="mt-3 text-sm text-red-600">
+            Stripe account connection was not completed. Select the intended
+            account in Stripe and try again.
+          </p>
+        )}
       {status && (
         <div className="mt-6 space-y-6">
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">1. Set up a Stripe merchant account</h3>
+            <h3 className="font-semibold">1. Connect your Stripe account</h3>
             <p className="mt-1 text-sm text-neutral-600">
               {status.merchant?.ready
-                ? "Merchant ready for card payments and payouts."
-                : "This setup creates a Rocket-connected Stripe merchant account. It does not link an existing Stripe account used elsewhere. Stripe-hosted business verification is required before a plan can be sold."}
+                ? `Merchant ready for card payments and payouts. Account: ${status.merchant.stripe_account_id}.`
+                : "Use Stripe Dashboard to select the account that holds your products. You can review the selected account before Rocket uses it for new checkout."}
             </p>
+            <button
+              type="button"
+              onClick={connectExisting}
+              disabled={busy}
+              className="mt-4 h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
+            >
+              Connect existing Stripe account
+            </button>
+            {pendingAccount && (
+              <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-neutral-800">
+                <p className="font-semibold">
+                  Review the account selected in Stripe
+                </p>
+                <p className="mt-1">
+                  {pendingAccount.stripe_account_name || "Stripe account"} ·{" "}
+                  {pendingAccount.stripe_account_id}
+                  {pendingAccount.stripe_account_country
+                    ? ` · ${pendingAccount.stripe_account_country}`
+                    : ""}
+                </p>
+                <p className="mt-1">
+                  {pendingAccount.charges_enabled &&
+                  pendingAccount.payouts_enabled
+                    ? "Card charges and payouts are enabled."
+                    : "This account cannot accept Buy with Rocket payments yet."}
+                </p>
+                {status.merchant &&
+                  status.merchant.stripe_account_id !==
+                    pendingAccount.stripe_account_id && (
+                    <p className="mt-1">
+                      Current Rocket merchant:{" "}
+                      {status.merchant.stripe_account_id}. Selecting this
+                      account will retire its active offers for new checkout;
+                      existing financial records stay attached to that merchant.
+                    </p>
+                  )}
+                <button
+                  type="button"
+                  onClick={selectAccount}
+                  disabled={
+                    busy ||
+                    !pendingAccount.charges_enabled ||
+                    !pendingAccount.payouts_enabled
+                  }
+                  className="mt-3 h-10 rounded-lg bg-[#167ac6] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Use this account for Buy with Rocket
+                </button>
+              </div>
+            )}
             {!status.merchant?.ready && (
               <div className="mt-4 flex flex-wrap items-end gap-3">
+                <p className="w-full text-sm text-neutral-600">
+                  Or create a new Rocket-connected Stripe account:
+                </p>
                 {!status.merchant && (
                   <label className="text-sm">
                     Business country (two-letter code)

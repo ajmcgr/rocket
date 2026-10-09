@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, base64url, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
-import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, retrieveStripeConnectV2Merchant, stripeConnectV2Ready, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
+import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
+import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
 import { approvedPaymentReturn, importableStripePrice, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 
@@ -29,20 +30,20 @@ async function context(req: Request, appId: string) {
 
 async function currentAccount(admin: ReturnType<typeof getAdmin>, clientId: string, userId: string) {
   const { data, error } = await admin.from("connect_developer_accounts")
-    .select("id,client_id,developer_user_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version")
+    .select("id,client_id,developer_user_id,stripe_account_id,status,charges_enabled,payouts_enabled,is_current,stripe_api_version,account_configuration")
     .eq("client_id", clientId).eq("developer_user_id", userId).eq("is_current", true).maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  if (data.stripe_api_version !== "v2") return { ...data, ready: false };
-  const remote = await retrieveStripeConnectV2Merchant(data.stripe_account_id, "production");
-  const ready = stripeConnectV2Ready(remote);
-  if (data.charges_enabled !== ready || data.payouts_enabled !== ready || data.status !== (ready ? "active" : "pending")) {
+  if (!stripe) return { ...data, ready: false };
+  const merchant = await buyMerchantReadiness(data, stripe);
+  const ready = merchant.ready;
+  if (data.charges_enabled !== merchant.chargesEnabled || data.payouts_enabled !== merchant.payoutsEnabled || data.status !== (ready ? "active" : "pending")) {
     const { error: updateError } = await admin.from("connect_developer_accounts")
-      .update({ status: ready ? "active" : "pending", charges_enabled: ready, payouts_enabled: ready, updated_at: new Date().toISOString(), account_configuration: { dashboard: remote.dashboard || null, defaults: remote.defaults || {}, requirements: remote.requirements || null } })
+      .update({ status: ready ? "active" : "pending", charges_enabled: merchant.chargesEnabled, payouts_enabled: merchant.payoutsEnabled, updated_at: new Date().toISOString(), account_configuration: merchant.configuration })
       .eq("id", data.id);
     if (updateError) throw updateError;
   }
-  return { ...data, status: ready ? "active" : "pending", charges_enabled: ready, payouts_enabled: ready, ready };
+  return { ...data, status: ready ? "active" : "pending", charges_enabled: merchant.chargesEnabled, payouts_enabled: merchant.payoutsEnabled, ready };
 }
 
 Deno.serve(async (req) => {
@@ -69,13 +70,14 @@ Deno.serve(async (req) => {
       const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
         .select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
       if (configurationError) throw configurationError;
-      return json({ app_id: appId, client_id: client.client_id, merchant: account ? { ready: account.ready, status: account.status, stripe_api_version: account.stripe_api_version } : null,
+      return json({ app_id: appId, client_id: client.client_id, merchant: account ? { ready: account.ready, status: account.status, stripe_api_version: account.stripe_api_version, stripe_account_id: account.stripe_account_id, connection_method: account.account_configuration?.connection_method || "rocket" } : null,
         products: (products || []).filter((p) => p.developer_account_id === account?.id), platform_fee_bps: configuration.platform_fee_bps,
         launch_ready: configuration.live_checkout_enabled && liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET")) });
     }
 
     if (action === "stripe_onboarding") {
       let account = await currentAccount(admin, client.client_id, user.id);
+      if (account?.account_configuration?.connection_method === "oauth") return json({ error: "existing_account_uses_stripe_dashboard" }, 409);
       if (!account) {
         const country = shortText(body.country, 2);
         if (!country || !/^[A-Za-z]{2}$/.test(country)) return json({ error: "invalid_business_country" }, 400);

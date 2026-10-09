@@ -96,6 +96,9 @@ verify_jwt = false
 [functions.rocket-buy-developer]
 verify_jwt = true
 
+[functions.rocket-buy-stripe-oauth]
+verify_jwt = false # Stripe callback is public; each POST verifies the owner with Auth.getUser.
+
 [functions.rocket-buy]
 verify_jwt = false # Public catalog; all buyer and mutation actions verify the user in code.
 
