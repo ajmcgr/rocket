@@ -140,7 +140,7 @@ it("preserves editor header controls and restores site search when leaving the e
   expect(screen.queryByRole("button", { name: "File" })).toBeNull();
 });
 
-it("keeps workspace selection and notifications reachable through the shared account menu", async () => {
+it("keeps workspace selection in the account menu and header actions separate", async () => {
   render(
     <MemoryRouter initialEntries={["/create"]}>
       <AppShell />
@@ -153,10 +153,14 @@ it("keeps workspace selection and notifications reachable through the shared acc
   expect(
     await screen.findByRole("button", { name: "Personal workspace" }),
   ).toBeTruthy();
+  expect(screen.queryByRole("menuitem", { name: "Notifications" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Share Rocket" })).toBeNull();
   expect(
-    screen
-      .getByRole("menuitem", { name: "Notifications" })
-      .getAttribute("href"),
-  ).toBe("/notifications");
-  expect(screen.getByRole("menuitem", { name: "Share Rocket" })).toBeTruthy();
+    screen.getByRole("button", { name: "Notifications", hidden: true }),
+  ).toBeTruthy();
+  const share = screen.getByRole("button", {
+    name: "Share Rocket",
+    hidden: true,
+  });
+  expect(share.textContent).toBe("");
 });
