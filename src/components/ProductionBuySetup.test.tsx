@@ -19,6 +19,14 @@ async function render(
     charges_enabled: boolean;
     payouts_enabled: boolean;
   } = null,
+  catalogPrices?: Array<{
+    stripe_price_id: string;
+    name: string;
+    amount_cents: number;
+    billing_type: "one_time" | "subscription";
+    interval: "month" | "year" | null;
+    registered: boolean;
+  }>,
 ) {
   invoke.mockClear();
   const status = {
@@ -52,7 +60,14 @@ async function render(
               ? { data: { pending_account: pendingAccount }, error: null }
               : { data: { connected: true }, error: null },
           )
-        : Promise.resolve(status),
+        : Promise.resolve(
+            options.body.action === "stripe_catalog" && catalogPrices
+              ? {
+                  data: { prices: catalogPrices, next_cursor: null },
+                  error: null,
+                }
+              : status,
+          ),
   );
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal("scrollTo", vi.fn());
@@ -76,6 +91,31 @@ async function render(
   };
 }
 describe("Buy with Rocket activation UI", () => {
+  it("loads connected merchant prices automatically without importing or activating them", async () => {
+    const { container, cleanup } = await render(false, false, null, [
+      {
+        stripe_price_id: "price_launch_pro",
+        name: "Launch Pro",
+        amount_cents: 3900,
+        billing_type: "one_time",
+        interval: null,
+        registered: false,
+      },
+    ]);
+    try {
+      expect(invoke).toHaveBeenCalledWith("rocket-buy-developer", {
+        body: { action: "stripe_catalog", app_id: "owned-app" },
+      });
+      expect(container.textContent).toContain("Launch Pro · $39.00 one-time");
+      expect(
+        invoke.mock.calls.some(([, options]) =>
+          ["import_price", "activate_plan"].includes(options.body.action),
+        ),
+      ).toBe(false);
+    } finally {
+      await cleanup();
+    }
+  });
   it("shows a selected Stripe account for explicit owner review before switching merchants", async () => {
     const pending = {
       id: "attempt-id",
