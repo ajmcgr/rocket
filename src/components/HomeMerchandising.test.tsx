@@ -139,6 +139,9 @@ describe("homepage section gates", () => {
       expect(view.container.textContent).toContain(
         "Most viewed app pages on Rocket.",
       );
+      expect(view.container.textContent).not.toContain(
+        "20 Rocket app-page views",
+      );
       expect(view.container.textContent).toContain(
         "Ranked by reviews, bookmarks and verified purchases.",
       );
