@@ -90,10 +90,10 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Apps",
     items: [
+      { label: "Submit my app", to: "/submit", icon: Plus },
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
       { label: "Saved", to: "/my-collections", icon: Bookmark },
-      { label: "Submit my app", to: "/submit", icon: Plus },
     ],
   },
   {
@@ -141,8 +141,8 @@ export default function SiteHeader({
       return {
         ...section,
         items: section.items.flatMap((item) =>
-          item.label === "Submit my app"
-            ? [{ label: "My Profile", to: profileHref, icon: UserRound }, item]
+          item.label === "Saved"
+            ? [item, { label: "My Profile", to: profileHref, icon: UserRound }]
             : [item],
         ),
       };
