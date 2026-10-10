@@ -345,15 +345,7 @@ export default function SiteHeader({
                   className="h-[18px] w-[18px] shrink-0"
                   aria-hidden="true"
                 />
-                {!sidebarCompact && (
-                  <>
-                    <span>Discord</span>
-                    <ExternalLink
-                      className="ml-auto h-3.5 w-3.5"
-                      aria-hidden="true"
-                    />
-                  </>
-                )}
+                {!sidebarCompact && <span>Discord</span>}
               </a>
             </div>
           </nav>
