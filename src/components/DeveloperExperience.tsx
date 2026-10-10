@@ -435,8 +435,9 @@ export default function DeveloperExperience({
           <h2>Rocket Developer</h2>
           <p>
             One $99/year membership for shared workspaces, Rocket ID and Buy
-            with Rocket across eligible apps you own. Your membership covers
-            invited teammates.
+            with Rocket across eligible apps you own. Beta Testing, AI App
+            Optimization and Advanced Analytics are being rolled out. Your
+            membership covers invited teammates.
           </p>
         </header>
         {loading ? (
@@ -1119,12 +1120,13 @@ export default function DeveloperExperience({
                   <h3>
                     Rocket Developer <span>$99/year</span>
                   </h3>
-                  <p>Identity and payments for eligible apps you own.</p>
+                  <p>Tools to test, improve, understand and monetize eligible apps you own.</p>
                   <Benefits
                     items={[
                       "Everything in Free",
                       "Rocket ID",
                       "Buy with Rocket",
+                      "Beta Testing, AI Optimization and Advanced Analytics (in rollout)",
                     ]}
                   />
                   <p className="dev-small">

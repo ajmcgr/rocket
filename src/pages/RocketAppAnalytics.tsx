@@ -3,6 +3,7 @@ import { BarChart3, Bookmark, Eye, MessageSquare, Star } from "lucide-react";
 import { Link, useParams } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import AdvancedRocketAnalytics from "@/components/AdvancedRocketAnalytics";
 
 export type RocketAnalytics = {
   app_id: string; app_name: string; from: string; to: string; days: number; page: number; page_size: number;
@@ -76,6 +77,7 @@ export default function RocketAppAnalytics() {
           { label: "Saves", value: number(data.save_count), note: "Currently bookmarked by Rocket users", Icon: Bookmark },
         ].map(({ label, value, note, Icon }) => <section key={label} className={panel}><p className="flex items-center gap-2 text-sm font-medium text-neutral-600"><Icon size={18} aria-hidden="true" />{label}</p><p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p><p className="mt-2 text-xs text-neutral-500">{note}</p></section>)}
       </div>
+      {id && <AdvancedRocketAnalytics appId={id} days={days} />}
       {data.commerce && <section className={`${panel} mt-6`} aria-label="Commerce funnel">
         <h2 className="text-lg font-semibold">Discovery to purchase</h2>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">{[["Outbound clicks",data.commerce.outbound_clicks],["Checkout starts",data.commerce.checkout_starts],["Verified purchases",data.commerce.verified_purchases],["Refunds",data.commerce.refunds]].map(([label,value]) => <div key={label}><p className="text-sm text-neutral-500">{label}</p><p className="mt-2 text-2xl font-semibold">{Number(value).toLocaleString()}</p></div>)}</div>

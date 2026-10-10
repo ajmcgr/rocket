@@ -14,6 +14,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import SaveAppButton from "@/components/SaveAppButton";
 import AppProfileBuyAction from "@/components/AppProfileBuyAction";
+import RocketBetaJoin from "@/components/RocketBetaJoin";
 import {
   signalExplanation,
   signalLabel,
@@ -452,6 +453,7 @@ export default function PublicAppProfile({
                 </p>
               )}
             </div>
+            <RocketBetaJoin appId={app.id} appSlug={app.slug || app.id} />
             {traction.length > 0 && (
               <section className="mt-8 border-t border-neutral-200 pt-6">
                 <h2 className="text-xl font-semibold tracking-tight">

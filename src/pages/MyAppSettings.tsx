@@ -8,6 +8,8 @@ import AppDisconnectControls from "@/components/AppDisconnectControls";
 import AppAnalyticsPreview from "@/components/AppAnalyticsPreview";
 import AppBadgeKit from "@/components/AppBadgeKit";
 import GitHubBuildInfo from "@/components/GitHubBuildInfo";
+import RocketBetaPanel from "@/components/RocketBetaPanel";
+import RocketImprovePanel from "@/components/RocketImprovePanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { loadMyApps, myAppStatus } from "@/lib/myApps";
 import { BarChart3 } from "lucide-react";
@@ -118,8 +120,12 @@ export default function MyAppSettings() {
       )}
       {!loading && !error && item && (
         <div className="mt-7 space-y-3">
+          {item.owned && <nav aria-label="App developer toolkit" className="flex flex-wrap gap-2 pb-2 text-sm font-medium">
+            {[["Overview", "overview"], ["Analytics", "analytics"], ["Improve", "improve"], ["Beta", "beta"], ["Verification", "verification"], ["Monetize", "monetize"]].map(([label, anchor]) => <a key={anchor} href={`#${anchor}`} className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-neutral-700 hover:border-sky-300 hover:text-sky-800">{label}</a>)}
+          </nav>}
           <div
             key={item.id}
+            id="overview"
             className="rounded-[1.5rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_36px_-34px_rgba(15,23,42,0.35)] sm:p-6"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -176,7 +182,7 @@ export default function MyAppSettings() {
                   </Link>
                 )}
             </div>
-            <AppJourney item={item} />
+            <div id="verification"><AppJourney item={item} /></div>
             {item.owned &&
               item.owner_verification_level === "domain_verified" && (
                 <GitHubBuildInfo
@@ -247,13 +253,15 @@ export default function MyAppSettings() {
                 )}
               </div>
             )}
-            {item.owned && (
+            {item.owned && <div id="analytics">
               <AppAnalyticsPreview
                 appId={item.app_id}
                 appName={item.app?.name || "App"}
               />
-            )}
-            {item.owned && <DeveloperProductCards appId={item.app_id} />}
+            </div>}
+            {item.owned && item.owner_verification_level === "domain_verified" && <RocketImprovePanel appId={item.app_id} />}
+            {item.owned && item.owner_verification_level === "domain_verified" && <RocketBetaPanel appId={item.app_id} appName={item.app?.name || "App"} />}
+            {item.owned && <div id="monetize"><DeveloperProductCards appId={item.app_id} /></div>}
             {item.owned && item.app && (
               <AppBadgeKit
                 appId={item.app_id}
