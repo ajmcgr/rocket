@@ -22,9 +22,9 @@ const FAQS = [
   { q: "Can I edit designs like Canva?", a: "Yes. Multi-select (Shift-click + marquee), drag-resize, colour overlays for logos and images, image uploads with resize, layers on the right, Quick Edit for title/slogan/icon/layout/background, and export to PNG/SVG/PDF/ZIP." },
   { q: "How long does a generation take?", a: "Generation time varies with the request and current demand. Your project chat keeps earlier results so you can revisit and iterate." },
   { q: "Can I regenerate individual pieces?", a: "Yes. Every result has Edit, Save, Variants and Remix. Regenerating one design costs 1 credit, and you can steer it with feedback like 'more minimal' or 'brighter'." },
-  { q: "What's a credit?", a: "Credits power every generation. Free includes 500 one-time credits; Starter renews 500 credits/month and adds PNG & SVG downloads. Pro includes 3,000/month, and Business includes 15,000/month. Top up anytime — packs never expire." },
-  { q: "How does sharing and export work?", a: "Every design opens in the editor via a shareable link (new tab). Export PNG, SVG, PDF, or a full ZIP of your Brand Kit. Pro adds password-protected share links and PDF/Markdown brand guidelines." },
-  { q: "What's included in Pro?", a: "3,000 credits/month, password-protected share links, brand guideline exports, and priority AI capacity. Paid plans include a 7-day trial; cancel anytime." },
+  { q: "What's a credit?", a: "Credits power generation. Free includes 500 one-time credits; Starter renews 500 credits/month, Pro includes 3,000/month, and Business includes 15,000/month. Top up anytime — packs never expire." },
+  { q: "How does sharing and export work?", a: "You can share designs, optionally protect a share link with a password, and export supported formats. Pro adds Brand Kit ZIP and Brand Book PNG and PDF downloads." },
+  { q: "What's included in Pro?", a: "Pro includes 3,000 credits/month, Brand Kit ZIP downloads, and Brand Book PNG and PDF downloads. Paid plans include a 7-day trial; cancel anytime." },
   { q: "Can I cancel anytime?", a: "Yes, from Settings → Manage Billing. You keep access until the end of the period." },
 ];
 
@@ -33,27 +33,17 @@ const STARTER_FEATURES = [
   "Logo & Icon Designer",
   "Brand Kit essentials (view & share)",
   "Full template library",
-  "PNG & SVG downloads",
 ];
 
 const PRO_FEATURES = [
   "3,000 Rocket Credits each month",
-  "Unlimited saved logos & brand kits",
-  "Multiple high-res file types (PNG, EPS, SVG, PDF)",
-  "Multiple color variations (including transparent backgrounds)",
-  "Unlimited post-purchase changes",
-  "Full ownership",
   "Brand Kit ZIP downloads",
-  "Priority generation",
-  "Brand Book & guideline export",
-  "Early access to new generators",
+  "Brand Book PNG and PDF downloads",
 ];
 
 const BUSINESS_FEATURES = [
   "Everything in Pro",
   "15,000 Rocket Credits each month",
-  "Highest priority generation queue",
-  "Dedicated onboarding & support",
 ];
 
 const UseCaseVisual = ({ kind, accent }: { kind: string; accent: string }) => {
@@ -416,7 +406,7 @@ const Index = () => {
         <div className="mx-auto max-w-6xl px-6 py-24">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-4xl font-semibold tracking-tight sm:text-6xl">Pricing built for founders</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Free includes 500 one-time credits, no card. Starter renews 500 credits every month and adds PNG &amp; SVG downloads.</p>
+            <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">Free includes 500 one-time credits, no card. Starter renews 500 credits every month.</p>
             <div className="mt-8 inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 text-sm">
               <button
                 type="button"
@@ -442,7 +432,7 @@ const Index = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("starter").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("starter").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">500 fresh credits every month, plus PNG &amp; SVG downloads.</p>
+              <p className="mt-2 text-sm text-neutral-600">500 fresh credits every month.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {STARTER_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -497,7 +487,7 @@ const Index = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("business").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("business").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">For teams and agencies building multiple brands at scale.</p>
+              <p className="mt-2 text-sm text-neutral-600">For higher-volume generation across multiple brands.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {BUSINESS_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
