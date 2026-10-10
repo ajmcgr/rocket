@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Find rising apps and new software from vibe coders and developers.",
+          "Discover apps. Build your developer reputation. Grow and monetize what you build.",
       },
     ],
     links: [{ rel: "canonical", href: "https://tryrocket.ai/" }],

@@ -15,7 +15,7 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
   useDocumentMeta({
     title: "Rocket — The open app platform",
     description:
-      "Find rising apps and new software from vibe coders and developers.",
+      "Discover apps. Build your developer reputation. Grow and monetize what you build.",
     canonical: "https://tryrocket.ai/",
   });
 
@@ -36,7 +36,8 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
               The open app platform.
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
-              Find rising apps and new software from vibe coders and developers.
+              Discover apps. Build your developer reputation. Grow and monetize
+              what you build.
             </p>
             <form
               onSubmit={search}
