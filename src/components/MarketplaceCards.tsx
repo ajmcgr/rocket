@@ -130,15 +130,20 @@ function Artwork({
   media,
   className,
   priority = false,
-}: BaseProps & { className: string; priority?: boolean }) {
+  fit = "contain",
+}: BaseProps & {
+  className: string;
+  priority?: boolean;
+  fit?: "cover" | "contain";
+}) {
   const cover = coverMedia(media);
   const [failed, setFailed] = useState(false);
   return (
     <div className={`overflow-hidden ${className}`}>
       {cover && !failed ? (
         <img
-          src={optimizedMediaUrl(cover.source_url, 720, 440, "contain")}
-          srcSet={`${optimizedMediaUrl(cover.source_url, 480, 300, "contain")} 480w, ${optimizedMediaUrl(cover.source_url, 720, 440, "contain")} 720w, ${optimizedMediaUrl(cover.source_url, 1200, 750, "contain")} 1200w`}
+          src={optimizedMediaUrl(cover.source_url, 720, 440, fit)}
+          srcSet={`${optimizedMediaUrl(cover.source_url, 480, 300, fit)} 480w, ${optimizedMediaUrl(cover.source_url, 720, 440, fit)} 720w, ${optimizedMediaUrl(cover.source_url, 1200, 750, fit)} 1200w`}
           sizes={
             priority
               ? "(min-width: 1024px) 50vw, 100vw"
@@ -148,7 +153,7 @@ function Artwork({
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
           decoding="async"
-          className="h-full w-full object-contain"
+          className={`h-full w-full ${fit === "cover" ? "object-cover" : "object-contain"}`}
           onError={() => setFailed(true)}
         />
       ) : (
@@ -167,46 +172,66 @@ export function EditorialAppCard({
   metadata,
   saved,
   onSave,
+  onCollectionsChanged,
   priority = true,
 }: BaseProps & SaveProps & { priority?: boolean }) {
   return (
-    <article className="group relative min-h-[22rem] overflow-hidden rounded-[1.25rem] border border-neutral-200 bg-[#167ac6] text-white">
-      <Artwork
-        app={app}
-        media={media}
-        priority={priority}
-        className="absolute inset-0 h-full w-full opacity-75 transition duration-500 group-hover:scale-[1.03]"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#167ac6] via-[#167ac6]/60 to-transparent" />
-      <div className="relative flex min-h-[22rem] flex-col justify-end p-6 sm:p-8">
-        <span className="text-xs font-semibold text-sky-200">{eyebrow}</span>
-        <div className="mt-3 flex items-center gap-3">
-          <AppLogo name={app.name} src={app.logo_url} className="h-14 w-14" />
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-sky-300 hover:shadow-sm">
+      <Link
+        to={`/apps/${app.slug || app.id}`}
+        aria-label={`View ${app.name}`}
+        className="block overflow-hidden focus-visible:outline-2 focus-visible:outline-sky-500"
+      >
+        <Artwork
+          app={app}
+          media={media}
+          priority={priority}
+          fit="cover"
+          className="aspect-[16/9] w-full bg-neutral-50"
+        />
+      </Link>
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <span className="text-xs font-semibold text-sky-800">{eyebrow}</span>
+        <div className="mt-3 flex min-w-0 items-center gap-3">
+          <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
           <div className="min-w-0">
-            <h3 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-              {app.name}
-            </h3>
-            <AppCardRating metadata={metadata} light />
-            <p className="mt-1 line-clamp-2 text-sm text-neutral-100">
-              {app.tagline || app.description || app.canonical_host}
-            </p>
+            <Link
+              to={`/apps/${app.slug || app.id}`}
+              className="hover:underline"
+            >
+              <h3 className="truncate text-xl font-semibold text-neutral-950">
+                {app.name}
+              </h3>
+            </Link>
+            {metadata?.developer_profile_username && (
+              <Link
+                to={`/@${metadata.developer_profile_username}`}
+                className="text-xs text-neutral-500 hover:underline"
+              >
+                @{metadata.developer_profile_username}
+              </Link>
+            )}
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-200">
-          <span>{app.categories[0] || "App"}</span>
+        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-neutral-600">
+          {app.tagline || app.description || app.canonical_host}
+        </p>
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
+          <span className="text-xs text-neutral-500">
+            {app.categories[0] || "App"}
+          </span>
           <div className="flex items-center gap-2">
             {onSave && (
               <SaveAppButton
                 appId={app.id}
                 saved={Boolean(saved)}
                 onChange={onSave}
-                light
+                onCollectionsChanged={onCollectionsChanged}
               />
             )}
-            <AppPurchaseActions appId={app.id} appSlug={app.slug} light />
+            <AppPurchaseActions appId={app.id} appSlug={app.slug} />
           </div>
         </div>
-        <AppCardByline metadata={metadata} light />
       </div>
     </article>
   );

@@ -27,6 +27,44 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
+  it("shows picks as full-width screenshots above neutral app details", async () => {
+    window.scrollTo = vi.fn();
+    const { container } = render(
+      <MemoryRouter>
+        <EditorialAppCard
+          app={app}
+          media={[
+            {
+              id: "media-1",
+              app_id: app.id,
+              media_type: "screenshot",
+              source_type: "owner",
+              source_url:
+                "https://example.supabase.co/storage/v1/object/public/app-media/sample.png",
+              sort_order: 0,
+            },
+          ]}
+          metadata={{
+            app_id: app.id,
+            save_count: 0,
+            rating_count: 0,
+            developer_profile_username: "maker",
+          }}
+        />
+      </MemoryRouter>,
+    );
+    const cover = await screen.findByAltText("Product image for Sample app");
+    const card = container.querySelector("article");
+    expect(card?.className).toContain("bg-white");
+    expect(card?.className).not.toContain("bg-[#167ac6]");
+    expect(cover.className).toContain("object-cover");
+    expect(cover.getAttribute("src")).toContain("resize=cover");
+    expect(cover.parentElement?.className).toContain("aspect-[16/9]");
+    expect(screen.getByText("@maker")).toBeTruthy();
+    expect(screen.getByText("Productivity")).toBeTruthy();
+    cleanup();
+  });
+
   it("supports bookmark controls in every marketplace layout", async () => {
     const controls = { saved: true, onSave: vi.fn() };
     render(
