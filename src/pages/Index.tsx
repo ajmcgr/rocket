@@ -17,11 +17,11 @@ const supabase = _sb as any;
 
 const FAQS = [
   { q: "What does Rocket generate?", a: "Rocket is a logo-first design tool. Start with logo directions — a logo mark, matching wordmark, icon, colours and typography — then refine your favourite in the editor and roll it into a Brand Kit." },
-  { q: "What are the main workflows?", a: "Wizard (guided chat that generates logo directions from a URL or idea), Logo Designer & Icon Designer (batch generate marks and app icons in a chosen style), Templates (200+ ready-made logo and icon starters), and Saved (every design you star or open in the editor)." },
+  { q: "What are the main workflows?", a: "Wizard (guided chat that generates logo directions from a URL or idea), Logo Designer & Icon Designer (batch generate marks and app icons in a chosen style), Templates (ready-made logo and icon starters), and Saved (designs you choose to save)." },
   { q: "How does the Brand Kit work?", a: "Every Brand Kit holds one canonical item per category — logo, colours, typography, design system, and more. Swap or remove any item; Remove sends it to Trash and you can restore within 30 days. Add extras from any saved design via 'Use in brand kit'." },
   { q: "Can I edit designs like Canva?", a: "Yes. Multi-select (Shift-click + marquee), drag-resize, colour overlays for logos and images, image uploads with resize, layers on the right, Quick Edit for title/slogan/icon/layout/background, and export to PNG/SVG/PDF/ZIP." },
   { q: "How long does a generation take?", a: "Generation time varies with the request and current demand. Your project chat keeps earlier results so you can revisit and iterate." },
-  { q: "Can I regenerate individual pieces?", a: "Yes. Every result has Edit, Save, Variants and Remix. Regenerating one design costs 1 credit, and you can steer it with feedback like 'more minimal' or 'brighter'." },
+  { q: "Can I create variants of a design?", a: "Yes. Use Variants on a generated result to start another prompt, or open the result in the editor to refine it. Generation uses credits." },
   { q: "What's a credit?", a: "Credits power generation. Free includes 500 one-time credits; Starter renews 500 credits/month, Pro includes 3,000/month, and Business includes 15,000/month. Top up anytime — packs never expire." },
   { q: "How does sharing and export work?", a: "You can share designs, optionally protect a share link with a password, and export supported formats. Pro adds Brand Kit ZIP and Brand Book PNG and PDF downloads." },
   { q: "What's included in Pro?", a: "Pro includes 3,000 credits/month, Brand Kit ZIP downloads, and Brand Book PNG and PDF downloads. Paid plans include a 7-day trial; cancel anytime." },
