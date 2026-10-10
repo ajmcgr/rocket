@@ -16,12 +16,12 @@ describe("settings integration hub", () => {
     expect(ui.getByRole("link", { name: "View app connections" }).getAttribute("href")).toBe("/your-apps");
     expect(ui.queryByText("Connected", { exact: true })).toBeNull();
   });
-  it("removes connected applications from Account while preserving the integrations tab and Drive", () => {
+  it("keeps the integrations tab without showing the Google Drive option", () => {
     const source = readFileSync("src/pages/Settings.tsx", "utf8");
     expect(source).not.toContain("Connected applications");
     expect(source).not.toContain("rocket-connect-applications");
     expect(source).toContain("<AppIntegrationLinks />");
-    expect(source).toContain("Google Drive");
+    expect(source).not.toContain("Google Drive");
     expect(source).toContain('to: "/settings/integrations"');
   });
 });
