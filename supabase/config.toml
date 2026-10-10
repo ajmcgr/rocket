@@ -117,6 +117,9 @@ verify_jwt = false # Auth.getUser validates every request; the service-only RPC 
 [functions.rocket-app-view]
 verify_jwt = false
 
+[functions.rocket-advertising]
+verify_jwt = false # Public catalog/placements; protected actions verify Auth.getUser.
+
 [functions.rocket-ga4]
 verify_jwt = false
 

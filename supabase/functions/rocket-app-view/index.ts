@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     return response(415, origin, { error: "Invalid content type" });
 
   let appId: string;
-  let kind = "view", source = "direct";
+  let kind = "view", source = "direct", sponsorshipId: string | null = null;
   try {
     const raw = await req.text();
     if (raw.length > 200) return response(413, origin, { error: "Invalid request" });
@@ -45,12 +45,27 @@ Deno.serve(async (req) => {
     appId = body?.app_id;
     kind = body?.kind || "view";
     source = ["rocket_badge","rocket_share"].includes(body?.source) ? body.source : "direct";
+    sponsorshipId = typeof body?.sponsorship_id === "string" ? body.sponsorship_id : null;
   } catch {
     return response(400, origin, { error: "Invalid request" });
   }
   if (typeof appId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId))
     return response(400, origin, { error: "Invalid app" });
   if (!["view","outbound"].includes(kind)) return response(400,origin,{error:"Invalid event"});
+
+  // A verified paid-placement visit is not organic Rising momentum. The
+  // active sponsorship RPC checks paid state, server time and app eligibility.
+  if (sponsorshipId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sponsorshipId)) {
+    try {
+      const { data: active, error } = await admin.rpc("active_rocket_sponsorships", { p_category: null });
+      if (error) throw error;
+      if ((active || []).some((slot: { sponsorship_id: string; app_id: string }) =>
+        slot.sponsorship_id === sponsorshipId && slot.app_id === appId))
+        return response(200, origin, { ok: true, counted: false, source: "sponsored" });
+    } catch {
+      return response(503, origin, { error: "View tracking unavailable" });
+    }
+  }
 
   const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();

@@ -17,6 +17,7 @@ import {
   Flame,
   TrendingUp,
   Wallet,
+  Megaphone,
   ShieldCheck,
   Grid2X2,
   PanelLeftClose,
@@ -59,7 +60,7 @@ export const isMarketplaceSidebarItemActive = (
   pathname: string,
   search: string,
 ) => {
-  if (label === "Buy with Rocket" || label === "Rocket ID")
+  if (label === "Advertise" || label === "Buy with Rocket" || label === "Rocket ID")
     return pathname === to;
   return (
     pathname + search === to ||
@@ -98,6 +99,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Monetize",
     items: [
+      { label: "Advertise", to: "/advertise", icon: Megaphone },
       { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
     ],
@@ -125,9 +127,11 @@ export default function SiteHeader({
   const profileHref = useMyProfileHref(user);
   const sidebarSections = sections
     .filter(
-      (section) => user || !["Monetize", "Create"].includes(section.heading),
+      (section) => user || section.heading !== "Create",
     )
     .map((section) => {
+      if (section.heading === "Monetize" && !user)
+        return { ...section, items: section.items.filter((item) => item.label === "Advertise") };
       if (section.heading !== "Apps") return section;
       if (!user)
         return {

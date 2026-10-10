@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
 import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
 import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketplaceOps";
+import AdminSponsorships from "@/components/AdminSponsorships";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -156,6 +157,7 @@ export default function Admin() {
       <Panel title="Recent members">{rows(data.members).length ? <div className="rocket-admin-list">{rows(data.members).map((row) => <article key={String(row.id)}><strong>{String(row.email || "No email")}</strong><p>Joined {when(row.created_at)} · {row.email_confirmed_at ? "Confirmed" : "Unconfirmed"}</p></article>)}</div> : <Empty />}</Panel>
     </>}
     {data && section === "marketing" && <>
+      <AdminSponsorships />
       <Panel title="Task collections">{picks.map(row => <div key={String(row.id)} className="mb-4"><strong>{String(row.name)}</strong><PickCollection appId={String(row.app_id)} /></div>)}</Panel>
       <p className="rocket-admin-note">Signals nominate candidates; only a deliberate Feature action creates a Rocket Pick. Private metrics are not used here.</p>
       <Panel title="Our picks">{picks.length ? <div className="rocket-admin-list">{picks.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link> · {String(row.placement)}</strong><p>{String(row.headline || "No editorial headline")}</p><button disabled={busy} onClick={() => void act("unfeature", String(row.app_id))}>Unfeature</button></article>)}</div> : <Empty>No picks yet.</Empty>}</Panel>

@@ -117,6 +117,7 @@ export function recordOutbound(appId: string) {
         app_id: appId,
         kind: "outbound",
         source: sourceAttribution(window.location.search),
+        sponsorship_id: new URLSearchParams(window.location.search).get("sponsor"),
       },
     })
     .catch(() => {});

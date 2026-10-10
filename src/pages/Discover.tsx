@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics";
 import { availableCategories } from "@/lib/appCategories";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
 import { marketplaceRpc } from "@/lib/marketplace";
+import SponsoredPlacement from "@/components/SponsoredPlacement";
 
 type App = Tables<"public_apps">;
 const PAGE_SIZE = 24;
@@ -333,6 +334,7 @@ export default function Discover() {
           </label>
         )}
         </div>
+        {category && view === "all" && <SponsoredPlacement category={category} />}
         {view === "rankings" && (
           <section className="mt-6" aria-labelledby="ranking-categories-heading">
             <h2 id="ranking-categories-heading" className="text-lg font-bold">Top Ranked Apps</h2>

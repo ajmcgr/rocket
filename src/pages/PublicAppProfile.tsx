@@ -77,6 +77,7 @@ export default function PublicAppProfile({
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const sponsorId = searchParams.get("sponsor");
   const saveAfterAuth = searchParams.get("save") === "1";
   const { user } = useAuth();
   const [app, setApp] = useState<App | null>(initialApp || null);
@@ -239,7 +240,7 @@ export default function PublicAppProfile({
       );
       // Optional evidence failures must not hide a valid public profile.
       if (appResult.data && !appResult.error) {
-        track("app_profile_viewed", { app_id: appResult.data.id });
+        track("app_profile_viewed", { app_id: appResult.data.id, source: sponsorId ? "sponsored" : "organic" });
         // First-party rankings count real production profile visits only.
         if (
           ["https://tryrocket.ai", "https://www.tryrocket.ai"].includes(
@@ -248,7 +249,7 @@ export default function PublicAppProfile({
         ) {
           void supabase.functions
             .invoke("rocket-app-view", {
-              body: { app_id: appResult.data.id },
+              body: { app_id: appResult.data.id, sponsorship_id: sponsorId },
             })
             .catch(() => undefined);
         }
@@ -264,7 +265,7 @@ export default function PublicAppProfile({
     return () => {
       canceled = true;
     };
-  }, [id, initialApp, initialMedia]);
+  }, [id, initialApp, initialMedia, sponsorId]);
 
   useEffect(() => {
     if (!app?.categories.length) {

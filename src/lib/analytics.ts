@@ -40,7 +40,13 @@ export type AnalyticsEvent =
   | "app_claim_started"
   | "app_claim_completed"
   | "app_verification_started"
-  | "app_verification_completed";
+  | "app_verification_completed"
+  | "advertise_page_viewed"
+  | "featured_app_selected"
+  | "category_sponsor_selected"
+  | "sponsorship_checkout_started"
+  | "sponsored_impression"
+  | "sponsored_click";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;

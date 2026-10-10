@@ -13,7 +13,7 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: mocks.user }),
 }));
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { from: mocks.from },
+  supabase: { from: mocks.from, functions: { invoke: () => Promise.resolve({ data: { placements: [] }, error: null }) } },
 }));
 vi.mock("@/hooks/useSavedAppControls", () => ({
   useSavedAppControls: () => () => ({ saved: false, onSave: vi.fn() }),

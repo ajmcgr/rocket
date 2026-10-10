@@ -111,6 +111,7 @@ type Template =
   | "rocket_generated"
   | "trial_started"
   | "payment_succeeded"
+  | "sponsorship_booked"
   | "credits_purchased"
   | "auth_signup"
   | "auth_magiclink"
@@ -164,6 +165,23 @@ function buildEmail(template: Template, data: any): { subject: string; html: str
           ctaUrl: "https://tryrocket.ai/settings",
         }),
       };
+    case "sponsorship_booked": {
+      const safe = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      })[character]!);
+      const product = data?.type === "category_sponsor" ? "Category Sponsor" : "Featured App";
+      return {
+        subject: `Your ${product} sponsorship is booked`,
+        html: renderEmail({
+          preheader: `${product} sponsorship details`,
+          title: `Your ${product} sponsorship is booked.`,
+          bodyHtml: `<p><strong>App:</strong> ${safe(data?.appName)}</p>${data?.category ? `<p><strong>Category:</strong> ${safe(data.category)}</p>` : ""}<p><strong>Placement:</strong> ${safe(data?.start)} to ${safe(data?.end)}</p><p><strong>Paid:</strong> $${((data?.amount ?? 0) / 100).toFixed(2)} USD, one-time.</p>`,
+          ctaLabel: "View My Advertising",
+          ctaUrl: "https://tryrocket.ai/advertise",
+          footer: "Paid placements are separate from Rocket's organic rankings and editorial picks.",
+        }),
+      };
+    }
     case "credits_purchased":
       return {
         subject: `${data?.credits ?? 0} Rocket Credits added`,
@@ -265,6 +283,8 @@ async function sendBranded(
 
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+const ADVERTISING_TEST_WEBHOOK_SECRET = Deno.env.get("STRIPE_ADVERTISING_TEST_WEBHOOK_SECRET");
+const ADVERTISING_TEST_KEY = Deno.env.get("STRIPE_ADVERTISING_TEST_SECRET_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -308,12 +328,112 @@ async function applyDeveloperSubscription(admin: any, stripe: Stripe, event: Str
   return true;
 }
 
+const advertisingProducts = {
+  featured_app: { name: "Rocket Featured App", amount: 4900 },
+  category_sponsor: { name: "Rocket Category Sponsor", amount: 29900 },
+} as const;
+
+// Advertising is Rocket-owned Checkout. Handle it before the generic credits
+// and subscription branches so it cannot create an entitlement or credit pack.
+async function applySponsorshipCheckout(admin: any, stripe: Stripe, event: Stripe.Event, session: Stripe.Checkout.Session) {
+  const id = session.metadata?.rocket_sponsorship_id;
+  if (!id) return false;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+    throw new Error("Invalid sponsorship reference");
+  const { data: booking, error: bookingError } = await admin.from("rocket_sponsorships")
+    .select("id,sponsorship_type,purchaser_user_id,purchaser_email,target_app_id,target_category,stripe_checkout_session_id,stripe_livemode,amount_cents,status")
+    .eq("id", id).single();
+  if (bookingError || !booking) throw bookingError || new Error("Unknown sponsorship");
+  const type = booking.sponsorship_type as keyof typeof advertisingProducts;
+  const spec = advertisingProducts[type];
+  if (!spec || session.mode !== "payment" || session.status !== "complete"
+    || session.payment_status !== "paid" || session.livemode !== event.livemode
+    || booking.stripe_livemode !== event.livemode
+    || booking.stripe_checkout_session_id !== session.id
+    || session.client_reference_id !== id
+    || session.metadata?.rocket_sponsorship_type !== type
+    || session.amount_total !== spec.amount || booking.amount_cents !== spec.amount
+    || session.currency !== "usd" || session.amount_subtotal !== spec.amount
+    || (session.customer_details?.email && booking.purchaser_email
+      && session.customer_details.email.toLowerCase() !== booking.purchaser_email.toLowerCase()))
+    throw new Error("Sponsorship Checkout does not match booking");
+  const { data: config, error: configError } = await admin.from("rocket_sponsorship_prices")
+    .select("live_product_id,test_product_id,live_price_id,test_price_id")
+    .eq("product_code", type).single();
+  if (configError || !config) throw configError || new Error("Sponsorship catalog unavailable");
+  const productId = event.livemode ? config.live_product_id : config.test_product_id;
+  const priceId = event.livemode ? config.live_price_id : config.test_price_id;
+  if (!productId || !priceId) throw new Error("Sponsorship catalog incomplete");
+  const [lineItems, product, price] = await Promise.all([
+    stripe.checkout.sessions.listLineItems(session.id, { limit: 2 }),
+    stripe.products.retrieve(productId), stripe.prices.retrieve(priceId),
+  ]);
+  if (lineItems.data.length !== 1 || lineItems.data[0].quantity !== 1
+    || lineItems.data[0].price?.id !== priceId
+    || lineItems.data[0].amount_total !== spec.amount
+    || !product.active || product.name !== spec.name
+    || product.metadata.rocket_product_type !== type
+    || product.livemode !== event.livemode || !price.active
+    || price.livemode !== event.livemode
+    || (typeof price.product === "string" ? price.product : price.product.id) !== productId
+    || price.type !== "one_time" || price.unit_amount !== spec.amount || price.currency !== "usd")
+    throw new Error("Sponsorship Stripe product/price mismatch");
+  const intentId = typeof session.payment_intent === "string"
+    ? session.payment_intent : session.payment_intent?.id;
+  if (!intentId) throw new Error("Missing sponsorship PaymentIntent");
+  const intent = await stripe.paymentIntents.retrieve(intentId);
+  if (intent.status !== "succeeded" || intent.livemode !== event.livemode
+    || intent.amount !== spec.amount || intent.amount_received !== spec.amount
+    || intent.currency !== "usd" || intent.metadata.rocket_sponsorship_id !== id)
+    throw new Error("Sponsorship payment is not verified");
+  const chargeId = typeof intent.latest_charge === "string"
+    ? intent.latest_charge : intent.latest_charge?.id;
+  if (!chargeId) throw new Error("Missing sponsorship charge");
+  const charge = await stripe.charges.retrieve(chargeId);
+  if (charge.payment_intent !== intentId || charge.livemode !== event.livemode
+    || charge.amount !== spec.amount || charge.currency !== "usd")
+    throw new Error("Sponsorship charge mismatch");
+  const fullyRefunded = charge.refunded || charge.amount_refunded >= charge.amount;
+  const disputed = charge.disputed === true;
+  const { data: applied, error } = await admin.rpc("apply_rocket_sponsorship_payment", {
+    p_event_id: event.id, p_sponsorship_id: id, p_session_id: session.id,
+    p_payment_intent_id: intent.id, p_price_id: priceId,
+    p_amount_cents: spec.amount, p_currency: "usd", p_livemode: event.livemode,
+    p_paid_at: new Date(event.created * 1000).toISOString(),
+    // Suppress activation atomically when a dispute predated checkout delivery.
+    p_fully_refunded: fullyRefunded || disputed,
+  });
+  if (error) throw error;
+  if (disputed) {
+    const result = await admin.rpc("apply_rocket_sponsorship_dispute", {
+      p_event_id: `dispute-at-checkout:${event.id}`, p_payment_intent_id: intentId,
+    });
+    if (result.error) throw result.error;
+  }
+  if (applied && !fullyRefunded && !disputed && RESEND_API_KEY && booking.purchaser_email) {
+    const [{ data: target }, { data: placed }] = await Promise.all([
+      admin.from("public_apps").select("name").eq("id", booking.target_app_id).maybeSingle(),
+      admin.from("rocket_sponsorships").select("actual_start_at,actual_end_at")
+        .eq("id", id).single(),
+    ]);
+    await sendBranded(RESEND_API_KEY, FROM_EMAIL, booking.purchaser_email,
+      "sponsorship_booked", {
+        type, appName: target?.name || "Your app", category: booking.target_category,
+        amount: spec.amount,
+        start: placed?.actual_start_at ? new Date(placed.actual_start_at).toUTCString() : "See My Advertising",
+        end: placed?.actual_end_at ? new Date(placed.actual_end_at).toUTCString() : "See My Advertising",
+      });
+  }
+  return Boolean(applied);
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = cors(req);
   if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
   if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET)
     return new Response("stripe not configured", { status: 500, headers: corsHeaders });
-  const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+  let stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+  let testAdvertisingSignature = false;
   const sig = req.headers.get("stripe-signature");
   if (!sig) return new Response("missing signature", { status: 400, headers: corsHeaders });
   const body = await req.text();
@@ -321,14 +441,38 @@ Deno.serve(async (req) => {
   try {
     event = await stripe.webhooks.constructEventAsync(body, sig, STRIPE_WEBHOOK_SECRET);
   } catch (e) {
-    return new Response(`webhook signature failed: ${(e as Error).message}`, { status: 400, headers: corsHeaders });
+    if (!ADVERTISING_TEST_WEBHOOK_SECRET || !ADVERTISING_TEST_KEY)
+      return new Response(`webhook signature failed: ${(e as Error).message}`, { status: 400, headers: corsHeaders });
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, sig, ADVERTISING_TEST_WEBHOOK_SECRET);
+      if (event.livemode || !ADVERTISING_TEST_KEY.startsWith("sk_test_")) throw new Error("Invalid test event");
+      stripe = new Stripe(ADVERTISING_TEST_KEY, { apiVersion: "2024-06-20" });
+      testAdvertisingSignature = true;
+    } catch {
+      return new Response("webhook signature failed", { status: 400, headers: corsHeaders });
+    }
   }
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  // The separate TEST destination is for advertising only. It must never
+  // execute Rocket Developer, credit-pack or subscription fulfilment paths.
+  if (testAdvertisingSignature && (
+    !["checkout.session.completed", "checkout.session.expired", "charge.refunded", "charge.dispute.created"].includes(event.type)
+    || (event.type.startsWith("checkout.session.") &&
+      !(event.data.object as Stripe.Checkout.Session).metadata?.rocket_sponsorship_id)
+  )) return new Response("ignored", { status: 200, headers: corsHeaders });
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const s = event.data.object as Stripe.Checkout.Session;
+        if (s.metadata?.rocket_sponsorship_id) {
+          if (event.account) throw new Error("Connected-account event cannot book Rocket advertising");
+          const account = await stripe.accounts.retrieve();
+          if (account.id !== "acct_1TfvwfL9pkHWyRRu") throw new Error("Rocket platform account mismatch");
+          await applySponsorshipCheckout(admin, stripe, event, s);
+          break;
+        }
         if (s.mode === "subscription" && s.subscription) {
           const subscriptionId = typeof s.subscription === "string" ? s.subscription : s.subscription.id;
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -378,6 +522,68 @@ Deno.serve(async (req) => {
               currency: s.currency || "usd",
             }).catch(console.error);
         }
+        break;
+      }
+      case "checkout.session.expired": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const id = session.metadata?.rocket_sponsorship_id;
+        if (!id) break;
+        const { data: booking, error } = await admin.from("rocket_sponsorships")
+          .select("id,stripe_checkout_session_id,stripe_livemode,stripe_payment_status")
+          .eq("id", id).single();
+        if (error || !booking || booking.stripe_checkout_session_id !== session.id
+          || booking.stripe_livemode !== event.livemode || session.status !== "expired")
+          throw error || new Error("Sponsorship expiration mismatch");
+        if (booking.stripe_payment_status === "unpaid") {
+          const result = await admin.rpc("cancel_rocket_sponsorship_reservation", { p_id: id });
+          if (result.error) throw result.error;
+        }
+        break;
+      }
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        if (!charge.payment_intent || charge.amount_refunded < charge.amount) break;
+        const intentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent.id;
+        const intent = await stripe.paymentIntents.retrieve(intentId);
+        const id = intent.metadata.rocket_sponsorship_id;
+        if (!id) break;
+        const { data: booking, error: bookingError } = await admin.from("rocket_sponsorships")
+          .select("id,stripe_payment_intent_id,stripe_livemode,amount_cents")
+          .eq("id", id).single();
+        if (bookingError || !booking || booking.stripe_payment_intent_id !== intentId
+          || booking.stripe_livemode !== event.livemode || booking.amount_cents !== charge.amount)
+          throw bookingError || new Error("Sponsorship refund mismatch");
+        const result = await admin.rpc("apply_rocket_sponsorship_refund", {
+          p_event_id: event.id, p_payment_intent_id: intentId,
+        });
+        if (result.error) throw result.error;
+        break;
+      }
+      case "charge.dispute.created": {
+        const dispute = event.data.object as Stripe.Dispute;
+        const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+        if (!chargeId) break;
+        const charge = await stripe.charges.retrieve(chargeId);
+        const intentId = typeof charge.payment_intent === "string"
+          ? charge.payment_intent : charge.payment_intent?.id;
+        if (!intentId) break;
+        const intent = await stripe.paymentIntents.retrieve(intentId);
+        const id = intent.metadata.rocket_sponsorship_id;
+        if (!id) break;
+        const { data: booking, error: bookingError } = await admin.from("rocket_sponsorships")
+          .select("id,stripe_payment_intent_id,stripe_livemode,amount_cents")
+          .eq("id", id).single();
+        if (bookingError || !booking || booking.stripe_livemode !== event.livemode
+          || (booking.stripe_payment_intent_id && booking.stripe_payment_intent_id !== intentId)
+          || booking.amount_cents !== charge.amount || !charge.disputed
+          || charge.livemode !== event.livemode)
+          throw bookingError || new Error("Sponsorship dispute mismatch");
+        // If the checkout event is still in flight, its charge check will
+        // observe the dispute and suppress activation before any rendering.
+        const result = await admin.rpc("apply_rocket_sponsorship_dispute", {
+          p_event_id: event.id, p_payment_intent_id: intentId,
+        });
+        if (result.error) throw result.error;
         break;
       }
       case "customer.subscription.created":

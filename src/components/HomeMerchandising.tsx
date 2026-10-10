@@ -20,6 +20,7 @@ import {
 } from "./MarketplaceCards";
 import AppLogo from "./AppLogo";
 import { categoryGradients } from "@/lib/categoryCardStyles";
+import SponsoredPlacement from "./SponsoredPlacement";
 
 function Heading({
   id,
@@ -91,6 +92,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
   );
   return (
     <>
+      <SponsoredPlacement />
       {data.picks.length > 0 && (
         <section className="mt-10 sm:mt-12" aria-labelledby="home-picks">
           <Heading

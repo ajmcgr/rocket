@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtChar123usernameChar125RouteImport } from './routes/@{$username}'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdvertiseRouteImport } from './routes/advertise'
 import { Route as AiInfoRouteImport } from './routes/ai-info'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
 import { Route as BuyWithRocketRouteImport } from './routes/buy-with-rocket'
@@ -150,6 +151,11 @@ const AppRoute = AppRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdvertiseRoute = AdvertiseRouteImport.update({
+  id: '/advertise',
+  path: '/advertise',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiInfoRoute = AiInfoRouteImport.update({
@@ -750,6 +756,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/@{$username}': typeof AtChar123usernameChar125Route
   '/about': typeof AboutRoute
+  '/advertise': typeof AdvertiseRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
   '/buy-with-rocket': typeof BuyWithRocketRoute
@@ -873,6 +880,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/@{$username}': typeof AtChar123usernameChar125Route
   '/about': typeof AboutRoute
+  '/advertise': typeof AdvertiseRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
   '/buy-with-rocket': typeof BuyWithRocketRoute
@@ -996,6 +1004,7 @@ export interface FileRoutesById {
   '/@{$username}': typeof AtChar123usernameChar125Route
   '/_app': typeof AppRouteWithChildren
   '/about': typeof AboutRoute
+  '/advertise': typeof AdvertiseRoute
   '/ai-info': typeof AiInfoRoute
   '/brand-kit': typeof BrandKitRoute
   '/buy-with-rocket': typeof BuyWithRocketRoute
@@ -1121,6 +1130,7 @@ export interface FileRouteTypes {
     | '/'
     | '/@{$username}'
     | '/about'
+    | '/advertise'
     | '/ai-info'
     | '/brand-kit'
     | '/buy-with-rocket'
@@ -1244,6 +1254,7 @@ export interface FileRouteTypes {
     | '/'
     | '/@{$username}'
     | '/about'
+    | '/advertise'
     | '/ai-info'
     | '/brand-kit'
     | '/buy-with-rocket'
@@ -1366,6 +1377,7 @@ export interface FileRouteTypes {
     | '/@{$username}'
     | '/_app'
     | '/about'
+    | '/advertise'
     | '/ai-info'
     | '/brand-kit'
     | '/buy-with-rocket'
@@ -1491,6 +1503,7 @@ export interface RootRouteChildren {
   AtChar123usernameChar125Route: typeof AtChar123usernameChar125Route
   AppRoute: typeof AppRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AdvertiseRoute: typeof AdvertiseRoute
   AiInfoRoute: typeof AiInfoRoute
   BrandKitRoute: typeof BrandKitRoute
   BuyWithRocketRoute: typeof BuyWithRocketRoute
@@ -1570,6 +1583,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/advertise': {
+      id: '/advertise'
+      path: '/advertise'
+      fullPath: '/advertise'
+      preLoaderRoute: typeof AdvertiseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-info': {
@@ -2582,6 +2602,7 @@ const rootRouteChildren: RootRouteChildren = {
   AtChar123usernameChar125Route: AtChar123usernameChar125Route,
   AppRoute: AppRouteWithChildren,
   AboutRoute: AboutRoute,
+  AdvertiseRoute: AdvertiseRoute,
   AiInfoRoute: AiInfoRoute,
   BrandKitRoute: BrandKitRoute,
   BuyWithRocketRoute: BuyWithRocketRoute,

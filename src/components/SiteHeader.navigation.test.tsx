@@ -84,6 +84,7 @@ describe("Sidebar destinations", () => {
             ).getAttribute("href"),
           ).toBe("/create");
           expect(sidebar.getByText("Monetize")).toBeTruthy();
+          expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
           expect(sidebar.getByText("Create")).toBeTruthy();
         } else {
           for (const label of ["My Apps", "My Purchases", "Saved"]) {
@@ -97,7 +98,8 @@ describe("Sidebar destinations", () => {
             sidebar.queryByRole("link", { name: "Buy with Rocket" }),
           ).toBeNull();
           expect(sidebar.queryByRole("link", { name: "Rocket ID" })).toBeNull();
-          expect(sidebar.queryByText("Monetize")).toBeNull();
+          expect(sidebar.getByText("Monetize")).toBeTruthy();
+          expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
           expect(sidebar.queryByText("Create")).toBeNull();
         }
         expect(
