@@ -72,6 +72,8 @@ Deno.serve(async req => {
     if (purchases || grants) return reply(req, { error: "new_buyer_required" }, 409);
     const price = await stripe!.prices.retrieve(plan.stripe_price_id, { stripeAccount: account.stripe_account_id });
     if (!price.livemode || !price.active || price.unit_amount !== 3900 || price.currency !== "usd" || price.type !== "one_time" || price.recurring !== null || price.product !== plan.stripe_product_id) return reply(req, { error: "price_mismatch" }, 409);
+    const stripeProduct = await stripe!.products.retrieve(plan.stripe_product_id, { stripeAccount: account.stripe_account_id });
+    if (!stripeProduct.livemode || !stripeProduct.active || stripeProduct.name !== "Launch Pro") return reply(req, { error: "product_mismatch" }, 409);
     if (body.action === "status") return reply(req, { available: true, plan: { id: plan.id, name: plan.name, amount_cents: 3900, currency: "usd", interval: null, billing_type: "one_time" } });
     if (body.confirm_purchase_terms !== "39 USD one-time for one Launch Pro" || body.amount_limit_cents !== 3900) return reply(req, { error: "purchase_terms_required" }, 400);
     const idempotencyKey = `launch-pro-one-time-${user.id}-${plan.id}`;

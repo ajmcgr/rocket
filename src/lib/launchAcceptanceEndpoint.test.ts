@@ -28,6 +28,7 @@ function harness(
     wrongSubject?: boolean;
     total?: number;
     merchantReady?: boolean;
+    productName?: string;
   } = {},
 ) {
   const writes: string[] = [],
@@ -134,6 +135,9 @@ function harness(
     },
   };
   class Stripe {
+    products = {
+      retrieve: async () => ({ livemode: true, active: true, name: options.productName ?? "Launch Pro" }),
+    };
     prices = {
       retrieve: async () => ({
         livemode: true,
@@ -285,6 +289,12 @@ describe("Launch pilot endpoint", () => {
   it("fails closed when the current OAuth merchant is not payment-ready", async () => {
     const h = harness({ enabled: true, merchantReady: false });
     expect((await h.request('status')).status).toBe(409);
+    expect(h.calls).toEqual([]);
+    expect(h.writes).toEqual([]);
+  });
+  it("rejects a Stripe product with a noncanonical checkout name", async () => {
+    const h = harness({ enabled: true, productName: "Launch" });
+    expect((await h.request("status")).status).toBe(409);
     expect(h.calls).toEqual([]);
     expect(h.writes).toEqual([]);
   });
