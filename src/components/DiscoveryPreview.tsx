@@ -7,6 +7,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { coverMedia, loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import { loadAppCardMetadata, type AppCardMetadata } from "@/lib/appCardMetadata";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
+import { categoryGradients } from "@/lib/categoryCardStyles";
 import { AppCardSkeleton, RankedAppRowSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
 import {
@@ -17,16 +18,6 @@ import {
 
 type App = Tables<"public_apps">;
 type Category = Tables<"public_app_categories">;
-const categoryGradients = [
-  "rocket-category-ocean",
-  "rocket-category-orchid",
-  "rocket-category-citrus",
-  "rocket-category-sunset",
-  "rocket-category-lagoon",
-  "rocket-category-coral",
-  "rocket-category-lime",
-  "rocket-category-indigo",
-] as const;
 
 function SectionHeading({ id, title, description, href, action, emoji }: {
   id: string;
