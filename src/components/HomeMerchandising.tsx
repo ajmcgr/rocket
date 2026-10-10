@@ -19,6 +19,7 @@ import {
   RankedAppRow,
 } from "./MarketplaceCards";
 import AppLogo from "./AppLogo";
+import { categoryGradients } from "@/lib/categoryCardStyles";
 
 function Heading({
   id,
@@ -246,16 +247,16 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
             action="All categories"
           />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {data.categories.map((category) => (
+            {data.categories.map((category, index) => (
               <Link
                 key={category.category}
                 to={`/discover?view=all&category=${encodeURIComponent(category.category)}`}
-                className="min-w-0 rounded-xl border border-neutral-200 px-4 py-4 hover:border-sky-300 focus-visible:outline-2 focus-visible:outline-sky-500"
+                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} min-w-0 rounded-xl px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-sky-500`}
               >
                 <strong className="block break-words text-sm sm:text-base">
                   {category.category}
                 </strong>
-                <span className="mt-1 block text-xs text-neutral-500">
+                <span className="mt-1 block text-xs opacity-75">
                   {category.app_count.toLocaleString()} apps
                 </span>
               </Link>
