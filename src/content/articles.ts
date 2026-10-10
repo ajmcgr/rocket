@@ -761,17 +761,17 @@ Open a blank doc. Write three sentences:
 
 Read it out loud. If you stumble, rewrite. If a friend can repeat it back ten minutes later, you've got something worth putting on a homepage.
 
-Rocket auto-generates all three layers from your URL in under sixty seconds — but the words only stick when you commit to repeating them everywhere, on purpose, for longer than feels comfortable.`),
+Use the exercise as a starting point, then test the wording with people who might actually use your app.`),
   },
   {
     slug: "the-perfect-product-hunt-launch",
-    title: "The Perfect Product Hunt Launch (2026 Edition)",
-    excerpt: "A repeatable framework that gets you in the Top 5 — without begging upvotes.",
+    title: "Preparing a Product Hunt Launch",
+    excerpt: "A practical framework for preparing a thoughtful product launch.",
     readTime: "9 min",
     date: "2026-06-08",
     body: md(`# The Perfect Product Hunt Launch
 
-Product Hunt is still the cheapest distribution event on the internet. A Top 5 finish reliably ships 2,000–5,000 visitors, 50–200 signups, a wave of inbound press, and at least a few "let's chat" emails from investors. The catch: the playbook from 2021 doesn't work anymore. Here's what does in 2026.
+Product Hunt can help people discover a new product, but results vary. Prepare a clear story, a working demo, and time to answer questions from the community.
 
 ## 14 days before
 
@@ -813,10 +813,10 @@ Product Hunt is still the cheapest distribution event on the internet. A Top 5 f
 ## After the launch
 
 - Day +1: thank-you post, public metrics, screenshot of the badge.
-- Day +3: write a retro. Even mediocre launches go viral as retros.
-- Day +7: email everyone who signed up with a personal note. Half of your long-term revenue starts here.
+- Day +3: write a retro about what you learned.
+- Day +7: email people who opted in with a useful follow-up.
 
-Rocket generates your maker comment, X thread, launch email, and directory submissions in one pass so you can spend launch day talking to humans instead of writing copy.`),
+Keep reusable copy in your own launch brief, then tailor each post to the channel and the people reading it.`),
   },
   {
     slug: "10-launch-channels-for-vibe-coders",
@@ -829,7 +829,7 @@ Rocket generates your maker comment, X thread, launch email, and directory submi
 If you only launch on Product Hunt, you're leaving 60% of your possible first-month traffic on the table. The channels below are where the smart vibe coders are quietly winning in 2026.
 
 ## 1. Product Hunt
-Still the single best one-day spike. Top 5 finish = 2k–5k visitors. Best for consumer and prosumer tools. Tuesday/Wednesday launches.
+Consider Product Hunt if you can present a working product and engage with people who try it.
 
 ## 2. BetaList
 Early-adopter SaaS gold. The audience is hungry for new tools and forgiving of rough edges. Lead time is 2–6 weeks; submit early.
@@ -838,7 +838,7 @@ Early-adopter SaaS gold. The audience is hungry for new tools and forgiving of r
 AI-product SEO juice. Listings rank fast on Google for "[category] AI tool" queries. Worth it even if you're only AI-adjacent.
 
 ## 4. Hacker News (Show HN)
-Tuesday and Wednesday mornings PT work best. Title format: "Show HN: [Product] – [one-line value prop]." Engage in the comments with humility and technical depth. A front-page hit ships 10k+ visitors and lasting backlinks.
+Choose a time when you can participate in the discussion. Title format: "Show HN: [Product] – [one-line value prop]." Engage in the comments with humility and technical depth.
 
 ## 5. Peerlist
 Strong engineering audience. Great for dev tools, APIs, and anything technically interesting. Lower volume than PH but very high signal.
@@ -873,7 +873,7 @@ Niche subs only. Posting in r/SaaS or r/startups is shouting into a void. Find t
 3. Paste, tweak, submit. Two hours max.
 4. Track responses in a single spreadsheet so you can follow up.
 
-Rocket auto-fills every directory form from your URL — including the awkward 250-word ones — so you can ship all ten in an afternoon instead of a week.`),
+Keep your master copy handy, and review each directory's requirements before submitting.`),
   },
   {
     slug: "writing-a-tagline-that-converts",
@@ -981,7 +981,7 @@ A launch isn't a day, it's a week. The founders who treat it like a single Tuesd
 ## Sunday — Off
 - Genuinely off. The product will survive one day without you.
 
-Rocket generates the email, the X thread, the LinkedIn post, the maker comment, the directory copy, and the retro outline from a single URL — so launch week is execution, not writing.`),
+Prepare the core message in advance, then write each update for its audience as launch week unfolds.`),
   },
   {
     slug: "from-zero-to-first-100-users",
@@ -1066,13 +1066,13 @@ Say it out loud ten times today. Then say it to a friend tomorrow and watch thei
   },
   {
     slug: "the-anatomy-of-a-viral-launch-tweet",
-    title: "The Anatomy of a Viral Launch Tweet",
-    excerpt: "What 50 viral launch threads have in common.",
+    title: "How to Write a Clear Launch Thread",
+    excerpt: "A practical structure for telling your launch story.",
     readTime: "6 min",
     date: "2026-05-20",
-    body: md(`# Viral Launch Tweets
+    body: md(`# Writing a Launch Thread
 
-We pulled apart 50 launch threads that crossed a million views in the last 12 months. They have almost nothing in common — except these five things.
+There is no formula for a viral launch. These five ideas can help make a launch thread clearer and more useful.
 
 ## 1. The hook is a pattern interrupt in seven words or fewer
 
@@ -1084,7 +1084,7 @@ The hook's only job is to stop the scroll. It does not need to mention your prod
 
 ## 2. Show, don't tell
 
-Tweet 1: hook + image or 6-second silent video. No link. The image carries 80% of the engagement. If your demo doesn't work on mute, re-record it.
+Open with a clear hook and an image or short demo when it helps explain the product. Make the demo understandable without sound.
 
 ## 3. Personal stakes
 
@@ -1257,48 +1257,48 @@ The template only works if you've actually researched the recipient. Spend 90 se
   },
   {
     slug: "directories-that-actually-drive-traffic",
-    title: "The 9 Directories That Actually Drive Traffic",
-    excerpt: "We submitted to 40+. These 9 paid off.",
+    title: "Nine Places to Share Your App",
+    excerpt: "How to choose launch communities that fit your audience.",
     readTime: "8 min",
     date: "2026-05-08",
-    body: md(`# Directories Worth Your Time
+    body: md(`# Places to Share Your App
 
-Over the last year we submitted Rocket to 43 directories and tracked the traffic each one sent over the following 90 days. Nine of them sent more than 100 visitors. The rest sent fewer than 20 combined. Here are the nine that earn the afternoon.
+The right launch channel depends on your product and audience. These are places to consider; check each community's current rules and track your own results.
 
-## The list, ranked by sustained traffic
+## Places to consider
 
 ### 1. Product Hunt
-Launch-day spike of 2k–5k, plus a permanent SEO page that keeps ranking. The single highest-ROI directory if you commit to a real launch.
+Useful when you have a clear story and time to engage with the community on launch day.
 
 ### 2. There's An AI For That
-Compounds for AI and AI-adjacent products. Listings rank fast on Google for "[category] AI" queries. Quiet 100–300 monthly visitors for years.
+Consider it if your app serves an AI-focused audience.
 
 ### 3. Hacker News (Show HN)
-Not technically a directory, but a single front-page hit ships 10k+ visitors and high-DA backlinks that lift everything else you do.
+Not a directory. Share a working product and be ready to answer technical questions.
 
 ### 4. BetaList
-Lower volume than PH but very warm audience. Great for capturing early waitlist signups before launch.
+Consider it for an early product or waitlist.
 
 ### 5. Alternative.me
-Long-tail comparison traffic. Get listed as an alternative to your top three competitors and you'll collect signups monthly with zero effort.
+Consider a listing if people already compare your app with established alternatives.
 
 ### 6. G2
-Enterprise credibility. Even five real reviews close deals you didn't know were in motion.
+Useful when your customers already research software reviews there.
 
 ### 7. Peerlist
-Strong technical audience. Best for dev tools, APIs, and infrastructure.
+A possible fit for developer tools, APIs, and infrastructure.
 
 ### 8. Uneed
-Friday weekly drops. Design and productivity tools convert especially well here.
+Review its current submission format and audience before posting.
 
 ### 9. Indie Hackers
-Story posts >> directory listings. Treat IH like a writing platform, not a directory.
+Treat it as a community for sharing what you built and what you learned.
 
 ## What didn't work (and why)
 
-- **General "startup directories" with 50,000 listings.** Page rank too low, audience too cold.
-- **Pay-to-play directories that promise PR.** Cancelled checks, zero traffic.
-- **Old AI directories from 2023.** Most are scraping each other now.
+- **Broad directories without a clear audience fit.** Check who visits before you invest time.
+- **Pay-to-play directories that promise results.** Ask for evidence and terms before paying.
+- **Stale directories.** Check whether listings and links are still maintained.
 - **Country-specific directories** unless you're targeting that country.
 
 ## How to submit efficiently
@@ -1309,7 +1309,7 @@ Story posts >> directory listings. Treat IH like a writing platform, not a direc
 4. Paste, tweak, submit. Track each in a spreadsheet with submission date, expected publish date, and link.
 5. Follow up once after two weeks if your listing isn't live.
 
-Rocket auto-fills every form from your URL so the whole job takes 30 minutes instead of a week.`),
+Use your own tracking sheet to see which placements bring relevant visitors; results vary by product.`),
   },
   {
     slug: "positioning-101-for-indie-hackers",

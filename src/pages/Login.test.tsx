@@ -50,7 +50,7 @@ describe("Rocket's own account entry", () => {
   it.each(["login", "signup"] as const)("puts Rocket first in %s and focuses email without starting OAuth", async (mode) => {
     await render(mode);
     expect(buttons().slice(0, 4).map(button => button.textContent)).toEqual([
-      "Continue with Rocket", "Continue with Google", "Continue with X", "Continue with GitHub",
+      "Continue with email", "Continue with Google", "Continue with X", "Continue with GitHub",
     ]);
     expect(container.querySelector("form")!.hidden).toBe(false);
     expect(container.querySelector("form")!.hasAttribute("hidden")).toBe(false);

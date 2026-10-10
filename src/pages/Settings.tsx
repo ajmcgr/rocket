@@ -110,14 +110,14 @@ export const AccountSettings = () => {
     </section>
     <section className="rounded-2xl border border-red-200 bg-white p-6">
       <h2 className="text-base font-semibold text-red-700">Delete account</h2>
-      <p className="mt-1 text-sm text-neutral-600">Permanently delete your account and all data. This cannot be undone.</p>
+      <p className="mt-1 text-sm text-neutral-600">Permanently delete your Rocket account. This cannot be undone.</p>
       <button onClick={deleteAccount} disabled={loading === "delete"} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60">
         {loading === "delete" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Delete account"}
       </button>
     </section>
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
       <h2 className="text-base font-semibold">Product tour</h2>
-      <p className="mt-1 text-sm text-neutral-600">Replay the guided walkthrough of Home, Wizard, Logo Designer, Templates, Saved, Editor, and Brand Kit.</p>
+      <p className="mt-1 text-sm text-neutral-600">Replay the guide to discovering apps and submitting or claiming your own.</p>
       <button
         onClick={() => window.dispatchEvent(new CustomEvent("rocket:start-tour"))}
         className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50"
@@ -141,7 +141,7 @@ export const BillingSettings = () => {
       window.sessionStorage.removeItem("rocket:checkout_source");
     } catch { /* completion telemetry must never affect billing */ }
     track("checkout_completed", { source });
-    toast({ title: "Checkout complete", description: "Your subscription or credits are being added now." });
+    toast({ title: "Returned from checkout", description: "We're confirming your payment. Your plan or credits will appear once confirmed." });
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams, toast]);
 

@@ -4,7 +4,15 @@ export const faqSections = [
     questions: [
       {
         q: "What is Rocket?",
-        a: "Rocket helps people discover apps worth using. You can search, browse categories, explore New and Rankings, view app profiles, and save apps to revisit.",
+        a: "Rocket is an open app platform where people discover software and developers build a public presence around what they make. You can search, browse categories, explore New and Rankings, and submit or claim your app.",
+      },
+      {
+        q: "What makes Rocket an open app platform?",
+        a: "You can explore public app listings without an account, and developers can submit or claim their apps for free. A listing does not require a Rocket payment or identity integration.",
+      },
+      {
+        q: "Who is Rocket for?",
+        a: "Rocket is for people looking for useful apps and for developers who want to present, improve, and grow the apps they build.",
       },
       {
         q: "Are all apps on Rocket reviewed or recommended?",
@@ -20,7 +28,7 @@ export const faqSections = [
       },
       {
         q: "Can I buy every app through Rocket?",
-        a: "No. Rocket payments are available only where a developer has integrated them for that app. Otherwise, pricing and payment happen on the app's own website.",
+        a: "No. Live Buy with Rocket checkout is enabled, but a Buy option appears only for an individually configured and ready offer. Otherwise, pricing and payment happen on the app's own website.",
       },
       {
         q: "How do I save an app?",
@@ -52,12 +60,20 @@ export const faqSections = [
         a: "Verified owners can manage supported public presentation details in My Apps. Owner edits do not replace Rocket's source provenance, public evidence, user reviews, or verification history.",
       },
       {
+        q: "What is my developer profile?",
+        a: "Your public developer profile shows the identity and apps connected to your Rocket account. Keep your app information accurate and connect supported evidence to give people context about what you build. Rocket does not assign a single reputation score.",
+      },
+      {
         q: "Can I connect Rocket Login or payments?",
         a: "Supported developers can configure Rocket identity and payments for apps they own. These capabilities require a deliberate integration and are not turned on for every indexed app.",
       },
       {
         q: "Can I show traffic or revenue on my profile?",
         a: "Only supported, connected evidence can be shown as verified. Provider metrics are private by default, and owners choose supported public visibility. Availability and verification depend on the specific integration and account.",
+      },
+      {
+        q: "What is the difference between Verified Purchases and Verified Revenue?",
+        a: "Verified Purchases are eligible paid Buy with Rocket purchases used in Top Ranked. Verified Revenue is a separate metric from a supported connected payment provider when its data passes verification. A purchase does not automatically make a public revenue claim.",
       },
     ],
   },
@@ -67,6 +83,18 @@ export const faqSections = [
       {
         q: "Do I need to create a second Stripe product for Buy with Rocket?",
         a: "Not when an eligible fixed price already exists on the Stripe merchant account connected to Rocket for payments. You can map that price to an app access key without creating another Stripe product or price. The mapping remains inactive until payment and entitlement handling are verified. A separate read-only revenue connection does not give Rocket payment access to its products. Only individually enabled, ready offers can use live checkout.",
+      },
+      {
+        q: "How does selling through Rocket work?",
+        a: "A buyer selects a ready offer and pays through Stripe Checkout for the connected app merchant. Rocket confirms the payment server-side, then makes the verified purchase available to the app's integration. The app must check that purchase or entitlement before granting access; a checkout return alone is not proof of payment.",
+      },
+      {
+        q: "How and when do developers get paid?",
+        a: "Buy with Rocket payments go through the developer's connected Stripe merchant account. Stripe controls payout timing and availability for that account. Rocket's 5% platform fee and Stripe's separate processing fees apply.",
+      },
+      {
+        q: "What happens after a refund or dispute?",
+        a: "Refunded or disputed purchases do not count toward Top Ranked. Paid access must follow the current verified purchase or entitlement state, so a revoked purchase must not keep granting access.",
       },
       {
         q: "What is the Buy with Rocket take rate?",

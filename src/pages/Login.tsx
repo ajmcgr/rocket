@@ -159,7 +159,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
             aria-describedby="rocket-email-description"
           >
             <span aria-hidden="true" className="h-4 w-4 bg-current" style={{ mask: 'url("/buttons/v1/rocket-mark.png") center / contain no-repeat', WebkitMask: 'url("/buttons/v1/rocket-mark.png") center / contain no-repeat' }} />
-            Continue with Rocket
+            Continue with email
           </Button>
           <p id="rocket-email-description" className="pb-2 text-center text-xs text-neutral-500">
             {isSignup ? "Create a Rocket account with your email and password." : "Use your Rocket email and password."}
