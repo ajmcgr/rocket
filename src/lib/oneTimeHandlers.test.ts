@@ -6,7 +6,7 @@ import * as payments from "../../supabase/functions/_shared/oneTimePayments";
 import * as rules from "../../supabase/functions/_shared/connectPaymentRules";
 import * as library from "../../supabase/functions/_shared/buyerLibrary";
 
-function load(path: string, stripe: any, admin: any, gate = true) {
+function load(path: string, stripe: any, admin: any, gate = true, mode: "live" | "test" = "live") {
   let handler!: (req: Request) => Promise<Response>;
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), { status });
@@ -27,6 +27,8 @@ function load(path: string, stripe: any, admin: any, gate = true) {
           get: (key: string) =>
             key === "STRIPE_SECRET_KEY"
               ? "sk_live_mock_only"
+              : key === "STRIPE_CONNECT_TEST_SECRET_KEY" && mode === "test"
+                ? "sk_test_mock_only"
               : key === "STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"
                 ? "whsec_mock_only"
                 : undefined,
@@ -72,7 +74,9 @@ function load(path: string, stripe: any, admin: any, gate = true) {
                           APP_URL: "https://tryrocket.ai",
                           getAdmin: () => admin,
                           getRocketUser: async () => ({ id: "buyer" }),
-                          getConnectToken: async () => null,
+                          getConnectToken: async () => mode === "test" ? {
+                            user_id: "buyer", client_id: "launch-test", scopes: ["entitlements:read"],
+                          } : null,
                           base64url: (bytes: Uint8Array) =>
                             Buffer.from(bytes).toString("base64url"),
                           json,
@@ -942,5 +946,65 @@ describe("actual one-time webhook handler (isolated)", () => {
     h.intent.latest_charge.refunded = true;
     expect((await h.handler(webhookRequest())).status).toBe(200);
     expect(h.rpc.mock.calls[0][1].p_status).toBe("refunded");
+  });
+});
+
+describe("test one-time checkout", () => {
+  function harness(priceOverride: Record<string, unknown> = {}) {
+    const create = vi.fn().mockResolvedValue({ id: "cs_test", url: "https://checkout.stripe.com/test" });
+    const testProduct = {
+      ...product,
+      client_id: "launch-test",
+      interval: null,
+      is_active: true,
+      connect_developer_accounts: {
+        id: "merchant", client_id: "launch-test", stripe_account_id: "acct_test",
+        status: "active", charges_enabled: true, payouts_enabled: true,
+        is_current: true, stripe_api_version: "v2",
+      },
+    };
+    const records: Record<string, unknown> = {
+      connect_products: testProduct,
+      rocket_oauth_clients: { environment: "test" },
+      connect_checkout_attempts: null,
+      connect_customers: { stripe_customer_id: "cus_test" },
+    };
+    const admin = { from: (table: string) => {
+      const q = query(records[table]);
+      q.upsert = async () => ({ error: null });
+      return q;
+    } };
+    const stripe = {
+      prices: { retrieve: vi.fn().mockResolvedValue({
+        id: "price_real", livemode: false, active: true, type: "one_time",
+        recurring: null, unit_amount: 3900, currency: "usd", product: "prod_real",
+        ...priceOverride,
+      }) },
+      checkout: { sessions: { create } },
+    };
+    return { create, handler: load("supabase/functions/connect-payment-checkout/index.ts", stripe, admin, true, "test") };
+  }
+
+  it("creates an isolated $39 one-time TEST Checkout with the exact $1.95 Rocket fee", async () => {
+    const h = harness();
+    const response = await h.handler(new Request("https://mock.invalid/", {
+      method: "POST", body: JSON.stringify({ product_key: "real-key", return_uri: product.checkout_return_uris[0], purchase_request_id: "6187613f-ae3e-44b2-a2ba-2c5ac7d32ebd" }),
+    }));
+    expect(response.status).toBe(200);
+    const [params, options] = h.create.mock.calls[0];
+    expect(params.mode).toBe("payment");
+    expect(params.line_items).toEqual([{ price: "price_real", quantity: 1 }]);
+    expect(params.payment_intent_data.application_fee_amount).toBe(195);
+    expect(params.payment_intent_data.metadata).toEqual(params.metadata);
+    expect(options.stripeAccount).toBe("acct_test");
+  });
+
+  it("fails closed when the registered TEST price differs from the immutable offer", async () => {
+    const h = harness({ unit_amount: 1 });
+    const response = await h.handler(new Request("https://mock.invalid/", {
+      method: "POST", body: JSON.stringify({ product_key: "real-key", return_uri: product.checkout_return_uris[0], purchase_request_id: "6187613f-ae3e-44b2-a2ba-2c5ac7d32ebd" }),
+    }));
+    expect(response.status).toBe(503);
+    expect(h.create).not.toHaveBeenCalled();
   });
 });
