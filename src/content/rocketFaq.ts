@@ -64,6 +64,18 @@ export const faqSections = [
         a: "Your public developer profile shows the identity and apps connected to your Rocket account. Keep your app information accurate and connect supported evidence to give people context about what you build. Rocket does not assign a single reputation score.",
       },
       {
+        q: "What can I do as a developer for free?",
+        a: "You can submit or claim an app, manage its basic listing, complete supported ownership checks, and connect available verification evidence without a Rocket Developer membership. Public app profiles and organic discovery are free.",
+      },
+      {
+        q: "What does Rocket Developer add?",
+        a: "Rocket Developer costs $99/year per developer account. It brings together Verified Traction, Rocket ID, and Buy with Rocket for eligible apps you own. Advanced Analytics, AI App Optimization, and Beta Testing are in rollout. Each integration has its own setup and readiness checks; membership alone does not activate it.",
+      },
+      {
+        q: "How can Rocket help my app grow?",
+        a: "A public profile lets people discover your app through search, categories, New, Rising, and Top Ranked. You can improve your listing and share supported evidence about your app. Discovery and verification do not guarantee traffic, sales, or a ranking position.",
+      },
+      {
         q: "Can I connect Rocket Login or payments?",
         a: "Supported developers can configure Rocket identity and payments for apps they own. These capabilities require a deliberate integration and are not turned on for every indexed app.",
       },
@@ -78,7 +90,7 @@ export const faqSections = [
     ],
   },
   {
-    title: "Buy with Rocket fees",
+    title: "Payments and Buy with Rocket",
     questions: [
       {
         q: "Do I need to create a second Stripe product for Buy with Rocket?",

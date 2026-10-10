@@ -25,7 +25,7 @@ const About = () => {
             For the people making those apps, a Rocket profile is a clearer way to show what they have built. Vibe coders and developers can submit an app, claim an existing listing, improve its public information, and choose which verified details to share. That gives visitors a better basis for understanding the product while keeping the builder in control of their own information.
           </p>
           <p>
-            A listing is not an endorsement. Rising reflects Rocket app-page views, while Rankings combine reviews, bookmarks, and verified purchases; neither proves customer growth. A claimed app is not automatically verified in every way. Where an app supports Rocket identity or payments, those capabilities belong to that specific connected app; they are not available across the whole catalogue.
+            A listing is not an endorsement. Rising reflects Rocket app-page views, while Top Ranked combines reviews, bookmarks, and verified purchases; neither proves customer growth. A claimed app is not automatically verified in every way. Where an app supports Rocket identity or payments, those capabilities belong to that specific connected app; they are not available across the whole catalogue.
           </p>
           <p>
             Rocket is still growing. Our aim is to make discovery genuinely useful for visitors and to give builders a fairer, more trustworthy way to be found. We will keep improving the information people can rely on without asking them to mistake an indexed app for a recommendation.

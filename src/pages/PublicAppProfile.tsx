@@ -129,7 +129,7 @@ export default function PublicAppProfile({
     }
   };
   useDocumentMeta({
-    title: app ? `${app.name} | Rocket Discover` : "App profile | Rocket",
+    title: app ? `${app.name} | Rocket` : "App profile | Rocket",
     description:
       app?.tagline ||
       (app?.description

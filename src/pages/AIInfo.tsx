@@ -110,7 +110,7 @@ export default function AIInfo() {
         <section className="mx-auto max-w-4xl px-6 py-16 sm:py-20">
           <h2 className="text-3xl font-semibold tracking-tight">First-party sources</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">{[["Discover apps", "/discover"], ["Submit an app", "/submit"], ["Pricing", "/pricing"], ["About", "/about"], ["LLM index", "/llms.txt"]].map(([label, href]) => <a key={href} href={href} className="rounded-xl border border-neutral-200 px-4 py-3 font-medium hover:border-neutral-400">{label} →</a>)}</div>
-          <p className="mt-8 text-sm text-neutral-500">Last reviewed: October 9, 2026. Contact: alex@tryrocket.ai.</p>
+          <p className="mt-8 text-sm text-neutral-500">Last reviewed: October 10, 2026. Contact: alex@tryrocket.ai.</p>
         </section>
       </main>
 
