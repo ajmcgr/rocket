@@ -63,24 +63,24 @@ export default function HomeStory() {
 
       <section
         aria-labelledby="home-letter-heading"
-        className="mx-auto max-w-4xl rounded-3xl border border-neutral-200 bg-neutral-50 px-6 py-8 sm:px-10 sm:py-10"
+        className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-6 py-10 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-12 sm:py-14"
       >
-        <p className="text-sm font-semibold text-neutral-500">
-          A note from our founder
-        </p>
         <h2
           id="home-letter-heading"
-          className="mt-2 text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl"
+          className="text-center text-4xl font-bold tracking-tight text-neutral-950 dark:text-white sm:text-5xl"
         >
           Why we built Rocket
         </h2>
-        <div className="mt-5 max-w-3xl space-y-4 leading-7 text-neutral-700">
+        <div className="mt-10 space-y-7 text-lg leading-8 text-neutral-700 dark:text-neutral-300 sm:text-xl sm:leading-9">
+          <p className="font-semibold text-neutral-950 dark:text-white">
+            Hello there!
+          </p>
           <p>
-            Hello there! More people can build useful software than ever before.
-            The hard part is finding it. Promising apps are scattered across
-            launch sites, social posts, and personal websites. Rocket brings
-            them together so you can discover new arrivals, browse by category,
-            and save what you want to try.
+            More people can build useful software than ever before. The hard
+            part is finding it. Promising apps are scattered across launch
+            sites, social posts, and personal websites. Rocket brings them
+            together so you can discover new arrivals, browse by category, and
+            save what you want to try.
           </p>
           <p>
             For builders, an app profile is a clearer way to show what they have
@@ -88,19 +88,21 @@ export default function HomeStory() {
             We want good software to find the people who need it.
           </p>
         </div>
-        <div className="mt-7 flex flex-wrap items-center gap-4 border-t border-neutral-200 pt-6">
+        <div className="mt-14">
           <img
             src={alexAvatar.url}
-            alt=""
-            className="h-12 w-12 rounded-full object-cover"
+            alt="Alex MacGregor"
+            className="h-20 w-20 rounded-full object-cover"
           />
-          <div>
-            <p className="font-semibold text-neutral-950">Alex MacGregor</p>
-            <p className="text-sm text-neutral-600">Founder, Rocket</p>
-          </div>
+          <p className="mt-4 font-semibold text-neutral-950 dark:text-white">
+            Alex MacGregor
+          </p>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Founder, Rocket
+          </p>
           <Link
             to="/about"
-            className="ml-auto inline-flex min-h-11 items-center text-sm font-semibold text-[#167ac6] hover:underline"
+            className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-[#267cbb] underline underline-offset-4 dark:text-[#80c7f4]"
           >
             Read the full letter{" "}
             <span aria-hidden="true" className="ml-2">
