@@ -102,6 +102,14 @@ describe("actual production merchant registration (isolated)",()=>{
   });
 });
 describe("actual production checkout handler (isolated)",()=>{
+  it("publishes one-time checkout fields only for a server-ready catalog offer",async()=>{
+    const h=checkoutHarness();
+    const response=await h.handler(request({...body,action:"catalog"}));
+    expect(response.status).toBe(200);
+    expect((await response.json()).plan).toMatchObject({product_key:product.product_key,return_uri:product.checkout_return_uris[0]});
+    const closed=checkoutHarness("one_time",false);
+    expect((await (await closed.handler(request({...body,action:"catalog"}))).json()).plan).toBeNull();
+  });
   it("Library includes buyer-scoped one-time grants without exposing test clients", async()=>{
     const filters: any[]=[];
     const admin={from:(table:string)=>{

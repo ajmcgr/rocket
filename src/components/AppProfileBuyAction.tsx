@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RocketButton from "./RocketButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,8 @@ type Plan = {
   currency: string;
   interval: "month" | "year" | null;
   billing_type?: "one_time" | "subscription";
+  product_key?: string;
+  return_uri?: string;
 };
 type Entitlement = {
   status: string;
@@ -27,9 +29,9 @@ const billingPeriod = (plan: Plan) =>
     ? "one-time"
     : plan.interval;
 
-async function request<T>(action: string, appId: string): Promise<T> {
+async function request<T>(action: string, appId: string, details: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
-    body: { action, app_id: appId },
+    body: { action, app_id: appId, ...details },
   });
   if (error || data?.error)
     throw new Error(
@@ -54,6 +56,7 @@ export default function AppProfileBuyAction({
   const [entitlement, setEntitlement] = useState<Entitlement>(null);
   const [busy, setBusy] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const purchaseRequestId = useRef<string | null>(null);
   const pilot =
     appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" &&
     typeof window !== "undefined" &&
@@ -159,7 +162,14 @@ export default function AppProfileBuyAction({
                 );
               return data;
             })
-        : await request<{ checkout_url: string }>("checkout", appId);
+        : await request<{ checkout_url: string }>("checkout", appId,
+            plan.billing_type === "one_time" || plan.interval === null
+              ? {
+                  product_key: plan.product_key,
+                  return_uri: plan.return_uri,
+                  purchase_request_id: (purchaseRequestId.current ||= crypto.randomUUID()),
+                }
+              : {});
       window.location.assign(result.checkout_url);
     } catch (caught: unknown) {
       setError(

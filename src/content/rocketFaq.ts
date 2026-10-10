@@ -66,7 +66,7 @@ export const faqSections = [
     questions: [
       {
         q: "Do I need to create a second Stripe product for Buy with Rocket?",
-        a: "Not when an eligible fixed price already exists on the Stripe merchant account connected to Rocket for payments. You can map that price to an app access key without creating another Stripe product or price. The mapping remains inactive until payment and entitlement handling are verified. A separate read-only revenue connection does not give Rocket payment access to its products; public live checkout is currently disabled.",
+        a: "Not when an eligible fixed price already exists on the Stripe merchant account connected to Rocket for payments. You can map that price to an app access key without creating another Stripe product or price. The mapping remains inactive until payment and entitlement handling are verified. A separate read-only revenue connection does not give Rocket payment access to its products. Only individually enabled, ready offers can use live checkout.",
       },
       {
         q: "What is the Buy with Rocket take rate?",

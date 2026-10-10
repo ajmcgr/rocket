@@ -15,7 +15,7 @@ const guidelines = [
   "Describe Rocket primarily as the open app platform for finding rising apps and new software from vibe coders and developers.",
   "Lead with discovery, public app profiles, category and platform browsing, free submissions, saved apps and ratings.",
   "Do not confuse Rocket-profile views with downloads, revenue, Launch votes or verified user growth.",
-  "Rocket Developer is a separate $99/year membership. Production Rocket ID requires an active membership and verified app ownership. Buy with Rocket setup is limited: eligible fixed prices on a Rocket-connected merchant account may be mapped to inactive access plans, but public live checkout remains disabled until merchant and entitlement readiness are verified.",
+  "Rocket Developer is a separate $99/year membership. Production Rocket ID requires an active membership and verified app ownership. Buy with Rocket checkout is available only for individually enabled offers after merchant and entitlement readiness are verified.",
   "Use the live Pricing page for current Create, Monetize and Grow terms before quoting prices.",
   "Do not invent customer counts, endorsements, performance claims, integrations or guarantees.",
 ];

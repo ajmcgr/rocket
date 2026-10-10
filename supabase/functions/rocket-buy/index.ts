@@ -36,11 +36,13 @@ async function offer(appId: string) {
     .eq("is_active", true).not("activated_at", "is", null).not("integration_confirmed_at", "is", null).limit(2);
   if (productError) throw productError;
   if (!products || products.length !== 1 || products[0].platform_fee_bps !== configuration.platform_fee_bps) return null;
+  if (billingType(products[0]) === "one_time" && (!products[0].product_key || !products[0].checkout_return_uris?.length)) return null;
   return { admin, client, account, product: products[0] };
 }
 
-const publicPlan = (product: { id: string; name: string; amount_cents: number; currency: string; interval: string | null; billing_type?: string }) =>
-  ({ id: product.id, name: product.name, amount_cents: product.amount_cents, currency: product.currency, interval: product.interval, billing_type: billingType(product) });
+const publicPlan = (product: { id: string; name: string; amount_cents: number; currency: string; interval: string | null; billing_type?: string; product_key?: string; checkout_return_uris?: string[] }) =>
+  ({ id: product.id, name: product.name, amount_cents: product.amount_cents, currency: product.currency, interval: product.interval, billing_type: billingType(product),
+    ...(billingType(product) === "one_time" ? { product_key: product.product_key, return_uri: product.checkout_return_uris?.[0] } : {}) });
 
 async function existingPurchase(admin: ReturnType<typeof getAdmin>, userId: string, appId: string) {
   const { data: client, error: clientError } = await admin.from("rocket_oauth_clients")
