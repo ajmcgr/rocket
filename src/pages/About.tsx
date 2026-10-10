@@ -5,7 +5,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 const About = () => {
   useDocumentMeta({
     title: "About Rocket — The open app platform",
-    description: "Find rising apps and new software from vibe coders and developers. Learn what Rocket does today and how we help people discover new software.",
+    description: "Discover apps, build your developer reputation, and learn why Rocket helps useful software find its audience.",
     canonical: "https://tryrocket.ai/about",
   });
 
@@ -16,16 +16,16 @@ const About = () => {
         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl">About Rocket</h1>
 
         <div className="mt-10 space-y-7 text-lg leading-8 text-neutral-700 dark:text-neutral-300 sm:text-xl sm:leading-9">
-          <p>Rocket is the open app platform to find rising apps and new software from vibe coders and developers.</p>
+          <p>Rocket is an open app platform for discovering software and helping its builders be found.</p>
           <p className="font-semibold text-neutral-950 dark:text-white">Hello there!</p>
           <p>
-            More people can build useful software than ever before. The hard part is finding it. Promising apps can be scattered across launch sites, social posts, and personal websites, with little context to help you decide what is worth trying. Rocket brings them into a place where you can browse by category, explore new arrivals, see public Launch activity, and save the apps you want to revisit.
+            More people can build useful software than ever before. The hard part is finding it. Promising apps can be scattered across launch sites, social posts, and personal websites, with little context to help you decide what is worth trying. Rocket brings them into a place where you can browse by category, explore new arrivals and rankings, and save the apps you want to revisit.
           </p>
           <p>
             For the people making those apps, a Rocket profile is a clearer way to show what they have built. Vibe coders and developers can submit an app, claim an existing listing, improve its public information, and choose which verified details to share. That gives visitors a better basis for understanding the product while keeping the builder in control of their own information.
           </p>
           <p>
-            A listing is not an endorsement. Rankings based on public Launch activity do not prove customer growth, and a claimed app is not automatically verified in every way. Where an app supports Rocket identity or payments, those capabilities belong to that specific connected app; they are not available across the whole catalogue.
+            A listing is not an endorsement. Rising reflects Rocket app-page views, while Rankings combine reviews, bookmarks, and verified purchases; neither proves customer growth. A claimed app is not automatically verified in every way. Where an app supports Rocket identity or payments, those capabilities belong to that specific connected app; they are not available across the whole catalogue.
           </p>
           <p>
             Rocket is still growing. Our aim is to make discovery genuinely useful for visitors and to give builders a fairer, more trustworthy way to be found. We will keep improving the information people can rely on without asking them to mistake an indexed app for a recommendation.

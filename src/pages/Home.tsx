@@ -3,6 +3,7 @@ import { Await } from "@tanstack/react-router";
 import { Link, useNavigate } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import HomeMerchandising from "@/components/HomeMerchandising";
+import HomeStory from "@/components/HomeStory";
 import type { HomeMerchandising as HomeData } from "@/lib/homeMerchandising";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { track } from "@/lib/analytics";
@@ -147,6 +148,7 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
             Submit my app <span aria-hidden="true">→</span>
           </Link>
         </section>
+        <HomeStory />
       </main>
     </div>
   );
