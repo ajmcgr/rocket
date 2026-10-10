@@ -1,9 +1,12 @@
 import Stripe from "npm:stripe@16.12.0";
 import { base64url, CORS_HEADERS, getAdmin, getConnectToken, json } from "../_shared/rocketConnect.ts";
 import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { billingType, priceMatches } from "../_shared/oneTimePayments.ts";
+import { registeredApplicationFee } from "../_shared/connectPaymentRules.ts";
 
 const stripeKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const stripe = stripeKey?.startsWith("sk_test_") ? new Stripe(stripeKey, { apiVersion: "2024-06-20" }) : null;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
@@ -22,7 +25,10 @@ Deno.serve(async (req) => {
     const { data: client } = await admin.from("rocket_oauth_clients").select("environment").eq("client_id", token.client_id).maybeSingle();
     if (client?.environment !== "test") return json({ error: "test_client_required" }, 403);
     if (!product || !developer || developer.client_id !== token.client_id || !developer.is_current || developer.status !== "active" || !developer.charges_enabled || !developer.payouts_enabled) return json({ error: "product_unavailable" }, 403);
+    const oneTime = billingType(product) === "one_time";
+    if (oneTime && (typeof body.purchase_request_id !== "string" || !UUID.test(body.purchase_request_id))) return json({ error: "invalid_purchase_request_id" }, 400);
     if (body.action === "reconcile") {
+      if (oneTime) return json({ error: "webhook_settlement_required" }, 409);
       if (!token.scopes.includes("entitlements:read")) return json({ error: "insufficient_scope" }, 403);
       if (typeof body.checkout_session_id !== "string") return json({ error: "invalid_request" }, 400);
       const { data: attempt } = await admin.from("connect_checkout_attempts").select("*")
@@ -64,13 +70,19 @@ Deno.serve(async (req) => {
       : (() => false)();
     const account = developer.stripe_api_version === "v2" ? null : await stripe.accounts.retrieve(developer.stripe_account_id);
     const price = await stripe.prices.retrieve(product.stripe_price_id, { stripeAccount: developer.stripe_account_id });
-    if ((developer.stripe_api_version === "v2" ? !accountReady : !account?.charges_enabled || !account?.payouts_enabled) || price.livemode || !price.active || price.unit_amount !== product.amount_cents || price.currency !== product.currency || price.recurring?.interval !== product.interval || price.product !== product.stripe_product_id) return json({ error: "stripe_configuration_invalid" }, 503);
+    if ((developer.stripe_api_version === "v2" ? !accountReady : !account?.charges_enabled || !account?.payouts_enabled) || !priceMatches(product, price, false) || (oneTime && product.platform_fee_bps !== 500)) return json({ error: "stripe_configuration_invalid" }, 503);
     const now = Date.now();
-    const { data: existing } = await admin.from("connect_checkout_attempts").select("stripe_checkout_session_id,expires_at")
-      .eq("user_id", token.user_id).eq("client_id", token.client_id).eq("product_id", product.id).gt("expires_at", new Date(now).toISOString()).not("stripe_checkout_session_id", "is", null).maybeSingle();
+    const idempotencyKey = oneTime
+      ? `rocket-connect-test-${token.user_id}-${token.client_id}-${product.id}-${body.purchase_request_id}`
+      : `rocket-connect-test-${token.user_id}-${token.client_id}-${product.id}-${Math.floor(now / 1800000)}`;
+    let existingQuery = admin.from("connect_checkout_attempts").select("stripe_checkout_session_id,expires_at")
+      .eq("user_id", token.user_id).eq("client_id", token.client_id).eq("product_id", product.id).not("stripe_checkout_session_id", "is", null);
+    existingQuery = oneTime ? existingQuery.eq("idempotency_key", idempotencyKey) : existingQuery.gt("expires_at", new Date(now).toISOString());
+    const { data: existing } = await existingQuery.maybeSingle();
     if (existing?.stripe_checkout_session_id) {
       const session = await stripe.checkout.sessions.retrieve(existing.stripe_checkout_session_id, { stripeAccount: developer.stripe_account_id });
-      if (session.url) return json({ checkout_url: session.url, reused: true });
+      if (session.status === "open" && session.url) return json({ checkout_url: session.url, reused: true });
+      return json({ error: "purchase_request_already_used", checkout_status: session.status }, 409);
     }
     const { data: customerRow } = await admin.from("connect_customers").select("stripe_customer_id").eq("user_id", token.user_id).eq("developer_account_id", developer.id).maybeSingle();
     let customerId = customerRow?.stripe_customer_id;
@@ -80,13 +92,15 @@ Deno.serve(async (req) => {
       const { error } = await admin.from("connect_customers").upsert({ user_id: token.user_id, developer_account_id: developer.id, stripe_customer_id: customerId }, { onConflict: "user_id,developer_account_id" });
       if (error) throw error;
     }
-    const idempotencyKey = `rocket-connect-test-${token.user_id}-${token.client_id}-${product.id}-${Math.floor(now / 1800000)}`;
+    const metadata = { rocket_user_id: token.user_id, rocket_client_id: token.client_id, rocket_product_id: product.id };
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription", customer: customerId,
+      mode: oneTime ? "payment" : "subscription", customer: customerId,
       line_items: [{ price: product.stripe_price_id, quantity: 1 }],
       success_url: `${body.return_uri}?checkout=success`, cancel_url: `${body.return_uri}?checkout=cancelled`,
-      subscription_data: { application_fee_percent: product.platform_fee_bps / 100, metadata: { rocket_user_id: token.user_id, rocket_client_id: token.client_id, rocket_product_id: product.id } },
-      metadata: { rocket_user_id: token.user_id, rocket_client_id: token.client_id, rocket_product_id: product.id },
+      ...(oneTime
+        ? { payment_intent_data: { application_fee_amount: registeredApplicationFee(product.amount_cents, product.platform_fee_bps), metadata } }
+        : { subscription_data: { application_fee_percent: product.platform_fee_bps / 100, metadata } }),
+      metadata,
     }, { stripeAccount: developer.stripe_account_id, idempotencyKey });
     const { error } = await admin.from("connect_checkout_attempts").upsert({ user_id: token.user_id, client_id: token.client_id, product_id: product.id, stripe_account_id: developer.stripe_account_id, idempotency_key: idempotencyKey, stripe_checkout_session_id: session.id, expires_at: new Date(now + 30 * 60_000).toISOString() }, { onConflict: "idempotency_key" });
     if (error) throw error;

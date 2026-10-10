@@ -126,7 +126,8 @@ function RocketIdSetup({
       <p>Use the exact HTTPS URL where your app handles Rocket sign-in.</p>
       <p className="dev-small">
         Rocket ID can be used on its own. To sell paid access with Buy with
-        Rocket, set up Rocket ID first, then connect Stripe and map an eligible price to app access.
+        Rocket, set up Rocket ID first, then connect Stripe. Your coding agent
+        can integrate each offer with your existing app access rules.
       </p>
       <form onSubmit={register} className="dev-form">
         <label>
@@ -336,7 +337,11 @@ export default function DeveloperExperience({
   );
   const prompt =
     active && selectedClient
-      ? integrationPrompt(selectedClient, selected, statuses[selected]?.products || [])
+      ? integrationPrompt(
+          selectedClient,
+          selected,
+          statuses[selected]?.products || [],
+        )
       : null;
   async function copyPrompt() {
     if (!prompt) return;
@@ -562,7 +567,7 @@ export default function DeveloperExperience({
                   : view === "id"
                     ? "Let Rocket users sign into your app with a secure, connected identity."
                     : view === "buy"
-                      ? "Connect a Stripe merchant account, map an eligible price to app access, and verify the integration before live buying."
+                      ? "Connect Stripe once, give your coding agent the integration prompt, then verify payment and access before live buying."
                       : active
                         ? "Identity and payments for the apps you own. Choose an app to get started."
                         : "Add identity and payments to your apps with one developer membership."}
@@ -835,10 +840,10 @@ export default function DeveloperExperience({
                           <Link to={`/rocket-id?app=${selected}`}>
                             Connect Rocket ID
                           </Link>{" "}
-                          first, then connect Stripe and map a price to app
-                          access. Rocket ID identifies the buyer so your app can
-                          check their paid access. The two integrations work together;
-                          they are not alternatives.
+                          first, then connect Stripe and give your coding agent
+                          the integration prompt. Rocket ID identifies the buyer
+                          so your app can check their paid access. The two
+                          integrations work together; they are not alternatives.
                         </p>
                       </div>
                     )}
@@ -850,7 +855,11 @@ export default function DeveloperExperience({
           </section>
         )}
 
-        <RocketButtonKit action={view === "buy" ? "buy" : view === "id" ? "continue" : undefined} />
+        <RocketButtonKit
+          action={
+            view === "buy" ? "buy" : view === "id" ? "continue" : undefined
+          }
+        />
 
         {showMarketing && (
           <>

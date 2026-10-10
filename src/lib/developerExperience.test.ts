@@ -33,7 +33,7 @@ describe("Developer readiness", () => {
     };
     expect(buyStatus(state)).toBe("Stripe setup");
     const merchant = { ready: true, status: "active" };
-    expect(buyStatus({ ...state, merchant })).toBe("Plan required");
+    expect(buyStatus({ ...state, merchant })).toBe("Integrate");
     const products = [
       { is_active: true, activated_at: "now", integration_confirmed_at: "now" },
     ];
@@ -53,9 +53,27 @@ describe("Developer readiness", () => {
 });
 describe("Safe app-specific integration prompt", () => {
   it("includes only registered product facts and replay-safe one-time semantics", () => {
-    const prompt = integrationPrompt(client, "owned-app", [{ id: "real-product", product_key: "real-key", name: "Actual product", amount_cents: 3900, currency: "usd", billing_type: "one_time", interval: null, is_active: false, secret_key: "NEVER_COPY" } as any])!;
-    expect(prompt).toContain("real-key"); expect(prompt).toContain('"amount_cents":3900'); expect(prompt).toContain('"billing_type":"one_time"'); expect(prompt).toContain('"enabled":false'); expect(prompt).toContain("purchase_id"); expect(prompt).toContain("Do not activate inactive products"); expect(prompt).not.toContain("NEVER_COPY");
-    expect(integrationPrompt(client, "owned-app")!).toContain("Do not invent a plan or enable payments.");
+    const prompt = integrationPrompt(client, "owned-app", [
+      {
+        id: "real-product",
+        product_key: "real-key",
+        name: "Actual product",
+        amount_cents: 3900,
+        currency: "usd",
+        billing_type: "one_time",
+        interval: null,
+        is_active: false,
+        secret_key: "NEVER_COPY",
+      } as any,
+    ])!;
+    expect(prompt).toContain("real-key");
+    expect(prompt).toContain('"amount_cents":3900');
+    expect(prompt).toContain('"billing_type":"one_time"');
+    expect(prompt).toContain('"enabled":false');
+    expect(prompt).toContain("purchase_id");
+    expect(prompt).toContain("Do not activate or substitute prices");
+    expect(prompt).not.toContain("NEVER_COPY");
+    expect(integrationPrompt(client, "owned-app")!).toContain("register_offer");
   });
   it("selects public fields only and instructs fail-closed identity and access checks", () => {
     const prompt = integrationPrompt(
@@ -68,12 +86,16 @@ describe("Safe app-specific integration prompt", () => {
     )!;
     expect(prompt).toContain(client.client_id);
     expect(prompt).toContain(client.redirect_uris[0]);
-    expect(prompt).toContain("Preserve its current authentication");
-    expect(prompt).toContain("fail closed");
+    expect(prompt).toContain(
+      "Preserve its existing checkout and security model",
+    );
+    expect(prompt).toContain("failed verification");
     expect(prompt).toContain("connect-entitlements");
-    expect(prompt).toContain("Existing prices can be imported as inactive plans");
-    expect(prompt).toContain("Rocket currently supports only one active offer per app");
-    expect(prompt).toContain("Never grant access from a checkout return URL");
+    expect(prompt).toContain("price_source inline");
+    expect(prompt).toContain(
+      "Monthly and annual subscriptions require a fixed Stripe Price",
+    );
+    expect(prompt).toContain("Never grant from a return URL");
     expect(prompt).not.toContain("NEVER_COPY");
   });
   it("does not generate prompts for wrong app, test, disabled, or unsafe callbacks", () => {

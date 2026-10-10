@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -6,27 +6,13 @@ import {
   type DeveloperBuyStatus,
 } from "@/lib/developerExperience";
 
-type Plan = {
-  id: string;
-  name: string;
-  amount_cents: number;
-  interval: "month" | "year" | null;
-  billing_type?: "subscription" | "one_time";
-  platform_fee_bps: number;
-  is_active: boolean;
-  integration_confirmed_at?: string | null;
-  activated_at?: string | null;
-};
-type BuyStatus = {
-  merchant: {
-    ready: boolean;
-    status: string;
-    stripe_account_id: string;
-    connection_method: string;
-  } | null;
-  products: Plan[];
-  platform_fee_bps: number;
-  launch_ready: boolean;
+type BuyStatus = DeveloperBuyStatus & {
+  merchant:
+    | (DeveloperBuyStatus["merchant"] & {
+        stripe_account_id: string;
+        connection_method: string;
+      })
+    | null;
 };
 type PendingStripeAccount = {
   id: string;
@@ -36,47 +22,19 @@ type PendingStripeAccount = {
   charges_enabled: boolean;
   payouts_enabled: boolean;
 };
-type StripePrice = {
-  stripe_price_id: string;
-  name: string;
-  amount_cents: number;
-  billing_type: "one_time" | "subscription";
-  interval: "month" | "year" | null;
-  registered: boolean;
-};
 
 async function request<T>(
+  functionName: string,
   action: string,
   appId: string,
   extras: Record<string, unknown> = {},
 ): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(
-    "rocket-buy-developer",
-    { body: { action, app_id: appId, ...extras } },
-  );
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body: { action, app_id: appId, ...extras },
+  });
   if (error || data?.error)
     throw new Error(
       data?.error || error?.message || "Buy with Rocket is unavailable",
-    );
-  return data as T;
-}
-
-async function oauthRequest<T>(
-  action: string,
-  appId: string,
-  extras: Record<string, unknown> = {},
-): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(
-    "rocket-buy-stripe-oauth",
-    {
-      body: { action, app_id: appId, ...extras },
-    },
-  );
-  if (error || data?.error)
-    throw new Error(
-      data?.error ||
-        error?.message ||
-        "Stripe account connection is unavailable",
     );
   return data as T;
 }
@@ -89,74 +47,40 @@ export default function ProductionBuySetup({
   onStatus?: (status: DeveloperBuyStatus) => void;
 }) {
   const [params] = useSearchParams();
-  const requestedApp = params.get("app");
-  const stripeReturn = params.get("stripe");
   const [appId, setAppId] = useState(
-    ownedApps.find((app) => app.app_id === requestedApp)?.app_id ||
+    ownedApps.find((app) => app.app_id === params.get("app"))?.app_id ||
       ownedApps[0]?.app_id ||
       "",
   );
   const [status, setStatus] = useState<BuyStatus | null>(null);
-  const [pendingAccount, setPendingAccount] =
-    useState<PendingStripeAccount | null>(null);
+  const [pending, setPending] = useState<PendingStripeAccount | null>(null);
   const [country, setCountry] = useState("");
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [interval, setInterval] = useState<"month" | "year" | "one_time">(
-    "month",
-  );
-  const [paymentReturn, setPaymentReturn] = useState("");
-  const [importReturn, setImportReturn] = useState("");
-  const [importKey, setImportKey] = useState("");
-  const [catalog, setCatalog] = useState<StripePrice[] | null>(null);
-  const [catalogCursor, setCatalogCursor] = useState<string | null>(null);
-  const [catalogLoading, setCatalogLoading] = useState(false);
-  const [catalogError, setCatalogError] = useState("");
-  const [selectedPrice, setSelectedPrice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
+
   const refresh = useCallback(async () => {
     if (!appId) return;
     try {
       setError("");
-      const next = await request<BuyStatus>("status", appId);
+      const next = await request<BuyStatus>(
+        "rocket-buy-developer",
+        "status",
+        appId,
+      );
       setStatus(next);
-      if (next.merchant?.ready) {
-        setCatalogLoading(true);
-        setCatalogError("");
-        try {
-          const page = await request<{
-            prices: StripePrice[];
-            next_cursor: string | null;
-          }>("stripe_catalog", appId);
-          setCatalog(page.prices);
-          setCatalogCursor(page.next_cursor);
-        } catch (caught) {
-          setCatalog(null);
-          setCatalogError(
-            caught instanceof Error
-              ? caught.message
-              : "Could not read Stripe prices",
-          );
-        } finally {
-          setCatalogLoading(false);
-        }
-      } else {
-        setCatalog(null);
-        setCatalogCursor(null);
-      }
+      onStatusRef.current?.(next);
       try {
-        const pending = await oauthRequest<{
+        const selection = await request<{
           pending_account: PendingStripeAccount | null;
-        }>("status", appId);
-        setPendingAccount(pending.pending_account);
+        }>("rocket-buy-stripe-oauth", "status", appId);
+        setPending(selection.pending_account);
       } catch {
-        setPendingAccount(null);
+        setPending(null);
       }
-      onStatus?.(next);
-    } catch (caught: unknown) {
+    } catch (caught) {
       setStatus(null);
-      setPendingAccount(null);
       setError(
         caught instanceof Error
           ? caught.message
@@ -165,19 +89,15 @@ export default function ProductionBuySetup({
     }
   }, [appId]);
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
-  useEffect(() => {
-    setCatalog(null);
-    setCatalogCursor(null);
-    setSelectedPrice("");
-    setImportKey("");
-  }, [appId]);
-  const connectExisting = async () => {
+
+  const connect = async () => {
     setBusy(true);
     setError("");
     try {
-      const result = await oauthRequest<{ authorization_url: string }>(
+      const result = await request<{ authorization_url: string }>(
+        "rocket-buy-stripe-oauth",
         "start",
         appId,
       );
@@ -190,86 +110,24 @@ export default function ProductionBuySetup({
       window.location.assign(destination.toString());
     } catch (caught) {
       setError(
-        caught instanceof Error
-          ? caught.message
-          : "Could not connect Stripe account",
+        caught instanceof Error ? caught.message : "Could not connect Stripe",
       );
       setBusy(false);
     }
   };
-  const selectAccount = async () => {
-    if (!pendingAccount) return;
+  const select = async () => {
+    if (!pending) return;
     setBusy(true);
     setError("");
     try {
-      await oauthRequest("activate", appId, { attempt_id: pendingAccount.id });
-      setPendingAccount(null);
-      setCatalog(null);
-      await refresh();
-    } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Could not select Stripe account",
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-  const loadCatalog = async (cursor?: string) => {
-    setCatalogLoading(true);
-    setCatalogError("");
-    try {
-      const page = await request<{
-        prices: StripePrice[];
-        next_cursor: string | null;
-      }>("stripe_catalog", appId, cursor ? { starting_after: cursor } : {});
-      setCatalog((previous) =>
-        cursor ? [...(previous || []), ...page.prices] : page.prices,
-      );
-      setCatalogCursor(page.next_cursor);
-    } catch (caught) {
-      setCatalogError(
-        caught instanceof Error
-          ? caught.message
-          : "Could not read Stripe prices",
-      );
-    } finally {
-      setCatalogLoading(false);
-    }
-  };
-  const importPlan = async (event: FormEvent) => {
-    event.preventDefault();
-    const selected = catalog?.find(
-      (price) => price.stripe_price_id === selectedPrice && !price.registered,
-    );
-    if (!selected) return;
-    setBusy(true);
-    setError("");
-    try {
-      await request("import_price", appId, {
-        stripe_price_id: selected.stripe_price_id,
-        ...(importKey ? { product_key: importKey } : {}),
-        ...(selected.billing_type === "one_time"
-          ? { payment_return_uri: importReturn }
-          : {}),
+      await request("rocket-buy-stripe-oauth", "activate", appId, {
+        attempt_id: pending.id,
       });
-      setCatalog(
-        (previous) =>
-          previous?.map((price) =>
-            price.stripe_price_id === selected.stripe_price_id
-              ? { ...price, registered: true }
-              : price,
-          ) || null,
-      );
-      setSelectedPrice("");
-      setImportKey("");
+      setPending(null);
       await refresh();
     } catch (caught) {
       setError(
-        caught instanceof Error
-          ? caught.message
-          : "Could not import Stripe price",
+        caught instanceof Error ? caught.message : "Could not select account",
       );
     } finally {
       setBusy(false);
@@ -280,12 +138,13 @@ export default function ProductionBuySetup({
     setError("");
     try {
       const result = await request<{ onboarding_url: string }>(
+        "rocket-buy-developer",
         "stripe_onboarding",
         appId,
         { country },
       );
       window.location.assign(result.onboarding_url);
-    } catch (caught: unknown) {
+    } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
@@ -294,57 +153,14 @@ export default function ProductionBuySetup({
       setBusy(false);
     }
   };
-  const createPlan = async (event: FormEvent) => {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    try {
-      const cents = Math.round(Number(price) * 100);
-      await request<{ plan: Plan }>("create_plan", appId, {
-        name,
-        amount_cents: cents,
-        interval,
-        billing_type: interval === "one_time" ? "one_time" : "subscription",
-        ...(interval === "one_time"
-          ? { payment_return_uri: paymentReturn }
-          : {}),
-      });
-      setName("");
-      setPrice("");
-      await refresh();
-    } catch (caught: unknown) {
-      setError(
-        caught instanceof Error ? caught.message : "Could not create plan",
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-  const activatePlan = async (planId: string) => {
-    setBusy(true);
-    setError("");
-    try {
-      await request("activate_plan", appId, { plan_id: planId });
-      await refresh();
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Could not activate plan",
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
   if (!ownedApps.length) return null;
   return (
     <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-neutral-200 p-6">
       <h2 className="text-xl font-semibold">Buy with Rocket</h2>
       <p className="mt-2 text-sm text-neutral-600">
-        Connect the Stripe account that holds your products, then map eligible
-        fixed prices from that account. Rocket&apos;s platform fee is{" "}
-        {status
-          ? `${status.platform_fee_bps / 100}%`
-          : "shown once setup loads"}{" "}
-        of each purchase, before Stripe&apos;s processing fees.
+        Connect Stripe once. Give the integration prompt above to your coding
+        agent. Rocket creates Checkout on your connected account and applies its
+        5% fee only to Buy with Rocket payments.
       </p>
       <label className="mt-5 block max-w-lg text-sm font-medium">
         Owned app
@@ -365,84 +181,71 @@ export default function ProductionBuySetup({
           {developerMessage(error)}
         </p>
       )}
-      {!error &&
-        ["connection_failed", "connection_denied"].includes(
-          stripeReturn || "",
-        ) && (
-          <p role="alert" className="mt-3 text-sm text-red-600">
-            Stripe account connection was not completed. Select the intended
-            account in Stripe and try again.
-          </p>
-        )}
       {status && (
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-5">
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">1. Stripe account</h3>
+            <h3 className="font-semibold">1. Connect Stripe</h3>
             <p className="mt-1 text-sm text-neutral-600">
               {status.merchant?.ready
-                ? `Connected and ready for payments: ${status.merchant.stripe_account_id}.`
-                : "Use Stripe Dashboard to select the account that holds your products. You can review the selected account before Rocket uses it for new checkout."}
+                ? `Connected and ready: ${status.merchant.stripe_account_id}`
+                : "Choose the Stripe account that receives your Buy with Rocket payments."}
             </p>
             <button
               type="button"
-              onClick={connectExisting}
+              onClick={connect}
               disabled={busy}
               className="mt-4 h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
             >
               {status.merchant?.ready
                 ? "Change Stripe account"
-                : "Connect existing Stripe account"}
+                : "Connect Stripe"}
             </button>
-            {pendingAccount && (
-              <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-neutral-800">
+            {pending && (
+              <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
                 <p className="font-semibold">
                   Review the account selected in Stripe
                 </p>
                 <p className="mt-1">
-                  {pendingAccount.stripe_account_name || "Stripe account"} ·{" "}
-                  {pendingAccount.stripe_account_id}
-                  {pendingAccount.stripe_account_country
-                    ? ` · ${pendingAccount.stripe_account_country}`
+                  {pending.stripe_account_name || "Stripe account"} ·{" "}
+                  {pending.stripe_account_id}
+                  {pending.stripe_account_country
+                    ? ` · ${pending.stripe_account_country}`
                     : ""}
                 </p>
                 <p className="mt-1">
-                  {pendingAccount.charges_enabled &&
-                  pendingAccount.payouts_enabled
+                  {pending.charges_enabled && pending.payouts_enabled
                     ? "Card charges and payouts are enabled."
-                    : "This account cannot accept Buy with Rocket payments yet."}
+                    : "This account cannot accept payments yet."}
                 </p>
                 {status.merchant &&
                   status.merchant.stripe_account_id !==
-                    pendingAccount.stripe_account_id && (
+                    pending.stripe_account_id && (
                     <p className="mt-1">
-                      Current Rocket merchant:{" "}
-                      {status.merchant.stripe_account_id}. Selecting this
-                      account will retire its active offers for new checkout;
-                      existing financial records stay attached to that merchant.
+                      Changing merchants retires previous offers for new
+                      checkout; past financial records remain with the original
+                      merchant.
                     </p>
                   )}
                 <button
                   type="button"
-                  onClick={selectAccount}
+                  onClick={select}
                   disabled={
-                    busy ||
-                    !pendingAccount.charges_enabled ||
-                    !pendingAccount.payouts_enabled
+                    busy || !pending.charges_enabled || !pending.payouts_enabled
                   }
                   className="mt-3 h-10 rounded-lg bg-[#167ac6] px-4 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  Use this account for Buy with Rocket
+                  Use this Stripe account
                 </button>
               </div>
             )}
             {!status.merchant?.ready && (
               <div className="mt-4 flex flex-wrap items-end gap-3">
                 <p className="w-full text-sm text-neutral-600">
-                  Or create a new Rocket-connected Stripe account:
+                  Or create a new connected Stripe account:
                 </p>
                 {!status.merchant && (
                   <label className="text-sm">
-                    Business country (two-letter code)
+                    Business country
                     <input
                       value={country}
                       onChange={(event) =>
@@ -450,7 +253,7 @@ export default function ProductionBuySetup({
                       }
                       maxLength={2}
                       placeholder="US"
-                      className="mt-1 block h-10 w-24 rounded-lg border border-neutral-200 px-3"
+                      className="mt-1 block h-10 w-24 rounded-lg border px-3"
                     />
                   </label>
                 )}
@@ -460,233 +263,36 @@ export default function ProductionBuySetup({
                   disabled={busy || (!status.merchant && country.length !== 2)}
                   className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
                 >
-                  {busy
-                    ? "Opening…"
-                    : status.merchant
-                      ? "Continue Stripe setup"
-                      : "Start Stripe setup"}
+                  Continue Stripe setup
                 </button>
               </div>
             )}
           </div>
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">2. Choose a Stripe price</h3>
+            <h3 className="font-semibold">
+              2. Integrate with your coding agent
+            </h3>
             <p className="mt-1 text-sm text-neutral-600">
-              Rocket loads eligible prices from your connected Stripe account
-              automatically. Choose the one you want to offer; it stays inactive
-              until the payment and entitlement integration is verified.
+              Your agent inspects the app’s existing products and access rules,
+              registers each intended offer through Rocket’s server-side
+              contract, and adds the official Buy with Rocket button. No product
+              mapping form is needed here.
             </p>
-            {catalogLoading && (
-              <p role="status" className="mt-3 text-sm text-neutral-600">
-                Loading Stripe prices…
-              </p>
-            )}
-            {catalogError && (
-              <p role="alert" className="mt-3 text-sm text-red-600">
-                {developerMessage(catalogError)}
-              </p>
-            )}
-            {status.merchant?.ready && (
-              <button
-                type="button"
-                onClick={() => void loadCatalog()}
-                disabled={catalogLoading || busy}
-                className="mt-3 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
-              >
-                Refresh prices
-              </button>
-            )}
-            {catalog && (
-              <form
-                onSubmit={importPlan}
-                className="mt-3 flex flex-wrap items-end gap-3"
-              >
-                <label className="text-sm">
-                  Existing Stripe price
-                  <select
-                    value={selectedPrice}
-                    onChange={(event) => setSelectedPrice(event.target.value)}
-                    className="mt-1 block h-10 max-w-full rounded-lg border border-neutral-200 px-3"
-                  >
-                    <option value="">Select a price</option>
-                    {catalog.map((item) => (
-                      <option
-                        key={item.stripe_price_id}
-                        value={item.stripe_price_id}
-                        disabled={item.registered}
-                      >
-                        {item.name} · ${(item.amount_cents / 100).toFixed(2)}{" "}
-                        {item.billing_type === "one_time"
-                          ? "one-time"
-                          : `/${item.interval}`}
-                        {item.registered ? " · Already mapped" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <details className="w-full text-sm">
-                  <summary className="cursor-pointer text-neutral-600">
-                    Advanced: custom access key
-                  </summary>
-                  <label className="mt-2 block">
-                    Access key for your app
-                    <input
-                      value={importKey}
-                      onChange={(event) => setImportKey(event.target.value)}
-                      pattern="[a-z0-9][a-z0-9_-]{2,80}"
-                      placeholder="Rocket generates one if blank"
-                      className="mt-1 block h-10 min-w-48 rounded-lg border border-neutral-200 px-3"
-                    />
-                  </label>
-                </details>
-                {catalog.find((item) => item.stripe_price_id === selectedPrice)
-                  ?.billing_type === "one_time" && (
-                  <label className="text-sm">
-                    Where should buyers return after payment?
-                    <input
-                      required
-                      type="url"
-                      value={importReturn}
-                      onChange={(event) => setImportReturn(event.target.value)}
-                      className="mt-1 block h-10 min-w-72 rounded-lg border border-neutral-200 px-3"
-                    />
-                  </label>
-                )}
-                <button
-                  disabled={busy || catalogLoading || !selectedPrice}
-                  className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
-                >
-                  Add selected price
-                </button>
-                {catalogCursor && (
-                  <button
-                    type="button"
-                    onClick={() => void loadCatalog(catalogCursor)}
-                    disabled={busy || catalogLoading}
-                    className="h-10 rounded-lg border border-neutral-200 px-4 text-sm disabled:opacity-50"
-                  >
-                    More prices
-                  </button>
-                )}
-                {!catalog.length && (
-                  <p className="text-sm text-neutral-600">
-                    No eligible fixed USD prices found on this connected Stripe
-                    account.
-                  </p>
-                )}
-              </form>
-            )}
-            {status.products.map((plan) => (
-              <p key={plan.id} className="mt-3 text-sm">
-                {plan.name} · ${(plan.amount_cents / 100).toFixed(2)}
-                {plan.billing_type === "one_time"
-                  ? " one-time"
-                  : `/${plan.interval === "year" ? "year" : "month"}`}{" "}
-                · {plan.is_active ? "Active" : "Not active"}
-              </p>
-            ))}
-            <details className="mt-5">
-              <summary className="cursor-pointer text-sm font-medium">
-                Need a new Stripe price?
-              </summary>
-              <form
-                onSubmit={createPlan}
-                className="mt-4 flex flex-wrap items-end gap-3"
-              >
-                <label className="text-sm">
-                  Plan name
-                  <input
-                    required
-                    maxLength={120}
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
-                  />
-                </label>
-                <label className="text-sm">
-                  Price (USD)
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    max="1000"
-                    step="0.01"
-                    value={price}
-                    onChange={(event) => setPrice(event.target.value)}
-                    className="mt-1 block h-10 w-28 rounded-lg border border-neutral-200 px-3"
-                  />
-                </label>
-                <label className="text-sm">
-                  Billing
-                  <select
-                    value={interval}
-                    onChange={(event) =>
-                      setInterval(
-                        event.target.value as "month" | "year" | "one_time",
-                      )
-                    }
-                    className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
-                  >
-                    <option value="month">Monthly</option>
-                    <option value="year">Annual</option>
-                    <option value="one_time">One-time</option>
-                  </select>
-                </label>
-                {interval === "one_time" && (
-                  <label className="text-sm">
-                    Approved payment-return URL
-                    <input
-                      required
-                      type="url"
-                      value={paymentReturn}
-                      onChange={(event) => setPaymentReturn(event.target.value)}
-                      className="mt-1 block h-10 rounded-lg border border-neutral-200 px-3"
-                    />
-                  </label>
-                )}
-                <button
-                  disabled={busy || !status.merchant?.ready}
-                  className="h-10 rounded-lg border border-[#167ac6] px-4 text-sm font-semibold text-[#167ac6] disabled:opacity-50"
-                >
-                  Create a new price and inactive plan
-                </button>
-              </form>
-            </details>
+            <p className="mt-2 text-sm text-neutral-600">
+              {status.products.length
+                ? `${status.products.length} offer${status.products.length === 1 ? "" : "s"} registered. Each stays private until integration and payment verification pass.`
+                : "No offers registered yet."}
+            </p>
           </div>
           <div className="rounded-xl border border-neutral-200 p-4">
-            <h3 className="font-semibold">3. Integrate, test and activate</h3>
-            <p className="text-sm text-neutral-600">
-              Copy the integration prompt above into your coding agent. Test
-              Continue with Rocket and server-side entitlement checks in your
-              app. An independent purchase test must be verified before
-              activation.
+            <h3 className="font-semibold">3. Test, then go live</h3>
+            <p className="mt-1 text-sm text-neutral-600">
+              Verify Rocket ID, payment, webhook delivery, fulfilment, and
+              revocation with an independent buyer. Public checkout remains off
+              until those checks pass.
             </p>
-            {status.products.map((plan) => (
-              <div key={plan.id} className="mt-4">
-                <p>
-                  {plan.name}:{" "}
-                  {plan.integration_confirmed_at
-                    ? "Entitlement integration verified"
-                    : "Entitlement verification required"}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => activatePlan(plan.id)}
-                  disabled={
-                    busy ||
-                    plan.is_active ||
-                    !status.launch_ready ||
-                    !status.merchant?.ready ||
-                    !plan.integration_confirmed_at
-                  }
-                  className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold disabled:opacity-50"
-                >
-                  {plan.is_active ? "Live" : "Activate Buy with Rocket"}
-                </button>
-              </div>
-            ))}
             {!status.launch_ready && (
-              <p className="mt-2 text-sm">
+              <p className="mt-2 text-sm text-neutral-600">
                 Live activation is not available yet. Your configuration remains
                 saved.
               </p>
