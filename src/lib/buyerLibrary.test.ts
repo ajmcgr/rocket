@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { libraryPurchases } from "../../supabase/functions/_shared/buyerLibrary";
+import { libraryPurchases, sandboxLibraryPurchases } from "../../supabase/functions/_shared/buyerLibrary";
 const client = { client_id: "live", app_id: "app", environment: "production" },
   product = {
     id: "product",
@@ -27,6 +27,19 @@ const order = {
   status: "paid",
 };
 describe("Buyer library ledger presentation", () => {
+  it("shows only verified TEST receipts and never promotes them into live access", () => {
+    const testClient = { client_id: "test", app_id: null, name: "Launch acceptance (test)", environment: "test" };
+    const testProduct = { ...product, client_id: "test" };
+    const testGrant = { ...entry, client_id: "test" };
+    const testOrder = { ...order, client_id: "test" };
+    expect(sandboxLibraryPurchases([testGrant], [testClient], [testProduct], [testOrder])).toMatchObject([
+      { purchase_id: "order", app_name: "Launch acceptance (test)", product_name: "Pro", amount_cents: 3900 },
+    ]);
+    expect(sandboxLibraryPurchases([{ ...testGrant, status: "refunded" }], [testClient], [testProduct], [testOrder])).toEqual([]);
+    expect(sandboxLibraryPurchases([testGrant], [testClient], [testProduct], [{ ...testOrder, status: "pending" }])).toEqual([]);
+    expect(sandboxLibraryPurchases([testGrant], [testClient], [product], [testOrder])).toEqual([]);
+    expect(libraryPurchases([testGrant], [testClient], [testProduct], [], [testOrder], [])).toEqual([]);
+  });
   it("keeps hidden purchase history without leaking listing fields or an Open URL", () => {
     const [p] = libraryPurchases([entry], [client], [product], [], [order], []);
     expect(p).toMatchObject({
