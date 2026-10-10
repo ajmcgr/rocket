@@ -58,7 +58,14 @@ Deno.serve(async (req) => {
       const actions = ids.length ? await admin.from("rocket_optimizer_actions").select("run_id,recommendation_index,status").in("run_id", ids)
         : { data: [], error: null };
       if (actions.error) throw new Error("Optimizer history unavailable");
-      return json({ runs, actions: actions.data });
+      const safeRuns = (runs || []).map((run) => ({ ...run,
+        recommendations: Array.isArray(run.recommendations)
+          ? run.recommendations.map((recommendation) => ({ ...recommendation,
+            proposed_description: safeProposedDescription(recommendation.proposed_description, run.context_snapshot?.facts?.description),
+          }))
+          : [],
+      }));
+      return json({ runs: safeRuns, actions: actions.data });
     }
     if (body.action === "generate") {
       if (!hasGeminiKey()) return json({ error: "AI optimizer is temporarily unavailable" }, 503);
