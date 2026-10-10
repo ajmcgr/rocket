@@ -63,7 +63,7 @@ export default function HomeStory() {
 
       <section
         aria-labelledby="home-letter-heading"
-        className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-8 py-12 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-16 sm:py-16"
+        className="mx-auto max-w-2xl rounded-2xl border border-neutral-200 bg-white px-8 py-12 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-16 sm:py-16"
       >
         <h2
           id="home-letter-heading"
