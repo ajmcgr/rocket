@@ -1,11 +1,15 @@
 export const LAUNCH_APP_ID = "b202d75a-02ae-46e6-8419-5b3410cbaac8";
 export const LAUNCH_CLIENT_ID = "rocket-dev-fZfbAEjB3Kp_eroMLQ_y4_fn";
+export const LAUNCH_PRO_STRIPE_PRICE_ID = "price_1T4XwvL6sVtfkDGltJE0e6DU";
+export const LAUNCH_PRO_STRIPE_PRODUCT_ID = "prod_TSjSKp8aDWVw26";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export function pilotBuyer(userId: string | undefined, ownerId: string | undefined, configuredBuyer: string | undefined) {
   return !!configuredBuyer && uuid.test(configuredBuyer) && !!ownerId && userId === configuredBuyer && userId !== ownerId;
 }
 export function acceptancePlan(plan: any, planId: string | undefined, accountId: string, ownerId: string) {
   return !!planId && uuid.test(planId) && !!plan && plan.id === planId && plan.client_id === LAUNCH_CLIENT_ID &&
+    plan.name === "Launch Pro" && plan.stripe_price_id === LAUNCH_PRO_STRIPE_PRICE_ID &&
+    plan.stripe_product_id === LAUNCH_PRO_STRIPE_PRODUCT_ID &&
     plan.developer_account_id === accountId && plan.developer_user_id === ownerId && plan.amount_cents === 3900 &&
     plan.currency === "usd" && plan.billing_type === "one_time" && plan.interval === null && plan.platform_fee_bps === 500 &&
     Array.isArray(plan.checkout_return_uris) && plan.checkout_return_uris.includes("https://trylaunch.ai/my-products?success=true");

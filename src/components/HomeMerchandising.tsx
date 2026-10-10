@@ -99,7 +99,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
             description="Apps worth knowing about right now."
             href="/picks"
           />
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {data.picks.map((row, index) => (
               <div key={row.app.id} className="min-w-0">
                 <EditorialAppCard

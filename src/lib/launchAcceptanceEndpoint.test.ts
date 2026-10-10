@@ -44,8 +44,8 @@ function harness(
     platform_fee_bps: 500,
     checkout_return_uris: ["https://trylaunch.ai/my-products?success=true"],
     name: "Launch Pro",
-    stripe_product_id: "prod_new",
-    stripe_price_id: "price_new",
+    stripe_product_id: rules.LAUNCH_PRO_STRIPE_PRODUCT_ID,
+    stripe_price_id: rules.LAUNCH_PRO_STRIPE_PRICE_ID,
     is_active: false,
     integration_confirmed_at: null,
   };
@@ -142,7 +142,7 @@ function harness(
         currency: "usd",
         type: "one_time",
         recurring: null,
-        product: "prod_new",
+        product: rules.LAUNCH_PRO_STRIPE_PRODUCT_ID,
       }),
     };
     customers = {
