@@ -1,5 +1,6 @@
 import { getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
 import { geminiText, hasGeminiKey } from "../_shared/gemini.ts";
+import { safeProposedDescription } from "../_shared/optimizerProposal.ts";
 
 const uuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const admin = getAdmin();
@@ -29,7 +30,7 @@ function validateRecommendations(value: unknown, facts: Record<string, unknown>)
       (typeof proposed !== "string" || proposed.length < 20 || proposed.length > 2000))
       throw new Error("Optimizer returned an invalid listing proposal");
     return { category: item.category, title: item.title.trim(), action: item.action.trim(),
-      evidence_key: item.evidence_key, proposed_description: proposed?.trim() || null };
+      evidence_key: item.evidence_key, proposed_description: safeProposedDescription(proposed, facts.description) };
   });
 }
 
@@ -107,7 +108,8 @@ Deno.serve(async (req) => {
       if (existing) return json({ error: "Recommendation already handled" }, 409);
       const recommendation = run.recommendations[body.index];
       if (body.action === "apply") {
-        if (typeof recommendation.proposed_description !== "string") return json({ error: "This recommendation requires an external action" }, 409);
+        if (!safeProposedDescription(recommendation.proposed_description, run.context_snapshot?.facts?.description))
+          return json({ error: "This listing proposal contains unverified wording" }, 409);
         const applied = await admin.rpc("rocket_optimizer_apply_description", {
           p_app_id: appId, p_user_id: user.id, p_run_id: run.id, p_index: body.index,
         });
