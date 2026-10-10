@@ -688,6 +688,7 @@
   padding: 0;
   min-height: 0;
   background: transparent;
+  margin-left: 0;
 }
 .dev-membership-settings h2 {
   font-size: 1.7rem;
