@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RocketButton from "./RocketButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 type Plan = {
   id: string;
+  product_key: string;
+  return_uri?: string;
   name: string;
   amount_cents: number;
   currency: string;
@@ -27,9 +29,13 @@ const billingPeriod = (plan: Plan) =>
     ? "one-time"
     : plan.interval;
 
-async function request<T>(action: string, appId: string): Promise<T> {
+async function request<T>(
+  action: string,
+  appId: string,
+  extras: Record<string, unknown> = {},
+): Promise<T> {
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
-    body: { action, app_id: appId },
+    body: { action, app_id: appId, ...extras },
   });
   if (error || data?.error)
     throw new Error(
@@ -49,10 +55,13 @@ export default function AppProfileBuyAction({
 }) {
   const { user } = useAuth();
   const userId = user?.id;
-  const [plan, setPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [selectedKey, setSelectedKey] = useState("");
+  const plan = plans.find((offer) => offer.product_key === selectedKey) || null;
   const [canBuy, setCanBuy] = useState(false);
   const [entitlement, setEntitlement] = useState<Entitlement>(null);
   const [busy, setBusy] = useState(false);
+  const purchaseRequest = useRef<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const pilot =
     appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" &&
@@ -66,7 +75,8 @@ export default function AppProfileBuyAction({
   useEffect(() => {
     let cancelled = false;
     setCanBuy(false);
-    setPlan(null);
+    setPlans([]);
+    setSelectedKey("");
     setAcceptedTerms(false);
     const catalog = pilot
       ? userId
@@ -74,15 +84,21 @@ export default function AppProfileBuyAction({
             .invoke("launch-rocket-acceptance", { body: { action: "status" } })
             .then(({ data, error }) => {
               if (error) throw error;
-              return { plan: data?.available ? data.plan : null };
+              return {
+                offers:
+                  data?.available && data.plan
+                    ? [{ ...data.plan, product_key: "launch-pro-acceptance" }]
+                    : [],
+              };
             })
-        : Promise.resolve({ plan: null })
-      : request<{ plan: Plan | null }>("catalog", appId);
+        : Promise.resolve({ offers: [] as Plan[] })
+      : request<{ offers: Plan[] }>("catalog", appId);
     catalog
       .then((result) => {
         if (!cancelled) {
-          setCanBuy(!!result.plan);
-          if (result.plan) setPlan(result.plan);
+          setCanBuy(result.offers.length > 0);
+          setPlans(result.offers);
+          setSelectedKey(result.offers[0]?.product_key || "");
         }
       })
       .catch(() => {
@@ -93,15 +109,18 @@ export default function AppProfileBuyAction({
     };
   }, [appId, pilot, userId]);
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !selectedKey || pilot) return;
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | undefined;
     const refresh = () =>
-      request<{ plan: Plan | null; entitlement: Entitlement }>("status", appId)
+      request<{ plan: Plan | null; entitlement: Entitlement }>(
+        "status",
+        appId,
+        { product_key: selectedKey },
+      )
         .then((result) => {
           if (!cancelled) {
             setEntitlement(result.entitlement || null);
-            if (result.plan) setPlan(result.plan);
           }
           if (result.entitlement?.active && timer) clearInterval(timer);
         })
@@ -112,7 +131,7 @@ export default function AppProfileBuyAction({
       cancelled = true;
       if (timer) clearInterval(timer);
     };
-  }, [appId, userId, processing]);
+  }, [appId, userId, processing, selectedKey, pilot]);
   if (!plan) return null;
   if (entitlement?.active)
     return (
@@ -159,7 +178,12 @@ export default function AppProfileBuyAction({
                 );
               return data;
             })
-        : await request<{ checkout_url: string }>("checkout", appId);
+        : await request<{ checkout_url: string }>("checkout", appId, {
+            product_key: plan.product_key,
+            purchase_request_id: (purchaseRequest.current ||=
+              crypto.randomUUID()),
+            return_uri: plan.return_uri,
+          });
       window.location.assign(result.checkout_url);
     } catch (caught: unknown) {
       setError(
@@ -170,6 +194,26 @@ export default function AppProfileBuyAction({
   };
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {plans.length > 1 && (
+        <label className="text-sm">
+          Offer{" "}
+          <select
+            value={selectedKey}
+            onChange={(event) => {
+              setSelectedKey(event.target.value);
+              setEntitlement(null);
+              purchaseRequest.current = null;
+            }}
+            className="rounded-lg border px-2 py-1"
+          >
+            {plans.map((offer) => (
+              <option key={offer.id} value={offer.product_key}>
+                {offer.name} · {money(offer)}/{billingPeriod(offer)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {processing && (
         <span role="status" className="text-sm text-neutral-600">
           Waiting for confirmed payment…

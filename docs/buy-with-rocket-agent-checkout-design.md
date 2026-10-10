@@ -6,14 +6,46 @@ The merchant connects its existing Stripe account once. Its coding agent integra
 
 The same checkout endpoint must serve the Rocket app page and a merchant site's server-side button handler. A browser must never supply an authoritative amount, merchant account, fee, or entitlement. The merchant's existing Stripe checkouts continue unchanged and do not acquire a Rocket fee.
 
+## Implemented contract and release gate
+
+The owner-authenticated `rocket-buy-developer` `register_offer` action records a
+stable `product_key` for each offer. For a reusable Stripe Price, the agent
+provides its exact ID and Rocket retrieves it on the current connected account.
+For a fixed inline one-time offer, the agent provides the existing app's name
+and USD amount; Rocket records those terms and creates Stripe Checkout with
+`price_data`. Monthly and annual subscriptions use verified recurring Stripe
+Prices. Registration does not activate checkout. An active offer's amount,
+currency, billing type, merchant, Stripe identity, fee, key and approved return
+URI cannot be edited; a commercial change requires a new offer row.
+
+The public `rocket-buy` catalog returns `offers[]`. Checkout requires the
+selected `product_key`, rechecks the current merchant and fixed Stripe Price
+when present, and uses the stored terms and 500 basis-point fee. It reserves a
+buyer/offer/merchant attempt before creating the Stripe session. Every checkout
+requires an approved return URI and a stable purchase-request UUID so retries
+reuse the same Stripe session across one-time and subscription offers. The signed
+webhook remains the only source of paid state. `connect-entitlements` returns
+each offer's Rocket and Stripe identifiers to support precise fulfilment.
+
+**Do not deploy this draft as a complete payment launch.** The current Launch
+production client has no test-environment counterpart, the current merchant's
+Pro/Grow/Pass offers are not registered and verified, and Launch's existing
+fulfilment handles only one configured Pro offer. No natural test-mode or live
+purchase has been demonstrated for this contract. Keep the global live switch
+off until those gates pass. A safe rollback after schema deployment is to turn
+off the global switch, restore the prior Edge Functions, and retire any new
+offers; financial history and the additive nullable/`price_source` columns
+remain intact. Reinstating the old one-active index requires retiring extra
+active offers first.
+
 ## Current blockers in source and production
 
-* `rocket-buy` accepts a single active `connect_products` row for the app. Production has the `connect_products_one_active_client_idx` unique index.
-* `rocket-buy-developer` requires an explicit `import_price` or `create_plan`, followed by an integration confirmation and activation. The screenshot shows this legacy path.
-* `AppProfileBuyAction` renders one plan. `rocket-buy` status and cancellation choose an app-level purchase rather than a selected price.
-* One-time checkout and webhook verification use a recorded `connect_products` row and checkout attempt. That binding must remain durable even if a Stripe price changes or is archived after purchase.
-* Launch's existing Pro and Grow checkout creates inline Stripe `price_data`; these are not discoverable as reusable catalog prices. Launch Pass has a reusable annual price. Connected Stripe access alone cannot infer which Launch access rule each price or inline quote fulfils.
-* Production `rocket_buy_configuration.live_checkout_enabled` is false and `platform_fee_bps` is 500. Do not turn on public checkout as part of a UI change.
+- `rocket-buy` accepts a single active `connect_products` row for the app. Production has the `connect_products_one_active_client_idx` unique index.
+- `rocket-buy-developer` requires an explicit `import_price` or `create_plan`, followed by an integration confirmation and activation. The screenshot shows this legacy path.
+- `AppProfileBuyAction` renders one plan. `rocket-buy` status and cancellation choose an app-level purchase rather than a selected price.
+- One-time checkout and webhook verification use a recorded `connect_products` row and checkout attempt. That binding must remain durable even if a Stripe price changes or is archived after purchase.
+- Launch's existing Pro and Grow checkout creates inline Stripe `price_data`; these are not discoverable as reusable catalog prices. Launch Pass has a reusable annual price. Connected Stripe access alone cannot infer which Launch access rule each price or inline quote fulfils.
+- Production `rocket_buy_configuration.live_checkout_enabled` is false and `platform_fee_bps` is 500. Do not turn on public checkout as part of a UI change.
 
 ## Target API and ledger behavior
 
