@@ -91,15 +91,7 @@ export function AppCardByline({
     <div
       className={`flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${light ? "text-white/85" : "text-neutral-500"}`}
     >
-      {metadata.developer_profile_username && (
-        <Link
-          to={`/@${metadata.developer_profile_username}`}
-          className="truncate font-medium hover:underline"
-          title="Ownership-backed public developer profile"
-        >
-          @{metadata.developer_profile_username}
-        </Link>
-      )}
+      <AppDeveloperHandle metadata={metadata} />
       {metadata.pricing_kind && metadata.pricing_kind !== "unknown" && (
         <span title="Pricing supplied by the verified owner">
           {metadata.pricing_kind === "free"
@@ -113,15 +105,35 @@ export function AppCardByline({
             : ""}
         </span>
       )}
-      <span
-        className="inline-flex items-center gap-1"
-        title={`${metadata.save_count} saves`}
-        aria-label={`${metadata.save_count} saves`}
-      >
-        <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-        {metadata.save_count.toLocaleString()}
-      </span>
+      <AppCardSaveCount metadata={metadata} />
     </div>
+  );
+}
+
+function AppDeveloperHandle({ metadata }: { metadata?: AppCardMetadata }) {
+  if (!metadata?.developer_profile_username) return null;
+  return (
+    <Link
+      to={`/@${metadata.developer_profile_username}`}
+      className="block truncate font-medium hover:underline"
+      title="Ownership-backed public developer profile"
+    >
+      @{metadata.developer_profile_username}
+    </Link>
+  );
+}
+
+function AppCardSaveCount({ metadata }: { metadata?: AppCardMetadata }) {
+  if (!metadata) return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1"
+      title={`${metadata.save_count} saves`}
+      aria-label={`${metadata.save_count} saves`}
+    >
+      <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
+      {metadata.save_count.toLocaleString()}
+    </span>
   );
 }
 
@@ -314,7 +326,14 @@ export function RankedAppRow({
           <strong className="block truncate text-base font-semibold text-neutral-950">
             {app.name}
           </strong>
-          <AppCardRating metadata={metadata} larger />
+        </Link>
+        <div className="text-xs">
+          <AppDeveloperHandle metadata={metadata} />
+        </div>
+        <Link
+          to={`/apps/${app.slug || app.id}`}
+          className="block focus-visible:outline-2 focus-visible:outline-[#167ac6]"
+        >
           <span className="block truncate text-sm text-neutral-500">
             {app.tagline || app.canonical_host}
           </span>
@@ -323,7 +342,10 @@ export function RankedAppRow({
             {eyebrow ? ` · ${eyebrow}` : ""}
           </span>
         </Link>
-        <AppCardByline metadata={metadata} />
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500">
+          <AppCardRating metadata={metadata} larger />
+          <AppCardSaveCount metadata={metadata} />
+        </div>
       </div>
       {onSave && (
         <SaveAppButton

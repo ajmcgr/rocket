@@ -27,6 +27,42 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
+  it("places the owner below the title and rating before saves in ranked rows", async () => {
+    window.scrollTo = vi.fn();
+    const { container } = render(
+      <MemoryRouter>
+        <RankedAppRow
+          app={app}
+          rank={1}
+          metadata={{
+            app_id: app.id,
+            developer_profile_username: "maker",
+            average_rating: 4.3,
+            rating_count: 1,
+            save_count: 27,
+          }}
+        />
+      </MemoryRouter>,
+    );
+    await screen.findByText("@maker");
+    const content = container.querySelector("article")?.textContent || "";
+    const ordered = [
+      "Sample app",
+      "@maker",
+      "A useful independent app",
+      "Productivity",
+      "★",
+      "27",
+    ];
+    let previous = -1;
+    for (const item of ordered) {
+      const position = content.indexOf(item);
+      expect(position).toBeGreaterThan(previous);
+      previous = position;
+    }
+    cleanup();
+  });
+
   it("shows picks as full-width screenshots above neutral app details", async () => {
     window.scrollTo = vi.fn();
     const { container } = render(
@@ -191,7 +227,7 @@ describe("marketplace content treatments", () => {
       expect(container.textContent).toContain("1Sample app");
       expect(container.textContent).toContain("Productivity · Launch activity");
       expect(container.querySelectorAll('a[href="/apps/app-1"]')).toHaveLength(
-        6,
+        7,
       );
       const viewLinks = Array.from(
         container.querySelectorAll('a[href="/apps/app-1"]'),
