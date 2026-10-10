@@ -61,7 +61,7 @@ const item = {
 };
 
 describe("My Apps next actions", () => {
-  it("links Analytics and previews owned apps, not pending claims", async () => {
+  it("shows app cards and the submission action while keeping settings off the index", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.stubGlobal("scrollTo", vi.fn());
     const container = document.createElement("div");
@@ -76,61 +76,21 @@ describe("My Apps next actions", () => {
         );
       });
       expect(
-        container.querySelector('a[href="/my-apps/app-owned/rocket-analytics"]')
-          ?.textContent,
-      ).toBe("Analytics");
+        container.querySelector('a[href="/submit"]')?.textContent,
+      ).toContain("Submit my app");
+      expect(
+        container.querySelector('a[href="/my-apps/app-owned"]')?.textContent,
+      ).toContain("Owned app");
+      expect(
+        container.querySelector('a[href="/my-apps/app-pending"]')?.textContent,
+      ).toContain("Pending app");
+      expect(container.textContent).toContain("Domain verified");
+      expect(container.textContent).toContain("Claim pending");
       expect(
         container.querySelector('[aria-label="Owned app analytics preview"]'),
-      ).not.toBeNull();
-      const preview = container.querySelector(
-        '[aria-label="Owned app analytics preview"]',
-      )!;
-      const connections = container.querySelector(
-        '[aria-label="Connect analytics and revenue"]',
-      )!;
-      const badge = container.querySelector(
-        '[aria-label="Owned app Rocket badge"]',
-      )!;
-      const manageConnections = Array.from(
-        container.querySelectorAll("h3"),
-      ).find((element) => element.textContent === "Manage connections")!;
-      expect(
-        badge.compareDocumentPosition(manageConnections) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(badge.closest("details")).toBeNull();
-      expect(
-        badge
-          .querySelector('a[aria-label="Preview Owned app on Rocket"]')
-          ?.getAttribute("href"),
-      ).toBe("https://tryrocket.ai/apps/owned-app?utm_source=rocket_badge");
-      expect(
-        (badge.querySelector("textarea") as HTMLTextAreaElement).value,
-      ).toContain(
-        'href="https://tryrocket.ai/apps/owned-app?utm_source=rocket_badge"',
-      );
-      expect(
-        container.querySelector('a[href="/apps/owned-app"]')?.textContent,
-      ).toBe("View public profile");
-      expect(badge.textContent).toContain("dofollow link to your website");
-      expect(
-        connections.compareDocumentPosition(preview) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(
-        preview.compareDocumentPosition(badge) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(badge.parentElement?.lastElementChild).toBe(
-        container.querySelector('[aria-label="Manage app connections"]'),
-      );
-      expect(
-        container.querySelector('[aria-label="Pending app analytics preview"]'),
       ).toBeNull();
       expect(
-        container.querySelector(
-          'a[href="/my-apps/app-pending/rocket-analytics"]',
-        ),
+        container.querySelector('[aria-label="Manage app connections"]'),
       ).toBeNull();
     } finally {
       await act(async () => root.unmount());
