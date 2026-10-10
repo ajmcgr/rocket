@@ -16,27 +16,17 @@ const STARTER_FEATURES = [
   "Logo & Icon Designer",
   "Brand Kit essentials (view & share)",
   "Full template library",
-  "PNG & SVG downloads",
 ];
 
 const PRO_FEATURES = [
   "3,000 Rocket Credits each month",
-  "Unlimited saved logos & brand kits",
-  "Multiple high-res file types (PNG, EPS, SVG, PDF)",
-  "Multiple color variations (including transparent backgrounds)",
-  "Unlimited post-purchase changes",
-  "Full ownership",
   "Brand Kit ZIP downloads",
-  "Priority generation",
-  "Brand Book & guideline export",
-  "Early access to new generators",
+  "Brand Book PNG and PDF downloads",
 ];
 
 const BUSINESS_FEATURES = [
   "Everything in Pro",
   "15,000 Rocket Credits each month",
-  "Highest priority generation queue",
-  "Dedicated onboarding & support",
 ];
 
 const FAQS = [
@@ -49,10 +39,10 @@ const FAQS = [
   { q: "What is the Buy with Rocket take rate?", a: "Rocket takes a 5% platform fee on payments through new Buy with Rocket plans. This transaction fee is separate from the $99/year Rocket Developer membership. Stripe processing fees and any other applicable charges are additional." },
   { q: "Are Stripe fees included in Rocket's 5%?", a: "No. Rocket's platform fee is separate from Stripe processing fees and any other applicable charges. A $100 purchase leaves $95 for the app before those separate costs." },
   { q: "Do teammates need their own Developer subscription?", a: "The workspace owner's active Rocket Developer membership covers shared workspaces and invited teammates. It does not grant teammates ownership of another developer's app or automatically activate payments or identity integrations." },
-  { q: "What do Create plans cover?", a: "Create plans cover Rocket's logo, icon, and Brand Kit tools. Paid plans add the generation allowances, downloads, export formats, and other features shown in the Create plan cards above. They are separate from Rocket Developer and the Grow products." },
+  { q: "What do Create plans cover?", a: "Create plans cover Rocket's logo, icon, and Brand Kit tools. Paid plans refresh or raise your monthly credit allowance; Pro also adds Brand Kit ZIP and Brand Book downloads. They are separate from Rocket Developer and the Grow products." },
   { q: "What is a Rocket Credit?", a: "Credits power everything you generate. Free includes 500 credits; Starter includes 500/month, Pro 3,000/month, and Business 15,000/month. One-time credit packs never expire." },
-  { q: "How is Free different from Starter?", a: "Free includes 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG and SVG downloads. Choose Starter when you need ongoing generation or files to use outside Rocket." },
-  { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, and priority generation. Shared workspaces are included separately with Rocket Developer ($99/year)." },
+  { q: "How is Free different from Starter?", a: "Free includes 500 one-time credits and no card. Starter renews 500 credits every month, so you can keep generating without buying a credit pack." },
+  { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, Brand Kit ZIP downloads, and Brand Book PNG and PDF downloads. Shared workspaces are included separately with Rocket Developer ($99/year)." },
   { q: "Where do I manage or cancel my subscriptions?", a: "Manage Create billing in Settings → Billing and Rocket Developer membership in Settings → Developer. Manage Launch, Post, and Media billing on each product's own site. Purchases of third-party apps through Buy with Rocket are separate and can be managed from your Library where supported. Check the relevant subscription's billing period and cancellation terms." },
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
   { q: "What does Launch help me do?", a: "Launch has its own product listing and promotion tools. See Launch for current plan details and availability; a free Rocket app listing is separate from a paid Launch purchase." },
@@ -260,7 +250,7 @@ const Pricing = () => {
       <section className="border-b border-neutral-200/60">
         <div className="mx-auto max-w-6xl px-6 py-16 text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Create plans</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Free gives you 500 one-time credits and no card. Starter renews 500 credits every month and adds PNG &amp; SVG downloads.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Free gives you 500 one-time credits and no card. Starter renews 500 credits every month.</p>
           <div className="mt-8 inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 text-sm">
             <button
               type="button"
@@ -291,7 +281,7 @@ const Pricing = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("starter").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("starter").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">For ongoing creation: 500 fresh credits every month, plus PNG &amp; SVG downloads.</p>
+              <p className="mt-2 text-sm text-neutral-600">For ongoing creation: 500 fresh credits every month.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {STARTER_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -346,7 +336,7 @@ const Pricing = () => {
                 <span className="text-5xl font-semibold tracking-tight">{priceFor("business").display}</span>
                 <span className="text-sm text-neutral-500">{priceFor("business").suffix}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">For teams and agencies generating across multiple brands.</p>
+              <p className="mt-2 text-sm text-neutral-600">For higher-volume generation across multiple brands.</p>
               <ul className="mt-6 space-y-3 text-sm">
                 {BUSINESS_FEATURES.map((f) => (
                   <li key={f} className="flex items-start gap-2">
