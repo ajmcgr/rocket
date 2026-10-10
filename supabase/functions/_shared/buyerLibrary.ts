@@ -11,7 +11,8 @@ type Entry = {
 };
 type Client = {
   client_id: string;
-  app_id: string;
+  app_id: string | null;
+  name?: string;
   environment: string;
   is_active?: boolean;
 };
@@ -56,7 +57,7 @@ export function libraryPurchases(
       product = productMap.get(entry.product_id);
     if (!client || !product || product.client_id !== client.client_id)
       return [];
-    const app = appMap.get(client.app_id);
+    const app = client.app_id ? appMap.get(client.app_id) : undefined;
     const order = orders.find(
       (o) =>
         o.client_id === entry.client_id &&
@@ -74,7 +75,7 @@ export function libraryPurchases(
     return [
       {
         purchase_id: entry.purchase_id || entry.id,
-        app_id: client.app_id,
+        app_id: client.app_id || "",
         // Do not leak hidden listing metadata or a disabled outbound URL.
         app_name: app?.name || "Unavailable listing",
         listing_available: !!app,
@@ -99,10 +100,35 @@ export function libraryPurchases(
             }
           : null,
         support_url: app
-          ? detailsMap.get(client.app_id)?.support_url || null
+          ? detailsMap.get(client.app_id || "")?.support_url || null
           : null,
         receipt_url: null, // No stored receipt exists. Never fabricate a Stripe URL.
       },
     ];
+  });
+}
+
+// TEST purchases are visible as receipts only. They never become live app access.
+export function sandboxLibraryPurchases(
+  grants: Entry[],
+  clients: Client[],
+  products: Product[],
+  orders: Order[],
+) {
+  const clientMap = new Map(clients.filter((client) => client.environment === "test").map((client) => [client.client_id, client]));
+  const productMap = new Map(products.map((product) => [product.id, product]));
+  return grants.flatMap((grant) => {
+    const client = clientMap.get(grant.client_id);
+    const product = productMap.get(grant.product_id);
+    const order = orders.find((entry) => entry.id === grant.purchase_id && entry.client_id === grant.client_id && entry.product_id === grant.product_id && entry.status === "paid");
+    if (!client || !product || product.client_id !== client.client_id || grant.status !== "granted" || !order) return [];
+    return [{
+      purchase_id: order.id,
+      app_name: client.name || "Test app",
+      product_name: product.name,
+      amount_cents: order.amount_cents,
+      currency: order.currency,
+      purchased_at: order.created_at,
+    }];
   });
 }

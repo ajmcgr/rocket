@@ -3,7 +3,7 @@ import { APP_URL, getAdmin, getRocketUser, getConnectToken, json } from "../_sha
 import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
 import { billingType, priceMatches } from "../_shared/oneTimePayments.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
-import { libraryPurchases } from "../_shared/buyerLibrary.ts";
+import { libraryPurchases, sandboxLibraryPurchases } from "../_shared/buyerLibrary.ts";
 
 const key = Deno.env.get("STRIPE_SECRET_KEY");
 const stripe = key?.startsWith("sk_live_") ? new Stripe(key, { apiVersion: "2024-06-20" }) : null;
@@ -88,11 +88,11 @@ Deno.serve(async (req) => {
         .select("purchase_id,client_id,product_id,status,created_at").eq("user_id", user.id).order("created_at", { ascending: false });
       if (grantsError) throw grantsError;
       const entries = [ ...(entitlements || []), ...(grants || []).map((entry) => ({ ...entry, valid_until: null, one_time: true })) ];
-      if (!entries.length) return json({ purchases: [] });
+      if (!entries.length) return json({ purchases: [], sandbox_purchases: [] });
       const clientIds = [...new Set(entries.map((entry) => entry.client_id))];
       const productIds = [...new Set(entries.map((entry) => entry.product_id))];
       const [{ data: clients, error: clientsError }, { data: products, error: productsError }] = await Promise.all([
-        admin.from("rocket_oauth_clients").select("client_id,app_id,name,environment,is_active").in("client_id", clientIds).eq("environment", "production"),
+        admin.from("rocket_oauth_clients").select("client_id,app_id,name,environment,is_active").in("client_id", clientIds),
         admin.from("connect_products").select("id,client_id,name,amount_cents,currency,interval,billing_type").in("id", productIds),
       ]);
       if (clientsError || productsError) throw clientsError || productsError;
@@ -104,7 +104,13 @@ Deno.serve(async (req) => {
         appIds.length ? admin.from("public_marketplace_details").select("app_id,support_url").in("app_id", appIds) : { data: [], error: null },
       ]);
       if (appResult.error || orderResult.error || detailsResult.error) throw appResult.error || orderResult.error || detailsResult.error;
-      return json({ purchases: libraryPurchases(entries, clients || [], products || [], appResult.data || [], orderResult.data || [], detailsResult.data || []) });
+      return json({
+        purchases: libraryPurchases(entries, clients || [], products || [], appResult.data || [], orderResult.data || [], detailsResult.data || []),
+        sandbox_purchases: sandboxLibraryPurchases(
+          (grants || []).map((grant) => ({ ...grant, one_time: true })),
+          clients || [], products || [], orderResult.data || [],
+        ),
+      });
     }
 
     const appId = text(body.app_id, 36);

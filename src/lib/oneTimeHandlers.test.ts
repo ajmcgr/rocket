@@ -109,8 +109,10 @@ describe("actual production checkout handler (isolated)",()=>{
       q.eq=(...args:any[])=>{filters.push([table,...args]);return q;};return q;
     }};
     const handler=load("supabase/functions/rocket-buy/index.ts",{},admin);const response=await handler(request({action:"library"}));expect(response.status).toBe(200);
-    expect((await response.json()).purchases[0]).toMatchObject({purchase_id:"purchase",active:true,plan:{billing_type:"one_time"}});
-    expect(filters).toContainEqual(["connect_purchase_grants","user_id","buyer"]);expect(filters).toContainEqual(["rocket_oauth_clients","environment","production"]);
+    const result=await response.json();
+    expect(result.purchases[0]).toMatchObject({purchase_id:"purchase",active:true,plan:{billing_type:"one_time"}});
+    expect(filters).toContainEqual(["connect_purchase_grants","user_id","buyer"]);
+    expect(result.sandbox_purchases).toEqual([]);
   });
   it("creates payment mode, one unit, exact approved URI and $1.95 fee",async()=>{
     const h=checkoutHarness(); expect((await h.handler(request(body))).status).toBe(200);

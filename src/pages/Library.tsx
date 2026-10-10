@@ -23,6 +23,15 @@ type Purchase = {
   valid_until: string | null;
   active: boolean;
 };
+type SandboxPurchase = {
+  purchase_id: string;
+  app_name: string;
+  product_name: string;
+  amount_cents: number;
+  currency: string;
+  purchased_at: string;
+};
+type LibraryResult = { purchases: Purchase[]; sandbox_purchases?: SandboxPurchase[] };
 
 async function request<T>(action: string, appId?: string): Promise<T> {
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
@@ -36,8 +45,9 @@ async function request<T>(action: string, appId?: string): Promise<T> {
 export default function Library() {
   const { user, loading: authLoading } = useAuth();
   const userId = user?.id;
-  const [loaded, setLoaded] = useState<{owner:string; purchases:Purchase[]} | null>(null);
-  const purchases = loaded && loaded.owner === userId ? loaded.purchases : [];
+  const [loaded, setLoaded] = useState<{owner:string; result:LibraryResult} | null>(null);
+  const purchases = loaded && loaded.owner === userId ? loaded.result.purchases : [];
+  const sandboxPurchases = loaded && loaded.owner === userId ? loaded.result.sandbox_purchases || [] : [];
   const currentUser = useRef(userId); currentUser.current=userId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -52,9 +62,9 @@ export default function Library() {
     }
     setLoading(true);
     let cancelled = false;
-    request<{ purchases: Purchase[] }>("library")
+    request<LibraryResult>("library")
       .then((result) => {
-        if (!cancelled) setLoaded({owner:userId,purchases:result.purchases || []});
+        if (!cancelled) setLoaded({owner:userId,result:{purchases:result.purchases || [],sandbox_purchases:result.sandbox_purchases || []}});
       })
       .catch((caught: unknown) => {
         if (!cancelled)
@@ -85,8 +95,8 @@ export default function Library() {
         purchase.app_id,
       );
       if (currentUser.current!==userId) return;
-      const result = await request<{ purchases: Purchase[] }>("library");
-      if (currentUser.current===userId) setLoaded({owner:userId,purchases:result.purchases || []});
+      const result = await request<LibraryResult>("library");
+      if (currentUser.current===userId) setLoaded({owner:userId,result:{purchases:result.purchases || [],sandbox_purchases:result.sandbox_purchases || []}});
     } catch (caught: unknown) {
       if (currentUser.current===userId) setError(
         caught instanceof Error
@@ -130,7 +140,7 @@ export default function Library() {
           {error}
         </p>
       )}
-      {!loading && !error && user && !purchases.length && (
+      {!loading && !error && user && !purchases.length && !sandboxPurchases.length && (
         <div className="mt-8 rounded-2xl border border-neutral-200 p-6">
           <p>No purchases yet.</p>
           <p className="mt-2 text-sm text-neutral-600">Subscriptions and one-time purchases through Buy with Rocket appear here once payment is confirmed.</p>
@@ -203,6 +213,21 @@ export default function Library() {
             </article>
           ))}
         </div>
+      )}
+      {!loading && !error && user && sandboxPurchases.length > 0 && (
+        <section className="mt-10" aria-label="Sandbox purchases">
+          <h2 className="text-2xl font-semibold">Sandbox purchases</h2>
+          <p className="mt-2 text-sm text-neutral-600">Stripe TEST payments only. These records do not grant live access.</p>
+          <div className="mt-4 space-y-3">
+            {sandboxPurchases.map((purchase) => (
+              <article key={purchase.purchase_id} className="rounded-2xl border border-neutral-200 p-5">
+                <h3 className="text-lg font-semibold">{purchase.app_name}</h3>
+                <p className="mt-1 text-sm">{purchase.product_name} · {new Intl.NumberFormat("en-US", { style: "currency", currency: purchase.currency }).format(purchase.amount_cents / 100)} · One-time TEST purchase</p>
+                <p className="mt-2 text-sm text-neutral-600">Payment confirmed {new Date(purchase.purchased_at).toLocaleDateString()} · Test order {purchase.purchase_id}</p>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
     </main>
   );
