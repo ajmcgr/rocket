@@ -63,7 +63,7 @@ export default function HomeStory() {
 
       <section
         aria-labelledby="home-letter-heading"
-        className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-6 py-10 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-12 sm:py-14"
+        className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-8 py-12 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-16 sm:py-16"
       >
         <h2
           id="home-letter-heading"
@@ -71,7 +71,7 @@ export default function HomeStory() {
         >
           Why we built Rocket
         </h2>
-        <div className="mt-10 space-y-7 text-lg leading-8 text-neutral-700 dark:text-neutral-300 sm:text-xl sm:leading-9">
+        <div className="mt-10 space-y-7 text-base leading-7 text-neutral-700 dark:text-neutral-300 sm:text-lg sm:leading-8">
           <p className="font-semibold text-neutral-950 dark:text-white">
             Hello there!
           </p>
