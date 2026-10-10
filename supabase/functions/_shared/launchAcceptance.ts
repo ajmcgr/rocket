@@ -18,3 +18,10 @@ export function paidProProof(t: any, g: any, userId: string, p: any, merchant: s
     typeof t.stripe_payment_intent_id === 'string' && t.stripe_payment_intent_id.startsWith('pi_') &&
     g.purchase_id === t.id && g.user_id === userId && g.client_id === LAUNCH_CLIENT_ID && g.product_id === p.id && g.quantity === 1 && g.status === 'granted';
 }
+export function launchFulfilmentProof(state: any, rocketUserId: string, purchaseId: string, productId: string) {
+  if (!state || state.identity_verified !== true || state.rocket_subject !== rocketUserId || !Array.isArray(state.fulfilments)) return false;
+  const matching = state.fulfilments.filter((f: any) => f.purchase_id === purchaseId);
+  return matching.length === 1 && matching[0].rocket_subject === rocketUserId &&
+    matching[0].rocket_client_id === LAUNCH_CLIENT_ID && matching[0].rocket_product_id === productId &&
+    typeof matching[0].order_id === 'string' && typeof matching[0].launch_product_id === 'string';
+}
