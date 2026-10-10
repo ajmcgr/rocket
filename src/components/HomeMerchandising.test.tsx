@@ -130,14 +130,17 @@ describe("homepage section gates", () => {
       expect(
         [...view.container.querySelectorAll("h2")].map((h) => h.textContent),
       ).toEqual([
-        "Rocket Picks",
-        "Rising on Rocket",
+        "Our picks",
+        "Rising",
         "New & Noteworthy",
-        "Top Ranked Apps",
+        "Top Ranked",
         "Categories",
       ]);
       expect(view.container.textContent).toContain(
         "Most viewed app pages on Rocket.",
+      );
+      expect(view.container.textContent).not.toContain(
+        "20 Rocket app-page views",
       );
       expect(view.container.textContent).toContain(
         "Ranked by reviews, bookmarks and verified purchases.",
@@ -163,7 +166,7 @@ describe("homepage section gates", () => {
     });
     const view = await render({ ...emptyMerchandising(), top: [{ app }] });
     try {
-      expect(view.container.textContent).toContain("Top Ranked Apps");
+      expect(view.container.textContent).toContain("Top Ranked");
       expect(view.container.textContent).not.toContain("Continue exploring");
       expect(view.container.textContent).not.toContain(
         "From developers you follow",

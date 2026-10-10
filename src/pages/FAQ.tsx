@@ -30,6 +30,7 @@ const sections = [
   {
     title: "Buy with Rocket fees",
     questions: [
+      { q: "Do I need to create a second Stripe product for Buy with Rocket?", a: "Not when an eligible fixed price already exists on the Stripe merchant account connected to Rocket for payments. You can map that price to an app access key without creating another Stripe product or price. The mapping remains inactive until payment and entitlement handling are verified. A separate read-only revenue connection does not give Rocket payment access to its products; public live checkout is currently disabled." },
       { q: "What is the Buy with Rocket take rate?", a: "Rocket takes a 5% platform fee on payments through new Buy with Rocket plans. This transaction fee is separate from the $99/year Rocket Developer membership." },
       { q: "Are Stripe processing fees included in the 5%?", a: "No. Stripe processing fees and any other applicable charges are separate. On a $100 payment, Rocket's platform fee is $5, leaving $95 for the app before those separate costs." },
     ],

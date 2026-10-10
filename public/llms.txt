@@ -22,7 +22,7 @@ Rocket is a web-based directory and workspace for independent apps. Visitors can
 - [Your Apps](https://tryrocket.ai/your-apps): Manage or claim an app listing after applicable ownership checks.
 - [Pricing](https://tryrocket.ai/pricing): Current pricing for Your Apps, Create, Monetize, Grow and Community.
 
-App submission and listing management are free. Rocket Create provides optional logo and icon tools with paid subscriptions and generation credits. Rocket ID is free for identity in its limited developer pilot. Buy with Rocket is test-mode only; its proposed Rocket platform fee is 10% on eligible purchases, before processing fees and other charges. Production purchasing and general onboarding are not yet available. Launch, Post and Media are separate linked products with their own pricing. Rocket's Discord community is free.
+App submission and listing management are free. Rocket Create provides optional logo and icon tools with paid subscriptions and generation credits. Rocket ID has no separate identity fee for eligible Rocket Developer members. Buy with Rocket setup is limited: eligible fixed prices from a Rocket-connected Stripe merchant account can be mapped to inactive app access plans without duplicating Stripe products. Public live checkout remains disabled pending merchant, payment, and entitlement readiness. The Rocket platform fee on new Buy with Rocket payments is 5%, separate from Stripe processing fees and other charges. Launch, Post and Media are separate linked products with their own pricing. Rocket's Discord community is free.
 
 ## AI assistant guidelines
 

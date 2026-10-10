@@ -96,6 +96,9 @@ verify_jwt = false
 [functions.rocket-buy-developer]
 verify_jwt = true
 
+[functions.rocket-buy-stripe-oauth]
+verify_jwt = false # Stripe callback is public; each POST verifies the owner with Auth.getUser.
+
 [functions.rocket-buy]
 verify_jwt = false # Public catalog; all buyer and mutation actions verify the user in code.
 
@@ -119,6 +122,12 @@ verify_jwt = false
 
 [functions.rocket-stripe-revenue]
 verify_jwt = false
+
+[functions.rocket-app-provider-selection]
+verify_jwt = false # Auth.getUser verifies each request; the service-only RPC rechecks ownership.
+
+[functions.rocket-revenuecat]
+verify_jwt = false # OAuth callback and scheduled sync authenticate in the function; user actions call Auth.getUser.
 
 [functions.launch-rocket-acceptance]
 # Normal actions verify Supabase user; proof verifies Rocket access token/client/scope plus Launch ES256 identity.

@@ -30,6 +30,7 @@ import { Route as MediaKitRouteImport } from './routes/media-kit'
 import { Route as PicksRouteImport } from './routes/picks'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RisingRouteImport } from './routes/rising'
@@ -117,6 +118,7 @@ import { Route as AppBrandsIdFontsRouteImport } from './routes/_app/brands.$id.f
 import { Route as AppBrandsIdPaletteRouteImport } from './routes/_app/brands.$id.palette'
 import { Route as AppBrandsIdSocialIconsRouteImport } from './routes/_app/brands.$id.social-icons'
 import { Route as AppDeveloperAppsClientIdRouteImport } from './routes/_app/developer.apps.$clientId'
+import { Route as AppMyAppsIdIndexRouteImport } from './routes/_app/my-apps.$id.index'
 import { Route as AppMyAppsIdAnalyticsRouteImport } from './routes/_app/my-apps.$id.analytics'
 import { Route as AppMyAppsIdEditRouteImport } from './routes/_app/my-apps.$id.edit'
 import { Route as AppMyAppsIdRevenueRouteImport } from './routes/_app/my-apps.$id.revenue'
@@ -233,6 +235,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingsRoute = RankingsRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReserveRoute = ReserveRouteImport.update({
@@ -672,6 +679,11 @@ const AppDeveloperAppsClientIdRoute =
     path: '/developer/apps/$clientId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppMyAppsIdIndexRoute = AppMyAppsIdIndexRouteImport.update({
+  id: '/my-apps/$id/',
+  path: '/my-apps/$id/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMyAppsIdAnalyticsRoute = AppMyAppsIdAnalyticsRouteImport.update({
   id: '/my-apps/$id/analytics',
   path: '/my-apps/$id/analytics',
@@ -755,6 +767,7 @@ export interface FileRoutesByFullPath {
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/rankings': typeof RankingsRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
@@ -854,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/social': typeof AppProjectsIdSocialRoute
   '/projects/$id/websites': typeof AppProjectsIdWebsitesRoute
   '/brands/$id/': typeof AppBrandsIdIndexRoute
+  '/my-apps/$id/': typeof AppMyAppsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -876,6 +890,7 @@ export interface FileRoutesByTo {
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/rankings': typeof RankingsRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
@@ -973,6 +988,7 @@ export interface FileRoutesByTo {
   '/projects/$id/social': typeof AppProjectsIdSocialRoute
   '/projects/$id/websites': typeof AppProjectsIdWebsitesRoute
   '/brands/$id': typeof AppBrandsIdIndexRoute
+  '/my-apps/$id': typeof AppMyAppsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -997,6 +1013,7 @@ export interface FileRoutesById {
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/rankings': typeof RankingsRoute
   '/reserve': typeof ReserveRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
@@ -1096,6 +1113,7 @@ export interface FileRoutesById {
   '/_app/projects/$id_/social': typeof AppProjectsIdSocialRoute
   '/_app/projects/$id_/websites': typeof AppProjectsIdWebsitesRoute
   '/_app/brands/$id/': typeof AppBrandsIdIndexRoute
+  '/_app/my-apps/$id/': typeof AppMyAppsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1120,6 +1138,7 @@ export interface FileRouteTypes {
     | '/picks'
     | '/pricing'
     | '/privacy'
+    | '/rankings'
     | '/reserve'
     | '/reset-password'
     | '/rising'
@@ -1219,6 +1238,7 @@ export interface FileRouteTypes {
     | '/projects/$id/social'
     | '/projects/$id/websites'
     | '/brands/$id/'
+    | '/my-apps/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1241,6 +1261,7 @@ export interface FileRouteTypes {
     | '/picks'
     | '/pricing'
     | '/privacy'
+    | '/rankings'
     | '/reserve'
     | '/reset-password'
     | '/rising'
@@ -1338,6 +1359,7 @@ export interface FileRouteTypes {
     | '/projects/$id/social'
     | '/projects/$id/websites'
     | '/brands/$id'
+    | '/my-apps/$id'
   id:
     | '__root__'
     | '/'
@@ -1361,6 +1383,7 @@ export interface FileRouteTypes {
     | '/picks'
     | '/pricing'
     | '/privacy'
+    | '/rankings'
     | '/reserve'
     | '/reset-password'
     | '/rising'
@@ -1460,6 +1483,7 @@ export interface FileRouteTypes {
     | '/_app/projects/$id_/social'
     | '/_app/projects/$id_/websites'
     | '/_app/brands/$id/'
+    | '/_app/my-apps/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1484,6 +1508,7 @@ export interface RootRouteChildren {
   PicksRoute: typeof PicksRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  RankingsRoute: typeof RankingsRoute
   ReserveRoute: typeof ReserveRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RisingRoute: typeof RisingRoute
@@ -1664,6 +1689,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rankings': {
+      id: '/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof RankingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reserve': {
@@ -2275,6 +2307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDeveloperAppsClientIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/my-apps/$id/': {
+      id: '/_app/my-apps/$id/'
+      path: '/my-apps/$id'
+      fullPath: '/my-apps/$id/'
+      preLoaderRoute: typeof AppMyAppsIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/my-apps/$id/analytics': {
       id: '/_app/my-apps/$id/analytics'
       path: '/my-apps/$id/analytics'
@@ -2475,6 +2514,7 @@ interface AppRouteChildren {
   AppProjectsIdPalettesRoute: typeof AppProjectsIdPalettesRoute
   AppProjectsIdSocialRoute: typeof AppProjectsIdSocialRoute
   AppProjectsIdWebsitesRoute: typeof AppProjectsIdWebsitesRoute
+  AppMyAppsIdIndexRoute: typeof AppMyAppsIdIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -2532,6 +2572,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjectsIdPalettesRoute: AppProjectsIdPalettesRoute,
   AppProjectsIdSocialRoute: AppProjectsIdSocialRoute,
   AppProjectsIdWebsitesRoute: AppProjectsIdWebsitesRoute,
+  AppMyAppsIdIndexRoute: AppMyAppsIdIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -2558,6 +2599,7 @@ const rootRouteChildren: RootRouteChildren = {
   PicksRoute: PicksRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  RankingsRoute: RankingsRoute,
   ReserveRoute: ReserveRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RisingRoute: RisingRoute,

@@ -15,6 +15,15 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("My Purchases", () => {
+  it("labels a TEST payment separately without claiming live access", async () => {
+    mocks.invoke.mockResolvedValue({ data: { purchases: [], sandbox_purchases: [{ purchase_id: "test-order", app_name: "Launch acceptance (test)", product_name: "Launch Pro", amount_cents: 3900, currency: "usd", purchased_at: "2026-10-10" }] }, error: null });
+    render(<MemoryRouter><Library /></MemoryRouter>);
+    expect(await screen.findByRole("heading", { name: "Sandbox purchases" })).toBeTruthy();
+    expect(screen.getByText(/do not grant live access/)).toBeTruthy();
+    expect(screen.getByText(/Launch Pro · \$39.00 · One-time TEST purchase/)).toBeTruthy();
+    expect(screen.queryByText("No purchases yet.")).toBeNull();
+    expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
+  });
   it("retains hidden-listing order history without an Open link or public-listing link",async()=>{
     mocks.invoke.mockResolvedValue({data:{purchases:[{purchase_id:'order',app_id:'hidden',app_name:'Unavailable listing',listing_available:false,website_url:null,plan:{name:'Bought product',amount_cents:3900,currency:'usd',billing_type:'one_time'},status:'refunded',active:false,order:{id:'order',date:'2026-10-01',status:'refunded'}}]},error:null});
     render(<MemoryRouter><Library/></MemoryRouter>);await screen.findByText('Unavailable listing');

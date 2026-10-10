@@ -78,8 +78,10 @@ it("paginates apps and batches optional media/metadata without per-app queries",
   render(<CollectionDetail slug={collection.slug} />);
   await waitFor(() => expect(screen.getAllByRole("article")).toHaveLength(24));
   expect(m.apps).toHaveBeenCalledTimes(1);
-  expect(m.media.mock.calls.at(-1)?.[0]).toHaveLength(24);
-  expect(m.metadata.mock.calls.at(-1)?.[0]).toHaveLength(24);
+  await waitFor(() => {
+    expect(m.media.mock.calls.at(-1)?.[0]).toHaveLength(24);
+    expect(m.metadata.mock.calls.at(-1)?.[0]).toHaveLength(24);
+  });
   expect(screen.getByRole("button", { name: "Show more apps" })).toBeTruthy();
 });
 it("never falls back to owner data when public access disappears", async () => {

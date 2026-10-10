@@ -20,13 +20,29 @@ const obj = (value: unknown): Row => value && typeof value === "object" && !Arra
 const label = (name: string) => name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
 const count = (value: unknown) => typeof value === "number" ? value.toLocaleString() : "Not tracked";
+const statEmojis: Record<string, string> = {
+  indexed: "📚", discoverable: "🧭", claimed: "✅", domain_verified: "🌐",
+  traffic_verified: "📈", revenue_verified: "💵", held_ambiguous: "⚠️",
+  rocket_id_connected: "🪪", buy_enabled: "🛒", usage_verified: "📊",
+  members: "👥", new_members: "🎉", developer_members: "🧑‍💻",
+  profile_views: "👀", saves: "🔖", reviews: "⭐", searches: "🔎",
+  outbound_clicks: "↗️", submissions: "🚀", claims: "🤝",
+  ga4_connections: "📈", revenue_connections: "💳", claim_review: "📋",
+  review_reports: "🚩", failed_imports: "⚠️", provider_failures: "🔌",
+  site_failures: "🛠️", eligible: "✨", queued: "📬", sent: "📤",
+  delivered: "✅", clicked: "👆", verified: "✔️", connected: "🔗",
+  bounced: "↩️", suppressed: "🔕", skipped: "⏭️", failed: "⚠️",
+};
 const when = (value: unknown) => typeof value === "string" ? new Date(value).toLocaleString() : "—";
 const appUrl = (row: Row) => `/apps/${encodeURIComponent(String(row.slug || row.id))}`;
 const outreachStatuses = ["eligible", "queued", "sent", "delivered", "clicked", "claimed", "verified", "connected", "bounced", "suppressed", "skipped", "failed"];
 
 function StatGrid({ data }: { data: Row }) {
   return <div className="rocket-admin-stats">{Object.entries(data).map(([name, value]) =>
-    <div className="rocket-admin-stat" key={name}><span>{label(name)}</span><strong>{count(value)}</strong></div>)}</div>;
+    <div className="rocket-admin-stat" key={name}>
+      <div className="rocket-admin-stat-header"><span>{label(name)}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
+      <div className={`rocket-admin-stat-figure${typeof value === "number" ? "" : " rocket-admin-stat-figure-untracked"}`}><span aria-hidden="true">{statEmojis[name] || "📊"}</span><strong>{count(value)}</strong></div>
+    </div>)}</div>;
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -142,9 +158,9 @@ export default function Admin() {
     {data && section === "marketing" && <>
       <Panel title="Task collections">{picks.map(row => <div key={String(row.id)} className="mb-4"><strong>{String(row.name)}</strong><PickCollection appId={String(row.app_id)} /></div>)}</Panel>
       <p className="rocket-admin-note">Signals nominate candidates; only a deliberate Feature action creates a Rocket Pick. Private metrics are not used here.</p>
-      <Panel title="Rocket Picks">{picks.length ? <div className="rocket-admin-list">{picks.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link> · {String(row.placement)}</strong><p>{String(row.headline || "No editorial headline")}</p><button disabled={busy} onClick={() => void act("unfeature", String(row.app_id))}>Unfeature</button></article>)}</div> : <Empty>No Rocket Picks yet.</Empty>}</Panel>
+      <Panel title="Our picks">{picks.length ? <div className="rocket-admin-list">{picks.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link> · {String(row.placement)}</strong><p>{String(row.headline || "No editorial headline")}</p><button disabled={busy} onClick={() => void act("unfeature", String(row.app_id))}>Unfeature</button></article>)}</div> : <Empty>No picks yet.</Empty>}</Panel>
       <Panel title="Candidates from public Launch activity">{candidates.length ? <div className="rocket-admin-list">{candidates.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link></strong><p>{String(row.tagline || "No description")} · {Array.isArray(row.categories) ? row.categories.join(", ") : "Uncategorized"}</p><p>Signal: {String(row.signal_type || "New listing")} · public Launch votes: {count(row.net_votes)}</p><div className="rocket-admin-actions"><a href={String(row.website_url)} target="_blank" rel="noopener noreferrer">External app ↗</a><button disabled={busy || picks.some((pick) => pick.app_id === row.id)} onClick={() => { const headline = window.prompt("Optional factual headline for this Rocket Pick:") || ""; void act("feature", String(row.id), null, { placement: "standard", headline }); }}>Feature</button></div></article>)}</div> : <Empty />}</Panel>
-      <Panel title="This week on Rocket"><p className="rocket-admin-muted">Select existing Rocket Picks to assemble a draft. Nothing is sent to Beehiiv.</p>{picks.map((row) => <label className="rocket-admin-check" key={String(row.id)}><input type="checkbox" checked={selected.includes(String(row.app_id))} onChange={(event) => setSelected((prior) => event.target.checked ? [...prior, String(row.app_id)] : prior.filter((id) => id !== row.app_id))} />{String(row.name)}</label>)}{issue && <><div className="rocket-admin-actions"><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}`)}>Copy subject</button><button onClick={() => void copy(`${issueApps.length} apps selected by Rocket’s editor`) }>Copy preview</button><button onClick={() => void copyNewsletter()}>Copy newsletter</button><button onClick={() => void copy(issue)}>Copy plain text</button><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}. Explore ${issueApps.map((row) => `https://tryrocket.ai${appUrl(row)}`).join(" ")}`)}>Copy social post</button></div><pre className="rocket-admin-draft">{issue}</pre></>}</Panel>
+      <Panel title="This week on Rocket"><p className="rocket-admin-muted">Select existing picks to assemble a draft. Nothing is sent to Beehiiv.</p>{picks.map((row) => <label className="rocket-admin-check" key={String(row.id)}><input type="checkbox" checked={selected.includes(String(row.app_id))} onChange={(event) => setSelected((prior) => event.target.checked ? [...prior, String(row.app_id)] : prior.filter((id) => id !== row.app_id))} />{String(row.name)}</label>)}{issue && <><div className="rocket-admin-actions"><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}`)}>Copy subject</button><button onClick={() => void copy(`${issueApps.length} apps selected by Rocket’s editor`) }>Copy preview</button><button onClick={() => void copyNewsletter()}>Copy newsletter</button><button onClick={() => void copy(issue)}>Copy plain text</button><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}. Explore ${issueApps.map((row) => `https://tryrocket.ai${appUrl(row)}`).join(" ")}`)}>Copy social post</button></div><pre className="rocket-admin-draft">{issue}</pre></>}</Panel>
     </>}
     {data && section === "outreach" && <>
       <p className="rocket-admin-note">Founder outreach is in test mode and paused. No real Launch founders can be emailed from this version.</p>

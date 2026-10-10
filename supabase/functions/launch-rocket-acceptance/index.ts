@@ -1,8 +1,8 @@
 import Stripe from "npm:stripe@16.12.0";
 import { getAdmin, getConnectToken, getRocketUser } from "../_shared/rocketConnect.ts";
-import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
-import { LAUNCH_APP_ID, LAUNCH_CLIENT_ID, acceptancePlan, pilotBuyer, paidProProof } from "../_shared/launchAcceptance.ts";
+import { LAUNCH_APP_ID, LAUNCH_CLIENT_ID, acceptancePlan, pilotBuyer, paidProProof, launchFulfilmentProof } from "../_shared/launchAcceptance.ts";
 
 const key = Deno.env.get("STRIPE_SECRET_KEY");
 const stripe = key?.startsWith("sk_live_") ? new Stripe(key, { apiVersion: "2024-06-20" }) : null;
@@ -22,8 +22,8 @@ async function context() {
   const { data: configuration, error: ge } = await admin.from("rocket_buy_configuration").select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
   if (ge || configuration.platform_fee_bps !== 500) return null;
   const { data: account, error: ae } = await admin.from("connect_developer_accounts").select("*").eq("client_id", LAUNCH_CLIENT_ID).eq("developer_user_id", client.created_by).eq("is_current", true).single();
-  if (ae || account.stripe_api_version !== "v2" || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
-  if (!stripeConnectV2Ready(await retrieveStripeConnectV2Merchant(account.stripe_account_id, "production"))) return null;
+  if (ae || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
+  if (!(await buyMerchantReadiness(account, stripe)).ready) return null;
   const { data: plan, error: pe } = await admin.from("connect_products").select("*").eq("id", planId()).single();
   if (pe || !acceptancePlan(plan, planId(), account.id, client.created_by)) return null;
   return { admin, client, account, plan, configuration };
@@ -50,11 +50,11 @@ Deno.serve(async req => {
       if (te || ge || !paidProProof(transaction, grant, token.user_id, plan, account.stripe_account_id)) return reply(req, { error: 'natural_paid_purchase_required' }, 409);
       const paid = await stripe!.checkout.sessions.retrieve(transaction.stripe_checkout_session_id, { stripeAccount: account.stripe_account_id });
       if (!paid.livemode || paid.mode !== 'payment' || paid.payment_status !== 'paid' || paid.amount_total !== 3900 || paid.currency !== 'usd' || paid.payment_intent !== transaction.stripe_payment_intent_id) return reply(req, { error: 'paid_checkout_mismatch' }, 409);
-      const idToken = req.headers.get('x-rocket-id-token');
-      if (!idToken || idToken.length > 8192) return reply(req, { error: 'identity_required' }, 401);
-      const external = await fetch('https://gzpypxgdkxdynovploxn.supabase.co/functions/v1/launch-rocket-access', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: req.headers.get('authorization')!, 'X-Rocket-ID-Token': idToken }, body: JSON.stringify({ action: 'status' }), signal: AbortSignal.timeout(10000) });
+      const launchAuthorization = req.headers.get('x-launch-authorization');
+      if (!launchAuthorization?.startsWith('Bearer ') || launchAuthorization.length > 8192) return reply(req, { error: 'launch_identity_required' }, 401);
+      const external = await fetch('https://gzpypxgdkxdynovploxn.supabase.co/functions/v1/launch-rocket-access', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: launchAuthorization }, body: JSON.stringify({ action: 'status' }), signal: AbortSignal.timeout(10000) });
       const state = await external.json();
-      if (!external.ok || state.identity_verified !== true || !Array.isArray(state.fulfilments) || state.fulfilments.filter((f: any) => f.purchase_id === transaction.id).length !== 1) return reply(req, { error: 'one_launch_fulfilment_required' }, 409);
+      if (!external.ok || !launchFulfilmentProof(state, token.user_id, transaction.id, plan.id)) return reply(req, { error: 'one_launch_fulfilment_required' }, 409);
       const { error } = await admin.from('connect_products').update({ integration_confirmed_at: new Date().toISOString() }).eq('id', plan.id).eq('client_id', LAUNCH_CLIENT_ID).is('integration_confirmed_at', null);
       if (error) throw error;
       return reply(req, { verified: true, purchase_id: transaction.id });

@@ -26,6 +26,10 @@ export default function AppJourney({ item }: { item: MyApp }) {
             <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect Stripe</span><span className="mt-1 block text-sm text-neutral-600">Verify revenue. Payment setup is separate.</span></span>
             <span aria-hidden="true" className="text-xl text-sky-800">→</span>
           </Link>
+          {(["Polar", "Dodo Payments"] as const).map((provider) => <div key={provider} className="flex min-h-24 items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+            <span className="text-lg font-semibold text-neutral-700">{provider}</span>
+            <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-700">Coming soon</span>
+          </div>)}
         </div>
       </div>}
   </div>;

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
-import { acceptancePlan, pilotBuyer, paidProProof, LAUNCH_CLIENT_ID } from '../supabase/functions/_shared/launchAcceptance.ts';
+import { acceptancePlan, pilotBuyer, paidProProof, launchFulfilmentProof, LAUNCH_CLIENT_ID } from '../supabase/functions/_shared/launchAcceptance.ts';
 const id = '10000000-0000-4000-8000-000000000001';
 const buyer = '20000000-0000-4000-8000-000000000001';
 const owner = '20000000-0000-4000-8000-000000000002';
@@ -20,11 +20,21 @@ test('proof requires natural one-time payment and matching unrefunded webhook gr
   for(const delta of [{status:'refunded'},{quantity:2},{purchase_id:'other'},{user_id:owner}]) assert.equal(paidProProof(t,{...g,...delta},buyer,plan,'acct_fixture'),false);
   assert.equal(paidProProof({...t,stripe_subscription_id:'sub_fixture'},g,buyer,plan,'acct_fixture'),false);
 });
+test('private proof requires one Launch order for the same buyer, client and product', () => {
+  const order = { purchase_id: id, order_id: 'order', launch_product_id: 'draft', rocket_subject: buyer, rocket_client_id: LAUNCH_CLIENT_ID, rocket_product_id: id };
+  const state = { identity_verified: true, rocket_subject: buyer, fulfilments: [order] };
+  assert.equal(launchFulfilmentProof(state, buyer, id, id), true);
+  assert.equal(launchFulfilmentProof({ ...state, rocket_subject: owner }, buyer, id, id), false);
+  assert.equal(launchFulfilmentProof({ ...state, fulfilments: [order, order] }, buyer, id, id), false);
+  for (const change of [{ rocket_subject: owner }, { rocket_client_id: 'other' }, { rocket_product_id: owner }, { purchase_id: owner }]) {
+    assert.equal(launchFulfilmentProof({ ...state, fulfilments: [{ ...order, ...change }] }, buyer, id, id), false);
+  }
+});
 test('old monthly enable flag never enables private checkout or invokes Stripe', async () => {
   const source=(await readFile(new URL('../supabase/functions/launch-rocket-acceptance/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
   const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
   let handler; const unexpected=()=>{throw new Error('must not call');};
-  new Function('Stripe','getAdmin','getConnectToken','getRocketUser','retrieveStripeConnectV2Merchant','stripeConnectV2Ready','liveWebhookConfigured','LAUNCH_APP_ID','LAUNCH_CLIENT_ID','acceptancePlan','pilotBuyer','paidProProof','Deno',js)(unexpected,unexpected,unexpected,unexpected,unexpected,unexpected,unexpected,'app',LAUNCH_CLIENT_ID,acceptancePlan,pilotBuyer,paidProProof,{env:{get:k=>k==='LAUNCH_ACCEPTANCE_ENABLED'?'true':undefined},serve:fn=>{handler=fn;}});
+  new Function('Stripe','getAdmin','getConnectToken','getRocketUser','buyMerchantReadiness','liveWebhookConfigured','LAUNCH_APP_ID','LAUNCH_CLIENT_ID','acceptancePlan','pilotBuyer','paidProProof','launchFulfilmentProof','Deno',js)(unexpected,unexpected,unexpected,unexpected,unexpected,unexpected,'app',LAUNCH_CLIENT_ID,acceptancePlan,pilotBuyer,paidProProof,launchFulfilmentProof,{env:{get:k=>k==='LAUNCH_ACCEPTANCE_ENABLED'?'true':undefined},serve:fn=>{handler=fn;}});
   for(const action of ['status','checkout','proof']) {
     const response=await handler(new Request('https://rocket.test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})}));
     assert.equal(response.status,action==='status'?200:409);

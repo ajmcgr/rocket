@@ -1,4 +1,3 @@
-import { rocketViewsLabel } from "@/lib/homeMerchandising";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +19,7 @@ import {
   RankedAppRow,
 } from "./MarketplaceCards";
 import AppLogo from "./AppLogo";
+import { categoryGradients } from "@/lib/categoryCardStyles";
 
 function Heading({
   id,
@@ -95,7 +95,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-10 sm:mt-12" aria-labelledby="home-picks">
           <Heading
             id="home-picks"
-            title="Rocket Picks"
+            title="Our picks"
             description="Apps worth knowing about right now."
             href="/picks"
           />
@@ -124,7 +124,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
           <Heading
             id="home-rising"
-            title="Rising on Rocket"
+            title="Rising"
             description="Most viewed app pages on Rocket."
             href="/rising"
             action="View rising apps"
@@ -137,7 +137,6 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                   {...save(row.app.id)}
                   rank={index + 1}
                   metadata={metadata.get(row.app.id)}
-                  eyebrow={rocketViewsLabel(row.viewCount)}
                 />
               </div>
             ))}
@@ -176,7 +175,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-12 sm:mt-16" aria-labelledby="home-top">
           <Heading
             id="home-top"
-            title="Top Ranked Apps"
+            title="Top Ranked"
             description="Ranked by reviews, bookmarks and verified purchases."
             href="/discover?view=rankings"
             action="View rankings"
@@ -248,16 +247,16 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
             action="All categories"
           />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {data.categories.map((category) => (
+            {data.categories.map((category, index) => (
               <Link
                 key={category.category}
                 to={`/discover?view=all&category=${encodeURIComponent(category.category)}`}
-                className="min-w-0 rounded-xl border border-neutral-200 px-4 py-4 hover:border-sky-300 focus-visible:outline-2 focus-visible:outline-sky-500"
+                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} min-w-0 rounded-xl px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-sky-500`}
               >
                 <strong className="block break-words text-sm sm:text-base">
                   {category.category}
                 </strong>
-                <span className="mt-1 block text-xs text-neutral-500">
+                <span className="mt-1 block text-xs opacity-75">
                   {category.app_count.toLocaleString()} apps
                 </span>
               </Link>

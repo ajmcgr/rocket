@@ -71,6 +71,8 @@ describe("Safe app-specific integration prompt", () => {
     expect(prompt).toContain("Preserve its current authentication");
     expect(prompt).toContain("fail closed");
     expect(prompt).toContain("connect-entitlements");
+    expect(prompt).toContain("Existing prices can be imported as inactive plans");
+    expect(prompt).toContain("Rocket currently supports only one active offer per app");
     expect(prompt).toContain("Never grant access from a checkout return URL");
     expect(prompt).not.toContain("NEVER_COPY");
   });

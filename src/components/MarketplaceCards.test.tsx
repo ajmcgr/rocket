@@ -3,7 +3,15 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "@/test/MemoryRouter";
 import type { Tables } from "@/integrations/supabase/types";
-import { AppCardByline, AppCardRating, EditorialAppCard, MarketplaceListRow, RankedAppRow, RisingAppCard, StandardAppCard } from "./MarketplaceCards";
+import {
+  AppCardByline,
+  AppCardRating,
+  EditorialAppCard,
+  MarketplaceListRow,
+  RankedAppRow,
+  RisingAppCard,
+  StandardAppCard,
+} from "./MarketplaceCards";
 import TrendArrow from "./TrendArrow";
 import { renderToStaticMarkup } from "react-dom/server";
 import { cleanup, render, screen } from "@testing-library/react";
@@ -21,14 +29,18 @@ const app = {
 describe("marketplace content treatments", () => {
   it("supports bookmark controls in every marketplace layout", async () => {
     const controls = { saved: true, onSave: vi.fn() };
-    render(<MemoryRouter>
-      <StandardAppCard app={app} {...controls} />
-      <EditorialAppCard app={app} {...controls} />
-      <RankedAppRow app={app} rank={1} {...controls} />
-      <RisingAppCard app={app} rank={1} {...controls} />
-      <MarketplaceListRow app={app} {...controls} />
-    </MemoryRouter>);
-    const buttons = await screen.findAllByRole("button", { name: "Manage saved app" });
+    render(
+      <MemoryRouter>
+        <StandardAppCard app={app} {...controls} />
+        <EditorialAppCard app={app} {...controls} />
+        <RankedAppRow app={app} rank={1} {...controls} />
+        <RisingAppCard app={app} rank={1} {...controls} />
+        <MarketplaceListRow app={app} {...controls} />
+      </MemoryRouter>,
+    );
+    const buttons = await screen.findAllByRole("button", {
+      name: "Manage saved app",
+    });
     expect(buttons).toHaveLength(5);
     for (const button of buttons) {
       expect(button.getAttribute("aria-pressed")).toBe("true");
@@ -38,20 +50,69 @@ describe("marketplace content treatments", () => {
   });
   it("shows only authoritative card counts and an owner-provided handle", () => {
     expect(renderToStaticMarkup(<AppCardByline />)).toBe("");
-    const markup = renderToStaticMarkup(<AppCardByline metadata={{ app_id: app.id, save_count: 27, rating_count: 3, developer_handle: "maker" }} />);
+    const markup = renderToStaticMarkup(
+      <AppCardByline
+        metadata={{
+          app_id: app.id,
+          save_count: 27,
+          rating_count: 3,
+          developer_handle: "maker",
+        }}
+      />,
+    );
     expect(markup).not.toContain("@maker"); // Unbacked presentation handles are not canonical attribution.
     expect(markup).toContain("27 saves");
     expect(markup).not.toContain("3 ratings");
-    const rating = renderToStaticMarkup(<AppCardRating metadata={{ app_id: app.id, save_count: 27, rating_count: 3, average_rating: 4.3, developer_handle: "maker" }} />);
-    expect(rating).toContain("4.3 out of 5 stars from 3 ratings");
+    const unknownPricing = renderToStaticMarkup(
+      <AppCardByline
+        metadata={{
+          app_id: app.id,
+          save_count: 0,
+          rating_count: 0,
+          pricing_kind: "unknown",
+        }}
+      />,
+    );
+    expect(unknownPricing).not.toContain("Pricing unknown");
+    const rating = renderToStaticMarkup(
+      <AppCardRating
+        metadata={{
+          app_id: app.id,
+          save_count: 27,
+          rating_count: 3,
+          average_rating: 4.3,
+          developer_handle: "maker",
+        }}
+      />,
+    );
+    expect(rating).toContain("4.3 out of 5 stars");
     expect(rating).toContain("★");
+    expect(rating).not.toContain("(3)");
+    expect(
+      renderToStaticMarkup(
+        <AppCardRating
+          metadata={{
+            app_id: app.id,
+            save_count: 0,
+            rating_count: 0,
+            average_rating: null,
+          }}
+        />,
+      ),
+    ).toBe("");
     expect(renderToStaticMarkup(<AppCardRating />)).toBe("");
   });
   it("uses colored text arrows only for supplied trend directions", () => {
-    expect(renderToStaticMarkup(<TrendArrow direction="up" />)).toContain("text-green-700");
+    expect(renderToStaticMarkup(<TrendArrow direction="up" />)).toContain(
+      "text-green-700",
+    );
     expect(renderToStaticMarkup(<TrendArrow direction="up" />)).toContain("↑");
-    expect(renderToStaticMarkup(<TrendArrow direction="down" />)).toContain("text-red-600");
-    expect(renderToStaticMarkup(<TrendArrow direction="down" />)).toContain("↓");
+    expect(renderToStaticMarkup(<TrendArrow direction="down" />)).toContain(
+      "text-red-600",
+    );
+    expect(renderToStaticMarkup(<TrendArrow direction="down" />)).toContain(
+      "↓",
+    );
   });
 
   it("shows an unframed icon when media is unavailable and Rising as a ranked row", async () => {
@@ -71,22 +132,40 @@ describe("marketplace content treatments", () => {
         );
       });
       const card = container.querySelector("article");
-      const rising = Array.from(container.querySelectorAll("article")).find((item) => item.className.includes("h-full") && item !== card);
+      const rising = Array.from(container.querySelectorAll("article")).find(
+        (item) => item.className.includes("h-full") && item !== card,
+      );
       expect(card?.querySelectorAll("img")).toHaveLength(1);
       expect(card?.className).toContain("border-neutral-200");
       expect(rising?.className).toContain("border-neutral-200");
-      expect(card?.querySelector("h3")?.parentElement?.parentElement?.querySelector("img")).not.toBeNull();
-      expect(rising?.querySelector("h3")?.parentElement?.parentElement?.querySelector("img")).not.toBeNull();
+      expect(
+        card
+          ?.querySelector("h3")
+          ?.parentElement?.parentElement?.querySelector("img"),
+      ).not.toBeNull();
+      expect(
+        rising
+          ?.querySelector("h3")
+          ?.parentElement?.parentElement?.querySelector("img"),
+      ).not.toBeNull();
       expect(card?.querySelector(".h-28")).toBeNull();
       expect(card?.outerHTML).not.toContain("bg-[#f1f4f7]");
       expect(container.textContent).toContain("1Sample app");
       expect(container.textContent).toContain("Productivity · Launch activity");
-      expect(container.querySelectorAll('a[href="/apps/app-1"]')).toHaveLength(6);
-      const viewLinks = Array.from(container.querySelectorAll('a[href="/apps/app-1"]')).filter((link) => link.textContent === "View");
+      expect(container.querySelectorAll('a[href="/apps/app-1"]')).toHaveLength(
+        6,
+      );
+      const viewLinks = Array.from(
+        container.querySelectorAll('a[href="/apps/app-1"]'),
+      ).filter((link) => link.textContent === "View");
       expect(viewLinks).toHaveLength(3);
       expect(viewLinks[0].className).toContain("bg-transparent");
       expect(viewLinks[0].className).toContain("border-[#167ac6]");
-      expect(container.querySelectorAll('button[disabled][aria-label^="Buy unavailable"]')).toHaveLength(3);
+      expect(
+        container.querySelectorAll(
+          'button[disabled][aria-label^="Buy unavailable"]',
+        ),
+      ).toHaveLength(0);
     } finally {
       await act(async () => root.unmount());
       container.remove();

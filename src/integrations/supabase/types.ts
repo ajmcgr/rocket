@@ -80,6 +80,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      public_app_verified_revenue: {
+        Row: {
+          app_id: string;
+          provider: string;
+          metric_type: string;
+          visibility: string;
+          currency: string;
+          value_minor: number | null;
+          range_lower_minor: number | null;
+          range_upper_minor: number | null;
+          period_start: string | null;
+          period_end: string | null;
+          observed_at: string;
+          verified_at: string;
+          mapping_version: number;
+        };
+        Insert: {
+          app_id: string;
+          provider: string;
+          metric_type: string;
+          visibility: string;
+          currency: string;
+          value_minor?: number | null;
+          range_lower_minor?: number | null;
+          range_upper_minor?: number | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          observed_at: string;
+          verified_at: string;
+          mapping_version: number;
+        };
+        Update: {
+          app_id?: string;
+          provider?: string;
+          metric_type?: string;
+          visibility?: string;
+          currency?: string;
+          value_minor?: number | null;
+          range_lower_minor?: number | null;
+          range_upper_minor?: number | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          observed_at?: string;
+          verified_at?: string;
+          mapping_version?: number;
+        };
+        Relationships: [];
+      };
       public_app_traction: {
         Row: {
           app_id: string;

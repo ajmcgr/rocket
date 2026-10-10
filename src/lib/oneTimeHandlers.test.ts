@@ -12,7 +12,7 @@ function load(path: string, stripe: any, admin: any, gate = true) {
   runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText, {
     exports: {}, Request, Response, URL, Date, console, crypto,
     Deno:{env:{get:(key: string)=>key === "STRIPE_SECRET_KEY" ? "sk_live_mock_only" : key === "STRIPE_CONNECT_LIVE_WEBHOOK_SECRET" ? "whsec_mock_only" : undefined},serve:(fn: typeof handler)=>handler=fn},
-    require:(name: string)=> name.includes("buyerLibrary") ? library : name.startsWith("npm:stripe") ? {default: class { constructor(){return stripe;} }} : name.includes("oneTimePayments") ? payments : name.includes("connectPaymentRules") ? rules : name.includes("connectLiveConfiguration") ? {isolatedLiveWebhookSecret:()=>"whsec_mock_only",liveWebhookConfigured:()=>gate} : name.includes("stripeConnectV2") ? {retrieveStripeConnectV2Merchant:async()=>({}),stripeConnectV2Ready:()=>true,StripeConnectV2Error:class extends Error {}} : {APP_URL:"https://tryrocket.ai",getAdmin:()=>admin,getRocketUser:async()=>({id:"buyer"}),getConnectToken:async()=>null,base64url:(bytes:Uint8Array)=>Buffer.from(bytes).toString("base64url"),json},
+    require:(name: string)=> name.includes("buyerLibrary") ? library : name.startsWith("npm:stripe") ? {default: class { constructor(){return stripe;} }} : name.includes("oneTimePayments") ? payments : name.includes("connectPaymentRules") ? rules : name.includes("connectLiveConfiguration") ? {isolatedLiveWebhookSecret:()=>"whsec_mock_only",liveWebhookConfigured:()=>gate} : name.includes("buyMerchant") ? {buyMerchantReadiness:async()=>({ready:true,chargesEnabled:true,payoutsEnabled:true,configuration:{}})} : name.includes("stripeConnectV2") ? {retrieveStripeConnectV2Merchant:async()=>({}),stripeConnectV2Ready:()=>true,StripeConnectV2Error:class extends Error {}} : {APP_URL:"https://tryrocket.ai",getAdmin:()=>admin,getRocketUser:async()=>({id:"buyer"}),getConnectToken:async()=>null,base64url:(bytes:Uint8Array)=>Buffer.from(bytes).toString("base64url"),json},
   });
   return handler;
 }
@@ -44,6 +44,62 @@ describe("actual production merchant registration (isolated)",()=>{
     const row=h.insert.mock.calls[0][0];expect(row.id).toMatch(/^[0-9a-f-]{36}$/);expect(row.product_key).toMatch(/^launch-pro-/);expect(row.client_id).toBe("launch");expect(row.developer_account_id).toBe("merchant");expect(row.is_active).toBe(false);expect(row.interval).toBeNull();expect(row.amount_cents).toBe(3900);expect(row.checkout_return_uris).toEqual([body.return_uri]);expect(h.stripe.prices.create.mock.calls[0][0].recurring).toBeUndefined();
   });
   it.each([{client_id:"other"},{payment_return_uri:"https://other.invalid"}])("rejects cross-client registration and unapproved origins %j",async patch=>{const h=registration();expect((await h.handler(request({...registrationBody,...patch}))).status).toBeGreaterThanOrEqual(400);expect(h.stripe.products.create).not.toHaveBeenCalled();});
+
+  const existingStripePrice={id:"price_existing",active:true,livemode:true,billing_scheme:"per_unit",custom_unit_amount:null,
+    type:"one_time",recurring:null,unit_amount:19900,currency:"usd",
+    product:{id:"prod_existing",name:"Grow",active:true,livemode:true}};
+  function importHarness(price: any = existingStripePrice, mapped: any[] = []) {
+    const insert=vi.fn((record:any)=>query(record));
+    const list=vi.fn().mockResolvedValue({data:[price],has_more:false});
+    const retrieve=vi.fn().mockResolvedValue(price);
+    const stripe={prices:{list,retrieve},products:{create:vi.fn()},};
+    const admin={rpc:async()=>({data:true,error:null}),from:(table:string)=>query(
+      table==="rocket_oauth_clients"?{client_id:"launch",is_active:true,allowed_scopes:["entitlements:read"],redirect_uris:["https://trylaunch.ai/rocket/callback"]}:
+      table==="connect_developer_accounts"?{id:"merchant",client_id:"launch",stripe_account_id:"acct_launch",stripe_api_version:"v2",status:"active",charges_enabled:true,payouts_enabled:true}:
+      table==="rocket_buy_configuration"?{platform_fee_bps:500}:
+      table==="connect_products"?mapped:[],{insert})};
+    return {insert,list,retrieve,handler:load("supabase/functions/rocket-buy-developer/index.ts",stripe,admin)};
+  }
+  it("lists only eligible prices on the verified connected account without creating Stripe objects",async()=>{
+    const h=importHarness();const response=await h.handler(request({...body,action:"stripe_catalog"}));
+    expect(response.status).toBe(200);
+    expect((await response.json()).prices).toMatchObject([{name:"Grow",amount_cents:19900,billing_type:"one_time",registered:false}]);
+    expect(h.list.mock.calls[0][1]).toEqual({stripeAccount:"acct_launch"});
+  });
+  it("imports an exact existing price as an inactive mapping without creating a Stripe product or price",async()=>{
+    const h=importHarness();const response=await h.handler(request({...body,action:"import_price",stripe_price_id:"price_existing",product_key:"grow-access",payment_return_uri:body.return_uri}));
+    expect(response.status).toBe(201);
+    expect(h.retrieve.mock.calls[0][2]).toEqual({stripeAccount:"acct_launch"});
+    expect(h.insert.mock.calls[0][0]).toMatchObject({stripe_price_id:"price_existing",stripe_product_id:"prod_existing",product_key:"grow-access",amount_cents:19900,billing_type:"one_time",is_active:false,platform_fee_bps:500});
+  });
+  it("rejects an unsafe access key before importing the price",async()=>{
+    const h=importHarness();const response=await h.handler(request({...body,action:"import_price",stripe_price_id:"price_existing",product_key:"Grow Access",payment_return_uri:body.return_uri}));
+    expect(response.status).toBe(400);expect(h.retrieve).not.toHaveBeenCalled();expect(h.insert).not.toHaveBeenCalled();
+  });
+  it("maps a fixed annual subscription price without a payment-return URL",async()=>{
+    const annual={...existingStripePrice,type:"recurring",recurring:{interval:"year",interval_count:1,usage_type:"licensed"},unit_amount:9900};
+    const h=importHarness(annual);const response=await h.handler(request({...body,action:"import_price",stripe_price_id:"price_existing",product_key:"pass-annual"}));
+    expect(response.status).toBe(201);
+    expect(h.insert.mock.calls[0][0]).toMatchObject({billing_type:"subscription",interval:"year",amount_cents:9900,product_key:"pass-annual",is_active:false});
+  });
+  it("rejects usage-based subscription prices",async()=>{
+    const metered={...existingStripePrice,type:"recurring",recurring:{interval:"month",interval_count:1,usage_type:"metered"}};
+    const h=importHarness(metered);const response=await h.handler(request({...body,action:"import_price",stripe_price_id:"price_existing"}));
+    expect(response.status).toBe(409);expect(h.insert).not.toHaveBeenCalled();
+  });
+  it.each([
+    [{...existingStripePrice,livemode:false},body.return_uri],
+    [{...existingStripePrice,product:{...existingStripePrice.product,active:false}},body.return_uri],
+    [existingStripePrice,"https://other.invalid/return"],
+  ])("rejects an unsafe price or unapproved return URL",async(price,returnUri)=>{
+    const h=importHarness(price);const response=await h.handler(request({...body,action:"import_price",stripe_price_id:"price_existing",payment_return_uri:returnUri}));
+    expect(response.status).toBeGreaterThanOrEqual(400);expect(h.insert).not.toHaveBeenCalled();
+  });
+  it("does not remap a price that is already registered",async()=>{
+    const h=importHarness(existingStripePrice,[{id:"already",stripe_price_id:"price_existing"}]);
+    const response=await h.handler(request({...body,action:"import_price",stripe_price_id:"price_existing",payment_return_uri:body.return_uri}));
+    expect(response.status).toBe(409);expect(h.insert).not.toHaveBeenCalled();
+  });
 });
 describe("actual production checkout handler (isolated)",()=>{
   it("Library includes buyer-scoped one-time grants without exposing test clients", async()=>{
@@ -53,8 +109,10 @@ describe("actual production checkout handler (isolated)",()=>{
       q.eq=(...args:any[])=>{filters.push([table,...args]);return q;};return q;
     }};
     const handler=load("supabase/functions/rocket-buy/index.ts",{},admin);const response=await handler(request({action:"library"}));expect(response.status).toBe(200);
-    expect((await response.json()).purchases[0]).toMatchObject({purchase_id:"purchase",active:true,plan:{billing_type:"one_time"}});
-    expect(filters).toContainEqual(["connect_purchase_grants","user_id","buyer"]);expect(filters).toContainEqual(["rocket_oauth_clients","environment","production"]);
+    const result=await response.json();
+    expect(result.purchases[0]).toMatchObject({purchase_id:"purchase",active:true,plan:{billing_type:"one_time"}});
+    expect(filters).toContainEqual(["connect_purchase_grants","user_id","buyer"]);
+    expect(result.sandbox_purchases).toEqual([]);
   });
   it("creates payment mode, one unit, exact approved URI and $1.95 fee",async()=>{
     const h=checkoutHarness(); expect((await h.handler(request(body))).status).toBe(200);

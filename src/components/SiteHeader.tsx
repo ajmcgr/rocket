@@ -87,7 +87,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
     ],
   },
   {
-    heading: "My apps",
+    heading: "Apps",
     items: [
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
@@ -123,21 +123,26 @@ export default function SiteHeader({
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const { user, loading, signOut } = useAuth();
   const profileHref = useMyProfileHref(user);
-  const sidebarSections = sections.map((section) =>
-    section.heading !== "My apps" || !user
-      ? section
-      : {
+  const sidebarSections = sections
+    .filter(
+      (section) => user || !["Monetize", "Create"].includes(section.heading),
+    )
+    .map((section) => {
+      if (section.heading !== "Apps") return section;
+      if (!user)
+        return {
           ...section,
-          items: section.items.flatMap((item) =>
-            item.label === "Submit my app"
-              ? [
-                  { label: "My Profile", to: profileHref, icon: UserRound },
-                  item,
-                ]
-              : [item],
-          ),
-        },
-  );
+          items: section.items.filter((item) => item.label === "Submit my app"),
+        };
+      return {
+        ...section,
+        items: section.items.flatMap((item) =>
+          item.label === "Submit my app"
+            ? [{ label: "My Profile", to: profileHref, icon: UserRound }, item]
+            : [item],
+        ),
+      };
+    });
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
   const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)
@@ -398,21 +403,20 @@ export default function SiteHeader({
             <ThemeToggle />
             {user && (
               <>
-                <button
-                  type="button"
-                  onClick={() => setShareOpen(true)}
-                  aria-label="Share Rocket"
-                  className="hidden items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
-                >
-                  <Share2 className="h-4 w-4" aria-hidden="true" />
-                  Share
-                </button>
                 <div
                   data-tour="nav-notifications"
                   className="hidden md:inline-flex"
                 >
                   <NotificationsBell />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShareOpen(true)}
+                  aria-label="Share Rocket"
+                  className="hidden items-center justify-center rounded-lg p-2 text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
+                >
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                </button>
               </>
             )}
             {loading ? (
@@ -437,12 +441,6 @@ export default function SiteHeader({
                     <WorkspaceSwitcher />
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/notifications">Notifications</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setShareOpen(true)}>
-                    Share Rocket
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to={profileHref}>My Profile</Link>
                   </DropdownMenuItem>

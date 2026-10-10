@@ -6,7 +6,7 @@ const integrations = [
   { name: "Google Analytics", description: "Connect a GA4 property to verify your app’s traffic. Manage access and disconnect from My Apps.", to: "/your-apps", action: "Choose an app", logo: "google-analytics" },
   { name: "PostHog", description: "Review your app’s PostHog connection and disconnect existing access from My Apps. Setup availability depends on the app’s analytics tools.", to: "/your-apps", action: "View app connections" },
   { name: "Stripe · revenue verification", description: "Connect Stripe to verify your app’s revenue. This is separate from accepting payments with Buy with Rocket.", to: "/your-apps", action: "Choose an app", logo: "stripe" },
-  { name: "Stripe · Buy with Rocket", description: "Set up Stripe merchant onboarding and paid access plans for eligible apps you own.", to: "/buy-with-rocket", action: "Manage payments", logo: "stripe" },
+  { name: "Stripe · Buy with Rocket", description: "Connect a Stripe merchant account, map an eligible existing price or create one, and verify paid access before checkout is enabled.", to: "/buy-with-rocket", action: "Manage payments", logo: "stripe" },
   { name: "Rocket ID", description: "Configure sign-in with Rocket for your app, including redirect URLs and integration credentials.", to: "/rocket-id", action: "Set up Rocket ID" },
 ] as const;
 
