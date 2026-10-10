@@ -1071,6 +1071,87 @@ Deno.serve(async (req) => {
         if (result.error) throw result.error;
         return json(result.data);
       }
+      case "github_build_info": {
+        const appId = text(body.app_id, 36);
+        if (!/^[0-9a-f-]{36}$/i.test(appId)) throw new Error("Invalid app");
+        const owner = await admin
+          .from("app_owners")
+          .select("app_id")
+          .eq("app_id", appId)
+          .eq("user_id", user.id)
+          .eq("verification_level", "domain_verified")
+          .is("revoked_at", null)
+          .maybeSingle();
+        if (owner.error) throw owner.error;
+        if (!owner.data) throw new Error("Verified app ownership required");
+
+        const sources = await admin
+          .from("public_app_sources")
+          .select("source_url")
+          .eq("app_id", appId)
+          .eq("source_type", "github")
+          .limit(1);
+        if (sources.error) throw sources.error;
+        const source = sources.data?.[0]?.source_url;
+        if (!source) return json({ connected: false });
+        const repository = new URL(source);
+        if (
+          repository.protocol !== "https:" ||
+          repository.hostname !== "github.com" ||
+          !/^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/.test(repository.pathname)
+        )
+          throw new Error("The linked GitHub repository is invalid");
+        const [, repoOwner, repoName] = repository.pathname.split("/");
+        const repo = `${repoOwner}/${repoName}`;
+        const repositoryUrl = `https://github.com/${repo}`;
+        const response = await fetchPublicBytes(
+          `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/actions/runs?per_page=1`,
+          250_000,
+        );
+        const result = JSON.parse(new TextDecoder().decode(response.bytes));
+        const run = Array.isArray(result.workflow_runs)
+          ? result.workflow_runs[0]
+          : null;
+        const runId = Number(run?.id);
+        return json({
+          connected: true,
+          repository: repo,
+          repository_url: repositoryUrl,
+          run:
+            run && Number.isSafeInteger(runId) && runId > 0
+              ? {
+                  name: text(run.name, 160) || "Workflow",
+                  status: [
+                    "queued",
+                    "in_progress",
+                    "completed",
+                    "waiting",
+                    "requested",
+                    "pending",
+                  ].includes(run.status)
+                    ? run.status
+                    : "unknown",
+                  conclusion: [
+                    "success",
+                    "failure",
+                    "cancelled",
+                    "skipped",
+                    "timed_out",
+                    "action_required",
+                    "neutral",
+                  ].includes(run.conclusion)
+                    ? run.conclusion
+                    : null,
+                  branch: text(run.head_branch, 160),
+                  sha: /^[a-f0-9]{40}$/i.test(run.head_sha || "")
+                    ? run.head_sha
+                    : null,
+                  updated_at: text(run.updated_at, 40),
+                  url: `${repositoryUrl}/actions/runs/${runId}`,
+                }
+              : null,
+        });
+      }
       case "my_apps": {
         const claims = await admin
           .from("app_claims")

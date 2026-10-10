@@ -118,6 +118,7 @@ import { Route as AppBrandsIdFontsRouteImport } from './routes/_app/brands.$id.f
 import { Route as AppBrandsIdPaletteRouteImport } from './routes/_app/brands.$id.palette'
 import { Route as AppBrandsIdSocialIconsRouteImport } from './routes/_app/brands.$id.social-icons'
 import { Route as AppDeveloperAppsClientIdRouteImport } from './routes/_app/developer.apps.$clientId'
+import { Route as AppMyAppsIdIndexRouteImport } from './routes/_app/my-apps.$id.index'
 import { Route as AppMyAppsIdAnalyticsRouteImport } from './routes/_app/my-apps.$id.analytics'
 import { Route as AppMyAppsIdEditRouteImport } from './routes/_app/my-apps.$id.edit'
 import { Route as AppMyAppsIdRevenueRouteImport } from './routes/_app/my-apps.$id.revenue'
@@ -678,6 +679,11 @@ const AppDeveloperAppsClientIdRoute =
     path: '/developer/apps/$clientId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppMyAppsIdIndexRoute = AppMyAppsIdIndexRouteImport.update({
+  id: '/my-apps/$id/',
+  path: '/my-apps/$id/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMyAppsIdAnalyticsRoute = AppMyAppsIdAnalyticsRouteImport.update({
   id: '/my-apps/$id/analytics',
   path: '/my-apps/$id/analytics',
@@ -861,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/social': typeof AppProjectsIdSocialRoute
   '/projects/$id/websites': typeof AppProjectsIdWebsitesRoute
   '/brands/$id/': typeof AppBrandsIdIndexRoute
+  '/my-apps/$id/': typeof AppMyAppsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -981,6 +988,7 @@ export interface FileRoutesByTo {
   '/projects/$id/social': typeof AppProjectsIdSocialRoute
   '/projects/$id/websites': typeof AppProjectsIdWebsitesRoute
   '/brands/$id': typeof AppBrandsIdIndexRoute
+  '/my-apps/$id': typeof AppMyAppsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1105,6 +1113,7 @@ export interface FileRoutesById {
   '/_app/projects/$id_/social': typeof AppProjectsIdSocialRoute
   '/_app/projects/$id_/websites': typeof AppProjectsIdWebsitesRoute
   '/_app/brands/$id/': typeof AppBrandsIdIndexRoute
+  '/_app/my-apps/$id/': typeof AppMyAppsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1229,6 +1238,7 @@ export interface FileRouteTypes {
     | '/projects/$id/social'
     | '/projects/$id/websites'
     | '/brands/$id/'
+    | '/my-apps/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1349,6 +1359,7 @@ export interface FileRouteTypes {
     | '/projects/$id/social'
     | '/projects/$id/websites'
     | '/brands/$id'
+    | '/my-apps/$id'
   id:
     | '__root__'
     | '/'
@@ -1472,6 +1483,7 @@ export interface FileRouteTypes {
     | '/_app/projects/$id_/social'
     | '/_app/projects/$id_/websites'
     | '/_app/brands/$id/'
+    | '/_app/my-apps/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2295,6 +2307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDeveloperAppsClientIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/my-apps/$id/': {
+      id: '/_app/my-apps/$id/'
+      path: '/my-apps/$id'
+      fullPath: '/my-apps/$id/'
+      preLoaderRoute: typeof AppMyAppsIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/my-apps/$id/analytics': {
       id: '/_app/my-apps/$id/analytics'
       path: '/my-apps/$id/analytics'
@@ -2495,6 +2514,7 @@ interface AppRouteChildren {
   AppProjectsIdPalettesRoute: typeof AppProjectsIdPalettesRoute
   AppProjectsIdSocialRoute: typeof AppProjectsIdSocialRoute
   AppProjectsIdWebsitesRoute: typeof AppProjectsIdWebsitesRoute
+  AppMyAppsIdIndexRoute: typeof AppMyAppsIdIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -2552,6 +2572,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjectsIdPalettesRoute: AppProjectsIdPalettesRoute,
   AppProjectsIdSocialRoute: AppProjectsIdSocialRoute,
   AppProjectsIdWebsitesRoute: AppProjectsIdWebsitesRoute,
+  AppMyAppsIdIndexRoute: AppMyAppsIdIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
