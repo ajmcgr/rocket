@@ -400,6 +400,8 @@ Deno.serve(async (req) => {
           "id,product_key,name,amount_cents,currency,interval,billing_type,price_source,is_active",
         )
         .single();
+      if (error?.code === "23505")
+        return json({ error: "offer_key_or_price_conflict" }, 409);
       if (error) throw error;
       return json({ offer: saved, reused: false }, 201);
     }
