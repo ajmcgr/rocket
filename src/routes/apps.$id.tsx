@@ -52,7 +52,7 @@ export const Route = createFileRoute("/apps/$id")({
       };
     }
 
-    const title = `${app.name} | Rocket Discover`;
+    const title = `${app.name} | Rocket`;
     const description =
       app.tagline ||
       (app.description

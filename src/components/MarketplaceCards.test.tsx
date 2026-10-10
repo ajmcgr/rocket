@@ -27,7 +27,7 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
-  it("places the owner below the title and rating before saves in ranked rows", async () => {
+  it("omits the owner handle and keeps rating before saves in ranked rows", async () => {
     window.scrollTo = vi.fn();
     const { container } = render(
       <MemoryRouter>
@@ -44,22 +44,14 @@ describe("marketplace content treatments", () => {
         />
       </MemoryRouter>,
     );
-    await screen.findByText("@maker");
+    await screen.findByText("Sample app");
     const content = container.querySelector("article")?.textContent || "";
-    const ordered = [
-      "Sample app",
-      "@maker",
-      "A useful independent app",
-      "Productivity",
-      "★",
-      "27",
-    ];
-    let previous = -1;
-    for (const item of ordered) {
-      const position = content.indexOf(item);
-      expect(position).toBeGreaterThan(previous);
-      previous = position;
-    }
+    expect(content).not.toContain("@maker");
+    expect(content).toContain("Sample app");
+    expect(content).toContain("A useful independent app");
+    expect(content).toContain("Productivity");
+    expect(content).toContain("★");
+    expect(content).toContain("27");
     cleanup();
   });
 
@@ -96,7 +88,7 @@ describe("marketplace content treatments", () => {
     expect(cover.className).toContain("object-cover");
     expect(cover.getAttribute("src")).toContain("resize=cover");
     expect(cover.parentElement?.className).toContain("aspect-[16/9]");
-    expect(screen.getByText("@maker")).toBeTruthy();
+    expect(card?.textContent).not.toContain("@maker");
     expect(screen.getByText("Productivity")).toBeTruthy();
     cleanup();
   });

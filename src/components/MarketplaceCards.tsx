@@ -91,7 +91,6 @@ export function AppCardByline({
     <div
       className={`flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs ${light ? "text-white/85" : "text-neutral-500"}`}
     >
-      <AppDeveloperHandle metadata={metadata} />
       {metadata.pricing_kind && metadata.pricing_kind !== "unknown" && (
         <span title="Pricing supplied by the verified owner">
           {metadata.pricing_kind === "free"
@@ -107,19 +106,6 @@ export function AppCardByline({
       )}
       <AppCardSaveCount metadata={metadata} />
     </div>
-  );
-}
-
-function AppDeveloperHandle({ metadata }: { metadata?: AppCardMetadata }) {
-  if (!metadata?.developer_profile_username) return null;
-  return (
-    <Link
-      to={`/@${metadata.developer_profile_username}`}
-      className="block truncate font-medium hover:underline"
-      title="Ownership-backed public developer profile"
-    >
-      @{metadata.developer_profile_username}
-    </Link>
   );
 }
 
@@ -215,14 +201,6 @@ export function EditorialAppCard({
                 {app.name}
               </h3>
             </Link>
-            {metadata?.developer_profile_username && (
-              <Link
-                to={`/@${metadata.developer_profile_username}`}
-                className="text-xs text-neutral-500 hover:underline"
-              >
-                @{metadata.developer_profile_username}
-              </Link>
-            )}
           </div>
         </div>
         <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-neutral-600">
@@ -327,9 +305,6 @@ export function RankedAppRow({
             {app.name}
           </strong>
         </Link>
-        <div className="text-xs">
-          <AppDeveloperHandle metadata={metadata} />
-        </div>
         <Link
           to={`/apps/${app.slug || app.id}`}
           className="block focus-visible:outline-2 focus-visible:outline-[#167ac6]"

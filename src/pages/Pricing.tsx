@@ -43,9 +43,9 @@ const FAQS = [
   { q: "What can I use on Rocket for free?", a: "Browse and discover apps, save apps with a Rocket account, and submit, claim, manage, and verify your own app without a Developer membership. Personal workspaces remain free. Create has a free credit allowance; Launch, Post, and Media offer their own free plans." },
   { q: "Is there one subscription for every Rocket product?", a: "No. Create plans and credits, Rocket Developer, and the separate Launch, Post, and Media products have their own pricing. Buy only what you need; a subscription to one does not include the others." },
   { q: "Does submitting an app cost anything?", a: "App submission and basic listing management are free. Rocket ownership verification is separate from submission. Adding an app does not automatically activate Rocket ID or Buy with Rocket." },
-  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. It includes shared workspaces and team invitations, Rocket ID, and Buy with Rocket. The workspace owner's membership covers invited teammates. Personal workspaces, app submission, claiming, basic management, and verification remain free. Production identity and payments require verified app ownership and integration readiness." },
+  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. It brings app growth tools together: Verified Traction, Advanced Analytics, AI App Optimization, Beta Testing, Rocket ID, and Buy with Rocket. Some tools are in rollout. App submission, claiming, basic management, and verification remain free." },
   { q: "What is Rocket ID?", a: "Rocket ID lets users sign into an integrated app with their Rocket account. It requires an active Developer membership, verified ownership, and a configured and tested integration. Listing your app alone does not enable Rocket ID." },
-  { q: "What is Buy with Rocket?", a: "Buy with Rocket is the payment and access integration for eligible apps. Developers can map an eligible fixed price from their Rocket-connected Stripe merchant account, or create a new price, then connect it to their app's access rules. A mapped price stays inactive until merchant readiness, payment handling, and entitlements are verified. Public live checkout is currently disabled." },
+  { q: "What is Buy with Rocket?", a: "Buy with Rocket lets eligible apps offer payment and verified access through Rocket. Live checkout is enabled, but a Buy option appears only for an offer that has passed its app-specific setup and readiness checks. It is not available on every listing." },
   { q: "What is the Buy with Rocket take rate?", a: "Rocket takes a 5% platform fee on payments through new Buy with Rocket plans. This transaction fee is separate from the $99/year Rocket Developer membership. Stripe processing fees and any other applicable charges are additional." },
   { q: "Are Stripe fees included in Rocket's 5%?", a: "No. Rocket's platform fee is separate from Stripe processing fees and any other applicable charges. A $100 purchase leaves $95 for the app before those separate costs." },
   { q: "Do teammates need their own Developer subscription?", a: "The workspace owner's active Rocket Developer membership covers shared workspaces and invited teammates. It does not grant teammates ownership of another developer's app or automatically activate payments or identity integrations." },
@@ -55,10 +55,10 @@ const FAQS = [
   { q: "What do I get when I upgrade to Pro?", a: "Pro includes 3,000 credits/month, unlimited saved designs, high-res PNG, EPS, SVG and PDF exports, color variations, full ownership, and priority generation. Shared workspaces are included separately with Rocket Developer ($99/year)." },
   { q: "Where do I manage or cancel my subscriptions?", a: "Manage Create billing in Settings → Billing and Rocket Developer membership in Settings → Developer. Manage Launch, Post, and Media billing on each product's own site. Purchases of third-party apps through Buy with Rocket are separate and can be managed from your Library where supported. Check the relevant subscription's billing period and cancellation terms." },
   { q: "Do credits roll over?", a: "Plan credits refresh each month. One-time credit packs never expire and stack on top of your plan." },
-  { q: "What does Launch help me do?", a: "Launch gives your app a public product listing for builders and early adopters. Paid plans add promotion, newsletter exposure, or directory submissions as shown above. Launch pricing and purchases are handled on trylaunch.ai; a free Rocket app listing is not a paid Launch promotion." },
+  { q: "What does Launch help me do?", a: "Launch has its own product listing and promotion tools. See Launch for current plan details and availability; a free Rocket app listing is separate from a paid Launch purchase." },
   { q: "What does Post help me do?", a: "Post helps you draft, schedule, and publish updates across connected social channels from one calendar. Its Free and Pro plans have different account connections and publishing limits. Subscribe and manage your plan on trypost.ai, separately from Rocket Developer." },
-  { q: "What does Media help me do?", a: "Media helps you find relevant journalists and creators, build contact lists, and manage outreach. Plans add search credits, database access, monitoring, inbox, and team features as shown above. Media credits and subscriptions are separate from Rocket Create credits and are managed on trymedia.ai." },
-  { q: "Are there trials for the Grow products?", a: "Launch, Post, and Media each have their own free options, trial availability, and billing terms. Check the linked product's pricing and checkout for current details before subscribing. A trial on one product does not apply to the others." },
+  { q: "What does Media help me do?", a: "Media is a separate product for finding contacts and organizing outreach. See Media for current features, pricing, and availability." },
+  { q: "Are there trials for the Grow products?", a: "Launch, Post, and Media set their own trial and billing terms. Check each product's pricing page for current offers." },
   { q: "Does joining the community require a paid plan?", a: "No Rocket paid plan is required to follow the community link and meet other builders on Discord. Community participation does not include paid product subscriptions." },
 ];
 
@@ -76,63 +76,61 @@ type GrowPlan = {
 const GROW_PRODUCTS: { name: string; description: string; href: string; footnote: string; plans: GrowPlan[] }[] = [
   {
     name: "Launch",
-    description: "Introduce your app to a community of builders and early adopters with a public product listing. Paid plans add promotion, newsletter exposure, and directory submissions to help more people discover what you've built.",
+    description: "Give your app a Launch product page and explore its separate promotion options.",
     href: "https://trylaunch.ai/pricing",
-    footnote: "Maximum 1 launch per week across all plans.",
+    footnote: "See Launch for current features, availability, and terms.",
     plans: [
       {
         name: "Free", tagline: "Basic listing", price: "$0", suffix: "one-time", cta: "Start free",
-        features: ["Homepage listing", "Standard launch queue", "Current queue estimate shown before submitting"],
+        features: ["Launch product listing", "See Launch for current features"],
       },
       {
         name: "Pro", tagline: "Full promotion", price: "$39", suffix: "per launch", badge: "Most popular", cta: "Get started",
-        features: ["Guaranteed high-authority backlink", "Homepage listing", "Social media promotion", "Newsletter feature", "Choose your launch date", "Verified badge", "Skip the queue — launch today"],
+        features: ["Launch promotion options", "See Launch for current features and eligibility"],
       },
       {
         name: "Grow", tagline: "Pro + directory submissions", price: "$199", suffix: "per launch", badge: "Most impact", cta: "Get started",
-        features: ["Everything in Pro", "Submission to 120+ startup directories", "Manual submission by the Launch team", "High-quality backlink opportunities", "Saves 20+ hours of manual work", "Progress tracking and confirmation"],
-        note: "Includes G2, Product Hunt, There's An AI For That, Hacker News, Peerlist, BetaList, Uneed, Indie Hackers and 110+ more.",
+        features: ["Additional Launch promotion options", "See Launch for current features and eligibility"],
       },
       {
         name: "Pass", tagline: "Unlimited launches", price: "$99", suffix: "/ year", badge: "Best value", cta: "Get Pass",
-        features: ["Guaranteed high-authority backlink", "Everything in Pro", "Unlimited launches and relaunches", "Future self-serve launch features", "12 months access"],
-        note: "Pays for itself in 3 launches ($117 vs $99). Best for makers shipping multiple products.",
+        features: ["Launch Pass options", "See Launch for current features and eligibility"],
       },
     ],
   },
   {
     name: "Post",
-    description: "Plan, schedule, and publish your app's updates across social channels from one workspace. Keep drafts and campaigns organized in a calendar, and share images and videos without switching between each platform's publishing tools.",
+    description: "Plan and publish social updates with Post, a separate product.",
     href: "https://trypost.ai/pricing",
-    footnote: "Paid plans include a 14-day free trial. Yearly billing saves ~17%. Cancel anytime.",
+    footnote: "See Post for current features, availability, and billing terms.",
     plans: [
       {
         name: "Free", tagline: "Everything you need to publish your first campaigns.", price: "$0", suffix: "/month", cta: "Get started",
-        features: ["Connect up to 2 social platforms", "10 scheduled posts per month", "Single post composer", "Calendar view", "Drafts library", "1 user"],
+        features: ["Social publishing tools", "See Post for current features"],
       },
       {
-        name: "Pro", tagline: "For creators publishing consistently across every platform.", price: "$19", suffix: "/month", badge: "Most popular", cta: "Start free trial",
-        features: ["Connect all 7 platforms (Instagram, YouTube, TikTok, X, LinkedIn, Facebook, Threads)", "Unlimited scheduled posts", "Single and bulk image/video publishing", "Calendar, queue and posting time slots", "Draft, scheduled and published post views", "Failure email notifications", "Priority support"],
+        name: "Pro", tagline: "For regular publishing.", price: "$19", suffix: "/month", badge: "Most popular", cta: "View plan",
+        features: ["Post publishing options", "See Post for current features and eligibility"],
       },
     ],
   },
   {
     name: "Media",
-    description: "Find journalists and creators relevant to your app with AI-powered search, then build contact lists for your outreach. Higher plans add news monitoring, pitch and reply tracking, and shared team tools to help you manage your publicity in one place.",
+    description: "Find contacts and organize outreach with Media, a separate product.",
     href: "https://trymedia.ai/pricing",
-    footnote: "Paid plans include a 30-day trial. Yearly billing saves ~17%. AI credit usage varies by request complexity.",
+    footnote: "See Media for current features, availability, and billing terms.",
     plans: [
       {
         name: "Free", tagline: "Try Media AI search.", price: "$0", suffix: "/month", cta: "Start free",
-        features: ["5,000 free AI credits every month", "Media AI search", "Upgrade any time"],
+        features: ["Explore Media", "See Media for current features"],
       },
       {
-        name: "Starter", tagline: "Media AI search.", price: "$29", suffix: "/month", cta: "Start 30-day trial",
-        features: ["200,000 AI credits / month", "Verified contact emails where available, plus on-demand enrichment", "Up to 100 media contacts per query", "Top-up credits any time", "Email support"],
+        name: "Starter", tagline: "Media search.", price: "$29", suffix: "/month", cta: "View plan",
+        features: ["Media search options", "See Media for current features and eligibility"],
       },
       {
-        name: "Growth", tagline: "Full journalist & creator database, monitoring, inbox and teams.", price: "$99", suffix: "/month", badge: "Most popular", cta: "Start 30-day trial",
-        features: ["1,000,000 AI credits / month", "Unlimited media contacts per query", "100% database access — no row limits", "Sort, filter, save views, export", "Share contacts via link, email, or CSV", "Keyword Monitor — daily Google News alerts", "Outreach Inbox — pitch and reply tracking", "Team workspaces with shared lists and roles", "Top-up credits any time", "Email support"],
+        name: "Growth", tagline: "For larger outreach workflows.", price: "$99", suffix: "/month", badge: "Most popular", cta: "View plan",
+        features: ["Media growth options", "See Media for current features and eligibility"],
       },
     ],
   },
@@ -241,14 +239,16 @@ const Pricing = () => {
           <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
             <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
             <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
-            <p className="mt-4 text-neutral-600">Test, improve, understand and monetize your apps with Rocket. One membership covers the apps you legitimately own.</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into your app.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Map an eligible price from your Rocket-connected Stripe account or create one, then verify paid access before checkout goes live. Rocket's fee is 5% per payment; Stripe processing fees are separate.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Workspaces</h4><p className="mt-2 text-sm text-neutral-600">Create shared workspaces and invite teammates. Included in your $99/year membership; the owner's subscription covers their team.</p><Link to="/settings/team" className="mt-3 inline-flex text-sm font-semibold text-[#167ac6]">Manage workspaces →</Link></div>
+            <p className="mt-4 text-neutral-600">Build trust, understand your audience, improve your app, and connect ready offers. One membership covers the apps you legitimately own.</p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Verified Traction</h4><p className="mt-2 text-sm text-neutral-600">Connect supported evidence for your app. Basic verification remains free.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Advanced Analytics <span className="text-xs font-medium text-neutral-500">· In rollout</span></h4><p className="mt-2 text-sm text-neutral-600">Explore deeper app performance insights as access rolls out.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">AI App Optimization <span className="text-xs font-medium text-neutral-500">· In rollout</span></h4><p className="mt-2 text-sm text-neutral-600">Get help improving how your app is presented.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Beta Testing <span className="text-xs font-medium text-neutral-500">· In rollout</span></h4><p className="mt-2 text-sm text-neutral-600">Prepare to gather feedback from testers.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into an app you have integrated.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Offer Rocket checkout on individually configured, ready offers. Rocket's fee is 5% per payment; Stripe processing fees are separate.</p></div>
             </div>
-            <p className="mt-4 text-sm text-neutral-600">Beta Testing, AI App Optimization and Advanced Rocket Analytics are in rollout. Basic listing analytics remain free.</p>
-            <p className="mt-5 text-sm text-neutral-600">Production activation requires verified ownership, a ready Stripe merchant, and a tested identity and entitlement integration. Live buying remains closed until acceptance testing is complete.</p>
+            <p className="mt-5 text-sm text-neutral-600">Live checkout is enabled for offers that pass their app-specific readiness checks. It is not available on every listing.</p>
             <Link to="/settings/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
           </div>
           <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>

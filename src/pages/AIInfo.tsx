@@ -5,7 +5,7 @@ import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const facts = [
   "Browse independent apps by category and supported platform: web, iOS, Android or hardware.",
-  "Rising uses views of app pages on Rocket. Top Ranked Apps combines published reviews, current bookmarks and verified purchases with equal weight; purchases count once per buyer per app and exclude refunds and disputes.",
+  "Rising reflects views of app pages on Rocket. Top Ranked combines published reviews, current bookmarks and verified purchases with equal weight; purchases count once per buyer per app and exclude refunds and disputes.",
   "Signed-in users can save apps and leave star ratings on individual app pages.",
   "Developers can submit an app and manage or claim its listing after applicable ownership checks.",
   "Logo and icon creation tools are optional. Launch, Post and Media are separate linked products.",
@@ -23,7 +23,7 @@ const guidelines = [
 export default function AIInfo() {
   useDocumentMeta({
     title: "Rocket AI Info — The open app platform",
-    description: "Current product facts for AI assistants describing Rocket's app platform, free listings, optional Create tools and limited developer pilots.",
+    description: "Current product facts for AI assistants describing Rocket's app platform, free listings, optional Create tools and developer integrations.",
     canonical: "https://tryrocket.ai/ai-info",
   });
 
@@ -64,7 +64,7 @@ export default function AIInfo() {
 
         <section className="mx-auto max-w-4xl px-6 py-16 sm:py-20">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">What Rocket is</h2>
-          <p className="mt-6 text-lg leading-8 text-neutral-600">Rocket is a web-based directory and workspace for independent apps. Visitors can explore new listings and rankings based on reviews, bookmarks and verified purchases, search and browse by category or platform, and open individual app profiles. A public listing is not a Rocket endorsement.</p>
+          <p className="mt-6 text-lg leading-8 text-neutral-600">The open app platform. Discover independent software, browse categories, and explore app profiles. Developers can submit or claim an app, build their public presence, and connect supported tools. Rising reflects Rocket app-page views; Top Ranked combines reviews, bookmarks, and verified purchases. A listing is not an endorsement.</p>
         </section>
 
         <section className="border-y border-neutral-200/70 bg-neutral-50/70">
@@ -92,7 +92,7 @@ export default function AIInfo() {
               {[
                 ["My apps", "Submitting and managing an app listing on Rocket are free."],
                 ["Create", "Optional logo and icon tools have subscriptions and generation credits."],
-                ["Monetize", "Rocket Developer costs $99/year per developer account, separate from Create. Production Rocket ID requires membership and verified app ownership. Eligible existing Stripe prices on a Rocket-connected merchant account can be mapped to inactive Buy with Rocket plans. Public live checkout remains disabled pending merchant, payment, and entitlement verification. Submission, claiming, and verification remain free."],
+                ["Monetize", "Rocket Developer costs $99/year per developer account, separate from Create. Rocket ID and Buy with Rocket require app-specific setup. Live Buy with Rocket checkout is enabled for individually ready offers; it is not available on every listing. Submission, claiming, and basic verification remain free."],
                 ["Grow and Community", "Launch, Post and Media have separate pricing on their own sites. Rocket's Discord community is free."],
               ].map(([title, copy]) => <article key={title} className="rounded-2xl border border-neutral-200 bg-white p-6"><h3 className="text-lg font-semibold">{title}</h3><p className="mt-2 leading-7 text-neutral-600">{copy}</p></article>)}
             </div>

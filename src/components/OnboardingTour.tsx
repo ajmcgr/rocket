@@ -22,26 +22,31 @@ const STORAGE_KEY = "rocket.onboarding.v2";
 
 const STEPS: Step[] = [
   {
-    title: "Welcome to Rocket",
-    body: "Discover independent apps worth using, save your favorites, or launch your own.",
+    title: "The open app platform.",
+    body: "Discover apps. Build your developer reputation. Grow and monetize what you build.",
     placement: "center",
     cta: "Start tour",
   },
   {
-    title: "Discover and save",
-    body: "Search the app catalogue, explore Rankings and New, and save apps you want to revisit.",
+    title: "Build your developer profile",
+    body: "Your public profile connects you with the apps you own. Submit or claim an app, then add accurate details and supported evidence.",
     placement: "center",
   },
   {
-    title: "Launch and create",
-    body: "Launch adds your app to Rocket. Create keeps your logo, icon, saved designs, and Brand Kits together.",
+    title: "Get discovered",
+    body: "People can find your app through search, categories, New, Rising, and Top Ranked. Your basic listing is free.",
+    placement: "center",
+  },
+  {
+    title: "Prove and grow",
+    body: "Connect supported traffic or revenue evidence when available. Rocket Developer is $99/year; Rocket ID, Buy with Rocket, and rollout tools need app-specific setup.",
     placement: "center",
   },
   {
     title: "You're ready",
-    body: "Start with an app, or explore Rocket Create. You can replay this tour from Settings.",
+    body: "Start with your app. You can explore the catalogue any time and replay this tour from Settings.",
     placement: "center",
-    cta: "Explore apps",
+    cta: "Submit or claim my app",
   },
 ];
 
@@ -169,7 +174,7 @@ const OnboardingTour = () => {
   const next = () => {
     if (last) {
       finish();
-      nav("/discover");
+      nav("/submit");
     } else setIdx((i) => i + 1);
   };
 
@@ -269,6 +274,14 @@ const OnboardingTour = () => {
             Skip
           </button>
           <div className="flex items-center gap-2">
+            {last && (
+              <button
+                onClick={() => { finish(); nav("/discover"); }}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+              >
+                Explore apps
+              </button>
+            )}
             {idx > 0 && !last && (
               <button
                 onClick={() => setIdx((i) => Math.max(0, i - 1))}
