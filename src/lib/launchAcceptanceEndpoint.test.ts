@@ -24,6 +24,8 @@ function harness(
     paid?: boolean;
     external?: boolean;
     token?: boolean;
+    launchToken?: boolean;
+    wrongSubject?: boolean;
     total?: number;
   } = {},
 ) {
@@ -219,14 +221,15 @@ function harness(
         serve = fn;
       },
     },
-    async () =>
+    async (_url: string, init: RequestInit) =>
       new Response(
         JSON.stringify(
-          options.external === false
+          options.external === false || new Headers(init.headers).get('Authorization') !== 'Bearer launch-session'
             ? { identity_verified: false, fulfilments: [] }
             : {
                 identity_verified: true,
-                fulfilments: [{ purchase_id: "txn" }],
+                rocket_subject: options.wrongSubject ? owner : buyer,
+                fulfilments: [{ purchase_id: "txn", order_id: 'order', launch_product_id: 'draft', rocket_subject: buyer, rocket_client_id: rules.LAUNCH_CLIENT_ID, rocket_product_id: planId }],
               },
         ),
         { status: 200, headers: { "Content-Type": "application/json" } },
@@ -241,7 +244,7 @@ function harness(
           method: "POST",
           headers: {
             Authorization: "Bearer mock",
-            "X-Rocket-ID-Token": "mock",
+            ...(options.launchToken === false ? {} : { "X-Launch-Authorization": "Bearer launch-session" }),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -297,6 +300,8 @@ describe("Launch pilot endpoint", () => {
       { token: false },
       { paid: false },
       { external: false },
+      { launchToken: false },
+      { wrongSubject: true },
     ]) {
       const h = harness({ enabled: true, ...options });
       expect((await h.request("proof")).status).toBeGreaterThanOrEqual(400);
