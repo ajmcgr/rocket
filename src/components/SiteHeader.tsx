@@ -237,12 +237,12 @@ export default function SiteHeader({
             onClick={toggleSidebar}
             aria-label={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
             title={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6] ${sidebarCompact ? "absolute left-full ml-2" : "ml-auto"}`}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-[#167ac6] ${sidebarCompact ? "absolute left-full ml-2" : "ml-auto"}`}
           >
             {sidebarCompact ? (
-              <PanelLeftOpen className="h-5 w-5" aria-hidden="true" />
+              <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <PanelLeftClose className="h-5 w-5" aria-hidden="true" />
+              <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
             )}
           </button>
         </div>
