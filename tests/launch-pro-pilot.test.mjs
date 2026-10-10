@@ -34,7 +34,7 @@ test('old monthly enable flag never enables private checkout or invokes Stripe',
   const source=(await readFile(new URL('../supabase/functions/launch-rocket-acceptance/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
   const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
   let handler; const unexpected=()=>{throw new Error('must not call');};
-  new Function('Stripe','getAdmin','getConnectToken','getRocketUser','retrieveStripeConnectV2Merchant','stripeConnectV2Ready','liveWebhookConfigured','LAUNCH_APP_ID','LAUNCH_CLIENT_ID','acceptancePlan','pilotBuyer','paidProProof','launchFulfilmentProof','Deno',js)(unexpected,unexpected,unexpected,unexpected,unexpected,unexpected,unexpected,'app',LAUNCH_CLIENT_ID,acceptancePlan,pilotBuyer,paidProProof,launchFulfilmentProof,{env:{get:k=>k==='LAUNCH_ACCEPTANCE_ENABLED'?'true':undefined},serve:fn=>{handler=fn;}});
+  new Function('Stripe','getAdmin','getConnectToken','getRocketUser','buyMerchantReadiness','liveWebhookConfigured','LAUNCH_APP_ID','LAUNCH_CLIENT_ID','acceptancePlan','pilotBuyer','paidProProof','launchFulfilmentProof','Deno',js)(unexpected,unexpected,unexpected,unexpected,unexpected,unexpected,'app',LAUNCH_CLIENT_ID,acceptancePlan,pilotBuyer,paidProProof,launchFulfilmentProof,{env:{get:k=>k==='LAUNCH_ACCEPTANCE_ENABLED'?'true':undefined},serve:fn=>{handler=fn;}});
   for(const action of ['status','checkout','proof']) {
     const response=await handler(new Request('https://rocket.test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})}));
     assert.equal(response.status,action==='status'?200:409);

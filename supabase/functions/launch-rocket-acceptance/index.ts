@@ -1,6 +1,6 @@
 import Stripe from "npm:stripe@16.12.0";
 import { getAdmin, getConnectToken, getRocketUser } from "../_shared/rocketConnect.ts";
-import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
 import { liveWebhookConfigured } from "../_shared/connectLiveConfiguration.ts";
 import { LAUNCH_APP_ID, LAUNCH_CLIENT_ID, acceptancePlan, pilotBuyer, paidProProof, launchFulfilmentProof } from "../_shared/launchAcceptance.ts";
 
@@ -22,8 +22,8 @@ async function context() {
   const { data: configuration, error: ge } = await admin.from("rocket_buy_configuration").select("platform_fee_bps,live_checkout_enabled").eq("singleton", true).single();
   if (ge || configuration.platform_fee_bps !== 500) return null;
   const { data: account, error: ae } = await admin.from("connect_developer_accounts").select("*").eq("client_id", LAUNCH_CLIENT_ID).eq("developer_user_id", client.created_by).eq("is_current", true).single();
-  if (ae || account.stripe_api_version !== "v2" || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
-  if (!stripeConnectV2Ready(await retrieveStripeConnectV2Merchant(account.stripe_account_id, "production"))) return null;
+  if (ae || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
+  if (!(await buyMerchantReadiness(account, stripe)).ready) return null;
   const { data: plan, error: pe } = await admin.from("connect_products").select("*").eq("id", planId()).single();
   if (pe || !acceptancePlan(plan, planId(), account.id, client.created_by)) return null;
   return { admin, client, account, plan, configuration };

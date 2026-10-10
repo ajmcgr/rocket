@@ -27,6 +27,7 @@ function harness(
     launchToken?: boolean;
     wrongSubject?: boolean;
     total?: number;
+    merchantReady?: boolean;
   } = {},
 ) {
   const writes: string[] = [],
@@ -65,7 +66,8 @@ function harness(
     connect_developer_accounts: {
       id: "account",
       stripe_account_id: "acct_new",
-      stripe_api_version: "v2",
+      stripe_api_version: "v1",
+      account_configuration: { connection_method: "oauth" },
       status: "active",
       charges_enabled: true,
       payouts_enabled: true,
@@ -192,8 +194,7 @@ function harness(
     "getAdmin",
     "getConnectToken",
     "getRocketUser",
-    "retrieveStripeConnectV2Merchant",
-    "stripeConnectV2Ready",
+    "buyMerchantReadiness",
     "liveWebhookConfigured",
     ...Object.keys(rules),
     "Deno",
@@ -211,8 +212,7 @@ function harness(
             scopes: ["entitlements:read"],
           },
     async () => ({ id: options.user || buyer }),
-    async () => ({}),
-    () => true,
+    async () => ({ ready: options.merchantReady !== false }),
     () => true,
     ...Object.values(rules),
     {
@@ -281,6 +281,12 @@ describe("Launch pilot endpoint", () => {
     const h = harness({ enabled: true });
     expect((await h.request("checkout", false)).status).toBe(400);
     expect(h.calls).toEqual([]);
+  });
+  it("fails closed when the current OAuth merchant is not payment-ready", async () => {
+    const h = harness({ enabled: true, merchantReady: false });
+    expect((await h.request('status')).status).toBe(409);
+    expect(h.calls).toEqual([]);
+    expect(h.writes).toEqual([]);
   });
   it("only the selected new buyer can receive the exact-total checkout", async () => {
     const h = harness({ enabled: true });
