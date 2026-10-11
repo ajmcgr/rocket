@@ -53,7 +53,8 @@ vi.mock("@/integrations/supabase/client", async () => {
                 : name === "rocket_redeem_claim_invitation"
                   ? { app_id: args.p_app_id }
                   : name === "rocket_admin_claims" ||
-                      name === "rocket_admin_outreach_today"
+                      name === "rocket_admin_outreach_first_batch" ||
+                      name === "rocket_admin_outreach_test_candidates"
                     ? []
                     : null;
             return new Response(JSON.stringify(result), {
@@ -126,7 +127,12 @@ describe("admin Supabase client binding", () => {
       });
     if (section === "outreach")
       expect(mocks.requests).toContainEqual({
-        name: "rocket_admin_outreach_today",
+        name: "rocket_admin_outreach_first_batch",
+        args: {},
+      });
+    if (section === "outreach")
+      expect(mocks.requests).toContainEqual({
+        name: "rocket_admin_outreach_test_candidates",
         args: {},
       });
     expect(mocks.requests.some((r) => r.name === "rocket_admin_action")).toBe(

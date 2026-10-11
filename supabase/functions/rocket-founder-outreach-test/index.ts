@@ -5,6 +5,7 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const TEST_EMAIL = (Deno.env.get("ROCKET_OUTREACH_TEST_EMAIL") ?? "").trim().toLowerCase();
+const POSTAL_ADDRESS = (Deno.env.get("ROCKET_OUTREACH_POSTAL_ADDRESS") ?? "").trim();
 const FROM = "Alex from Rocket <alex@tryrocket.ai>";
 const ORIGIN = "https://tryrocket.ai";
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
@@ -16,8 +17,8 @@ const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => ({
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  if (!TEST_EMAIL || !RESEND_KEY || !PROJECT_URL || !ANON_KEY || !SERVICE_KEY) {
-    return json({ error: "Internal test delivery is not configured" }, 503);
+  if (!RESEND_KEY || !PROJECT_URL || !ANON_KEY || !SERVICE_KEY || !POSTAL_ADDRESS) {
+    return json({ error: "Founder delivery is not configured" }, 503);
   }
   const jwt = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!jwt) return json({ error: "Unauthorized" }, 401);
@@ -34,52 +35,76 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Invalid queue item" }, 400);
   }
   const admin = createClient(PROJECT_URL, SERVICE_KEY);
+  const { data: control, error: controlError } = await admin.from("rocket_outreach_control")
+    .select("paused,send_mode,production_authorized").eq("id", true).maybeSingle();
+  if (controlError || !control) return json({ error: "Campaign control unavailable" }, 503);
+  const production = control.send_mode === "production";
+  if (production && (control.paused || !control.production_authorized)) {
+    return json({ error: "Production campaign is paused or unauthorized" }, 403);
+  }
+  if (!production && (control.send_mode !== "test" || !control.paused || !TEST_EMAIL)) {
+    return json({ error: "Internal test gate closed" }, 403);
+  }
   const { data: queue } = await admin.from("rocket_outreach_queue")
-    .select("id,app_id,recipient_email,founder_first_name,status")
+    .select("id,app_id,recipient_email,status")
     .eq("id", queueId).maybeSingle();
-  if (!queue || queue.recipient_email?.toLowerCase() !== TEST_EMAIL) {
-    return json({ error: "Recipient is not the approved internal test address" }, 403);
+  if (!queue || (!production && queue.recipient_email?.toLowerCase() !== TEST_EMAIL)) {
+    return json({ error: "Recipient is not authorized for this mode" }, 403);
+  }
+  if (production) {
+    const { data: review } = await admin.from("rocket_outreach_recipient_reviews")
+      .select("status").eq("email", queue.recipient_email.trim().toLowerCase()).maybeSingle();
+    if (review?.status !== "eligible") return json({ error: "Recipient eligibility not verified" }, 403);
   }
   const { data: app } = await userClient.from("public_discoverable_apps")
-    .select("name").eq("id", queue.app_id).maybeSingle();
-  if (!app?.name) return json({ error: "App unavailable" }, 409);
+    .select("name,slug").eq("id", queue.app_id).maybeSingle();
+  if (!app?.name || !app.slug) return json({ error: "App unavailable" }, 409);
   const { data: invitation, error: invitationError } = await userClient.rpc(
     "rocket_admin_issue_claim_invitation", { p_queue_id: queueId },
   );
   if (invitationError || !invitation) return json({ error: "Invitation not eligible" }, 409);
   const { data: reserved, error: reserveError } = await admin.rpc(
-    "rocket_outreach_reserve_test_send",
+    production ? "rocket_outreach_reserve_production_send" : "rocket_outreach_reserve_test_send",
     { p_queue_id: queueId, p_claim_token: invitation.claim_token },
   );
-  if (reserveError || !reserved) return json({ error: "Test delivery gate closed or already attempted" }, 409);
+  if (reserveError || !reserved) return json({ error: "Delivery gate closed or already attempted" }, 409);
   const appName = String(app.name);
-  const firstName = String(queue.founder_first_name || "").trim();
-  const greeting = firstName ? `Hi ${firstName},` : "Hi there,";
+  const recipient = String(reserved.recipient_email).trim().toLowerCase();
   const claimUrl = `${ORIGIN}/claim-invitation?token=${encodeURIComponent(invitation.claim_token)}&app=${encodeURIComponent(queue.app_id)}`;
+  const listingUrl = `${ORIGIN}/apps/${encodeURIComponent(String(app.slug))}`;
   const unsubscribeUrl = `${ORIGIN}/outreach/unsubscribe?token=${encodeURIComponent(invitation.unsubscribe_token)}`;
-  const subject = `You launched ${appName} — now grow it with Rocket`;
-  const text = `${greeting}\n\nYou launched ${appName} on Launch.\n\nNow we're building Rocket to help you grow and monetize what you built.\n\nYour app is already on Rocket. Claim it to take control of your profile, add screenshots, share details that build trust, and get discovered by more users.\n\nClaim ${appName}: ${claimUrl}\n\nWe're starting with Launch founders first.\n\nAlex\nFounder, Rocket\n\nStop Rocket founder outreach: ${unsubscribeUrl}`;
-  const html = `<div style="font-family:Arial,sans-serif;line-height:1.6;max-width:600px;margin:auto;color:#20252b"><p>${escapeHtml(greeting)}</p><p>You launched ${escapeHtml(appName)} on Launch.</p><p>Now we're building Rocket to help you grow and monetize what you built.</p><p>Your app is already on Rocket. Claim it to take control of your profile, add screenshots, share details that build trust, and get discovered by more users.</p><p><a href="${claimUrl}" style="display:inline-block;padding:12px 18px;background:#167ac6;color:#fff;text-decoration:none;border-radius:8px">Claim ${escapeHtml(appName)}</a></p><p>We're starting with Launch founders first.</p><p>Alex<br>Founder, Rocket</p><hr><p style="font-size:12px"><a href="${unsubscribeUrl}">Stop Rocket founder outreach</a></p></div>`;
+  const subject = `${appName} is now on Rocket`;
+  const text = `Hi,\n\nYour app, ${appName}, is now listed on Rocket.\n\nRocket is the open app platform, where people discover software and developers build their reputation around what they create.\n\nYou can claim your app for free, manage its listing, build your developer profile and see how people discover your work.\n\nClaim your app: ${claimUrl}\n\nView your listing: ${listingUrl}\n\nAlex\nFounder, Rocket\n\n${POSTAL_ADDRESS}\n\nUnsubscribe from Rocket founder invitations: ${unsubscribeUrl}`;
+  const html = `<div style="font-family:Arial,sans-serif;line-height:1.6;max-width:600px;margin:auto;color:#20252b"><p>Hi,</p><p>Your app, ${escapeHtml(appName)}, is now listed on Rocket.</p><p>Rocket is the open app platform, where people discover software and developers build their reputation around what they create.</p><p>You can claim your app for free, manage its listing, build your developer profile and see how people discover your work.</p><p><a href="${escapeHtml(claimUrl)}">Claim your app</a></p><p><a href="${escapeHtml(listingUrl)}">View your listing</a></p><p>Alex<br>Founder, Rocket</p><hr><p style="font-size:12px">${escapeHtml(POSTAL_ADDRESS)}<br><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe from Rocket founder invitations</a></p></div>`;
   let providerId: string | null = null;
   let providerError: string | null = null;
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json",
-        "Idempotency-Key": String(reserved.idempotency_key) },
-      body: JSON.stringify({ from: FROM, to: [TEST_EMAIL], subject, text, html,
-        tags: [{ name: "category", value: "rocket_founder_outreach_test" }],
-        headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` } }),
-    });
-    const payload = await response.json();
-    if (response.ok && typeof payload.id === "string") providerId = payload.id;
-    else providerError = `Resend rejected request (${response.status})`;
-  } catch { providerError = "Resend request outcome unknown"; }
+  const payload = JSON.stringify({ from: FROM, to: [recipient], subject, text, html,
+    tags: [{ name: "category", value: production ? "rocket_founder_outreach" : "rocket_founder_outreach_test" }],
+    headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` } });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json",
+          "Idempotency-Key": String(reserved.idempotency_key) },
+        body: payload, signal: AbortSignal.timeout(10000),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && typeof result.id === "string") { providerId = result.id; break; }
+      providerError = `Resend rejected request (${response.status})`;
+      if (response.status !== 429 && response.status < 500) break;
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
+    } catch {
+      // An uncertain provider outcome must not trigger a second send.
+      providerError = "Resend request outcome unknown; manual reconciliation required";
+      break;
+    }
+  }
   const { error: finishError } = await admin.rpc("rocket_outreach_finish_test_send", {
     p_attempt_id: reserved.attempt_id, p_provider_email_id: providerId,
     p_error: providerError,
   });
   if (finishError) return json({ error: "Delivery state needs manual review; do not retry" }, 502);
-  if (!providerId) return json({ error: "Test delivery failed; reservation prevents automatic retry" }, 502);
-  return json({ ok: true, provider_email_id: providerId, test_only: true });
+  if (!providerId) return json({ error: "Delivery failed or is uncertain; reservation prevents duplicate send" }, 502);
+  return json({ ok: true, provider_email_id: providerId, test_only: !production });
 });
