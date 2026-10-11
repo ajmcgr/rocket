@@ -20,7 +20,6 @@ export default function AppMarketplaceContext({ appId }: { appId: string }) {
   const [details, setDetails] = useState<Detail | null>(null),
     [developer, setDeveloper] = useState<{
       username: string;
-      full_name: string;
     } | null>(null);
   const [more, setMore] = useState<Tables<"public_apps">[]>([]),
     [releases, setReleases] = useState<
@@ -104,7 +103,7 @@ export default function AppMarketplaceContext({ appId }: { appId: string }) {
               className="font-semibold text-sky-800 underline"
               to={`/@${developer.username}`}
             >
-              {developer.full_name || `@${developer.username}`}
+              @{developer.username}
             </Link>
           </p>
           <MarketplaceFollow
