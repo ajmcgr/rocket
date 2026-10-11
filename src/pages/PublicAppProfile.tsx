@@ -31,6 +31,7 @@ import PublicMetricCard, {
   publicTrafficValue,
   publicRevenueValue,
 } from "@/components/PublicMetricCard";
+import { featuredTraffic, featuredRevenue } from "@/lib/publicAppEvidence";
 import { Users, Eye, BarChart3, DollarSign } from "lucide-react";
 import { AppProfileContentSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import AppReviews from "@/components/AppReviews";
@@ -84,7 +85,9 @@ export default function PublicAppProfile({
   const [sources, setSources] = useState<Source[]>([]);
   const [traction, setTraction] = useState<Traction[]>([]);
   const [revenue, setRevenue] = useState<Revenue[]>([]);
-  const [alternativeRevenue, setAlternativeRevenue] = useState<AlternativeRevenue[]>([]);
+  const [alternativeRevenue, setAlternativeRevenue] = useState<
+    AlternativeRevenue[]
+  >([]);
   const [signals, setSignals] = useState<AppSignal[]>([]);
   const [trust, setTrust] = useState<AppTrust | null>(null);
   const [media, setMedia] = useState<PublicAppMedia[]>(initialMedia || []);
@@ -200,7 +203,10 @@ export default function PublicAppProfile({
         supabase.from("public_app_sources").select("*").eq("app_id", appId),
         supabase.from("public_app_traction").select("*").eq("app_id", appId),
         supabase.from("public_app_revenue").select("*").eq("app_id", appId),
-        supabase.from("public_app_verified_revenue").select("*").eq("app_id", appId),
+        supabase
+          .from("public_app_verified_revenue")
+          .select("*")
+          .eq("app_id", appId),
         supabase
           .from("public_app_intelligence")
           .select("*")
@@ -240,7 +246,10 @@ export default function PublicAppProfile({
       );
       // Optional evidence failures must not hide a valid public profile.
       if (appResult.data && !appResult.error) {
-        track("app_profile_viewed", { app_id: appResult.data.id, source: sponsorId ? "sponsored" : "organic" });
+        track("app_profile_viewed", {
+          app_id: appResult.data.id,
+          source: sponsorId ? "sponsored" : "organic",
+        });
         // First-party rankings count real production profile visits only.
         if (
           ["https://tryrocket.ai", "https://www.tryrocket.ai"].includes(
@@ -348,6 +357,9 @@ export default function PublicAppProfile({
     };
   }, [app?.id, user, saveAfterAuth, setSearchParams, navigate]);
 
+  const trafficPoint = featuredTraffic(traction);
+  const revenuePoint = featuredRevenue(alternativeRevenue, revenue);
+
   return (
     <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
       <SiteHeader />
@@ -377,29 +389,29 @@ export default function PublicAppProfile({
         )}
         {app && !loading && !error && (
           <>
-            <div className="mt-7 pb-6 sm:pb-8">
+            <div className="mt-5 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-7">
               <div className="flex items-start gap-4 sm:gap-6">
                 <AppLogo
                   name={app.name}
                   src={app.logo_url}
-                  className="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
+                  className="h-16 w-16 shrink-0 sm:h-20 sm:w-20"
                   eager
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="mb-2 text-xs font-semibold text-sky-800">
+                  <p className="mb-1 text-xs font-semibold text-sky-800">
                     {app.categories[0] || "App"}
                   </p>
-                  <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
+                  <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
                     {app.name}
                   </h1>
-                  <p className="mt-2 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
+                  <p className="mt-1 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
                     {app.tagline ||
                       (app.description
                         ? descriptionSummary(app.description)
                         : app.canonical_host)}
                   </p>
                   {reviewSummary && (
-                    <p className="mt-3 text-sm font-medium text-neutral-700">
+                    <p className="mt-2 text-sm font-medium text-neutral-700">
                       <span className="text-amber-500">★</span>{" "}
                       {reviewSummary.average_rating} ·{" "}
                       {reviewSummary.rating_count}{" "}
@@ -408,7 +420,7 @@ export default function PublicAppProfile({
                   )}
                 </div>
               </div>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 <a
                   href={app.website_url}
                   target="_blank"
@@ -448,91 +460,81 @@ export default function PublicAppProfile({
                 </span>
               </div>
               {presentation?.pricing_display && (
-                <p className="mt-4 text-xs text-neutral-500">
+                <p className="mt-3 text-xs text-neutral-500">
                   Pricing: {presentation.pricing_display} · Information supplied
                   by the app owner
                 </p>
               )}
+              {(trafficPoint || revenuePoint) && (
+                <div className="mt-6 grid gap-4 border-t border-neutral-200 pt-6 sm:grid-cols-2">
+                  {trafficPoint && (
+                    <section aria-label="Traffic">
+                      <PublicMetricCard
+                        label={
+                          {
+                            active_users: "Daily active users",
+                            sessions: "Daily sessions",
+                            views: "Daily views",
+                          }[trafficPoint.metric_type] ||
+                          trafficPoint.metric_type
+                        }
+                        icon={
+                          trafficPoint.metric_type === "active_users"
+                            ? Users
+                            : trafficPoint.metric_type === "views"
+                              ? Eye
+                              : BarChart3
+                        }
+                        value={publicTrafficValue(
+                          trafficPoint.visibility,
+                          trafficPoint.value,
+                          trafficPoint.value_range,
+                        )}
+                        details={`${trafficPoint.provider === "ga4" ? "Google Analytics" : trafficPoint.provider} · ${trafficPoint.metric_date}`}
+                      />
+                    </section>
+                  )}
+                  {revenuePoint && (
+                    <section aria-label="Verified revenue">
+                      {revenuePoint.source === "alternative" ? (
+                        <PublicMetricCard
+                          label={
+                            revenuePoint.point.metric_type ===
+                            "gross_revenue_30d"
+                              ? `Gross revenue · previous 30 days · ${revenuePoint.point.currency}`
+                              : `Subscription MRR · ${revenuePoint.point.currency}`
+                          }
+                          icon={DollarSign}
+                          value={publicRevenueValue(
+                            revenuePoint.point.visibility,
+                            revenuePoint.point.value_minor,
+                            revenuePoint.point.range_lower_minor,
+                            revenuePoint.point.range_upper_minor,
+                            revenuePoint.point.currency,
+                          )}
+                          details={`${revenuePoint.point.provider === "revenuecat" ? "RevenueCat" : revenuePoint.point.provider} · Updated ${date(revenuePoint.point.verified_at)}`}
+                        />
+                      ) : (
+                        <PublicMetricCard
+                          label={`Monthly recurring revenue · ${revenuePoint.point.currency.toUpperCase()}`}
+                          icon={DollarSign}
+                          value={publicRevenueValue(
+                            revenuePoint.point.visibility,
+                            revenuePoint.point.mrr_minor,
+                            revenuePoint.point.range_lower_minor,
+                            revenuePoint.point.range_upper_minor,
+                            revenuePoint.point.currency,
+                          )}
+                          details={`Stripe · Snapshot ${date(revenuePoint.point.observed_at)}`}
+                        />
+                      )}
+                    </section>
+                  )}
+                </div>
+              )}
+              <AppMediaGallery name={app.name} media={media} />
             </div>
             <RocketBetaJoin appId={app.id} appSlug={app.slug || app.id} />
-            {traction.length > 0 && (
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">
-                  Traffic
-                </h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {traction.map((point) => (
-                    <PublicMetricCard
-                      key={point.metric_type}
-                      label={
-                        {
-                          active_users: "Daily active users",
-                          sessions: "Daily sessions",
-                          views: "Daily views",
-                        }[point.metric_type] || point.metric_type
-                      }
-                      icon={
-                        point.metric_type === "active_users"
-                          ? Users
-                          : point.metric_type === "views"
-                            ? Eye
-                            : BarChart3
-                      }
-                      value={publicTrafficValue(
-                        point.visibility,
-                        point.value,
-                        point.value_range,
-                      )}
-                      details={`Google Analytics · ${point.metric_date} · Verified ${point.last_verified_at}`}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-            {alternativeRevenue.length > 0 && (
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">Verified revenue</h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {alternativeRevenue.map((point) => (
-                    <PublicMetricCard
-                      key={`${point.provider}-${point.currency}`}
-                      label={point.metric_type === "gross_revenue_30d"
-                        ? `Project gross revenue · previous 30 complete days · ${point.currency}`
-                        : `Subscription MRR · ${point.currency}`}
-                      icon={DollarSign}
-                      value={publicRevenueValue(point.visibility, point.value_minor,
-                        point.range_lower_minor, point.range_upper_minor, point.currency)}
-                      details={`Verified with ${point.provider === "revenuecat" ? "RevenueCat" : point.provider} · ${point.period_start || ""} to ${point.period_end || ""} · Updated ${date(point.verified_at)}`}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-            {alternativeRevenue.length === 0 && revenue.length > 0 && (
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">
-                  Subscription revenue
-                </h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {revenue.map((point) => (
-                    <PublicMetricCard
-                      key={point.currency}
-                      label={`Monthly recurring revenue · ${point.currency.toUpperCase()}`}
-                      icon={DollarSign}
-                      value={publicRevenueValue(
-                        point.visibility,
-                        point.mrr_minor,
-                        point.range_lower_minor,
-                        point.range_upper_minor,
-                        point.currency,
-                      )}
-                      details={`Stripe · Snapshot ${point.observed_at}`}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-            <AppMediaGallery name={app.name} media={media} />
             {signals.length > 0 && (
               <section className="mt-8 pb-2">
                 <h2 className="text-xl font-semibold tracking-tight">
