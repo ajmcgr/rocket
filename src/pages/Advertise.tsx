@@ -13,6 +13,7 @@ type Sponsorship = {
   amount_cents: number; status: string; stripe_payment_status: string; stripe_livemode: boolean;
   scheduled_start_at: string; scheduled_end_at: string;
   actual_start_at: string | null; actual_end_at: string | null;
+  views?: number | null; clicks?: number | null;
 };
 type Quote = { available: boolean; reason?: string; start?: string; end?: string; amount_cents?: number };
 type ReservedCheckout = { url: string; start: string; end: string; checkout_expires_at: string };
@@ -165,9 +166,16 @@ export default function Advertise() {
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{offers[item.sponsorship_type].title} · {app?.name || "App"}{item.target_category ? ` · ${item.target_category}` : ""}</h3><span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold capitalize">{item.status}</span></div>
             <p className="mt-2 text-sm text-neutral-600">${(item.amount_cents / 100).toFixed(2)} USD · {item.stripe_payment_status}</p>
             <p className="mt-1 text-sm text-neutral-600">{formatDate(item.actual_start_at || item.scheduled_start_at)} – {formatDate(item.actual_end_at || item.scheduled_end_at)}</p>
+            {item.stripe_payment_status === "paid" && <div className="mt-4 flex flex-wrap gap-6 border-t border-neutral-100 pt-4" aria-label="Sponsored placement performance">
+              {item.views === null || item.clicks === null
+                ? <p className="text-sm text-neutral-500">Performance is temporarily unavailable.</p>
+                : <><p className="text-sm text-neutral-600"><span className="block text-xl font-bold text-neutral-950">{(item.views ?? 0).toLocaleString()}</span>Placement views</p>
+                  <p className="text-sm text-neutral-600"><span className="block text-xl font-bold text-neutral-950">{(item.clicks ?? 0).toLocaleString()}</span>App clicks</p></>}
+            </div>}
             {app && <Link to={`/apps/${item.target_app_id}`} className="mt-2 inline-block text-sm font-semibold text-sky-700 hover:underline">View app</Link>}
           </div>;
         })}</div> : <p className="mt-3 text-neutral-600">No advertising purchases yet.</p>}
+        {history.some((item) => item.stripe_payment_status === "paid") && <p className="mt-3 text-xs text-neutral-500">Views count when a sponsored placement is at least half visible. Totals are daily-deduplicated estimates; activity before reporting began is not included.</p>}
       </section>}
     </main>
   </div>;

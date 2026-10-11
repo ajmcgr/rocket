@@ -11,6 +11,13 @@ type Placement = {
   app: { id: string; name: string; slug: string | null; tagline: string | null; logo_url: string | null };
 };
 
+function recordPlacementMetric(placement: Placement, eventType: "view" | "click") {
+  void supabase.functions.invoke("rocket-advertising", {
+    body: { action: "metric", sponsorship_id: placement.sponsorship_id,
+      app_id: placement.app.id, event_type: eventType },
+  });
+}
+
 /** Separate paid inventory; never mixed into editorial or ranked app arrays. */
 export default function SponsoredPlacement({ category }: { category?: string }) {
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -32,6 +39,7 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
     const observer = new IntersectionObserver((entries) => {
       if (!entries[0]?.isIntersecting) return;
       track("sponsored_impression", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id });
+      recordPlacementMetric(placement, "view");
       observer.disconnect();
     }, { threshold: 0.5 });
     observer.observe(element.current);
@@ -51,7 +59,10 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
         {placement.app.tagline && <p className="mt-1 line-clamp-2 text-sm text-neutral-600">{placement.app.tagline}</p>}
         {category && <p className="mt-1 text-xs text-neutral-500">{category}</p>}
       </div>
-      <Link to={href} onClick={() => track("sponsored_click", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id })}
+      <Link to={href} onClick={() => {
+        track("sponsored_click", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id });
+        recordPlacementMetric(placement, "click");
+      }}
         className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-sky-600 px-4 text-sm font-semibold text-sky-700 hover:bg-sky-50">View app</Link>
     </div>
   </section>;
