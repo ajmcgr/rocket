@@ -73,7 +73,7 @@ const NotificationsBell = () => {
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-700 outline-hidden transition hover:bg-neutral-100 focus:ring-2 focus:ring-neutral-300"
         aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
       >
-        <ControlBell className="h-[18px] w-[18px]" />
+        <ControlBell className="h-4 w-4" />
         {unread > 0 && (
           <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold leading-none text-brand-foreground">
             {unread > 9 ? "9+" : unread}
