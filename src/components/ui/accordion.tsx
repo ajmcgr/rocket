@@ -27,6 +27,13 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       {children}
+      <span
+        aria-hidden="true"
+        className="ml-4 inline-flex w-5 shrink-0 items-center justify-center text-xl font-normal leading-none text-neutral-500"
+      >
+        <span className="group-data-[state=open]:hidden">+</span>
+        <span className="hidden group-data-[state=open]:inline">−</span>
+      </span>
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ));
