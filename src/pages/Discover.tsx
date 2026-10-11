@@ -56,6 +56,7 @@ export default function Discover() {
     }),
   });
   const [count, setCount] = useState(0);
+  const [rankingHasMore, setRankingHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const category = params.get("category") || "";
@@ -133,11 +134,12 @@ export default function Discover() {
       if (view === "rankings") {
         if (rankingCategoriesLoading) return;
         const eligibleCategory = rankingCategories.some((item) => item.category === category) ? category : "";
-        const { data: rankingRows, error: rankingError } = await marketplaceRpc("get_public_app_rankings", {
-          p_category: eligibleCategory, p_limit: RANKING_SIZE,
+        const { data: rankingRows, error: rankingError } = await marketplaceRpc("get_public_app_rankings_page", {
+          p_category: eligibleCategory, p_offset: page * RANKING_SIZE,
+          p_limit: RANKING_SIZE + 1,
         });
         if (rankingError) throw rankingError;
-        const ids = (rankingRows || []).map((row) => row.app_id);
+        const ids = (rankingRows || []).slice(0, RANKING_SIZE).map((row) => row.app_id);
         const appResult = ids.length
           ? await supabase.from("public_discoverable_apps").select("*").in("id", ids)
           : { data: [] as App[], error: null };
@@ -147,6 +149,7 @@ export default function Discover() {
           setApps(ids.map((id) => byId.get(id)).filter((app): app is App => Boolean(app)));
           setSignals(new Map());
           setCount(ids.length);
+          setRankingHasMore((rankingRows || []).length > RANKING_SIZE);
           setMedia(new Map());
         }
       } else {
@@ -453,7 +456,7 @@ export default function Discover() {
               : view === "categories"
                 ? `${discoverCategories.length} categories`
                 : view === "rankings"
-                  ? `Top ${count} apps`
+                  ? count ? `Showing ${page * RANKING_SIZE + 1}–${page * RANKING_SIZE + count} ranked apps` : "No ranked apps"
                 : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}
           </span>
           <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by reviews, bookmarks and verified purchases" : view === "new" ? "Newest listings on Rocket" : "Public Launch activity"}</span>
@@ -555,7 +558,7 @@ export default function Discover() {
                   app={app}
                   {...saveControls(app.id)}
                   metadata={cardMetadata.get(app.id)}
-                  rank={index + 1}
+                  rank={page * RANKING_SIZE + index + 1}
                 />
               ))}
             </div>
@@ -597,7 +600,7 @@ export default function Discover() {
               ))}
             </div>
           ))}
-        {!error && view !== "rankings" && count > PAGE_SIZE && (
+        {!error && view !== "categories" && (view === "rankings" ? page > 0 || rankingHasMore : count > PAGE_SIZE) && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <button
               disabled={page === 0 || loading}
@@ -611,10 +614,10 @@ export default function Discover() {
               Previous
             </button>
             <span className="text-sm text-neutral-500">
-              Page {page + 1} of {Math.ceil(count / PAGE_SIZE)}
+              {view === "rankings" ? `Page ${page + 1}` : `Page ${page + 1} of ${Math.ceil(count / PAGE_SIZE)}`}
             </span>
             <button
-              disabled={(page + 1) * PAGE_SIZE >= count || loading}
+              disabled={(view === "rankings" ? !rankingHasMore : (page + 1) * PAGE_SIZE >= count) || loading}
               onClick={() => {
                 const next = new URLSearchParams(params);
                 next.set("page", String(page + 1));

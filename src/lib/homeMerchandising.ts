@@ -56,16 +56,16 @@ async function optionalRows<T>(
     return [];
   }
 }
-export function risingQuery(limit = 6) {
-  return supabase
+export function risingQuery(limit = 6, offset = 0) {
+  const query = supabase
     .from("public_app_rankings")
     .select("app_id,rocket_view_count")
     .gt("rocket_view_count", 0)
     .order("rocket_view_count", { ascending: false })
     .order("last_viewed_at", { ascending: false, nullsFirst: false })
     .order("launched_at", { ascending: false, nullsFirst: false })
-    .order("app_id", { ascending: true })
-    .limit(limit);
+    .order("app_id", { ascending: true });
+  return offset ? query.range(offset, offset + limit - 1) : query.limit(limit);
 }
 export function rankingsQuery(limit = 8, category = "") {
   return marketplaceRpc("get_public_app_rankings", {
@@ -264,8 +264,10 @@ export async function loadHomeMerchandising(): Promise<HomeMerchandising> {
 export async function loadCuratedApps(
   kind: "rising" | "picks",
   collection?: string,
+  offset = 0,
+  limit = 24,
 ): Promise<ShelfItem[]> {
-  const signals = kind === "rising" ? await optionalRows(risingQuery(24)) : [];
+  const signals = kind === "rising" ? await optionalRows(risingQuery(limit, offset)) : [];
   const picks =
     kind === "picks" ? await optionalRows(picksQuery(collection)) : [];
   const ids = [...signals, ...picks].map((row) => row.app_id);

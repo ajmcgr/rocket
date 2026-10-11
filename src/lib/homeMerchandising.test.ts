@@ -197,7 +197,7 @@ describe("truthful homepage merchandising", () => {
 
 it("Rising queries positive Rocket views with deterministic ordering", () => {
   const chain: any = {};
-  for (const name of ["select", "gt", "order", "limit"])
+  for (const name of ["select", "gt", "order", "limit", "range"])
     chain[name] = vi.fn(() => chain);
   db.from.mockReturnValue(chain);
   risingQuery(24);
@@ -210,6 +210,8 @@ it("Rising queries positive Rocket views with deterministic ordering", () => {
     "app_id",
   ]);
   expect(chain.limit).toHaveBeenCalledWith(24);
+  risingQuery(21, 20);
+  expect(chain.range).toHaveBeenCalledWith(20, 40);
   expect(rocketViewsLabel(1)).toBe("1 Rocket app-page view");
   expect(rocketViewsLabel(2000)).toBe("2,000 Rocket app-page views");
 });
