@@ -37,16 +37,6 @@ const ICONS: Record<
   monetize: CreditCard,
 };
 
-const ICON_BG: Record<NotificationKind, string> = {
-  asset: "bg-violet-50 text-violet-600",
-  export: "bg-sky-50 text-sky-600",
-  billing: "bg-amber-50 text-amber-600",
-  project: "bg-emerald-50 text-emerald-600",
-  system: "bg-neutral-100 text-neutral-700",
-  app: "bg-sky-50 text-sky-600",
-  monetize: "bg-emerald-50 text-emerald-600",
-};
-
 const timeAgo = (ts: number) => {
   const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
   if (s < 60) return `${s}s ago`;
@@ -130,9 +120,7 @@ const NotificationsBell = () => {
                 const Icon = ICONS[n.kind];
                 const inner = (
                   <div className="flex gap-3 px-4 py-3 transition hover:bg-neutral-50">
-                    <div
-                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${ICON_BG[n.kind]}`}
-                    >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
