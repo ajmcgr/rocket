@@ -44,7 +44,9 @@ Deno.serve(async (req: Request) => {
     p_occurred_at: event.created_at ?? null,
   });
   if (error) return json({ error: "Event recording failed" }, 500);
-  if (data !== true && event.data.tags?.category === "rocket_founder_outreach_test") {
+  // This endpoint is dedicated to founder outreach. An accepted email may
+  // trigger a webhook before its send attempt is finalized; ask Resend to retry.
+  if (data !== true) {
     return json({ error: "Outreach delivery record not ready; retry event" }, 503);
   }
   return json({ ok: true, matched_outreach: data === true });
