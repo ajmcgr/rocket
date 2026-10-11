@@ -210,31 +210,35 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           />
           <div className="grid gap-4 sm:grid-cols-2">
             {data.collections.map((shelf) => (
-              <Link
+              <div
                 key={shelf.name}
-                to={`/picks?collection=${encodeURIComponent(shelf.name)}`}
-                className="min-w-0 rounded-2xl border border-neutral-200 p-5 hover:border-sky-300 focus-visible:outline-2 focus-visible:outline-sky-500"
+                className="min-w-0 rounded-2xl border border-neutral-200 p-5 transition hover:border-sky-300"
               >
                 <div className="mb-4 flex flex-wrap gap-2">
                   {shelf.items.slice(0, 5).map(({ app }) => (
-                    <AppLogo
+                    <Link
                       key={app.id}
-                      name={app.name}
-                      src={app.logo_url}
-                      className="h-12 w-12"
-                    />
+                      to={`/apps/${app.slug || app.id}`}
+                      aria-label={`View ${app.name}`}
+                      className="rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
+                    >
+                      <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+                    </Link>
                   ))}
                 </div>
-                <h3 className="break-words text-xl font-semibold">
-                  {shelf.name}
-                </h3>
-                <p className="mt-2 text-sm text-neutral-500">
-                  Rocket editorial · {shelf.items.length} apps in this preview
-                </p>
-                <span className="mt-4 inline-block text-sm font-semibold text-sky-800">
-                  Explore collection →
-                </span>
-              </Link>
+                <Link
+                  to={`/picks?collection=${encodeURIComponent(shelf.name)}`}
+                  className="block rounded-lg focus-visible:outline-2 focus-visible:outline-sky-500"
+                >
+                  <h3 className="break-words text-xl font-semibold">{shelf.name}</h3>
+                  <p className="mt-2 text-sm text-neutral-500">
+                    Rocket editorial · {shelf.items.length} apps in this preview
+                  </p>
+                  <span className="mt-4 inline-block text-sm font-semibold text-sky-800">
+                    Explore collection →
+                  </span>
+                </Link>
+              </div>
             ))}
           </div>
         </section>

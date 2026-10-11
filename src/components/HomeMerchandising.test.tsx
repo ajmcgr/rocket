@@ -116,6 +116,19 @@ describe("homepage section gates", () => {
       await view.close();
     }
   });
+  it("opens an app from a collection preview icon and the collection from its title", async () => {
+    const view = await render({
+      ...emptyMerchandising(),
+      collections: [{ name: "Useful tools", items: [{ app }] }],
+    });
+    try {
+      expect(view.container.querySelector('a[aria-label="View Real app"][href="/apps/a"]')).not.toBeNull();
+      const title = [...view.container.querySelectorAll("h3")].find((heading) => heading.textContent === "Useful tools");
+      expect(title?.closest("a")?.getAttribute("href")).toContain("/picks?collection=Useful");
+    } finally {
+      await view.close();
+    }
+  });
   it("keeps section order and distinguishes views from engagement rankings", async () => {
     const data = {
       ...emptyMerchandising(),
