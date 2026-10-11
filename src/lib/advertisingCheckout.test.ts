@@ -8,7 +8,8 @@ const bookingId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const productId = "prod_canonical";
 const priceId = "price_canonical";
 
-function harness({ authenticated = true, canonical = true, owned = true, liveEnabled = true } = {}) {
+function harness({ authenticated = true, canonical = true, owned = true, liveEnabled = true,
+  type = "featured_app" as "featured_app" | "category_sponsor" } = {}) {
   let handler!: (request: Request) => Promise<Response>;
   const create = vi.fn().mockResolvedValue({
     id: "cs_live_approved", url: "https://checkout.stripe.com/c/approved", status: "open",
@@ -16,8 +17,8 @@ function harness({ authenticated = true, canonical = true, owned = true, liveEna
   });
   const expire = vi.fn().mockResolvedValue({ status: "expired" });
   const rpc = vi.fn(async (name: string) => name === "reserve_rocket_sponsorship"
-    ? owned ? { data: { id: bookingId, scheduled_start_at: "2027-01-01T00:00:00Z",
-        scheduled_end_at: "2027-01-08T00:00:00Z" }, error: null }
+      ? owned ? { data: { id: bookingId, scheduled_start_at: "2027-01-01T00:00:00Z",
+        scheduled_end_at: type === "featured_app" ? "2027-01-08T00:00:00Z" : "2027-01-31T00:00:00Z" }, error: null }
       : { data: null, error: { message: "Eligible owned app required" } }
     : { data: name === "is_rocket_admin" ? false : true, error: null });
   const from = (table: string) => {
@@ -33,12 +34,13 @@ function harness({ authenticated = true, canonical = true, owned = true, liveEna
   class StripeMock {
     accounts = { retrieve: async () => ({ id: "acct_1TfvwfL9pkHWyRRu" }) };
     products = { retrieve: async () => ({
-      active: true, livemode: true, name: "Rocket Featured App",
-      metadata: { rocket_product_type: "featured_app" },
+      active: true, livemode: true, name: type === "featured_app" ? "Rocket Featured App" : "Rocket Category Sponsor",
+      metadata: { rocket_product_type: type },
     }) };
     prices = { retrieve: async () => ({
       active: true, livemode: true, product: productId,
-      unit_amount: canonical ? 4900 : 1, currency: "usd", type: "one_time",
+      unit_amount: canonical ? (type === "featured_app" ? 4900 : 29900) : 1,
+      currency: "usd", type: "one_time",
     }) };
     checkout = { sessions: { create, expire } };
   }
@@ -93,6 +95,21 @@ describe("Rocket-owned advertising Checkout", () => {
     expect(params.payment_intent_data.metadata.rocket_sponsorship_id).toBe(bookingId);
     expect(rpc).toHaveBeenCalledWith("reserve_rocket_sponsorship", expect.objectContaining({
       p_user_id: appId, p_livemode: true, p_type: "featured_app",
+    }));
+  });
+
+  it("uses the canonical $299 one-time Category Sponsor price and server-selected 30-day window", async () => {
+    const { request, create, rpc } = harness({ type: "category_sponsor" });
+    const response = await request({ action: "checkout", type: "category_sponsor", app_id: appId,
+      category: "Productivity", amount_cents: 1, duration_days: 1, price_id: "price_attacker" });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(expect.objectContaining({
+      start: "2027-01-01T00:00:00Z", end: "2027-01-31T00:00:00Z",
+    }));
+    expect(create).toHaveBeenCalledOnce();
+    expect(create.mock.calls[0][0].line_items).toEqual([{ price: priceId, quantity: 1 }]);
+    expect(rpc).toHaveBeenCalledWith("reserve_rocket_sponsorship", expect.objectContaining({
+      p_type: "category_sponsor", p_category: "Productivity", p_livemode: true,
     }));
   });
 

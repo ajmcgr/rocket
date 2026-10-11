@@ -31,17 +31,11 @@ const offers = {
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, {
   year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short",
 });
-const adminStatus = supabase.rpc.bind(supabase) as unknown as
-  (name: "is_rocket_admin") => Promise<{ data: boolean | null; error: unknown }>;
-
 export default function Advertise() {
   const { user } = useAuth();
   const [apps, setApps] = useState<OwnedApp[]>([]);
   const [history, setHistory] = useState<Sponsorship[]>([]);
   const [ready, setReady] = useState<Record<AdType, boolean>>({ featured_app: false, category_sponsor: false });
-  const [testReady, setTestReady] = useState<Record<AdType, boolean>>({ featured_app: false, category_sponsor: false });
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [testMode, setTestMode] = useState(false);
   const [type, setType] = useState<AdType | null>(null);
   const [appId, setAppId] = useState("");
   const [category, setCategory] = useState("");
@@ -62,14 +56,11 @@ export default function Advertise() {
         if (!error && data?.products) {
           setReady(Object.fromEntries(data.products.map((product: { type: AdType; ready: boolean }) =>
             [product.type, product.ready])) as Record<AdType, boolean>);
-          setTestReady(Object.fromEntries(data.products.map((product: { type: AdType; test_ready: boolean }) =>
-            [product.type, product.test_ready])) as Record<AdType, boolean>);
         }
       });
   }, []);
   useEffect(() => {
-    if (!user) { setApps([]); setHistory([]); setIsAdmin(false); return; }
-    void adminStatus("is_rocket_admin").then(({ data, error }) => setIsAdmin(!error && Boolean(data)));
+    if (!user) { setApps([]); setHistory([]); return; }
     void supabase.functions.invoke("rocket-advertising", { body: { action: "mine" } })
       .then(({ data, error }) => {
         if (error) { setError("Advertising details are temporarily unavailable."); return; }
@@ -84,12 +75,12 @@ export default function Advertise() {
     let active = true;
     void supabase.functions.invoke("rocket-advertising", {
       body: { action: "quote", type, app_id: appId, category: type === "category_sponsor" ? category : null,
-        mode: testMode ? "test" : "live" },
+        mode: "live" },
     }).then(({ data, error }) => {
       if (active) setQuote(error ? { available: false, reason: "Availability could not be checked" } : data?.quote || null);
     });
     return () => { active = false; };
-  }, [user, type, appId, category, testMode]);
+  }, [user, type, appId, category]);
   const selectedApp = apps.find((app) => app.id === appId);
   const selectOffer = (next: AdType) => {
     setType(next); setAppId(""); setCategory(""); setError(""); setReservedCheckout(null);
@@ -101,7 +92,7 @@ export default function Advertise() {
     try {
       const { data, error: requestError } = await supabase.functions.invoke("rocket-advertising", {
         body: { action: "checkout", type, app_id: appId, category: type === "category_sponsor" ? category : null,
-          mode: testMode ? "test" : "live" },
+          mode: "live" },
       });
       if (requestError || !data?.url || !/^https:\/\/checkout\.stripe\.com\//.test(data.url)
         || !data.start || !data.end || !data.checkout_expires_at)
@@ -128,17 +119,12 @@ export default function Advertise() {
           <p className="mt-5 text-neutral-700">{offers[key].description}</p>
           <p className="mt-3 text-sm leading-relaxed text-neutral-500">{offers[key].details}</p>
           {user ? <button className="mt-7 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white hover:bg-[#1268aa] disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => selectOffer(key)} disabled={!ready[key] && !(isAdmin && testReady[key])}>{ready[key] || (isAdmin && testReady[key]) ? offers[key].button : "Booking unavailable"}</button>
+            onClick={() => selectOffer(key)} disabled={!ready[key]}>{ready[key] ? offers[key].button : "Booking unavailable"}</button>
             : <Link to="/login" className="mt-7 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 font-semibold text-white hover:bg-[#1268aa]">Sign in to {key === "featured_app" ? "feature an app" : "sponsor a category"}</Link>}
         </article>)}
       </div>
       {user && type && <section className="mt-8 rounded-3xl border border-neutral-200 bg-white p-7 sm:p-9" aria-labelledby="booking-title">
         <h2 id="booking-title" className="text-2xl font-bold">Book {offers[type].title}</h2>
-        {isAdmin && testReady[type] && <label className="mt-4 flex items-center gap-2 text-sm text-neutral-600">
-          <input type="checkbox" checked={testMode} onChange={(event) => setTestMode(event.target.checked)} />
-          Stripe TEST checkout · no real charge or public placement
-        </label>}
-        {!testMode && !ready[type] && <p className="mt-4 text-amber-800">Live booking opens after payment acceptance testing.</p>}
         {apps.length ? <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-semibold">Your eligible app
             <select value={appId} onChange={(event) => { setAppId(event.target.value); setCategory(""); }} className="mt-2 min-h-11 w-full rounded-lg border border-neutral-300 bg-white px-3">
@@ -159,7 +145,7 @@ export default function Advertise() {
           <p className="mt-1"><strong>Ends:</strong> {formatDate(quote.end)}</p>
           <p className="mt-1"><strong>Due:</strong> {offers[type].price} USD, one-time</p>
           <p className="mt-3 text-neutral-600">Availability and dates are confirmed again at checkout. The placement starts only after verified payment.</p>
-          {!reservedCheckout && <button onClick={checkout} disabled={pending || (!testMode && !ready[type]) || (testMode && !testReady[type])} className="mt-4 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white disabled:opacity-50">{pending ? "Reserving…" : `Reserve and review · ${offers[type].price}`}</button>}
+          {!reservedCheckout && <button onClick={checkout} disabled={pending || !ready[type]} className="mt-4 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white disabled:opacity-50">{pending ? "Reserving…" : `Reserve and review · ${offers[type].price}`}</button>}
         </div>}
         {reservedCheckout && <div className="mt-5 rounded-xl border border-sky-200 bg-white p-5 text-sm">
           <p className="font-semibold">Final booking review</p>
@@ -167,7 +153,7 @@ export default function Advertise() {
           <p className="mt-1">{formatDate(reservedCheckout.start)} – {formatDate(reservedCheckout.end)}</p>
           <p className="mt-1">{offers[type].price} USD, one-time. Stripe checkout expires {formatDate(reservedCheckout.checkout_expires_at)}.</p>
           <button onClick={() => { track("sponsorship_checkout_started", { sponsorship_type: type }); window.location.assign(reservedCheckout.url); }}
-            className="mt-4 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white">Open {testMode ? "TEST " : ""}Stripe Checkout</button>
+            className="mt-4 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white">Open Stripe Checkout</button>
         </div>}
         {error && <p role="alert" className="mt-4 text-red-700">{error}</p>}
       </section>}
@@ -177,7 +163,7 @@ export default function Advertise() {
           const app = apps.find((owned) => owned.id === item.target_app_id);
           return <div key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{offers[item.sponsorship_type].title} · {app?.name || "App"}{item.target_category ? ` · ${item.target_category}` : ""}</h3><span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold capitalize">{item.status}</span></div>
-            <p className="mt-2 text-sm text-neutral-600">${(item.amount_cents / 100).toFixed(2)} USD · {item.stripe_livemode ? "Live" : "TEST"} · {item.stripe_payment_status}</p>
+            <p className="mt-2 text-sm text-neutral-600">${(item.amount_cents / 100).toFixed(2)} USD · {item.stripe_payment_status}</p>
             <p className="mt-1 text-sm text-neutral-600">{formatDate(item.actual_start_at || item.scheduled_start_at)} – {formatDate(item.actual_end_at || item.scheduled_end_at)}</p>
             {app && <Link to={`/apps/${item.target_app_id}`} className="mt-2 inline-block text-sm font-semibold text-sky-700 hover:underline">View app</Link>}
           </div>;

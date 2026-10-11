@@ -125,7 +125,8 @@ Deno.serve(async (req) => {
         admin.from("app_owners").select("app_id").eq("user_id", user.id).is("revoked_at", null),
         admin.from("rocket_sponsorships")
           .select("id,sponsorship_type,target_app_id,target_category,amount_cents,currency,scheduled_start_at,scheduled_end_at,actual_start_at,actual_end_at,status,stripe_payment_status,stripe_livemode,moderation_hold,created_at")
-          .eq("purchaser_user_id", user.id).order("created_at", { ascending: false }).limit(50),
+          .eq("purchaser_user_id", user.id).eq("stripe_livemode", true)
+          .order("created_at", { ascending: false }).limit(50),
       ]);
       if (ownership.error || purchases.error) throw ownership.error || purchases.error;
       const appIds = (ownership.data || []).map((row) => row.app_id);
