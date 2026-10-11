@@ -2,15 +2,20 @@ import SiteHeader from "@/components/SiteHeader";
 import { RankedAppRow, StandardAppCard } from "@/components/MarketplaceCards";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
 import type { ShelfItem } from "@/lib/homeMerchandising";
+import { Link } from "@tanstack/react-router";
 
 export default function CuratedApps({
   kind,
   rows,
   collection,
+  page = 0,
+  hasMore = false,
 }: {
   kind: "rising" | "picks";
   rows: ShelfItem[];
   collection?: string;
+  page?: number;
+  hasMore?: boolean;
 }) {
   const save = useSavedAppControls(rows.map((row) => row.app.id));
   return (
@@ -31,7 +36,7 @@ export default function CuratedApps({
               <RankedAppRow
                 key={row.app.id}
                 app={row.app}
-                rank={index + 1}
+                rank={page * 20 + index + 1}
                 {...save(row.app.id)}
               />
             ) : (
@@ -54,6 +59,21 @@ export default function CuratedApps({
           <p className="mt-8 text-sm text-neutral-500">
             No eligible apps are available here right now.
           </p>
+        )}
+        {kind === "rising" && (page > 0 || hasMore) && (
+          <nav aria-label="Rising pages" className="mt-8 flex items-center justify-center gap-4">
+            {page > 0 ? (
+              <Link to="/rising" search={{ page: page - 1 }} className="rounded-lg border border-neutral-200 px-4 py-2 text-sm">
+                Previous
+              </Link>
+            ) : <span className="rounded-lg border border-neutral-200 px-4 py-2 text-sm opacity-40">Previous</span>}
+            <span className="text-sm text-neutral-500">Page {page + 1}</span>
+            {hasMore ? (
+              <Link to="/rising" search={{ page: page + 1 }} className="rounded-lg border border-neutral-200 px-4 py-2 text-sm">
+                Next
+              </Link>
+            ) : <span className="rounded-lg border border-neutral-200 px-4 py-2 text-sm opacity-40">Next</span>}
+          </nav>
         )}
       </main>
     </div>
