@@ -2,15 +2,8 @@ import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import { tools } from "@/content/tools";
 import { ArrowRight, Sparkles } from "@/components/EmojiIcons";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Tools = () => {
-  useDocumentMeta({
-    title: "Free AI branding tools for founders — Rocket",
-    description: "Generate taglines, value propositions, names, pitches, bios and more with Rocket's free AI tools.",
-    canonical: "https://tryrocket.ai/tools",
-  });
-
   return <div className="min-h-screen bg-white text-neutral-900">
     <SiteHeader />
     <main className="mx-auto max-w-6xl px-6 py-16">

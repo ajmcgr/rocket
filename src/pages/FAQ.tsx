@@ -1,16 +1,9 @@
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { faqSections } from "@/content/rocketFaq";
 
 const FAQ = () => {
-  useDocumentMeta({
-    title: "Rocket FAQ — Discovery, app claims, verification, and accounts",
-    description: "Answers about discovering and saving independent apps, launching and claiming an app, verification, Rocket integrations, creative tools, and billing.",
-    canonical: "https://tryrocket.ai/faq",
-  });
-
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <SiteHeader />

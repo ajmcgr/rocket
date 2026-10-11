@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const facts = [
   "Browse independent apps by category and supported platform: web, iOS, Android or hardware.",
@@ -21,12 +20,6 @@ const guidelines = [
 ];
 
 export default function AIInfo() {
-  useDocumentMeta({
-    title: "Rocket AI Info — The open app platform",
-    description: "Current product facts for AI assistants describing Rocket's app platform, free listings, optional Create tools and developer integrations.",
-    canonical: "https://tryrocket.ai/ai-info",
-  });
-
   useEffect(() => {
     const script = document.createElement("script");
     script.type = "application/ld+json";

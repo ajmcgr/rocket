@@ -7,7 +7,6 @@ import ArticleCard from "@/components/blog/ArticleCard";
 import ArticleCover from "@/components/blog/ArticleCover";
 import Highlight from "@/components/blog/Highlight";
 import { Button } from "@/components/ui/button";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { useEnsureBlogImages } from "@/hooks/useBlogImages";
 import {
   activeCategories,
@@ -26,13 +25,6 @@ const Blog = () => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category | "All">("All");
   const [visible, setVisible] = useState(PAGE_SIZE);
-
-  useDocumentMeta({
-    title: "Rocket Blog — Ideas for independent app builders",
-    description:
-      "Practical ideas on launching, growing, monetizing, and branding independent software.",
-    canonical: `${SITE_URL}/blog`,
-  });
 
   const categories = useMemo(() => activeCategories(), []);
 

@@ -7,7 +7,6 @@ import { supabase as _sb } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { track } from "@/lib/analytics";
 const supabase = _sb as any;
 
@@ -132,12 +131,6 @@ const Pricing = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
   const [billing, setBilling] = useState<"monthly" | "yearly">("yearly");
-
-  useDocumentMeta({
-    title: "Rocket pricing — apps, Create, Monetize and Grow",
-    description: "See free app listings, Rocket Create plans, Rocket ID and Buy with Rocket pricing, plus Grow products.",
-    canonical: "https://tryrocket.ai/pricing",
-  });
 
   const priceFor = (base: "starter" | "growth" | "business") => {
     const monthly = base === "starter" ? 12 : base === "growth" ? 20 : 50;
