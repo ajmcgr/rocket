@@ -248,18 +248,26 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
             href="/discover?view=categories"
             action="All categories"
           />
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {data.categories.map((category, index) => (
               <Link
                 key={category.category}
                 to={`/discover?view=all&category=${encodeURIComponent(category.category)}`}
-                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} min-w-0 rounded-xl px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-sky-500`}
+                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} group flex min-h-44 items-end justify-between gap-3 rounded-2xl p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6] sm:p-6`}
               >
-                <strong className="block break-words text-sm sm:text-base">
-                  {category.category}
-                </strong>
-                <span className="mt-1 block text-xs opacity-75">
-                  {category.app_count.toLocaleString()} apps
+                <span className="min-w-0">
+                  <strong className="block text-xl font-bold leading-tight tracking-tight sm:text-2xl">
+                    {category.category}
+                  </strong>
+                  <span className="mt-2 block text-sm opacity-75">
+                    {category.app_count.toLocaleString()} apps
+                  </span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-white/25 text-lg transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                >
+                  →
                 </span>
               </Link>
             ))}
