@@ -10,7 +10,7 @@ type AdType = "featured_app" | "category_sponsor";
 type OwnedApp = { id: string; name: string; categories: string[] };
 type Sponsorship = {
   id: string; sponsorship_type: AdType; target_app_id: string; target_category: string | null;
-  amount_cents: number; status: string; stripe_payment_status: string; stripe_livemode: boolean;
+  amount_cents: number; paid_amount_cents: number | null; status: string; stripe_payment_status: string; stripe_livemode: boolean;
   scheduled_start_at: string; scheduled_end_at: string;
   actual_start_at: string | null; actual_end_at: string | null;
   views?: number | null; clicks?: number | null;
@@ -164,7 +164,7 @@ export default function Advertise() {
           const app = apps.find((owned) => owned.id === item.target_app_id);
           return <div key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{offers[item.sponsorship_type].title} · {app?.name || "App"}{item.target_category ? ` · ${item.target_category}` : ""}</h3><span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold capitalize">{item.status}</span></div>
-            <p className="mt-2 text-sm text-neutral-600">${(item.amount_cents / 100).toFixed(2)} USD · {item.stripe_payment_status}</p>
+            <p className="mt-2 text-sm text-neutral-600">${((item.paid_amount_cents ?? item.amount_cents) / 100).toFixed(2)} USD · {item.stripe_payment_status}</p>
             <p className="mt-1 text-sm text-neutral-600">{formatDate(item.actual_start_at || item.scheduled_start_at)} – {formatDate(item.actual_end_at || item.scheduled_end_at)}</p>
             {item.stripe_payment_status === "paid" && <div className="mt-4 flex flex-wrap gap-6 border-t border-neutral-100 pt-4" aria-label="Sponsored placement performance">
               {item.views === null || item.clicks === null

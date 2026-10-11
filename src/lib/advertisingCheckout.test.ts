@@ -90,6 +90,7 @@ describe("Rocket-owned advertising Checkout", () => {
     const params = create.mock.calls[0][0];
     expect(params.mode).toBe("payment");
     expect(params.line_items).toEqual([{ price: priceId, quantity: 1 }]);
+    expect(params.allow_promotion_codes).toBe(true);
     expect(params).not.toHaveProperty("payment_intent_data.application_fee_amount");
     expect(params).not.toHaveProperty("transfer_data");
     expect(params.payment_intent_data.metadata.rocket_sponsorship_id).toBe(bookingId);
@@ -108,6 +109,7 @@ describe("Rocket-owned advertising Checkout", () => {
     }));
     expect(create).toHaveBeenCalledOnce();
     expect(create.mock.calls[0][0].line_items).toEqual([{ price: priceId, quantity: 1 }]);
+    expect(create.mock.calls[0][0].allow_promotion_codes).toBe(true);
     expect(rpc).toHaveBeenCalledWith("reserve_rocket_sponsorship", expect.objectContaining({
       p_type: "category_sponsor", p_category: "Productivity", p_livemode: true,
     }));

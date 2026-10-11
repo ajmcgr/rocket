@@ -211,6 +211,7 @@ Deno.serve(async (req) => {
       if (oneTime && product.platform_fee_bps !== 500) return json({ error: "platform_fee_configuration_invalid" }, 409);
       const session = await stripe.checkout.sessions.create({
         mode: oneTime ? "payment" : "subscription", customer: customerId, payment_method_types: ["card"], line_items: [{ price: product.stripe_price_id, quantity: 1 }],
+        ...(oneTime ? {} : { allow_promotion_codes: true }),
         success_url: oneTime ? body.return_uri : `${returnUrl}?purchase=processing`, cancel_url: `${returnUrl}?purchase=cancelled`,
         ...(oneTime ? { payment_intent_data: { application_fee_amount: Math.round(product.amount_cents * product.platform_fee_bps / 10000), metadata } } : { subscription_data: { application_fee_percent: product.platform_fee_bps / 100, metadata } }),
         metadata: { rocket_user_id: user.id, rocket_client_id: client.client_id, rocket_product_id: product.id },

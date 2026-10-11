@@ -14,7 +14,8 @@ function harness({ amount = 4900, refunded = false, disputed = false, signature 
       id: test ? "cs_test_canonical" : "cs_live_canonical", mode: "payment", status: "complete",
       payment_status: "paid", livemode: !test, client_reference_id: id,
       metadata: { rocket_sponsorship_id: id, rocket_sponsorship_type: "featured_app" },
-      amount_total: amount, amount_subtotal: amount, currency: "usd",
+      amount_total: amount, amount_subtotal: 4900, currency: "usd",
+      total_details: { amount_discount: 4900 - amount, amount_tax: 0, amount_shipping: 0 },
       payment_intent: "pi_canonical",
     } },
   };
@@ -44,12 +45,13 @@ function harness({ amount = 4900, refunded = false, disputed = false, signature 
     prices = { retrieve: async () => ({ active: true, livemode: !test,
       product: "prod_canonical", type: "one_time", unit_amount: 4900, currency: "usd" }) };
     checkout = { sessions: { listLineItems: async () => ({ data: [{ quantity: 1,
-      price: { id: "price_canonical" }, amount_total: 4900 }] }) } };
+      price: { id: "price_canonical" }, amount_subtotal: 4900,
+      amount_discount: 4900 - amount, amount_total: amount }] }) } };
     paymentIntents = { retrieve: async () => ({ id: "pi_canonical", status: "succeeded",
-      livemode: !test, amount: 4900, amount_received: 4900, currency: "usd",
+      livemode: !test, amount, amount_received: amount, currency: "usd",
       latest_charge: "ch_canonical", metadata: { rocket_sponsorship_id: id } }) };
     charges = { retrieve: async () => ({ payment_intent: "pi_canonical", livemode: !test,
-      amount: 4900, amount_refunded: refunded ? 4900 : 0, refunded, disputed, currency: "usd" }) };
+      amount, amount_refunded: refunded ? amount : 0, refunded, disputed, currency: "usd" }) };
   }
   runInNewContext(ts.transpileModule(
     readFileSync("supabase/functions/stripe-webhook/index.ts", "utf8"),
@@ -87,6 +89,20 @@ describe("Rocket advertising verified webhook isolation", () => {
 
   it("rejects a wrong amount before any fulfilment", async () => {
     const { request, rpc } = harness({ amount: 29900 });
+    expect((await request()).status).toBe(500);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("books a Stripe-discounted charge while retaining the canonical price", async () => {
+    const { request, rpc } = harness({ amount: 3920 });
+    expect((await request()).status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith("apply_rocket_sponsorship_payment", expect.objectContaining({
+      p_price_id: "price_canonical", p_amount_cents: 3920,
+    }));
+  });
+
+  it("rejects a fully discounted checkout without a captured payment", async () => {
+    const { request, rpc } = harness({ amount: 0 });
     expect((await request()).status).toBe(500);
     expect(rpc).not.toHaveBeenCalled();
   });

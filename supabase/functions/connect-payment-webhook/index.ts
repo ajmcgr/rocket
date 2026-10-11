@@ -214,6 +214,7 @@ Deno.serve(async (req) => {
     let status: string | null = null; let validUntil: string | null = null;
     const invoiceForSettlement = event.type === "invoice.paid" ? object : settledInvoice;
     let settledPeriodEnd: number | null = null;
+    let settledFeeCents: number | null = null;
     if (invoiceForSettlement) {
       let invoiceMetadata = invoiceForSettlement.parent?.subscription_details?.metadata || invoiceForSettlement.subscription_details?.metadata || {};
       if (!invoiceMetadata.rocket_user_id && transaction.stripe_subscription_id) {
@@ -221,7 +222,7 @@ Deno.serve(async (req) => {
         invoiceMetadata = subscription.metadata;
       }
       const { data: purchasedProduct, error: purchasedProductError } = await admin.from("connect_products")
-        .select("stripe_price_id").eq("id", transaction.product_id).eq("client_id", transaction.client_id).maybeSingle();
+        .select("stripe_price_id,platform_fee_bps").eq("id", transaction.product_id).eq("client_id", transaction.client_id).maybeSingle();
       if (purchasedProductError || !purchasedProduct) throw purchasedProductError || new Error("Missing registered price");
       settledPeriodEnd = verifiedPaidInvoicePeriodEnd(invoiceForSettlement, { currency: transaction.currency, amount_cents: transaction.amount_cents, stripe_price_id: purchasedProduct.stripe_price_id });
       if (!settledPeriodEnd ||
@@ -229,6 +230,7 @@ Deno.serve(async (req) => {
           invoiceMetadata.rocket_user_id !== transaction.user_id ||
           invoiceMetadata.rocket_client_id !== transaction.client_id ||
           invoiceMetadata.rocket_product_id !== transaction.product_id) throw new Error("Invoice did not match the recorded Rocket purchase");
+      settledFeeCents = registeredApplicationFee(invoiceForSettlement.amount_paid, purchasedProduct.platform_fee_bps);
     }
     if (invoiceForSettlement) { status = "active"; validUntil = new Date(settledPeriodEnd! * 1000).toISOString(); }
     if (event.type === "invoice.payment_failed") status = "past_due";
@@ -260,7 +262,7 @@ Deno.serve(async (req) => {
     const transactionStatus = status === "active" ? "paid" : status;
     const { error: transactionError } = await admin
       .from("connect_transactions")
-      .update({ status: transactionStatus, stripe_invoice_id: invoiceForSettlement?.id || (object.object === "invoice" ? object.id : transaction.stripe_invoice_id), stripe_payment_intent_id: typeof object.payment_intent === "string" ? object.payment_intent : transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() })
+      .update({ status: transactionStatus, application_fee_cents: settledFeeCents ?? transaction.application_fee_cents, stripe_invoice_id: invoiceForSettlement?.id || (object.object === "invoice" ? object.id : transaction.stripe_invoice_id), stripe_payment_intent_id: typeof object.payment_intent === "string" ? object.payment_intent : transaction.stripe_payment_intent_id, stripe_event_created_at: new Date(event.created * 1000).toISOString(), updated_at: new Date().toISOString() })
       .eq("id", transaction.id);
     if (transactionError) throw transactionError;
     const entitlement = { user_id: transaction.user_id, client_id: transaction.client_id, product_id: transaction.product_id, transaction_id: transaction.id, status, valid_from: status === "active" ? new Date().toISOString() : null, valid_until: validUntil, revoked_at: ["refunded", "expired", "disputed"].includes(status) ? new Date().toISOString() : null, updated_at: new Date().toISOString() };

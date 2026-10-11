@@ -41,5 +41,10 @@ describe("Connect payment access rules", () => {
     expect(verifiedPaidInvoicePeriodEnd({ ...invoice, amount_paid: 0 }, expected)).toBeNull();
     expect(verifiedPaidInvoicePeriodEnd({ ...invoice, lines: { data: [{ ...invoice.lines.data[0], price: { id: "price_wrong" } }] } }, expected)).toBeNull();
     expect(verifiedPaidInvoicePeriodEnd({ ...invoice, lines: { data: [{ pricing: { price_details: { price: "price_right" } }, amount: 1900, period: { end: 1800000000 } }] } }, expected)).toBe(1800000000);
+    const discounted = { ...invoice, amount_paid: 1520, amount_due: 1520, total: 1520,
+      subtotal: 1900, total_discount_amounts: [{ amount: 380 }] };
+    expect(verifiedPaidInvoicePeriodEnd(discounted, expected)).toBe(1800000000);
+    expect(verifiedPaidInvoicePeriodEnd({ ...discounted, total_discount_amounts: [{ amount: 300 }] }, expected)).toBeNull();
+    expect(verifiedPaidInvoicePeriodEnd({ ...discounted, lines: { data: [...invoice.lines.data, ...invoice.lines.data] } }, expected)).toBeNull();
   });
 });
