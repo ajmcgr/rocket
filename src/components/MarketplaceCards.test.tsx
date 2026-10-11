@@ -88,6 +88,7 @@ describe("marketplace content treatments", () => {
     expect(cover.className).toContain("object-cover");
     expect(cover.getAttribute("src")).toContain("resize=cover");
     expect(cover.parentElement?.className).toContain("aspect-[16/9]");
+    expect(card?.querySelector('a[aria-label="View Sample app"] img[alt=""]')).not.toBeNull();
     expect(card?.textContent).not.toContain("@maker");
     expect(screen.getByText("Productivity")).toBeTruthy();
     cleanup();
@@ -219,8 +220,11 @@ describe("marketplace content treatments", () => {
       expect(container.textContent).toContain("1Sample app");
       expect(container.textContent).toContain("Productivity · Launch activity");
       expect(container.querySelectorAll('a[href="/apps/app-1"]')).toHaveLength(
-        7,
+        8,
       );
+      for (const article of container.querySelectorAll("article")) {
+        expect(article.querySelector('a[href="/apps/app-1"] img')).not.toBeNull();
+      }
       const viewLinks = Array.from(
         container.querySelectorAll('a[href="/apps/app-1"]'),
       ).filter((link) => link.textContent === "View");

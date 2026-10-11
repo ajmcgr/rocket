@@ -191,7 +191,13 @@ export function EditorialAppCard({
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <span className="text-xs font-semibold text-sky-800">{eyebrow}</span>
         <div className="mt-3 flex min-w-0 items-center gap-3">
-          <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+          <Link
+            to={`/apps/${app.slug || app.id}`}
+            aria-label={`View ${app.name}`}
+            className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
+          >
+            <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+          </Link>
           <div className="min-w-0">
             <Link
               to={`/apps/${app.slug || app.id}`}
@@ -295,7 +301,13 @@ export function RankedAppRow({
       <span className="w-5 shrink-0 text-sm font-semibold tabular-nums text-neutral-400">
         {rank}
       </span>
-      <AppLogo name={app.name} src={app.logo_url} className="h-11 w-11" />
+      <Link
+        to={`/apps/${app.slug || app.id}`}
+        aria-label={`View ${app.name}`}
+        className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
+      >
+        <AppLogo name={app.name} src={app.logo_url} className="h-11 w-11" />
+      </Link>
       <div className="min-w-32 flex-1">
         <Link
           to={`/apps/${app.slug || app.id}`}
