@@ -60,6 +60,7 @@ type PendingDatabase = Omit<Database, "public"> & {
 export type PublicAppRank = { app_id: string; rank_position: number };
 type RpcResults = {
   get_public_app_rankings: PublicAppRank[];
+  get_public_app_rankings_page: PublicAppRank[];
   search_marketplace: { apps: Tables<"public_apps">[]; total: number };
   get_app_developer: { username: string; full_name: string } | null;
   get_public_member_apps: Tables<"public_apps">[];
