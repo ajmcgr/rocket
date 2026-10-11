@@ -14,7 +14,7 @@ export default function PublicMetricCard({
 }) {
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-6 sm:p-8"
+      className="relative h-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6"
       title={details}
     >
       <span
@@ -25,13 +25,14 @@ export default function PublicMetricCard({
         <Icon aria-hidden="true" className="h-5 w-5 shrink-0" />
         {label}
       </p>
-      <p className="mt-3 break-words text-4xl font-semibold tabular-nums tracking-tight text-sky-700 sm:text-5xl">
+      <p className="mt-2 break-words text-3xl font-semibold tabular-nums tracking-tight text-sky-700 sm:text-4xl">
         {value}
       </p>
-      <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-neutral-600">
+      <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-neutral-600">
         <ShieldCheck aria-hidden="true" className="h-4 w-4" />
         Verified
       </p>
+      <p className="mt-1 text-xs text-neutral-500">{details}</p>
     </div>
   );
 }

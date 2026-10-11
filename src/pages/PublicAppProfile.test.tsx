@@ -5,7 +5,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Tables } from "@/integrations/supabase/types";
 
 vi.mock("@/lib/router-compat", () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
   useParams: () => ({ id: "whisperit" }),
   useNavigate: () => vi.fn(),
   useSearchParams: () => [new URLSearchParams(), vi.fn()],
@@ -17,13 +19,44 @@ vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/components/SiteFooter", () => ({ default: () => null }));
 vi.mock("@/components/AppReviews", () => ({ default: () => null }));
 vi.mock("@/components/AppProfileBuyAction", () => ({ default: () => null }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: {
-  from: vi.fn(() => { const q: Record<string, unknown> = { then: () => new Promise(() => {}) }; for (const key of ["select", "eq", "in", "order", "limit", "contains", "neq", "maybeSingle"]) q[key] = () => q; return q; }),
-} }));
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    from: vi.fn(() => {
+      const q: Record<string, unknown> = { then: () => new Promise(() => {}) };
+      for (const key of [
+        "select",
+        "eq",
+        "in",
+        "order",
+        "limit",
+        "contains",
+        "neq",
+        "maybeSingle",
+      ])
+        q[key] = () => q;
+      return q;
+    }),
+  },
+}));
 import PublicAppProfile from "./PublicAppProfile";
 import { supabase } from "@/integrations/supabase/client";
-const app = { id: "app1", slug: "whisperit", name: "Whisperit", tagline: "Useful software", description: "Real description", categories: ["Productivity"], tags: [], platforms: ["web"], website_url: "https://whisperit.ai", canonical_host: "whisperit.ai", logo_url: null } as Tables<"public_apps">;
-afterEach(() => { cleanup(); auth.user = null; });
+const app = {
+  id: "app1",
+  slug: "whisperit",
+  name: "Whisperit",
+  tagline: "Useful software",
+  description: "Real description",
+  categories: ["Productivity"],
+  tags: [],
+  platforms: ["web"],
+  website_url: "https://whisperit.ai",
+  canonical_host: "whisperit.ai",
+  logo_url: null,
+} as Tables<"public_apps">;
+afterEach(() => {
+  cleanup();
+  auth.user = null;
+});
 it("includes useful profile identity in server-rendered HTML", () => {
   const html = renderToStaticMarkup(<PublicAppProfile initialApp={app} />);
   expect(html).toContain("Whisperit");
@@ -32,32 +65,77 @@ it("includes useful profile identity in server-rendered HTML", () => {
 });
 it("does not hide the profile while optional queries remain pending", () => {
   render(<PublicAppProfile initialApp={app} />);
-  expect(screen.getByRole("heading", { name: "Whisperit", level: 1 })).toBeTruthy();
+  expect(
+    screen.getByRole("heading", { name: "Whisperit", level: 1 }),
+  ).toBeTruthy();
   const website = screen.getByRole("link", { name: /Visit website/ });
-  expect(website.getAttribute('href')).toBe(app.website_url);
-  expect(website.getAttribute('rel')).toBe('noopener noreferrer');
+  expect(website.getAttribute("href")).toBe(app.website_url);
+  expect(website.getAttribute("rel")).toBe("noopener noreferrer");
 });
 it("places public traffic and revenue before the screenshot gallery", async () => {
   vi.mocked(supabase.from).mockImplementation((table) => {
-    const data = table === "public_app_traction"
-      ? [{ metric_type: "views", visibility: "verified_only", metric_date: "2026-10-04", last_verified_at: "2026-10-05T09:03:35Z" }]
-      : table === "public_app_revenue"
-        ? [{ currency: "usd", visibility: "verified_only", observed_at: "2026-10-05T09:03:35Z" }]
-        : [];
+    const data =
+      table === "public_app_traction"
+        ? [
+            {
+              metric_type: "views",
+              visibility: "verified_only",
+              metric_date: "2026-10-04",
+              last_verified_at: "2026-10-05T09:03:35Z",
+            },
+          ]
+        : table === "public_app_revenue"
+          ? [
+              {
+                currency: "usd",
+                visibility: "verified_only",
+                observed_at: "2026-10-05T09:03:35Z",
+              },
+            ]
+          : [];
     const result = Promise.resolve({ data, error: null });
     const q: Record<string, unknown> = { then: result.then.bind(result) };
-    for (const key of ["select", "eq", "in", "order", "limit", "contains", "neq", "maybeSingle"]) q[key] = () => q;
+    for (const key of [
+      "select",
+      "eq",
+      "in",
+      "order",
+      "limit",
+      "contains",
+      "neq",
+      "maybeSingle",
+    ])
+      q[key] = () => q;
     return q as never;
   });
-  render(<PublicAppProfile initialApp={app} initialMedia={[{
-    id: "screenshot1", app_id: app.id, media_type: "screenshot", source_type: "owner",
-    source_url: "https://whisperit.ai/screenshot.png", sort_order: 0,
-  } as never]} />);
-  const traffic = await screen.findByRole("heading", { name: "Traffic" });
-  const revenue = await screen.findByRole("heading", { name: "Subscription revenue" });
-  const gallery = screen.getByRole("heading", { name: "See Whisperit in action" });
-  expect(traffic.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(revenue.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  render(
+    <PublicAppProfile
+      initialApp={app}
+      initialMedia={[
+        {
+          id: "screenshot1",
+          app_id: app.id,
+          media_type: "screenshot",
+          source_type: "owner",
+          source_url: "https://whisperit.ai/screenshot.png",
+          sort_order: 0,
+        } as never,
+      ]}
+    />,
+  );
+  const traffic = await screen.findByRole("region", { name: "Traffic" });
+  const revenue = await screen.findByRole("region", {
+    name: "Verified revenue",
+  });
+  const gallery = screen.getByRole("heading", {
+    name: "See Whisperit in action",
+  });
+  expect(
+    traffic.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    revenue.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
 });
 
 it("checks saved status with the resolved UUID on a slug URL", async () => {
@@ -66,8 +144,20 @@ it("checks saved status with the resolved UUID on a slug URL", async () => {
   vi.mocked(supabase.from).mockImplementation(() => {
     const result = Promise.resolve({ data: null, error: null });
     const q: Record<string, unknown> = { then: result.then.bind(result) };
-    for (const key of ["select", "in", "order", "limit", "contains", "neq", "maybeSingle"]) q[key] = () => q;
-    q.eq = (...args: unknown[]) => { eq(...args); return q; };
+    for (const key of [
+      "select",
+      "in",
+      "order",
+      "limit",
+      "contains",
+      "neq",
+      "maybeSingle",
+    ])
+      q[key] = () => q;
+    q.eq = (...args: unknown[]) => {
+      eq(...args);
+      return q;
+    };
     return q as never;
   });
   render(<PublicAppProfile initialApp={app} />);
