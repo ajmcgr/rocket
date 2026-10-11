@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
       const [ownership, purchases, metrics] = await Promise.all([
         admin.from("app_owners").select("app_id").eq("user_id", user.id).is("revoked_at", null),
         admin.from("rocket_sponsorships")
-          .select("id,sponsorship_type,target_app_id,target_category,amount_cents,currency,scheduled_start_at,scheduled_end_at,actual_start_at,actual_end_at,status,stripe_payment_status,stripe_livemode,moderation_hold,created_at")
+          .select("id,sponsorship_type,target_app_id,target_category,amount_cents,paid_amount_cents,currency,scheduled_start_at,scheduled_end_at,actual_start_at,actual_end_at,status,stripe_payment_status,stripe_livemode,moderation_hold,created_at")
           .eq("purchaser_user_id", user.id).eq("stripe_livemode", true)
           .order("created_at", { ascending: false }).limit(50),
         admin.rpc("rocket_sponsorship_metrics_for_owner", { p_user_id: user.id }),
@@ -238,6 +238,7 @@ Deno.serve(async (req) => {
       session = await stripe.checkout.sessions.create({
         mode: "payment", payment_method_types: ["card"],
         line_items: [{ price: priceId, quantity: 1 }],
+        allow_promotion_codes: true,
         client_reference_id: booking.id,
         customer_email: user.email || undefined,
         metadata, payment_intent_data: { metadata },

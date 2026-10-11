@@ -124,10 +124,10 @@ describe("actual production checkout handler (isolated)",()=>{
   });
   it("creates payment mode, one unit, exact approved URI and $1.95 fee",async()=>{
     const h=checkoutHarness(); expect((await h.handler(request(body))).status).toBe(200);
-    const [params,options]=h.create.mock.calls[0]; expect(params.mode).toBe("payment"); expect(params.payment_intent_data.application_fee_amount).toBe(195); expect(params.subscription_data).toBeUndefined(); expect(params.line_items).toEqual([{price:"price_real",quantity:1}]); expect(params.success_url).toBe(body.return_uri); expect(options.stripeAccount).toBe("acct_launch"); expect(options.idempotencyKey).toContain(body.purchase_request_id);
+    const [params,options]=h.create.mock.calls[0]; expect(params.mode).toBe("payment"); expect(params.allow_promotion_codes).toBeUndefined(); expect(params.payment_intent_data.application_fee_amount).toBe(195); expect(params.subscription_data).toBeUndefined(); expect(params.line_items).toEqual([{price:"price_real",quantity:1}]); expect(params.success_url).toBe(body.return_uri); expect(options.stripeAccount).toBe("acct_launch"); expect(options.idempotencyKey).toContain(body.purchase_request_id);
   });
   it("preserves subscription checkout and percentage fee",async()=>{
-    const h=checkoutHarness("subscription"); expect((await h.handler(request(body))).status).toBe(200); const [p]=h.create.mock.calls[0]; expect(p.mode).toBe("subscription"); expect(p.subscription_data.application_fee_percent).toBe(5); expect(p.payment_intent_data).toBeUndefined();
+    const h=checkoutHarness("subscription"); expect((await h.handler(request(body))).status).toBe(200); const [p]=h.create.mock.calls[0]; expect(p.mode).toBe("subscription"); expect(p.allow_promotion_codes).toBe(true); expect(p.subscription_data.application_fee_percent).toBe(5); expect(p.payment_intent_data).toBeUndefined();
   });
   it("leaves the closed public gate effective",async()=>{const h=checkoutHarness("one_time",false);expect((await h.handler(request(body))).status).toBe(409);expect(h.create).not.toHaveBeenCalled();});
   it.each([{client_id:"other"},{product_key:"other"},{return_uri:"https://attacker.invalid"},{purchase_request_id:null}])("rejects mismatched checkout inputs %j",async patch=>{const h=checkoutHarness();expect((await h.handler(request({...body,...patch}))).status).toBeGreaterThanOrEqual(400);expect(h.create).not.toHaveBeenCalled();});

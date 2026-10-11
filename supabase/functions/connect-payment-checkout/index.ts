@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@16.12.0";
 import { base64url, CORS_HEADERS, getAdmin, getConnectToken, json } from "../_shared/rocketConnect.ts";
 import { retrieveStripeConnectV2Merchant, stripeConnectV2Ready } from "../_shared/stripeConnectV2.ts";
+import { verifiedPaidInvoicePeriodEnd } from "../_shared/connectPaymentRules.ts";
 
 const stripeKey = Deno.env.get("STRIPE_CONNECT_TEST_SECRET_KEY");
 const stripe = stripeKey?.startsWith("sk_test_") ? new Stripe(stripeKey, { apiVersion: "2024-06-20" }) : null;
@@ -41,12 +42,13 @@ Deno.serve(async (req) => {
       if (checkout.status !== "complete" || checkout.payment_status !== "paid" || checkout.mode !== "subscription" || typeof checkout.subscription !== "string" || typeof checkout.invoice !== "string") return json({ error: "checkout_not_settled" }, 409);
       const invoice: any = await stripe.invoices.retrieve(checkout.invoice, { stripeAccount: developer.stripe_account_id });
       const metadata = invoice.parent?.subscription_details?.metadata || {};
-      if (invoice.status !== "paid" || invoice.amount_paid !== product.amount_cents || invoice.currency !== product.currency || invoice.parent?.subscription_details?.subscription !== checkout.subscription || pendingTransaction.stripe_subscription_id !== checkout.subscription || metadata.rocket_user_id !== token.user_id || metadata.rocket_client_id !== token.client_id || metadata.rocket_product_id !== product.id) return json({ error: "invoice_not_authoritative" }, 409);
+      const validPeriodEnd = verifiedPaidInvoicePeriodEnd(invoice, { currency: product.currency, amount_cents: product.amount_cents, stripe_price_id: product.stripe_price_id });
+      if (!validPeriodEnd || invoice.parent?.subscription_details?.subscription !== checkout.subscription || pendingTransaction.stripe_subscription_id !== checkout.subscription || metadata.rocket_user_id !== token.user_id || metadata.rocket_client_id !== token.client_id || metadata.rocket_product_id !== product.id) return json({ error: "invoice_not_authoritative" }, 409);
       const { data: transaction, error: transactionError } = await admin.from("connect_transactions").update({ stripe_customer_id: typeof checkout.customer === "string" ? checkout.customer : null, stripe_invoice_id: invoice.id, status: "paid", stripe_event_created_at: new Date(invoice.created * 1000).toISOString(), updated_at: new Date().toISOString() })
         .eq("id", pendingTransaction.id).eq("status", "pending").select().maybeSingle();
       if (transactionError) throw transactionError;
       if (!transaction) return json({ error: "transaction_changed" }, 409);
-      const validUntil = invoice.lines?.data?.[0]?.period?.end ? new Date(invoice.lines.data[0].period.end * 1000).toISOString() : null;
+      const validUntil = new Date(validPeriodEnd * 1000).toISOString();
       const { data: entitlement, error: entitlementError } = await admin.from("connect_entitlements").upsert({ user_id: token.user_id, client_id: token.client_id, product_id: product.id, transaction_id: transaction.id, status: "active", valid_from: new Date().toISOString(), valid_until: validUntil, revoked_at: null, updated_at: new Date().toISOString() }, { onConflict: "user_id,client_id,product_id" }).select("id").single();
       if (entitlementError) throw entitlementError;
       const detail = { checkout_session_id: checkout.id, stripe_invoice_id: invoice.id, reason: "verified_delivery_ordering_recovery" };
@@ -84,6 +86,7 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", customer: customerId,
       line_items: [{ price: product.stripe_price_id, quantity: 1 }],
+      allow_promotion_codes: true,
       success_url: `${body.return_uri}?checkout=success`, cancel_url: `${body.return_uri}?checkout=cancelled`,
       subscription_data: { application_fee_percent: product.platform_fee_bps / 100, metadata: { rocket_user_id: token.user_id, rocket_client_id: token.client_id, rocket_product_id: product.id } },
       metadata: { rocket_user_id: token.user_id, rocket_client_id: token.client_id, rocket_product_id: product.id },

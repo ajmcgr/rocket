@@ -50,11 +50,22 @@ export function verifiedPaidInvoicePeriodEnd(
     status?: string;
     currency?: string;
     amount_paid?: number;
+    amount_due?: number;
+    subtotal?: number;
+    total?: number;
+    total_discount_amounts?: Array<{ amount?: number }>;
     lines?: { data?: Array<{ price?: { id?: string }; pricing?: { price_details?: { price?: string } }; amount?: number; period?: { end?: number } }> };
   },
   expected: { currency: string; amount_cents: number; stripe_price_id: string },
 ): number | null {
-  if (invoice.status !== "paid" || invoice.currency !== expected.currency || invoice.amount_paid !== expected.amount_cents) return null;
+  if (invoice.status !== "paid" || invoice.currency !== expected.currency ||
+      !Number.isSafeInteger(invoice.amount_paid) || invoice.amount_paid! < 1 ||
+      invoice.amount_paid! > expected.amount_cents || invoice.lines?.data?.length !== 1) return null;
+  const discount = expected.amount_cents - invoice.amount_paid!;
+  if (discount && (invoice.subtotal !== expected.amount_cents || invoice.total !== invoice.amount_paid ||
+      invoice.amount_due !== invoice.amount_paid ||
+      !Array.isArray(invoice.total_discount_amounts) ||
+      invoice.total_discount_amounts.reduce((sum, item) => sum + (item.amount || 0), 0) !== discount)) return null;
   const line = invoice.lines?.data?.find((entry) =>
     (entry.price?.id ?? entry.pricing?.price_details?.price) === expected.stripe_price_id &&
     entry.amount === expected.amount_cents
