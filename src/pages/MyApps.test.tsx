@@ -84,7 +84,7 @@ describe("My Apps next actions", () => {
       expect(
         container.querySelector('a[href="/my-apps/app-pending"]')?.textContent,
       ).toContain("Pending app");
-      expect(container.textContent).toContain("Domain verified");
+      expect(container.textContent).not.toContain("Domain verified");
       expect(container.textContent).toContain("Claim pending");
       expect(
         container.querySelector('[aria-label="Owned app analytics preview"]'),

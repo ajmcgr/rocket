@@ -114,10 +114,12 @@ export default function MyApps() {
                   {item.app?.website_url || "Private submission"}
                 </p>
                 <div className="mt-4 flex items-center justify-between gap-3 text-sm">
-                  <span className="text-neutral-600">{myAppStatus(item)}</span>
+                  {!(item.owned && item.owner_verification_level === "domain_verified") && (
+                    <span className="text-neutral-600">{myAppStatus(item)}</span>
+                  )}
                   <ArrowRight
                     size={18}
-                    className="text-sky-700 transition group-hover:translate-x-1"
+                    className="ml-auto text-sky-700 transition group-hover:translate-x-1"
                     aria-hidden="true"
                   />
                 </div>
