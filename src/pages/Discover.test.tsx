@@ -194,9 +194,10 @@ describe("engagement rankings", () => {
       "1. Beta",
       "2. Alpha",
     ]);
-    expect(mocks.rpc).toHaveBeenCalledWith("get_public_app_rankings", {
+    expect(mocks.rpc).toHaveBeenCalledWith("get_public_app_rankings_page", {
       p_category: "Productivity",
-      p_limit: 20,
+      p_offset: 0,
+      p_limit: 21,
     });
     expect(
       mocks.queries.some(
@@ -207,6 +208,46 @@ describe("engagement rankings", () => {
     expect(
       screen.getByText(/Published reviews, current bookmarks/),
     ).toBeTruthy();
+  });
+  it("shows 20 ranked apps per page and preserves their global ranks", async () => {
+    mocks.rpc.mockImplementation((_name, args) => Promise.resolve({
+      data: Array.from({ length: 25 }, (_, index) => ({
+        app_id: `app-${index + 1}`,
+        rank_position: index + 1,
+      })).slice(args.p_offset, args.p_offset + args.p_limit),
+      error: null,
+    }));
+    mocks.from.mockImplementation((table: string) => {
+      let ids: string[] = [];
+      const builder: any = {};
+      for (const method of ["select", "order", "limit", "eq"])
+        builder[method] = () => builder;
+      builder.in = (_column: string, values: string[]) => {
+        ids = values;
+        return builder;
+      };
+      builder.then = (resolve: any) => Promise.resolve({
+        data: table === "public_discoverable_apps"
+          ? ids.map((id) => ({ id, name: `App ${id.slice(4)}` }))
+          : [],
+        error: null,
+      }).then(resolve);
+      return builder;
+    });
+    render(<MemoryRouter initialEntries={["/discover?view=rankings"]}><Discover /></MemoryRouter>);
+    await screen.findByText("1. App 1");
+    expect(screen.getAllByRole("article")).toHaveLength(20);
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("21. App 21");
+    expect(screen.getAllByRole("article")).toHaveLength(5);
+    expect(screen.getByText("Page 2")).toBeTruthy();
+    expect(mocks.rpc).toHaveBeenCalledWith("get_public_app_rankings_page", {
+      p_category: "",
+      p_offset: 20,
+      p_limit: 21,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    await screen.findByText("1. App 1");
   });
   it("shows an error instead of silently substituting page-view rankings", async () => {
     setup({ message: "Ranking service unavailable" });
