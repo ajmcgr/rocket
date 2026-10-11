@@ -25,7 +25,7 @@ export const Route = createFileRoute("/collections/$slug")({
         ],
       };
     const title = `${collection.name} | Rocket`;
-    const description = `${collection.app_count} apps curated by ${collection.full_name || collection.username || "a Rocket member"}.`;
+    const description = `${collection.app_count} apps curated by ${collection.username ? `@${collection.username}` : "a Rocket member"}.`;
     const url = `https://tryrocket.ai/collections/${encodeURIComponent(collection.slug)}`;
     return {
       meta: [

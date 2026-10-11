@@ -22,10 +22,9 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
         </div>
         <div className="px-6 pb-8 sm:px-10">
           <div className="relative -mt-10 mb-5 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-sky-100 text-3xl font-semibold dark:border-neutral-900 dark:bg-sky-900">
-            <ProfileAvatarImage src={profile.avatar_url} alt={`${profile.full_name || profile.username}'s profile photo`} className="h-full w-full object-cover" fallback={(profile.full_name || profile.username)[0].toUpperCase()} />
+            <ProfileAvatarImage src={profile.avatar_url} alt={`@${profile.username}'s profile photo`} className="h-full w-full object-cover" fallback={profile.username[0].toUpperCase()} />
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">{profile.full_name || profile.username}</h1>
-          <p className="mt-1 text-neutral-500">@{profile.username}</p>
+          <h1 className="text-3xl font-semibold tracking-tight">@{profile.username}</h1>
           {profile.bio && <p className="mt-5 whitespace-pre-wrap break-words text-base leading-7">{profile.bio}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             {safeProfileUrl(profile.website) && <a href={safeProfileUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">Website ↗</a>}

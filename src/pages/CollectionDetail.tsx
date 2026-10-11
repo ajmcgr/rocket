@@ -168,7 +168,7 @@ function CollectionDetailContent({
                   className="text-[#469DDA] hover:underline"
                   to={`/u/${collection.username}`}
                 >
-                  {collection.full_name || `@${collection.username}`}
+                  @{collection.username}
                 </Link>
               ) : (
                 "a Rocket member"

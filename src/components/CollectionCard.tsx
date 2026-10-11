@@ -36,7 +36,7 @@ export default function CollectionCard({
           {Number(collection.app_count) === 1 ? "app" : "apps"}
           {personal
             ? ` · ${collection.visibility === "public" ? "Public" : "Private"}`
-            : ` · ${collection.full_name || (collection.username ? `@${collection.username}` : "Rocket member")}`}
+            : ` · ${collection.username ? `@${collection.username}` : "Rocket member"}`}
         </p>
       </Link>
       {personal && (

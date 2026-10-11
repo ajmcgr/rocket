@@ -65,7 +65,8 @@ it("includes collection title, curator and app content in initial HTML without o
     />,
   );
   expect(html).toContain("Useful tools");
-  expect(html).toContain("Alex");
+  expect(html).toContain("@alex");
+  expect(html).not.toContain("Alex");
   expect(html).toContain("App One");
   expect(html).not.toContain("Manage collection");
 });

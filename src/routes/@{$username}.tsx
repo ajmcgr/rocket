@@ -19,10 +19,10 @@ export const Route = createFileRoute("/@{$username}")({
   },
   head: ({ loaderData }) => ({
     meta: loaderData ? [
-      { title: `${loaderData.full_name || loaderData.username} | Rocket` },
-      { name: "description", content: loaderData.bio || `Explore apps from ${loaderData.full_name || loaderData.username} on Rocket.` },
-      { property: "og:title", content: `${loaderData.full_name || loaderData.username} | Rocket` },
-      { property: "og:description", content: loaderData.bio || `Explore apps from ${loaderData.full_name || loaderData.username} on Rocket.` },
+      { title: `@${loaderData.username} | Rocket` },
+      { name: "description", content: loaderData.bio || `Explore apps from @${loaderData.username} on Rocket.` },
+      { property: "og:title", content: `@${loaderData.username} | Rocket` },
+      { property: "og:description", content: loaderData.bio || `Explore apps from @${loaderData.username} on Rocket.` },
       { property: "og:url", content: `https://tryrocket.ai/@${loaderData.username}` },
     ] : [{ title: "Profile not found | Rocket" }, { name: "robots", content: "noindex" }],
     links: loaderData ? [{ rel: "canonical", href: `https://tryrocket.ai/@${loaderData.username}` }] : [],
