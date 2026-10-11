@@ -104,10 +104,7 @@ export default function HomeStory() {
             to="/about"
             className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-[#267cbb] underline underline-offset-4 dark:text-[#80c7f4]"
           >
-            Read the full letter{" "}
-            <span aria-hidden="true" className="ml-2">
-              →
-            </span>
+            Read the full letter
           </Link>
         </div>
       </section>
