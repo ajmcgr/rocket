@@ -409,9 +409,9 @@ export default function SiteHeader({
                   type="button"
                   onClick={() => setShareOpen(true)}
                   aria-label="Share Rocket"
-                  className="hidden items-center justify-center rounded-lg p-2 text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
+                  className="hidden h-10 w-10 items-center justify-center rounded-lg text-neutral-700 hover:bg-neutral-100 2xl:inline-flex"
                 >
-                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                  <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </>
             )}
