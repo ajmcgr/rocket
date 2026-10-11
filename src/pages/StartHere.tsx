@@ -1,6 +1,5 @@
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const steps = {
   people: [
@@ -31,12 +30,6 @@ const StepList = ({ items }: { items: typeof steps.people }) => (
 );
 
 const StartHere = () => {
-  useDocumentMeta({
-    title: "Start here — How Rocket works",
-    description: "A practical guide to discovering independent apps and launching your own app on Rocket.",
-    canonical: "https://tryrocket.ai/start",
-  });
-
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <SiteHeader />

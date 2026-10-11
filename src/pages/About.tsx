@@ -1,14 +1,7 @@
 import SiteHeader from "@/components/SiteHeader";
 import alexAvatar from "@/assets/alex-macgregor.png.asset.json";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const About = () => {
-  useDocumentMeta({
-    title: "About Rocket — The open app platform",
-    description: "Discover apps, build your developer reputation, and learn why Rocket helps useful software find its audience.",
-    canonical: "https://tryrocket.ai/about",
-  });
-
   return <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
     <SiteHeader />
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">

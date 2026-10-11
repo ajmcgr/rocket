@@ -2,15 +2,8 @@ import { Link } from "@/lib/router-compat";
 import { ArrowRight } from "@/components/EmojiIcons";
 import SiteHeader from "@/components/SiteHeader";
 import { marketplaceComparisons } from "@/content/marketplaceComparisons";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 export default function Compare() {
-  useDocumentMeta({
-    title: "Compare Rocket with other software marketplaces",
-    description: "How Rocket's independent web-app discovery differs from the App Store, Google Play, Product Hunt, Whop, Gumroad, and G2.",
-    canonical: "https://tryrocket.ai/compare",
-  });
-
   return (
     <div className="marketplace-page min-h-screen bg-[#f7f9fc] text-neutral-950">
       <SiteHeader />

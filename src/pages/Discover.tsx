@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,15 +30,16 @@ const safeSearch = (value: string) =>
     .trim()
     .slice(0, 80);
 
-export default function Discover() {
+export default function Discover({ initialCategories = [], initialView }: {
+  initialCategories?: Tables<"public_app_categories">[];
+  initialView?: string | null;
+}) {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(params.get("q") || "");
   const [apps, setApps] = useState<App[]>([]);
-  const [categories, setCategories] = useState<
-    Tables<"public_app_categories">[]
-  >([]);
+  const [categories, setCategories] = useState<Tables<"public_app_categories">[]>(initialCategories);
   const [categorySignals, setCategorySignals] = useState<Tables<"public_category_intelligence">[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [rankingCategories, setRankingCategories] = useState<Tables<"public_ranking_categories">[]>([]);
   const [rankingCategoriesLoading, setRankingCategoriesLoading] = useState(true);
   const [signals, setSignals] = useState<Map<string, AppSignal>>(new Map());
@@ -57,7 +57,7 @@ export default function Discover() {
   });
   const [count, setCount] = useState(0);
   const [rankingHasMore, setRankingHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialView !== "categories");
   const [error, setError] = useState<string | null>(null);
   const category = params.get("category") || "";
   const platform = params.get("platform") || "";
@@ -76,7 +76,7 @@ export default function Discover() {
   )
     ? params.get("view")!
     : "all";
-  const pageTitle = view === "rankings" ? "Rankings" : view === "new" ? "New" : view === "categories" ? "Categories" : "Discover";
+  const pageTitle = view === "rankings" ? "Rankings" : view === "new" ? "New" : view === "categories" ? "Categories" : category && view === "all" ? `${category} Apps` : "Discover";
   const showOverview =
     !params.get("view") &&
     !search &&
@@ -89,13 +89,6 @@ export default function Discover() {
   useEffect(() => {
     setQuery(rawSearch);
   }, [rawSearch]);
-
-  useDocumentMeta({
-    title: `${pageTitle} | Rocket`,
-    description:
-      "Discover apps worth using, including new software from vibe coders and developers. Browse by category, platform and launch date.",
-    canonical: "https://tryrocket.ai/discover",
-  });
 
   useEffect(() => {
     Promise.resolve(supabase
@@ -498,25 +491,23 @@ export default function Discover() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {discoverCategories.map((name) => {
               const appCount = categories.find((row) => row.category === name)?.app_count || 0;
+              const card = <>
+                <h2 className="mt-3 font-semibold">{name}</h2>
+                <p className="mt-2 text-sm text-neutral-600">{appCount ? `${appCount.toLocaleString()} apps` : "No listings yet"}</p>
+              </>;
               return (
-              <button
+              appCount ? <Link
                 key={name}
-                disabled={appCount === 0}
                 onClick={() => {
                   track("discovery_category_selected", {
                     category: name,
                   });
-                  const next = new URLSearchParams(params);
-                  next.set("view", "all");
-                  next.set("category", name);
-                  next.delete("page");
-                  setParams(next);
                 }}
-                className="rounded-2xl border border-neutral-200 bg-white p-5 text-left hover:border-sky-300 disabled:cursor-default disabled:opacity-55 disabled:hover:border-neutral-200"
+                to={`/discover?view=all&category=${encodeURIComponent(name)}`}
+                className="rounded-2xl border border-neutral-200 bg-white p-5 text-left hover:border-sky-300"
               >
-                <h2 className="mt-3 font-semibold">{name}</h2>
-                <p className="mt-2 text-sm text-neutral-600">{appCount ? `${appCount.toLocaleString()} apps` : "No listings yet"}</p>
-              </button>
+                {card}
+              </Link> : <div key={name} className="cursor-default rounded-2xl border border-neutral-200 bg-white p-5 text-left opacity-55">{card}</div>
             );})}
             </div>
             {categorySignals.length > 0 && <section className="mt-10" aria-labelledby="category-activity-heading">

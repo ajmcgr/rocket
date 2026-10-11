@@ -5,7 +5,6 @@ import SiteHeader from "@/components/SiteHeader";
 import HomeMerchandising from "@/components/HomeMerchandising";
 import HomeStory from "@/components/HomeStory";
 import type { HomeMerchandising as HomeData } from "@/lib/homeMerchandising";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { track } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -13,13 +12,6 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
-  useDocumentMeta({
-    title: "Rocket — The open app platform",
-    description:
-      "Discover apps. Build your developer reputation. Grow and monetize what you build.",
-    canonical: "https://tryrocket.ai/",
-  });
-
   const search = (event: FormEvent) => {
     event.preventDefault();
     const term = query.trim();
@@ -29,6 +21,13 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
 
   return (
     <div className="marketplace-page min-h-screen bg-white pb-16 text-neutral-900 lg:pb-0">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          { "@type": "Organization", "@id": "https://tryrocket.ai/#organization", name: "Rocket", url: "https://tryrocket.ai/", logo: "https://tryrocket.ai/favicon.png" },
+          { "@type": "WebSite", "@id": "https://tryrocket.ai/#website", name: "Rocket", url: "https://tryrocket.ai/", publisher: { "@id": "https://tryrocket.ai/#organization" } },
+        ],
+      }) }} />
       <SiteHeader />
       <main className="mx-auto max-w-[90rem] px-5 pb-20 sm:px-8">
         {!user && (

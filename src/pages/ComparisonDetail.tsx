@@ -4,18 +4,11 @@ import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { comparisons, getComparison } from "@/content/comparisons";
 import { getMarketplaceComparison, marketplaceComparisons } from "@/content/marketplaceComparisons";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const ComparisonDetail = () => {
   const { slug } = useParams();
   const marketplace = slug ? getMarketplaceComparison(slug) : null;
   const comparison = slug ? getComparison(slug) : null;
-
-  useDocumentMeta({
-    title: marketplace ? `Rocket vs ${marketplace.name} — Compare software discovery` : comparison ? `Rocket vs ${comparison.tool} — AI logo and brand tools compared` : "Comparison not found — Rocket",
-    description: marketplace ? `Compare Rocket and ${marketplace.name} for finding independent software.` : comparison ? `Compare Rocket with ${comparison.tool} for logos, icons, Brand Kits, editing and exports.` : undefined,
-    canonical: marketplace ? `https://tryrocket.ai/compare/${marketplace.slug}` : comparison ? `https://tryrocket.ai/compare/${comparison.slug}` : undefined,
-  });
 
   if (marketplace) return (
     <div className="marketplace-page min-h-screen bg-[#f7f9fc] text-neutral-950">

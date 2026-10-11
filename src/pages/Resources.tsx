@@ -2,16 +2,8 @@ import { Link, useParams } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import ArticleCard from "@/components/blog/ArticleCard";
 import { PILLARS, getPillar, pillarPosts, SITE_URL } from "@/content/blogMeta";
-import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 export const ResourcesHub = () => {
-  useDocumentMeta({
-    title: "Branding Resources for Founders — Rocket",
-    description:
-      "Evergreen guides on startup branding, logo design, brand kits, typography, colour psychology, and icon design.",
-    canonical: `${SITE_URL}/resources`,
-  });
-
   return (
     <div className="min-h-screen bg-white text-neutral-900">
       <SiteHeader />
@@ -58,12 +50,6 @@ export const ResourcesHub = () => {
 export const PillarPage = () => {
   const { slug } = useParams();
   const pillar = slug ? getPillar(slug) : null;
-
-  useDocumentMeta({
-    title: pillar ? `${pillar.title} — Rocket` : "Guide not found — Rocket",
-    description: pillar?.summary,
-    canonical: pillar ? `${SITE_URL}/resources/${pillar.slug}` : undefined,
-  });
 
   if (!pillar) {
     return (

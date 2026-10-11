@@ -83,5 +83,32 @@ export const Route = createFileRoute("/apps/$id")({
 
 function AppProfileRoute() {
   const { app, media } = Route.useLoaderData();
-  return <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} /></Suspense>;
+  if (!app) return <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} /></Suspense>;
+  const canonical = `${siteUrl}/apps/${app.slug || app.id}`;
+  const description = app.description?.trim() || app.tagline?.trim() || undefined;
+  const category = app.categories?.[0] || undefined;
+  const schema = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: app.name,
+      url: canonical,
+      ...(description ? { description } : {}),
+      ...(category ? { applicationCategory: category } : {}),
+      ...(app.logo_url && /^https:\/\//i.test(app.logo_url) ? { image: app.logo_url } : {}),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${siteUrl}/` },
+        { "@type": "ListItem", position: 2, name: "Discover", item: `${siteUrl}/discover` },
+        { "@type": "ListItem", position: 3, name: app.name, item: canonical },
+      ],
+    },
+  ];
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
+    <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} /></Suspense>
+  </>;
 }
