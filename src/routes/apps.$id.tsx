@@ -5,7 +5,7 @@ import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeleton
 import { loadAppMedia } from "@/lib/appMedia";
 
 const siteUrl = "https://tryrocket.ai";
-const fallbackImage = `${siteUrl}/og-homepage.png`;
+const fallbackImage = `${siteUrl}/og-rocket-open-platform.png`;
 const Profile = lazy(() => import("@/pages/PublicAppProfile"));
 
 function summarize(description: string) {
