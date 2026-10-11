@@ -34,16 +34,6 @@ const ICONS: Record<
   app: FolderOpen,
   monetize: CreditCard,
 };
-const ICON_BG: Record<NotificationKind, string> = {
-  asset: "bg-violet-50 text-violet-600",
-  export: "bg-sky-50 text-sky-600",
-  billing: "bg-amber-50 text-amber-600",
-  project: "bg-emerald-50 text-emerald-600",
-  system: "bg-neutral-100 text-neutral-700",
-  app: "bg-sky-50 text-sky-600",
-  monetize: "bg-emerald-50 text-emerald-600",
-};
-
 const FILTERS: { id: "all" | "unread" | NotificationKind; label: string }[] = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
@@ -172,9 +162,7 @@ const Notifications = () => {
               const Icon = ICONS[n.kind];
               const body = (
                 <div className="flex gap-4 px-5 py-4 transition hover:bg-neutral-50">
-                  <div
-                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${ICON_BG[n.kind]}`}
-                  >
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center">
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
