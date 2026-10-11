@@ -24,7 +24,7 @@ const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&
 const SITE_TITLE = "Rocket — The open app platform";
 const SITE_DESCRIPTION =
   "Discover apps. Build your developer reputation. Grow and monetize what you build.";
-const SOCIAL_IMAGE = "https://tryrocket.ai/og-homepage.png";
+const SOCIAL_IMAGE = "https://tryrocket.ai/og-rocket-open-platform.png";
 type GoogleTranslateWindow = Window & {
   googleTranslateElementInit?: () => void;
   google?: {
@@ -47,9 +47,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "description", content: SITE_DESCRIPTION },
         { name: "author", content: "Rocket" },
         { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Rocket" },
         { property: "og:title", content: SITE_TITLE },
         { property: "og:description", content: SITE_DESCRIPTION },
         { property: "og:image", content: SOCIAL_IMAGE },
+        { property: "og:image:secure_url", content: SOCIAL_IMAGE },
+        { property: "og:image:alt", content: "Rocket — The open app platform" },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -57,6 +60,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "twitter:title", content: SITE_TITLE },
         { name: "twitter:description", content: SITE_DESCRIPTION },
         { name: "twitter:image", content: SOCIAL_IMAGE },
+        { name: "twitter:image:alt", content: "Rocket — The open app platform" },
       ],
       links: [
         { rel: "stylesheet", href: appCss },
