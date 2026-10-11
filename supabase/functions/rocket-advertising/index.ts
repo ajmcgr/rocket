@@ -4,7 +4,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 const PLATFORM_ACCOUNT_ID = "acct_1TfvwfL9pkHWyRRu";
 const origin = "https://tryrocket.ai";
 const allowedOrigins = new Set([origin, "https://www.tryrocket.ai", "http://localhost:5173"]);
-const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type AdType = "featured_app" | "category_sponsor";
@@ -31,6 +32,17 @@ async function verifiedUser(req: Request) {
     { global: { headers: { Authorization: bearer } } });
   const { data, error } = await client.auth.getUser();
   return !error ? data.user : null;
+}
+
+async function dailyPlacementHash(day: string, sponsorshipId: string, ip: string, userAgent: string) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(serviceKey), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const digest = new Uint8Array(await crypto.subtle.sign(
+    "HMAC", key, encoder.encode(`${day}|${sponsorshipId}|${ip}|${userAgent}`),
+  ));
+  return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function platformStripe(testMode: boolean) {
@@ -118,15 +130,38 @@ Deno.serve(async (req) => {
         sponsorship_id: string; sponsorship_type: string; app_id: string; category: string | null;
       }) => byId.has(slot.app_id) ? [{ ...slot, app: byId.get(slot.app_id) }] : []) });
     }
+    if (body.action === "metric") {
+      // Public placement metrics are not buyer management actions. Keep their
+      // recorder separate from both checkout and organic ranking events.
+      if (!allowedOrigins.has(req.headers.get("Origin") || ""))
+        return reply(req, { error: "forbidden" }, 403);
+      if (typeof body.sponsorship_id !== "string" || !uuid.test(body.sponsorship_id)
+        || typeof body.app_id !== "string" || !uuid.test(body.app_id)
+        || (body.event_type !== "view" && body.event_type !== "click"))
+        return reply(req, { error: "invalid_metric" }, 400);
+      const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip")
+        || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+      if (!ip) return reply(req, { ok: true, counted: false }, 202);
+      const day = new Date().toISOString().slice(0, 10);
+      const visitorHash = await dailyPlacementHash(day, body.sponsorship_id, ip,
+        (req.headers.get("user-agent") || "").slice(0, 256));
+      const { data, error } = await admin.rpc("record_rocket_sponsorship_metric", {
+        p_sponsorship_id: body.sponsorship_id, p_app_id: body.app_id,
+        p_event_type: body.event_type, p_visitor_hash: visitorHash,
+      });
+      if (error) throw error;
+      return reply(req, { ok: true, counted: Boolean(data) });
+    }
     const user = await verifiedUser(req);
     if (!user) return reply(req, { error: "authentication_required" }, 401);
     if (body.action === "mine") {
-      const [ownership, purchases] = await Promise.all([
+      const [ownership, purchases, metrics] = await Promise.all([
         admin.from("app_owners").select("app_id").eq("user_id", user.id).is("revoked_at", null),
         admin.from("rocket_sponsorships")
           .select("id,sponsorship_type,target_app_id,target_category,amount_cents,currency,scheduled_start_at,scheduled_end_at,actual_start_at,actual_end_at,status,stripe_payment_status,stripe_livemode,moderation_hold,created_at")
           .eq("purchaser_user_id", user.id).eq("stripe_livemode", true)
           .order("created_at", { ascending: false }).limit(50),
+        admin.rpc("rocket_sponsorship_metrics_for_owner", { p_user_id: user.id }),
       ]);
       if (ownership.error || purchases.error) throw ownership.error || purchases.error;
       const appIds = (ownership.data || []).map((row) => row.app_id);
@@ -134,8 +169,13 @@ Deno.serve(async (req) => {
         ? await admin.from("public_discoverable_apps").select("id,name,categories").in("id", appIds)
         : { data: [], error: null };
       if (apps.error) throw apps.error;
+      const metricsById = new Map((metrics.error ? [] : metrics.data || []).map((row: {
+        sponsorship_id: string; views: number; clicks: number;
+      }) => [row.sponsorship_id, row]));
       return reply(req, { apps: apps.data || [], sponsorships: (purchases.data || []).map((row) => ({
-        ...row, status: row.status === "active" || row.status === "scheduled"
+        ...row, views: metrics.error ? null : metricsById.get(row.id)?.views || 0,
+        clicks: metrics.error ? null : metricsById.get(row.id)?.clicks || 0,
+        status: row.status === "active" || row.status === "scheduled"
           ? (row.actual_end_at && new Date(row.actual_end_at).getTime() <= Date.now()
             ? "expired" : row.actual_start_at && new Date(row.actual_start_at).getTime() <= Date.now()
               ? "active" : "scheduled")
