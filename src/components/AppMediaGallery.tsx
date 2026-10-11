@@ -25,23 +25,26 @@ export default function AppMediaGallery({
   const visible = images.filter((item) => !failed.has(item.id)).slice(0, 12);
   if (!visible.length && !videos.length) return null;
   return (
-    <section className="mt-8" aria-labelledby="gallery-title">
-      <div className="mb-4 flex items-end justify-between gap-3">
+    <section className="mt-6" aria-labelledby="gallery-title">
+      <div className="mb-3 flex items-end justify-between gap-3">
         <div>
-          <h2 id="gallery-title" className="text-xl font-semibold tracking-tight">
+          <h2
+            id="gallery-title"
+            className="text-xl font-semibold tracking-tight"
+          >
             See {name} in action
           </h2>
         </div>
       </div>
       {visible.length > 0 && (
-        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:thin]">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
           {visible.map((item, index) => (
             <a
               key={item.id}
               href={item.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative w-[min(82vw,34rem)] shrink-0 snap-start overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 focus-visible:outline-2 focus-visible:outline-sky-500"
+              className="group relative w-[min(78vw,23rem)] shrink-0 snap-start overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 focus-visible:outline-2 focus-visible:outline-sky-500 sm:w-[calc((100%-1.5rem)/3)]"
             >
               <img
                 src={
@@ -57,7 +60,7 @@ export default function AppMediaGallery({
                     ? setFailed((current) => new Set(current).add(item.id))
                     : setOriginal((current) => new Set(current).add(item.id))
                 }
-                className="h-64 w-full object-contain sm:h-80"
+                className="h-48 w-full object-contain sm:h-56"
               />
               <span className="absolute bottom-3 right-3 rounded-full bg-white/90 p-2 text-neutral-800 opacity-0 transition group-hover:opacity-100">
                 <span aria-hidden="true">→</span>
