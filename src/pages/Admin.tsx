@@ -64,6 +64,7 @@ export default function Admin() {
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
   const [error, setError] = useState("");
+  const [batchResult, setBatchResult] = useState("");
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const refresh = useCallback(async () => {
@@ -103,6 +104,26 @@ export default function Admin() {
       if (sendError) throw sendError;
       await refresh();
     } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
+  };
+  const sendNextBatch = async () => {
+    setBusy(true); setError(""); setBatchResult("");
+    let accepted = 0;
+    try {
+      // The server still checks eligibility, suppression, uniqueness and rate limits for each item.
+      for (const row of today.slice(0, 10)) {
+        const { error: sendError } = await supabase.functions.invoke("rocket-founder-outreach-test", {
+          body: { queue_id: String(row.id) },
+        });
+        if (sendError) throw sendError;
+        accepted++;
+      }
+      setBatchResult(`${accepted} invitation${accepted === 1 ? "" : "s"} accepted by the email provider.`);
+      await refresh();
+    } catch (cause) {
+      setBatchResult(`${accepted} invitation${accepted === 1 ? "" : "s"} accepted before the batch stopped.`);
+      await refresh();
+      setError((cause as Error).message);
+    } finally { setBusy(false); }
   };
   const setOutreachPaused = async (paused: boolean) => {
     setBusy(true); setError("");
@@ -190,7 +211,7 @@ export default function Admin() {
       <p className="rocket-admin-note">Campaign mode: {String(obj(data.control).send_mode || "unknown")} · {obj(data.control).paused ? "Paused" : "Running"} · production authorization {obj(data.control).production_authorized ? "enabled" : "locked"}. Imported Launch contacts require documented outreach eligibility before any external send.</p>
       <Panel title="Queue status"><StatGrid data={Object.fromEntries(outreachStatuses.map((status) => [status, Number(obj(data.counts)[status] || 0)]))} /><button disabled={busy || Boolean(obj(data.control).paused)} onClick={() => void setOutreachPaused(true)}>Pause outreach</button>{obj(data.control).send_mode === "production" && <button disabled={busy || !obj(data.control).paused || !obj(data.control).production_authorized} onClick={() => void setOutreachPaused(false)}>Resume outreach</button>}</Panel>
       <Panel title="Internal acceptance test"><p className="rocket-admin-muted">Only explicitly allowlisted internal recipients can receive a test message while production sending is locked.</p>{internalTests.length ? <div className="rocket-admin-list">{internalTests.map((row) => <article key={String(row.id)}><strong>{String(row.app_name)}</strong><p>{String(row.recipient_email)} · Launch source {String(row.launch_product_id)}</p><button disabled={busy} onClick={() => void sendInternalTest(String(row.id))}>Send internal test invitation</button></article>)}</div> : <Empty>No internal test candidate is available.</Empty>}</Panel>
-      <Panel title="First eligible batch"><p className="rocket-admin-muted">Read-only preview, limited to 100 distinct reviewed recipients. This does not send email.</p>{today.length ? <div className="rocket-admin-list">{today.map((row) => <article key={String(row.id)}><strong>{String(row.app_name)}</strong><p>{String(row.recipient_email)} · Launch source {String(row.launch_product_id)}</p><button disabled={busy} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No recipient has documented eligibility yet.</Empty>}</Panel>
+      <Panel title="First eligible batch"><p className="rocket-admin-muted">Up to 100 distinct reviewed recipients are shown. Each send is checked again by the server; a batch sends at most 10 and stops on the first failure.</p><button disabled={busy || !today.length || obj(data.control).paused || obj(data.control).send_mode !== "production" || !obj(data.control).production_authorized} onClick={() => void sendNextBatch()}>Send next eligible batch (up to 10)</button>{batchResult && <p role="status">{batchResult}</p>}{today.length ? <div className="rocket-admin-list">{today.map((row) => <article key={String(row.id)}><strong>{String(row.app_name)}</strong><p>{String(row.recipient_email)} · Launch source {String(row.launch_product_id)}</p><button disabled={busy} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No recipient has documented eligibility yet.</Empty>}</Panel>
       <Panel title="Founder queue">{rows(data.queue).length ? <div className="rocket-admin-list">{rows(data.queue).map((row) => <article key={String(row.id)}><strong>{String(row.recipient_email)} · {String(row.status)}</strong><p>App {String(row.app_id)} · {when(row.created_at)}</p><button disabled={busy || !["eligible","queued"].includes(String(row.status))} onClick={() => void act("skip_outreach", String(row.id))}>Skip</button></article>)}</div> : <Empty>No founder relationships imported yet. A private, read-only Launch founder credential and test claim flow are required before this queue is populated.</Empty>}</Panel>
     </>}
   </main>;
