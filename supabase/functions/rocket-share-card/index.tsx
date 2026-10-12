@@ -83,6 +83,13 @@ async function rasterDataUrl(value: unknown): Promise<string | null> {
 
 type Card = { title: string; detail: string; kicker: string; url: string; logo: string | null; cover: string | null; logos?: string[] };
 
+function truncateForCard(value: string, limit: number) {
+  if (value.length <= limit) return value;
+  const prefix = value.slice(0, limit - 1).trimEnd();
+  const boundary = prefix.lastIndexOf(" ");
+  return `${(boundary > limit * 0.65 && !/\s/.test(value[limit - 1]) ? prefix.slice(0, boundary) : prefix).trimEnd()}…`;
+}
+
 async function loadCard(kind: string, id: string, includeCover: boolean): Promise<Card | null> {
   if (kind === "app") {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id);
@@ -120,15 +127,20 @@ function artwork(card: Card, width: number, height: number) {
   const visualHeight = portrait ? 770 : square ? 570 : 410;
   const coverZoom = square ? 1.27 : 1.48;
   const logoSize = portrait ? 144 : square ? 112 : 104;
-  const nameSize = portrait ? (card.title.length > 20 ? 76 : 100) : square ? (card.title.length > 22 ? 62 : 82) : card.title.length > 18 ? 50 : 68;
+  const titleLimit = portrait ? 56 : square ? 52 : 37;
+  const visibleTitle = truncateForCard(card.title, titleLimit);
+  const detailLimit = portrait ? 135 : square ? 105 : 55;
+  const visibleDetail = truncateForCard(card.detail, detailLimit);
+  const visibleUrl = card.url.length > 65 ? `${card.url.slice(0, 47)}…` : card.url;
+  const nameSize = portrait ? (visibleTitle.length > 20 ? 76 : 100) : square ? (visibleTitle.length > 22 ? 62 : 82) : visibleTitle.length > 35 ? 38 : visibleTitle.length > 18 ? 50 : 68;
   const visual = <div style={{ display: "flex", width: visualWidth, height: visualHeight, flexShrink: 0, alignItems: card.cover && !portrait ? "flex-start" : "center", justifyContent: "center", overflow: "hidden", borderRadius: portrait ? 42 : 28, backgroundColor: "#eef7fc", border: "2px solid #dcebf5" }}>
     {card.cover && !portrait ? <img src={card.cover} width={Math.round(visualWidth * coverZoom)} height={Math.round(visualHeight * coverZoom)} style={{ objectFit: "cover", objectPosition: "top", flexShrink: 0 }} /> : card.logos?.length ? <div style={{ display: "flex", gap: 24, alignItems: "center" }}>{card.logos.map((logo, index) => <img key={index} src={logo} width={portrait ? 190 : 130} height={portrait ? 190 : 130} style={{ borderRadius: 28, objectFit: "contain" }} />)}</div> : card.logo ? <img src={card.logo} width={portrait ? 390 : square ? 280 : 230} height={portrait ? 390 : square ? 280 : 230} style={{ borderRadius: portrait ? 80 : 50, objectFit: "contain" }} /> : <span style={{ display: "flex", fontSize: portrait ? 240 : 150, color: "#469DDA", fontWeight: 700 }}>{card.title.slice(0, 1).toUpperCase()}</span>}
   </div>;
   const identity = <div style={{ display: "flex", flexDirection: portrait ? "column" : "row", gap: portrait ? 32 : 24, alignItems: portrait ? "flex-start" : "center", width: portrait ? 936 : square ? 952 : 420 }}>
     {card.logo ? <img src={card.logo} width={logoSize} height={logoSize} style={{ borderRadius: portrait ? 32 : 24, objectFit: "contain", backgroundColor: "#f3f7fa" }} /> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: logoSize, height: logoSize, borderRadius: 24, backgroundColor: "#dceffb", color: "#2389cb", fontSize: 65, fontWeight: 700 }}>{card.title.slice(0, 1).toUpperCase()}</div>}
     <div style={{ display: "flex", flexDirection: "column", width: portrait ? 936 : square ? 810 : 290 }}>
-      <div style={{ display: "flex", fontSize: nameSize, fontWeight: 700, letterSpacing: -2.5, lineHeight: 1.03, maxHeight: portrait ? 260 : square ? 178 : 145, overflow: "hidden" }}>{card.title}</div>
-      <div style={{ display: "flex", marginTop: 12, color: "#536173", fontSize: portrait ? 36 : square ? 31 : 27, lineHeight: 1.25, maxHeight: portrait ? 180 : 128, overflow: "hidden" }}>{card.detail}</div>
+      <div style={{ display: "flex", fontSize: nameSize, fontWeight: 700, letterSpacing: -2.5, lineHeight: 1.03, maxHeight: portrait ? 260 : square ? 178 : 145, overflow: "hidden" }}>{visibleTitle}</div>
+      <div style={{ display: "flex", marginTop: 12, color: "#536173", fontSize: portrait ? 36 : square ? 31 : visibleDetail.length > 52 ? 24 : 27, lineHeight: 1.25, maxHeight: portrait ? 180 : square ? 128 : 145, overflow: "hidden" }}>{visibleDetail}</div>
     </div>
   </div>;
   return <div style={{ display: "flex", flexDirection: "column", width, height, overflow: "hidden", padding: pad, backgroundColor: "#fff", color: "#111827", fontFamily: "Inter" }}>
@@ -148,7 +160,7 @@ function artwork(card: Card, width: number, height: number) {
       {visual}
     </div>}
     <div style={{ display: "flex", width: width - pad * 2, alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 18, borderTop: "2px solid #dbe5ec", color: "#536173", fontSize: portrait ? 25 : 20 }}>
-      <span>The open app platform for builders.</span><span style={{ color: "#2389cb", fontWeight: 700 }}>{card.url}</span>
+      <span>The open app platform for builders.</span><span style={{ color: "#2389cb", fontWeight: 700 }}>{visibleUrl}</span>
     </div>
   </div>;
 }
