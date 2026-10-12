@@ -231,6 +231,9 @@ Deno.serve(async (request) => {
   } catch (error) {
     console.error("rocket-investor-sync", error);
     await service.rpc("rocket_record_revenue_sync", { p_status: "FAILED", p_sponsors: sponsors, p_developers: developers, p_marketplace_fees: fees, p_error: String(error) });
+    // Publish the failed-quality snapshot immediately so the admin view never
+    // keeps showing an earlier precise amount after reconciliation fails.
+    await service.rpc("rocket_refresh_investor_snapshot", {});
     return reply({ error: "reconciliation_failed" }, 500);
   }
 });
