@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
+import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
+import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Metric = "active_users" | "sessions" | "views";
@@ -52,7 +54,8 @@ export default function AppAnalytics() {
   return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Traffic connection</h1>
-    <p className="mt-2 text-sm text-neutral-600">Connect a Google Analytics 4 web stream for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
+    <p className="mt-2 text-sm text-neutral-600">Connect a traffic source for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
+    {id && <VerifiedProviderSelection appId={id} kind="analytics" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
@@ -95,6 +98,7 @@ export default function AppAnalytics() {
         }} className="ml-2 mt-4 rounded-xl border px-4 py-2 text-sm text-red-700 disabled:opacity-50">Disconnect</button>}
       </>}
     </section>
+    {id && <PostHogAnalytics appId={id} />}
     {status?.connection?.status === "active" && <section className="mt-6 rounded-2xl border bg-white p-6">
       <h2 className="font-semibold">Public visibility</h2><p className="mt-2 text-sm text-neutral-600">Only the latest completed day is eligible for the public profile. These choices do not publish historical points. “Verified only” reveals no number.</p>
       <div className="mt-5 space-y-4">{metrics.map((metric) => <label key={metric.id} className="flex items-center justify-between gap-4 border-t pt-4 text-sm">

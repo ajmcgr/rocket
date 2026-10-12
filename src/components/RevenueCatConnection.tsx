@@ -5,6 +5,7 @@ import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Status = {
   connect_available: boolean;
+  selected_provider: string | null;
   connection: null | { status: string; last_attempted_sync: string | null;
     last_successful_sync: string | null; last_error: string | null };
   source: null | { project_id: string; app_id: string; product_ids: string[]; visibility: Visibility };
@@ -27,6 +28,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
   const [app, setApp] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [confirmSwitch, setConfirmSwitch] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -64,7 +66,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
   });
   return <section className="mt-6 rounded-2xl border bg-white p-6">
     <h2 className="font-semibold">RevenueCat</h2>
-    <p className="mt-2 text-sm text-neutral-600">Verify the previous 30 complete UTC days of RevenueCat gross project revenue. RevenueCat includes purchases and ads, and subtracts refunds and adjustments in the period they occur. This is not MRR. For app-specific accuracy, this flow accepts projects with exactly one app and maps the complete product catalogue.</p>
+    <p className="mt-2 text-sm text-neutral-600">You can use one revenue provider at a time. Verify the previous 30 complete UTC days of RevenueCat gross project revenue. This is not MRR. For app-specific accuracy, this flow accepts projects with exactly one app and maps the complete product catalogue.</p>
     {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
     {!status && !error && <p className="mt-4 text-sm text-neutral-500">Checking availability…</p>}
@@ -108,9 +110,14 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
         <label className="mt-3 flex items-start gap-2"><input type="checkbox" checked={confirmed}
           onChange={(event) => setConfirmed(event.target.checked)} />
           <span>This project has only contained this app, and its historical revenue belongs to this app. Map the complete product catalogue. Keep revenue private.</span></label>
-        <button disabled={busy || !confirmed} onClick={() => run(async () => {
+        {status.selected_provider && status.selected_provider !== "revenuecat" && <label className="mt-3 flex items-start gap-2 text-amber-900">
+          <input type="checkbox" checked={confirmSwitch} onChange={(event) => setConfirmSwitch(event.target.checked)} />
+          <span>Switching to RevenueCat will replace {status.selected_provider} as this app’s active revenue source. Previous metrics remain private. The switch happens only after RevenueCat’s first verified sync succeeds.</span>
+        </label>}
+        <button disabled={busy || !confirmed || Boolean(status.selected_provider && status.selected_provider !== "revenuecat" && !confirmSwitch)} onClick={() => run(async () => {
           await request("save_mapping", { project_id: preview.project_id,
-            revenuecat_app_id: preview.app_id, confirm_all_products: true });
+            revenuecat_app_id: preview.app_id, confirm_all_products: true,
+            confirm_switch: confirmSwitch });
           await refresh(); setPreview(null); setNotice("RevenueCat revenue verified privately. Public visibility remains off.");
         })} className="mt-4 rounded-xl bg-brand px-4 py-2 text-white disabled:opacity-50">Save private source</button>
       </div>}

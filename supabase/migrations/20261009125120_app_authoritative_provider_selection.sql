@@ -61,6 +61,10 @@ begin
       delete from public.public_app_traction where app_id = p_app_id;
     else
       delete from public.public_app_revenue where app_id = p_app_id;
+      if to_regclass('public.public_app_verified_revenue') is not null then
+        execute 'delete from public.public_app_verified_revenue where app_id = $1'
+          using p_app_id;
+      end if;
     end if;
   end if;
 end;
@@ -68,13 +72,73 @@ $$;
 revoke all on function public.set_app_provider_selection(uuid,uuid,text,text) from public, anon, authenticated;
 grant execute on function public.set_app_provider_selection(uuid,uuid,text,text) to service_role;
 
+-- The interactive selector may restore only an already verified GA4 or live
+-- Stripe source. Compare-and-swap and source checks share one transaction so
+-- a stale browser cannot replace a newer provider choice.
+create function public.select_verified_app_provider(
+  p_app_id uuid, p_owner_user_id uuid, p_kind text, p_provider text,
+  p_expected_previous text, p_confirm_switch boolean
+) returns void language plpgsql security invoker set search_path = '' as $$
+declare v_previous text;
+begin
+  if p_kind not in ('analytics', 'revenue')
+    or (p_provider is not null and
+      not ((p_kind = 'analytics' and p_provider = 'ga4')
+        or (p_kind = 'revenue' and p_provider = 'stripe'))) then
+    raise exception 'Select a verified supported provider';
+  end if;
+  perform 1 from public.app_owners o where o.app_id = p_app_id
+    and o.user_id = p_owner_user_id and o.revoked_at is null
+    and o.verification_level = 'domain_verified' for update;
+  if not found then raise exception 'A domain-verified app owner is required'; end if;
+  select case when p_kind = 'analytics' then analytics_provider else revenue_provider end
+    into v_previous from public.app_provider_selection where app_id = p_app_id for update;
+  if v_previous is distinct from p_expected_previous then
+    raise exception 'Provider choice changed; reload and try again';
+  end if;
+  if v_previous is not null and v_previous <> p_provider
+    and p_confirm_switch is not true then
+    raise exception 'Confirm the provider switch';
+  end if;
+  if p_provider = 'ga4' and not exists (
+    select 1 from public.app_data_connections c
+    where c.app_id = p_app_id and c.owner_user_id = p_owner_user_id
+      and c.provider = 'ga4' and c.status = 'active'
+      and c.last_successful_sync > now() - interval '72 hours'
+      and exists (select 1 from public.app_metric_points p
+        where p.connection_id = c.id and p.provider = 'ga4'
+          and p.verification_status = 'verified'
+          and p.observed_through > now() - interval '72 hours')
+  ) then raise exception 'Sync Google Analytics before selecting it'; end if;
+  if p_provider = 'stripe' and not exists (
+    select 1 from public.app_revenue_bindings b
+    join public.app_revenue_connections c on c.id = b.connection_id
+    where b.app_id = p_app_id and b.owner_user_id = p_owner_user_id
+      and c.owner_user_id = p_owner_user_id and c.provider = 'stripe'
+      and c.status = 'active' and c.livemode
+      and c.last_successful_sync > now() - interval '72 hours'
+      and exists (select 1 from public.app_revenue_metric_points p
+        where p.app_id = p_app_id and p.connection_id = c.id
+          and p.mapping_version = b.mapping_version and p.provider = 'stripe'
+          and p.verification_status = 'verified' and p.source_livemode
+          and p.observed_at > now() - interval '72 hours')
+  ) then raise exception 'Sync live Stripe revenue before selecting it'; end if;
+  perform public.set_app_provider_selection(p_app_id, p_owner_user_id,
+    p_kind, p_provider);
+end;
+$$;
+revoke all on function public.select_verified_app_provider(uuid,uuid,text,text,text,boolean)
+  from public, anon, authenticated;
+grant execute on function public.select_verified_app_provider(uuid,uuid,text,text,text,boolean)
+  to service_role;
+
 -- Public reads fail closed if the app owner changes the authoritative source.
 create or replace function public.app_traction_is_currently_public(
   p_app_id uuid, p_metric_type text, p_visibility text
 ) returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.app_metric_visibility v
-    join public.app_data_connections c on c.app_id = v.app_id and c.provider = 'ga4'
+    join public.app_data_connections c on c.app_id = v.app_id and c.provider = v.provider
     join public.app_provider_selection s on s.app_id = v.app_id
       and s.owner_user_id = c.owner_user_id and s.analytics_provider = c.provider
     join public.app_owners o on o.app_id = v.app_id
@@ -83,6 +147,25 @@ create or replace function public.app_traction_is_currently_public(
       and c.status = 'active' and c.last_successful_sync > now() - interval '72 hours'
       and o.revoked_at is null and o.user_id = c.owner_user_id
       and o.verification_level = 'domain_verified'
+  );
+$$;
+
+-- Production's provider-aware public policy calls the four-argument version.
+-- Preserve that policy while making the selected provider authoritative.
+create or replace function public.app_traction_is_currently_public(
+  p_app_id uuid, p_metric_type text, p_visibility text, p_provider text
+) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.app_metric_visibility v
+    join public.app_data_connections c on c.app_id = v.app_id and c.provider = v.provider
+    join public.app_provider_selection s on s.app_id = v.app_id
+      and s.owner_user_id = c.owner_user_id and s.analytics_provider = c.provider
+    join public.app_owners o on o.app_id = v.app_id and o.user_id = c.owner_user_id
+    where v.app_id = p_app_id and v.metric_type = p_metric_type
+      and v.provider = p_provider and v.visibility = p_visibility
+      and v.visibility <> 'private' and c.status = 'active'
+      and c.last_successful_sync > now() - interval '72 hours'
+      and o.revoked_at is null and o.verification_level = 'domain_verified'
   );
 $$;
 
