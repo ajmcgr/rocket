@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
@@ -6,6 +6,7 @@ import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
 import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketplaceOps";
 import AdminSponsorships from "@/components/AdminSponsorships";
 import AdminInvestorMetrics from "@/components/AdminInvestorMetrics";
+import AdminNewsletter from "@/components/AdminNewsletter";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -20,7 +21,6 @@ const adminRpc = supabase.rpc.bind(supabase) as unknown as (name: string, args: 
 const rows = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
 const obj = (value: unknown): Row => value && typeof value === "object" && !Array.isArray(value) ? value as Row : {};
 const label = (name: string) => name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-const escapeHtml = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
 const count = (value: unknown) => typeof value === "number" ? value.toLocaleString() : "Not tracked";
 const statEmojis: Record<string, string> = {
   indexed: "📚", discoverable: "🧭", claimed: "✅", domain_verified: "🌐",
@@ -68,7 +68,6 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [batchResult, setBatchResult] = useState("");
   const [busy, setBusy] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
   const refresh = useCallback(async () => {
     setError(""); setData(null); setInvestor(null); setToday([]); setInternalTests([]);
     const [result, batch, claims, tests, investorResult] = await Promise.all([
@@ -144,21 +143,6 @@ export default function Admin() {
   };
   const picks = rows(data?.picks).filter((row) => row.status === "featured");
   const candidates = rows(data?.candidates);
-  const issueApps = useMemo(() => picks.filter((row) => selected.includes(String(row.app_id))), [picks, selected]);
-  const issue = useMemo(() => {
-    if (!issueApps.length) return "";
-    const intro = `This week on Rocket: ${issueApps.length} independently built ${issueApps.length === 1 ? "app" : "apps"} our editor selected from the Rocket catalogue. A listing is not a blanket endorsement.`;
-    const blocks = issueApps.map((app) => `${app.name}\n${app.headline || "Explore its Rocket profile."}\nWhy Rocket noticed it: selected as a Rocket Pick by our editor.\nhttps://tryrocket.ai${appUrl(app)}`);
-    return `${intro}\n\n${blocks.join("\n\n")}\n\nFind more apps at https://tryrocket.ai/discover\n\nAlex\nRocket`;
-  }, [issueApps]);
-  const issueHtml = useMemo(() => `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#20252b;line-height:1.6"><h1>This week on Rocket</h1><p>${issueApps.length} independently built ${issueApps.length === 1 ? "app" : "apps"} selected from Rocket’s catalogue. A listing is not a blanket endorsement.</p>${issueApps.map((app) => `<section style="border-top:1px solid #ddd;padding:20px 0"><h2>${escapeHtml(app.name)}</h2><p>${escapeHtml(app.headline || "Explore its Rocket profile.")}</p><p>Why Rocket noticed it: selected as a Rocket Pick by our editor.</p><p><a href="https://tryrocket.ai${appUrl(app)}">View on Rocket</a></p></section>`).join("")}<p><a href="https://tryrocket.ai/discover">Discover more apps</a></p><p>Alex<br>Rocket</p></div>`, [issueApps]);
-  const copy = async (text: string) => { await navigator.clipboard.writeText(text); };
-  const copyNewsletter = async () => {
-    try { await navigator.clipboard.write([new ClipboardItem({
-      "text/html": new Blob([issueHtml], { type: "text/html" }),
-      "text/plain": new Blob([issue], { type: "text/plain" }),
-    })]); } catch { await copy(issue); }
-  };
 
   return <main className="rocket-admin">
     <header className="rocket-admin-heading"><div><p className="rocket-admin-eyebrow">Rocket operating system</p><h1>{section === "home" ? "Admin overview" : label(section)}</h1><p>Production data, explicit decisions, and auditable changes.</p></div>
@@ -211,7 +195,7 @@ export default function Admin() {
       <p className="rocket-admin-note">Signals nominate candidates; only a deliberate Feature action creates a Rocket Pick. Private metrics are not used here.</p>
       <Panel title="Our picks">{picks.length ? <div className="rocket-admin-list">{picks.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link> · {String(row.placement)}</strong><p>{String(row.headline || "No editorial headline")}</p><button disabled={busy} onClick={() => void act("unfeature", String(row.app_id))}>Unfeature</button></article>)}</div> : <Empty>No picks yet.</Empty>}</Panel>
       <Panel title="Candidates from public Launch activity">{candidates.length ? <div className="rocket-admin-list">{candidates.map((row) => <article key={String(row.id)}><strong><Link to={appUrl(row)}>{String(row.name)}</Link></strong><p>{String(row.tagline || "No description")} · {Array.isArray(row.categories) ? row.categories.join(", ") : "Uncategorized"}</p><p>Signal: {String(row.signal_type || "New listing")} · public Launch votes: {count(row.net_votes)}</p><div className="rocket-admin-actions"><a href={String(row.website_url)} target="_blank" rel="noopener noreferrer">External app ↗</a><button disabled={busy || picks.some((pick) => pick.app_id === row.id)} onClick={() => { const headline = window.prompt("Optional factual headline for this Rocket Pick:") || ""; void act("feature", String(row.id), null, { placement: "standard", headline }); }}>Feature</button></div></article>)}</div> : <Empty />}</Panel>
-      <Panel title="This week on Rocket"><p className="rocket-admin-muted">Select existing picks to assemble a draft. Nothing is sent to Beehiiv.</p>{picks.map((row) => <label className="rocket-admin-check" key={String(row.id)}><input type="checkbox" checked={selected.includes(String(row.app_id))} onChange={(event) => setSelected((prior) => event.target.checked ? [...prior, String(row.app_id)] : prior.filter((id) => id !== row.app_id))} />{String(row.name)}</label>)}{issue && <><div className="rocket-admin-actions"><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}`)}>Copy subject</button><button onClick={() => void copy(`${issueApps.length} apps selected by Rocket’s editor`) }>Copy preview</button><button onClick={() => void copyNewsletter()}>Copy newsletter</button><button onClick={() => void copy(issue)}>Copy plain text</button><button onClick={() => void copy(`This week on Rocket: ${issueApps.map((row) => row.name).join(", ")}. Explore ${issueApps.map((row) => `https://tryrocket.ai${appUrl(row)}`).join(" ")}`)}>Copy social post</button></div><pre className="rocket-admin-draft">{issue}</pre></>}</Panel>
+      <AdminNewsletter />
     </>}
     {data && section === "outreach" && <>
       <p className="rocket-admin-note">Campaign mode: {String(obj(data.control).send_mode || "unknown")} · {obj(data.control).paused ? "Paused" : "Running"} · production authorization {obj(data.control).production_authorized ? "enabled" : "locked"}. Imported Launch contacts require documented outreach eligibility before any external send.</p>

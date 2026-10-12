@@ -36,11 +36,25 @@
 .rocket-admin-check{display:block;margin:8px 0}
 .rocket-admin-check input{margin-right:9px}
 .rocket-admin-draft{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;background:var(--muted-bg,#f5f5f5);padding:18px;border-radius:12px;margin-top:16px}
+.rocket-admin-newsletter-heading,.rocket-admin-newsletter-section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.rocket-admin-newsletter-heading .rocket-admin-muted{margin:5px 0}
+.rocket-admin-newsletter-heading .rocket-admin-actions{margin-top:0;flex-shrink:0}
+.rocket-admin .rocket-admin-primary{border-color:#167ac6;background:#167ac6;color:#fff;font-weight:700}
+.rocket-admin .rocket-admin-primary:hover{background:#1066aa;color:#fff}
+.rocket-admin-newsletter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
+.rocket-admin-newsletter-section{border:1px solid var(--border-color,#e4e4e4);border-radius:14px;padding:18px;min-width:0}
+.rocket-admin-newsletter-section h3{font-size:1.1rem;font-weight:700;margin:0}
+.rocket-admin-newsletter-section .rocket-admin-muted{margin:5px 0 12px}
+.rocket-admin-newsletter-section ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rocket-admin-newsletter-section li{border-top:1px solid var(--border-color,#eee);padding-top:10px;overflow-wrap:anywhere}
+.rocket-admin-newsletter-section li a{color:var(--rocket-blue,#167ac6);font-weight:700;text-decoration:none}
+.rocket-admin-newsletter-section li span:last-child{display:block;color:var(--text-secondary,#666);font-size:.88rem;margin-top:3px}
+.rocket-admin-sponsored{display:inline-block;background:#e7f3fc;color:#11669f;border-radius:999px;padding:2px 8px;margin-right:7px;font-size:.72rem;font-weight:700}
 .rocket-admin-loading{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
 .rocket-admin-loading div{height:130px;border-radius:16px;background:var(--muted-bg,#eee);animation:rocket-admin-pulse 1.4s ease-in-out infinite alternate}
 @keyframes rocket-admin-pulse{to{opacity:.55}}
 @media(max-width:1100px){.rocket-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:700px){.rocket-admin{padding:28px 16px}.rocket-admin-heading{display:block}.rocket-admin-heading label{display:block;margin-top:16px}.rocket-admin-stats,.rocket-admin-loading{grid-template-columns:1fr}.rocket-admin-stat{min-height:210px;padding:22px}.rocket-admin-stat-figure strong{font-size:clamp(2.5rem,11vw,4rem)}}
+@media(max-width:700px){.rocket-admin{padding:28px 16px}.rocket-admin-heading,.rocket-admin-newsletter-heading,.rocket-admin-newsletter-section-heading{display:block}.rocket-admin-heading label{display:block;margin-top:16px}.rocket-admin-stats,.rocket-admin-loading,.rocket-admin-newsletter-grid{grid-template-columns:1fr}.rocket-admin-stat{min-height:210px;padding:22px}.rocket-admin-stat-figure strong{font-size:clamp(2.5rem,11vw,4rem)}.rocket-admin-newsletter-section-heading button{margin-bottom:12px}}
 .rocket-investor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .rocket-investor-card{border:1px solid var(--border-color,#e4e4e4);border-radius:14px;padding:22px;background:var(--surface,#fff)}
 .rocket-investor-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}

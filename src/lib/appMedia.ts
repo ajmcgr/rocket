@@ -13,16 +13,25 @@ export type PublicAppMedia = {
 export async function loadAppMedia(
   appIds: string[],
   coversOnly = true,
+  strict = false,
 ): Promise<Map<string, PublicAppMedia[]>> {
   if (!appIds.length) return new Map();
   // The public view is security-invoker and exposes only public apps/media.
-  const { data, error } = await publicMarketplaceRead("media", `${coversOnly}:${[...appIds].sort().join(",")}`, () => supabase
-    .from(coversOnly ? "public_app_media_covers" : "public_app_media")
-    .select("id,app_id,media_type,source_url,sort_order,source_type")
-    .in("app_id", appIds)
-    .order("sort_order", { ascending: true })
-    .limit(coversOnly ? appIds.length : Math.min(600, appIds.length * 25)));
-  if (error) return new Map(); // Legacy deployments can still render logo-only cards.
+  const { data, error } = await publicMarketplaceRead(
+    "media",
+    `${coversOnly}:${[...appIds].sort().join(",")}`,
+    () =>
+      supabase
+        .from(coversOnly ? "public_app_media_covers" : "public_app_media")
+        .select("id,app_id,media_type,source_url,sort_order,source_type")
+        .in("app_id", appIds)
+        .order("sort_order", { ascending: true })
+        .limit(coversOnly ? appIds.length : Math.min(600, appIds.length * 25)),
+  );
+  if (error) {
+    if (strict) throw error;
+    return new Map(); // Legacy deployments can still render logo-only cards.
+  }
   const result = new Map<string, PublicAppMedia[]>();
   for (const row of (data || []) as PublicAppMedia[]) {
     const current = result.get(row.app_id) || [];
