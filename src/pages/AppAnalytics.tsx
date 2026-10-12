@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
+import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Metric = "active_users" | "sessions" | "views";
@@ -52,7 +53,8 @@ export default function AppAnalytics() {
   return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Traffic connection</h1>
-    <p className="mt-2 text-sm text-neutral-600">Connect a Google Analytics 4 web stream for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
+    <p className="mt-2 text-sm text-neutral-600">Connect a traffic source for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
+    {id && <VerifiedProviderSelection appId={id} kind="analytics" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">

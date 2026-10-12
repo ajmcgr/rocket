@@ -42,24 +42,58 @@ Deno.serve(async (request) => {
       const allowed: readonly string[] = providers[kind];
       if (body.provider !== null && !allowed.includes(body.provider))
         return json({ error: "Invalid provider" }, 400);
-      if (kind === "revenue" && (body.provider === "polar" || body.provider === "dodo"))
-        return json({ error: "This revenue provider is coming soon" }, 400);
-      if (kind === "revenue" && body.provider === "revenuecat") {
-        const source = await service.from("app_verified_revenue_sources")
-          .select("connection_id")
-          .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id)
-          .eq("provider", "revenuecat").maybeSingle();
-        if (source.error || !source.data)
-          return json({ error: "Connect and map RevenueCat first" }, 400);
-        const connection = await service.from("app_verified_revenue_connections")
-          .select("status").eq("id", source.data.connection_id)
-          .eq("owner_user_id", user.data.user.id).maybeSingle();
-        if (connection.error || connection.data?.status !== "active")
-          return json({ error: "RevenueCat verification needs attention" }, 400);
+      const current = await service.from("app_provider_selection")
+        .select("analytics_provider,revenue_provider").eq("app_id", body.app_id).maybeSingle();
+      if (current.error) throw current.error;
+      const previous = kind === "analytics"
+        ? current.data?.analytics_provider ?? null : current.data?.revenue_provider ?? null;
+      if (body.expected_previous !== previous)
+        return json({ error: "Provider choice changed; reload and try again" }, 409);
+      if (previous && previous !== body.provider && body.confirm_switch !== true)
+        return json({ error: "Confirm the provider switch" }, 400);
+      // Alternative providers select themselves only after a validated first
+      // sync commits the mapping and choice in one database transaction.
+      if (["posthog", "revenuecat", "polar", "dodo"].includes(String(body.provider)))
+        return json({ error: "Connect and verify this provider before selecting it" }, 400);
+      if (body.provider === "ga4") {
+        const connection = await service.from("app_data_connections")
+          .select("id,status,last_successful_sync").eq("app_id", body.app_id)
+          .eq("owner_user_id", user.data.user.id).eq("provider", "ga4").maybeSingle();
+        if (connection.error || connection.data?.status !== "active"
+          || !connection.data.last_successful_sync
+          || Date.now() - Date.parse(connection.data.last_successful_sync) >= 72 * 60 * 60 * 1000)
+          return json({ error: "Sync Google Analytics before selecting it" }, 400);
+        const point = await service.from("app_metric_points").select("id")
+          .eq("connection_id", connection.data.id).eq("provider", "ga4")
+          .eq("verification_status", "verified").limit(1);
+        if (point.error || !point.data?.length)
+          return json({ error: "Google Analytics has no verified data" }, 400);
       }
-      const result = await service.rpc("set_app_provider_selection", {
+      if (body.provider === "stripe") {
+        const binding = await service.from("app_revenue_bindings")
+          .select("connection_id,mapping_version").eq("app_id", body.app_id)
+          .eq("owner_user_id", user.data.user.id).maybeSingle();
+        if (binding.error || !binding.data)
+          return json({ error: "Map Stripe revenue before selecting it" }, 400);
+        const connection = await service.from("app_revenue_connections")
+          .select("status,livemode,last_successful_sync").eq("id", binding.data.connection_id)
+          .eq("owner_user_id", user.data.user.id).maybeSingle();
+        if (connection.error || connection.data?.status !== "active" || !connection.data.livemode
+          || !connection.data.last_successful_sync
+          || Date.now() - Date.parse(connection.data.last_successful_sync) >= 72 * 60 * 60 * 1000)
+          return json({ error: "Sync live Stripe revenue before selecting it" }, 400);
+        const point = await service.from("app_revenue_metric_points").select("id")
+          .eq("app_id", body.app_id).eq("connection_id", binding.data.connection_id)
+          .eq("mapping_version", binding.data.mapping_version)
+          .eq("verification_status", "verified").eq("source_livemode", true).limit(1);
+        if (point.error || !point.data?.length)
+          return json({ error: "Stripe has no verified live revenue snapshot" }, 400);
+      }
+      const result = await service.rpc("select_verified_app_provider", {
         p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
         p_kind: kind, p_provider: body.provider,
+        p_expected_previous: body.expected_previous,
+        p_confirm_switch: body.confirm_switch === true,
       });
       if (result.error) throw result.error;
     } else if (body.action !== "status") {

@@ -350,8 +350,11 @@ async function handle(request: Request) {
   if (body.action === "status") {
     const row = await connection(userId);
     const linked = await source(appId);
+    const selected = await service.from("app_provider_selection")
+      .select("revenue_provider").eq("app_id", appId).maybeSingle();
+    if (selected.error) throw selected.error;
     if (linked && linked.owner_user_id !== userId) throw new Error("Revenue source unavailable");
-    const points = linked ? await service.from("app_verified_revenue_points")
+    const points = linked?.provider === "revenuecat" ? await service.from("app_verified_revenue_points")
       .select("metric_type,value_minor,currency,period_start,period_end,verified_at")
       .eq("app_id", appId).eq("connection_id", linked.connection_id)
       .eq("mapping_version", linked.mapping_version).order("verified_at", { ascending: false }).limit(1) : null;
@@ -359,6 +362,7 @@ async function handle(request: Request) {
     let available = false;
     try { config(); await key(); available = true; } catch { /* setup incomplete */ }
     return json({ connect_available: available,
+      selected_provider: selected.data?.revenue_provider ?? null,
       connection: row && row.status !== "disconnected" ? {
         status: row.status, last_attempted_sync: row.last_attempted_sync,
         last_successful_sync: row.last_successful_sync, last_error: row.last_error,
@@ -416,16 +420,29 @@ async function handle(request: Request) {
       notice: "RevenueCat project revenue includes purchases and ads, minus refunds and adjustments in the period. This project must contain only the selected app.",
     });
     if (body.confirm_all_products !== true) return fail("Confirm the complete RevenueCat product mapping");
+    const selected = await service.from("app_provider_selection")
+      .select("revenue_provider").eq("app_id", appId).maybeSingle();
+    if (selected.error) throw selected.error;
+    const previous = selected.data?.revenue_provider ?? null;
+    if (previous !== "revenuecat" && previous !== null && body.confirm_switch !== true)
+      return fail(`Confirm switching from ${previous} to RevenueCat before saving`);
     const bound = await service.rpc("bind_app_verified_revenue_source", {
       p_app_id: appId, p_user_id: userId, p_connection_id: row.id,
       p_provider: "revenuecat", p_external_account_id: catalog.source.projectId,
       p_external_app_id: catalog.source.appId, p_product_ids: catalog.source.productIds,
+      p_value_minor: metric.valueMinor, p_currency: metric.currency,
+      p_period_start: metric.periodStart, p_period_end: metric.periodEnd,
+      p_expected_previous: previous, p_confirm_switch: body.confirm_switch === true,
     });
     if (bound.error) {
       if (bound.error.code === "23505") return fail("This RevenueCat project is mapped to another Rocket app", 409);
       throw bound.error;
     }
-    return json({ saved: true, visibility: "private", sync: await sync(appId, userId) });
+    return json({ saved: true, visibility: "private", sync: {
+      provider: "revenuecat", metric_type: "gross_revenue_30d",
+      value_minor: metric.valueMinor, currency: metric.currency,
+      period_start: metric.periodStart, period_end: metric.periodEnd,
+    } });
   }
   const linked = await source(appId);
   if (!linked || linked.owner_user_id !== userId || linked.connection_id !== row.id
