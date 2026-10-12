@@ -73,7 +73,7 @@ export function AlternativeRevenueConnection({ appId, provider }: { appId: strin
       {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last verified: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
       {status.connection?.last_error && <p className="mt-2 text-amber-700">Action required: {status.connection.last_error}</p>}
       {status.connect_available && <div className="mt-4 flex flex-wrap items-end gap-2">
-        <label className="min-w-60 flex-1">{provider === "polar" ? "Read-only organization token" : "Live read-only API key"}
+        <label className="min-w-60 flex-1">{provider === "polar" ? "Read-only organization token" : "Live Dodo API key (Rocket reads data only)"}
           <input type="password" autoComplete="off" value={credential} disabled={busy}
             onChange={(event) => setCredential(event.target.value)}
             className="mt-2 block w-full rounded-lg border px-3 py-2" />
