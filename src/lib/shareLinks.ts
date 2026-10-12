@@ -22,7 +22,7 @@ export function shareCardUrl(kind: ShareKind, identifier: string, variant: Share
   url.searchParams.set("id", identifier);
   url.searchParams.set("variant", variant);
   const contentVersion = version ? (/^[a-z0-9]{1,12}$/i.test(version) ? version : shareCardVersion(version)) : "base";
-  url.searchParams.set("v", `b2${contentVersion}`);
+  url.searchParams.set("v", `b3${contentVersion}`);
   return url.toString();
 }
 
