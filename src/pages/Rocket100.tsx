@@ -15,7 +15,6 @@ const number = (value: number) => String(value).padStart(3, "0");
 export default function Rocket100({ data }: { data: Rocket100Data }) {
   const [board, setBoard] = useState(data);
   const [status, setStatus] = useState<MyStatus | null>(null);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   useEffect(() => {
@@ -28,7 +27,6 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
         const result = await (supabase as any).rpc("rocket100_my_status");
         if (active && !result.error) { setStatus(result.data || {}); if (result.data?.qualified) track("rocket100_qualified"); }
       }
-      if (active) setLoading(false);
     })();
     return () => { active = false; };
   }, []);
@@ -52,7 +50,7 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
     }
     setBusy(false);
   };
-  const action = loading ? null : !status
+  const action = !status
     ? <Link to="/signup?next=%2F100" className="rocket100-button" onClick={() => track("rocket100_cta_clicked", { state: "signed_out" })}>Become a Founding Builder</Link>
     : status.founding_number
     ? <a href="#leaderboard" className="rocket100-button">Explore the leaderboard</a>
