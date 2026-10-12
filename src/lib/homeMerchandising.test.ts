@@ -65,6 +65,31 @@ const base = () => ({
   now,
 });
 describe("truthful homepage merchandising", () => {
+  it("fails the admin newsletter read instead of copying incomplete shelves", async () => {
+    db.rpc.mockResolvedValue({ data: [], error: null });
+    db.from.mockImplementation((table) => {
+      const chain: any = {
+        select: () => chain,
+        eq: () => chain,
+        gt: () => chain,
+        in: () => chain,
+        order: () => chain,
+        limit: () => chain,
+        then: (resolve: any) =>
+          Promise.resolve({
+            data: [],
+            error:
+              table === "public_rocket_picks"
+                ? new Error("Picks unavailable")
+                : null,
+          }).then(resolve),
+      };
+      return chain;
+    });
+    await expect(loadHomeMerchandising({ strict: true })).rejects.toThrow(
+      "Picks unavailable",
+    );
+  });
   it("keeps public rankings and categories when optional editorial/signals queries fail", async () => {
     db.rpc.mockResolvedValue({
       data: [{ app_id: "b", rank_position: 1 }],

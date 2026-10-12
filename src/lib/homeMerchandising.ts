@@ -48,11 +48,14 @@ export const emptyMerchandising = (): HomeMerchandising => ({
 // No secret, financial, private metric or auth query belongs in this public loader.
 async function optionalRows<T>(
   request: PromiseLike<{ data: T[] | null; error?: unknown }>,
+  strict = false,
 ): Promise<T[]> {
   try {
     const result = await request;
-    return result.error ? [] : result.data || [];
-  } catch {
+    if (result.error) throw result.error;
+    return result.data || [];
+  } catch (error) {
+    if (strict) throw error;
     return [];
   }
 }
@@ -199,12 +202,17 @@ export function composeHome(input: {
     media: Object.fromEntries(input.media),
   };
 }
-export async function loadHomeMerchandising(): Promise<HomeMerchandising> {
+export async function loadHomeMerchandising({
+  strict = false,
+}: { strict?: boolean } = {}): Promise<HomeMerchandising> {
+  const readRows = <T>(
+    request: PromiseLike<{ data: T[] | null; error?: unknown }>,
+  ) => optionalRows(request, strict);
   const [picks, rising, fresh, rankings, evidence, categories] =
     await Promise.all([
-      optionalRows(picksQuery()),
-      optionalRows(risingQuery()),
-      optionalRows(
+      readRows(picksQuery()),
+      readRows(risingQuery()),
+      readRows(
         supabase
           .from("public_discoverable_app_intelligence")
           .select("*")
@@ -212,10 +220,10 @@ export async function loadHomeMerchandising(): Promise<HomeMerchandising> {
           .order("percentile_rank", { ascending: false })
           .order("net_votes", { ascending: false })
           .order("app_id", { ascending: true })
-          .limit(4),
+          .limit(24),
       ),
-      optionalRows(rankingsQuery()),
-      optionalRows(
+      readRows(rankingsQuery()),
+      readRows(
         supabase
           .from("public_app_traction")
           .select(
@@ -225,7 +233,7 @@ export async function loadHomeMerchandising(): Promise<HomeMerchandising> {
           .order("last_verified_at", { ascending: false })
           .limit(12),
       ),
-      optionalRows(
+      readRows(
         supabase
           .from("public_app_categories")
           .select("category,app_count")
@@ -242,13 +250,18 @@ export async function loadHomeMerchandising(): Promise<HomeMerchandising> {
   ];
   const [apps, media] = await Promise.all([
     ids.length
-      ? optionalRows(
+      ? readRows(
           supabase.from("public_discoverable_apps").select("*").in("id", ids),
         )
       : Promise.resolve([]),
-    loadAppMedia([
-      ...new Set([...picks, ...fresh].map((row) => row.app_id)),
-    ]).catch(() => new Map<string, PublicAppMedia[]>()),
+    loadAppMedia(
+      [...new Set([...picks, ...fresh].map((row) => row.app_id))],
+      true,
+      strict,
+    ).catch((error) => {
+      if (strict) throw error;
+      return new Map<string, PublicAppMedia[]>();
+    }),
   ]);
   return composeHome({
     apps,
@@ -267,7 +280,8 @@ export async function loadCuratedApps(
   offset = 0,
   limit = 24,
 ): Promise<ShelfItem[]> {
-  const signals = kind === "rising" ? await optionalRows(risingQuery(limit, offset)) : [];
+  const signals =
+    kind === "rising" ? await optionalRows(risingQuery(limit, offset)) : [];
   const picks =
     kind === "picks" ? await optionalRows(picksQuery(collection)) : [];
   const ids = [...signals, ...picks].map((row) => row.app_id);
