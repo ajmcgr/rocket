@@ -153,7 +153,12 @@ describe("My Apps next actions", () => {
         '[aria-label="Connect analytics and revenue"]',
       );
       expect(connections?.classList.contains("grid-cols-1")).toBe(true);
-      expect(connections?.querySelectorAll("a")).toHaveLength(2);
+      expect(connections?.querySelectorAll('a[href="/my-apps/app-1/analytics"]')).toHaveLength(2);
+      expect(connections?.querySelectorAll('a[href="/my-apps/app-1/revenue"]')).toHaveLength(4);
+      expect(connections?.textContent).toContain("Connect RevenueCat");
+      expect(connections?.textContent).toContain("Connect Polar");
+      expect(connections?.textContent).toContain("Connect Dodo Payments");
+      expect(connections?.textContent).not.toContain("Coming soon");
       expect(
         connections
           ?.querySelector('a[href="/my-apps/app-1/analytics"]')
