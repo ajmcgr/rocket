@@ -5,6 +5,7 @@ import "./Admin.css";
 import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
 import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketplaceOps";
 import AdminSponsorships from "@/components/AdminSponsorships";
+import AdminInvestorMetrics from "@/components/AdminInvestorMetrics";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -61,6 +62,7 @@ export default function Admin() {
   const section = (sections.some((item) => item.id === params.section) ? params.section : "home") as Section;
   const [period, setPeriod] = useState<Period>("30d");
   const [data, setData] = useState<Row | null>(null);
+  const [investor, setInvestor] = useState<Row | null>(null);
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
   const [error, setError] = useState("");
@@ -68,20 +70,23 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const refresh = useCallback(async () => {
-    setError(""); setData(null); setToday([]); setInternalTests([]);
-    const [result, batch, claims, tests] = await Promise.all([
+    setError(""); setData(null); setInvestor(null); setToday([]); setInternalTests([]);
+    const [result, batch, claims, tests, investorResult] = await Promise.all([
       adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_first_batch", {}) : Promise.resolve(null),
       section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
       section === "outreach" ? adminRpc("rocket_admin_outreach_test_candidates", {}) : Promise.resolve(null),
+      section === "metrics" ? adminRpc("rocket_admin_investor_metrics", {}) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
     if (batch?.error) { setError(batch.error.message); return; }
     if (claims?.error) { setError(claims.error.message); return; }
     if (tests?.error) { setError(tests.error.message); return; }
+    if (investorResult?.error) { setError(investorResult.error.message); return; }
     setToday(rows(batch?.data));
     setInternalTests(rows(tests?.data));
     setData({ ...obj(result.data), ...(claims ? { claims: claims.data } : {}) });
+    setInvestor(investorResult ? obj(investorResult.data) : null);
   }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
   useEffect(() => {
@@ -164,6 +169,7 @@ export default function Admin() {
     {error && <p className="rocket-admin-error" role="alert">{error}</p>}
     {!data && !error && <div className="rocket-admin-loading" role="status" aria-label="Loading admin data"><div /><div /><div /><div /></div>}
     {data && (section === "home" || section === "metrics") && <>
+      {section === "metrics" && <AdminInvestorMetrics data={investor} />}
       <Panel title="Catalogue"><StatGrid data={obj(data.catalogue)} /></Panel>
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /><p className="rocket-admin-muted">“Not tracked” means Rocket has no reliable first-party counter for that event.</p></Panel>
