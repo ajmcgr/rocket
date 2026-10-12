@@ -32,6 +32,7 @@ export default function AdminInvestorMetrics({ data }: { data: Values | null }) 
   const currencies = Array.isArray(gmv.currencies) ? gmv.currencies.map(row) : [];
   const usd = currencies.find((item) => item.currency === "usd") || {};
   const quality = (item: Values) => String(item.quality || "UNVERIFIED");
+  const reconciledRevenue = typeof revenue.amount_cents === "number";
   return <section className="rocket-admin-panel" aria-labelledby="investor-metrics-title">
     <h2 id="investor-metrics-title">Investor metrics</h2>
     <p className="rocket-admin-muted">Rolling 30-day UTC windows [{date(data.window_start)}, {date(data.as_of)}). Previous window begins {date(data.previous_window_start)}. Calculated {date(data.calculated_at)}{data.stale ? " · Snapshot stale" : ""}.</p>
@@ -59,12 +60,12 @@ export default function AdminInvestorMetrics({ data }: { data: Values | null }) 
         <span>Independent / related-party gross <b>{money(usd.independent_customer_gross_cents)} / {money(usd.related_party_gross_cents)}</b></span>
         {currencies.filter((item) => item.currency !== "usd").map((item) => <span key={String(item.currency)}>{String(item.currency).toUpperCase()} gross / net <b>{money(item.gross_cents, String(item.currency))} / {money(item.net_cents, String(item.currency))}</b></span>)}
       </Card>
-      <Card title="Net Retained Revenue" value={typeof revenue.amount_cents === "number" ? money(revenue.amount_cents) : "Unverified"} quality={quality(revenue)} limitation={String(revenue.limitations || "")}>
+      <Card title="Net Retained Revenue" value={reconciledRevenue ? money(revenue.amount_cents) : "Unverified"} quality={quality(revenue)} limitation={String(revenue.limitations || "")}>
         <span>Previous 30 days <b>{typeof revenue.previous_30d_cents === "number" ? money(revenue.previous_30d_cents) : "Unverified"}</b></span>
         <span>Growth <b>{typeof revenue.amount_cents === "number" && typeof revenue.previous_30d_cents === "number" ? growth(revenue.amount_cents,revenue.previous_30d_cents) : "N/A"}</b></span>
-        <span>Developer / Buy with Rocket fees <b>{money(sources.developer)} / {money(sources.marketplace_fees)}</b></span>
-        <span>Advertising retained <b>{money(sources.advertising)}</b></span>
-        <span>Related party / independent customer <b>{money(revenue.related_party_cents)} / {money(revenue.independent_customer_cents)}</b></span>
+        <span>Developer / Buy with Rocket fees <b>{reconciledRevenue ? `${money(sources.developer)} / ${money(sources.marketplace_fees)}` : "Unverified"}</b></span>
+        <span>Advertising retained <b>{reconciledRevenue ? money(sources.advertising) : "Unverified"}</b></span>
+        <span>Related party / independent customer <b>{reconciledRevenue ? `${money(revenue.related_party_cents)} / ${money(revenue.independent_customer_cents)}` : "Unverified"}</b></span>
         <span>Advertising gross, not retained <b>{money(revenue.current_30d_gross_advertising_cents)}</b></span>
         <span>Related-party advertising gross <b>{money(revenue.related_party_gross_advertising_cents)}</b></span>
       </Card>
