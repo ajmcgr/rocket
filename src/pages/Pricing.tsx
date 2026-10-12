@@ -235,6 +235,26 @@ const Pricing = () => {
             <Link to="/settings/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
           </div>
           <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
+
+          <div className="mx-auto mt-14 max-w-3xl">
+            <h3 className="text-2xl font-semibold tracking-tight">Advertising</h3>
+            <p className="mt-2 text-neutral-600">Give your app more visibility with a clearly labelled sponsored placement. Advertising is a separate one-time purchase, subject to available inventory.</p>
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7">
+                <h4 className="text-xl font-semibold tracking-tight">Featured App</h4>
+                <p className="mt-3"><span className="text-4xl font-semibold tracking-tight">$49</span><span className="ml-2 text-sm text-neutral-600">one-time · 7 days</span></p>
+                <p className="mt-4 flex-1 text-neutral-600">Feature an eligible app in Rocket’s designated Sponsored discovery placement.</p>
+                <Link to="/advertise" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50">Feature an app →</Link>
+              </div>
+              <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7">
+                <h4 className="text-xl font-semibold tracking-tight">Category Sponsor</h4>
+                <p className="mt-3"><span className="text-4xl font-semibold tracking-tight">$299</span><span className="ml-2 text-sm text-neutral-600">one-time · 30 days</span></p>
+                <p className="mt-4 flex-1 text-neutral-600">Sponsor an available Rocket category with a clearly labelled placement.</p>
+                <Link to="/advertise" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50">Sponsor a category →</Link>
+              </div>
+            </div>
+            <p className="mt-5 text-sm text-neutral-500">Sponsored placements do not change organic rankings or Rocket Picks.</p>
+          </div>
         </div>
       </section>
 
