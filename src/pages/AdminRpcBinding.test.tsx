@@ -35,6 +35,12 @@ vi.mock("@/integrations/supabase/client", async () => {
             const name = String(input).split("/rpc/")[1];
             const args = JSON.parse(String(init?.body || "{}"));
             mocks.requests.push({ name, args });
+            if (String(input).includes("/public_apps?")) {
+              return new Response(JSON.stringify({ name: "Launch", slug: "launch" }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
             if (name === "rocket_admin_snapshot" && mocks.denied) {
               return new Response(
                 JSON.stringify({
@@ -206,7 +212,7 @@ it("redeems a claim invitation using the bound client", async () => {
   );
   render(<ClaimInvitation />);
   await screen.findByText(/Your app is now claimed on Rocket/);
-  expect(mocks.requests).toEqual([
+  expect(mocks.requests.filter((request) => request.name)).toEqual([
     {
       name: "rocket_redeem_claim_invitation",
       args: { p_token: token, p_app_id: appId },

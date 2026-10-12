@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appBadgeEmbed, appBadgeUrl, badgePath } from "./appBadge";
+import { appBadgeEmbed, appBadgeMarkdown, appBadgeUrl, badgePath } from "./appBadge";
 
 describe("Rocket app badges", () => {
   it("links to the exact public app listing and escapes app identifiers", () => {
@@ -15,5 +15,8 @@ describe("Rocket app badges", () => {
     expect(embed).toContain('alt="Discover it on Rocket"');
     expect(embed).toContain('width="160" height="50"');
     expect(embed).toContain('rel="noopener"');
+  });
+  it("offers a Markdown badge linking to the attributed canonical app page", () => {
+    expect(appBadgeMarkdown("app-1", "black", "launch")).toContain("https://tryrocket.ai/apps/launch?utm_source=rocket_badge");
   });
 });

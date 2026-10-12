@@ -35,7 +35,7 @@ export function claimEmailContent(kind: string, c: Record<string, unknown>) {
     : kind === "received"
       ? "We received your ownership request"
       : kind === "approved"
-        ? "Your ownership request was approved"
+        ? "Your Rocket app claim is complete"
         : kind === "rejected"
           ? "Your ownership request was not approved"
           : "Your ownership request needs more evidence";
@@ -63,13 +63,13 @@ export function claimEmailContent(kind: string, c: Record<string, unknown>) {
   const notice = admin
     ? "A Rocket login is not proof of ownership. Review the evidence before deciding."
     : kind === "approved"
-      ? "Your app is now claimed and appears in Your Apps. Manual approval does not verify control of the domain or bypass developer/payment requirements."
+      ? "Your app is now claimed and appears in My Apps. Manual approval does not verify control of the domain. You can manage the listing and share its public app page."
       : kind === "received"
         ? "Your request is queued for manual review. We will email you after a decision. You do not need to submit it again."
         : "Open your claim in Rocket to read the decision or correction details. A rejected request does not grant app ownership.";
   return {
     title,
-    bodyHtml: `<p>${notice}</p><table>${rows.map(([k, v]) => `<tr><th style="text-align:left;padding:6px 12px 6px 0">${escape(k)}</th><td>${escape(v)}</td></tr>`).join("")}</table>`,
+    bodyHtml: `<p>${notice}</p><table>${rows.map(([k, v]) => `<tr><th style="text-align:left;padding:6px 12px 6px 0">${escape(k)}</th><td>${escape(v)}</td></tr>`).join("")}</table>${kind === "approved" && /^[0-9a-f-]{36}$/i.test(String(c.app_id || "")) ? `<p><a href="https://tryrocket.ai/apps/${encodeURIComponent(String(c.app_id))}?utm_source=rocket&amp;utm_medium=email">Share app</a> · <a href="https://tryrocket.ai/your-apps">Manage app</a></p>` : ""}`,
     ctaLabel: admin ? "Review ownership claim" : "View your claim",
     ctaUrl: admin
       ? `https://tryrocket.ai/admin/ops?claim=${encodeURIComponent(String(c.claim_id))}#claim-${encodeURIComponent(String(c.claim_id))}`
@@ -101,6 +101,16 @@ export async function deliverClaimEmail(
     };
   const job = lease.data as ClaimEmailJob;
   try {
+    // The existing manual-review outbox stores the claim ID but not its app ID.
+    // Resolve it server-side after the capability lease so approved mail can
+    // link to the public Rocket listing without trusting caller-supplied data.
+    if (job.kind === "approved" && /^[0-9a-f-]{36}$/i.test(String(job.context.claim_id || ""))) {
+      const client = db as unknown as { from?: (table: string) => { select: (columns: string) => { eq: (column: string, value: unknown) => { maybeSingle: () => Promise<{ data: { app_id?: string | null } | null }> } } } };
+      if (client.from) {
+        const { data } = await client.from("app_claims").select("app_id").eq("id", job.context.claim_id).maybeSingle();
+        if (data?.app_id) job.context = { ...job.context, app_id: data.app_id };
+      }
+    }
     const email = claimEmailContent(job.kind, job.context);
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",

@@ -8,13 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   collectionApps,
   collectionDetail,
-  collectionPath,
   setCollectionMembership,
   COLLECTION_PAGE_SIZE,
   type Collection,
   type CollectionApp,
 } from "@/lib/collections";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
+import RocketShare from "@/components/RocketShare";
 import {
   loadAppCardMetadata,
   type AppCardMetadata,
@@ -175,26 +175,7 @@ function CollectionDetailContent({
               )}
             </p>
           )}
-          {(personal ? collection.visibility === "public" : true) && (
-            <button
-              className="mt-4 min-h-11 rounded-xl border px-4 text-[#469DDA]"
-              onClick={async () => {
-                const url = `${window.location.origin}${collectionPath(collection)}`;
-                try {
-                  if (navigator.share)
-                    await navigator.share({ title: collection.name, url });
-                  else {
-                    await navigator.clipboard.writeText(url);
-                    alert("Collection link copied.");
-                  }
-                } catch {
-                  /* Cancelled share leaves collection unchanged. */
-                }
-              }}
-            >
-              Share collection
-            </button>
-          )}
+          {(personal ? collection.visibility === "public" : true) && <div className="mt-4"><RocketShare kind="collection" identifier={collection.slug} title={collection.name} label="Share collection" version={collection.updated_at || undefined} /></div>}
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {apps.map((app) => (
               <div key={app.id} className="min-w-0">

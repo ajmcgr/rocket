@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CollectionDetail from "@/pages/CollectionDetail";
 import { collectionApps, collectionDetail } from "@/lib/collections";
+import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 
 export const Route = createFileRoute("/collections/$slug")({
   staleTime: 0,
@@ -34,6 +35,8 @@ export const Route = createFileRoute("/collections/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
+        { property: "og:image", content: shareCardUrl("collection", collection.slug, "landscape", shareCardVersion(collection.name, collection.app_count, collection.logos, collection.updated_at)) },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
       links: [{ rel: "canonical", href: url }],
     };

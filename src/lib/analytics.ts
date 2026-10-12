@@ -46,7 +46,13 @@ export type AnalyticsEvent =
   | "category_sponsor_selected"
   | "sponsorship_checkout_started"
   | "sponsored_impression"
-  | "sponsored_click";
+  | "sponsored_click"
+  | "share_button_clicked"
+  | "share_destination_clicked"
+  | "share_link_copied"
+  | "share_caption_copied"
+  | "share_card_downloaded"
+  | "share_native_completed";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;
