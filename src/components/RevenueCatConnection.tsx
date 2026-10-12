@@ -31,6 +31,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
   const [confirmSwitch, setConfirmSwitch] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [unavailable, setUnavailable] = useState(false);
   const [notice, setNotice] = useState("");
   const stale = Boolean(status?.connection?.last_successful_sync
     && Date.now() - Date.parse(status.connection.last_successful_sync) >= 72 * 60 * 60 * 1000);
@@ -46,7 +47,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
     const result = new URLSearchParams(window.location.search).get("revenuecat");
     if (result === "connected") setNotice("RevenueCat authorized. Choose the project for this app; all revenue stays private.");
     if (result === "error") setError("RevenueCat authorization was not completed.");
-    void refresh().catch((cause) => setError((cause as Error).message));
+    void refresh().catch(() => setUnavailable(true));
   }, [refresh]);
   const run = async (work: () => Promise<void>) => {
     setBusy(true); setError(""); setNotice("");
@@ -69,7 +70,8 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
     <p className="mt-2 text-sm text-neutral-600">You can use one revenue provider at a time. Verify the previous 30 complete UTC days of RevenueCat gross project revenue. This is not MRR. For app-specific accuracy, this flow accepts projects with exactly one app and maps the complete product catalogue.</p>
     {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
-    {!status && !error && <p className="mt-4 text-sm text-neutral-500">Checking availability…</p>}
+    {!status && !unavailable && !error && <p className="mt-4 text-sm text-neutral-500">Checking availability…</p>}
+    {unavailable && <p className="mt-4 text-sm text-neutral-600">Coming soon — RevenueCat verification is in rollout.</p>}
     {status && <>
       <p className="mt-3 text-sm text-neutral-600">{status.connection
         ? `Connection: ${status.connection.status}` : status.connect_available ? "Available to connect" : "Coming soon — OAuth registration or secure server configuration is pending"}</p>
