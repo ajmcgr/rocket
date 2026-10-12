@@ -113,6 +113,8 @@ describe("Rocket newsletter draft", () => {
     expect(copy.html).toContain(
       '<strong style="color:#167ac6">Sponsored · </strong>',
     );
+    expect(copy.html).toMatch(/^<h2 /);
+    expect(copy.html).not.toContain("<div");
     expect(mocks.collections).toHaveBeenCalledOnce();
     expect(mocks.rpc).toHaveBeenCalledWith("active_rocket_sponsorships", {
       p_category: null,
