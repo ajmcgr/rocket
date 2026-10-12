@@ -1,9 +1,9 @@
 type Provider = "google-analytics" | "stripe" | "posthog" | "revenuecat" | "polar" | "dodopayments";
 
 const providerIcons: Partial<Record<Provider, string>> = {
-  posthog: "/integrations/posthog.svg",
+  posthog: "/integrations/posthog.png",
   revenuecat: "/integrations/revenuecat.svg",
-  polar: "/integrations/polar.png",
+  polar: "/integrations/polar-dark.png",
   dodopayments: "/integrations/dodopayments.svg",
 };
 
