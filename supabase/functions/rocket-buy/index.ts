@@ -218,6 +218,7 @@ Deno.serve(async (req) => {
       }, { stripeAccount: account.stripe_account_id, idempotencyKey });
       if (!session.url) return json({ error: "checkout_unavailable" }, 503);
       const { error } = await admin.from("connect_checkout_attempts").upsert({ user_id: user.id, client_id: client.client_id, product_id: product.id, stripe_account_id: account.stripe_account_id,
+        origin: oauthToken ? "EXTERNAL_BUTTON" : "UNKNOWN",
         idempotency_key: idempotencyKey, stripe_checkout_session_id: session.id, expires_at: new Date(now + 30 * 60_000).toISOString() }, { onConflict: "idempotency_key" });
       if (error) throw error;
       return json({ checkout_url: session.url, reused: false });

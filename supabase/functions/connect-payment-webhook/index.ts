@@ -12,6 +12,30 @@ const testStripe = testKey?.startsWith("sk_test_") ? new Stripe(testKey, { apiVe
 const liveStripe = liveKey?.startsWith("sk_live_") ? new Stripe(liveKey, { apiVersion: "2024-06-20" }) : null;
 const reply = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
 
+// Investor recording is a sidecar. A reporting outage must never withhold an
+// already verified purchase or change the existing entitlement outcome.
+async function recordInvestorPayment(admin: ReturnType<typeof getAdmin>, args: Record<string, unknown>) {
+  try {
+    const { error } = await admin.rpc("rocket_record_marketplace_payment", args);
+    if (error) throw error;
+  } catch (error) { console.error("investor-payment-record-failed", error); }
+}
+async function recordInvestorRefunds(admin: ReturnType<typeof getAdmin>, stripe: Stripe,
+  accountId: string, paymentKey: string | null, chargeId: string | null) {
+  if (!paymentKey || !chargeId) return;
+  try {
+    for await (const refund of stripe.refunds.list({ charge: chargeId, limit: 100 }, { stripeAccount: accountId })) {
+      if (refund.status !== "succeeded") continue;
+      const { error } = await admin.rpc("rocket_record_marketplace_adjustment_by_key", {
+        p_stripe_account_id: accountId, p_payment_key: paymentKey, p_adjustment_id: refund.id,
+        p_kind: "REFUND", p_amount_cents: refund.amount, p_currency: refund.currency,
+        p_occurred_at: new Date(refund.created * 1000).toISOString(),
+      });
+      if (error) throw error;
+    }
+  } catch (error) { console.error("investor-refund-record-failed", error); }
+}
+
 function subscriptionIdFrom(object: any) {
   if (object?.object === "subscription") return typeof object.id === "string" ? object.id : null;
   if (typeof object?.subscription === "string") return object.subscription;
@@ -55,6 +79,25 @@ Deno.serve(async (req) => {
   if (received && !isDuplicate) return reply({ error: "event_record_failed" }, 500);
   try {
     const object: any = event.data.object;
+    if (["charge.dispute.created", "charge.dispute.closed"].includes(event.type) &&
+      (event.type === "charge.dispute.created" || object.status === "won")) {
+      try {
+        const chargeId = typeof object.charge === "string" ? object.charge : object.charge?.id;
+        if (!chargeId) throw new Error("Dispute charge missing");
+        const disputedCharge = await stripe.charges.retrieve(chargeId, {}, { stripeAccount: accountId });
+        const paymentKey = typeof disputedCharge.invoice === "string" ? disputedCharge.invoice :
+          typeof disputedCharge.payment_intent === "string" ? disputedCharge.payment_intent : null;
+        if (!paymentKey) throw new Error("Dispute payment mapping missing");
+        const { error } = await admin.rpc("rocket_record_marketplace_adjustment_by_key", {
+          p_stripe_account_id: accountId, p_payment_key: paymentKey,
+          p_adjustment_id: event.type === "charge.dispute.closed" ? `${object.id}:won` : object.id,
+          p_kind: event.type === "charge.dispute.closed" ? "REVERSAL" : "DISPUTE",
+          p_amount_cents: object.amount, p_currency: object.currency,
+          p_occurred_at: new Date(event.created * 1000).toISOString(),
+        });
+        if (error) throw error;
+      } catch (error) { console.error("investor-dispute-record-failed", error); }
+    }
     let transaction: any = null;
     // Stripe can deliver invoice.paid before checkout.session.completed. Keep
     // fulfillment webhook-authoritative by reconciling the canonical invoice
@@ -100,6 +143,16 @@ Deno.serve(async (req) => {
       if (lookupError || !transaction || transaction.user_id !== attempt.user_id || transaction.product_id !== product.id ||
           transaction.stripe_payment_intent_id !== intent.id) throw lookupError || new Error("Purchase mapping changed");
       const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
+      await recordInvestorPayment(admin, {
+        p_transaction_id: transaction.id, p_payment_key: intent.id,
+        p_invoice_id: null, p_payment_intent_id: intent.id,
+        p_amount_cents: intent.amount_received, p_fee_cents: registeredApplicationFee(intent.amount_received, product.platform_fee_bps),
+        p_currency: intent.currency, p_paid_at: new Date((charge?.created || event.created) * 1000).toISOString(),
+        p_source_event_id: event.id,
+      });
+      if (charge?.refunded || charge?.amount_refunded > 0) {
+        await recordInvestorRefunds(admin, stripe, accountId, intent.id, charge.id);
+      }
       const state = charge?.disputed ? "disputed" : charge?.refunded ? "refunded" : "granted";
       const { error: settlementError } = await admin.rpc("connect_settle_one_time", { p_transaction_id: transaction.id, p_environment: environment, p_status: state });
       if (settlementError) throw settlementError;
@@ -198,6 +251,9 @@ Deno.serve(async (req) => {
       .eq("id", transaction.product_id).eq("client_id", transaction.client_id).maybeSingle();
     if (kindError || !purchasedKind) throw kindError || new Error("Missing purchased product");
     if (billingType(purchasedKind) === "one_time") {
+      if (event.type === "charge.refunded") {
+        await recordInvestorRefunds(admin, stripe, accountId, transaction.stripe_payment_intent_id, object.id);
+      }
       const state = event.type === "charge.dispute.created" ? "disputed" :
         event.type === "charge.refunded" && object.refunded === true ? "refunded" : null;
       if (state) {
@@ -231,6 +287,15 @@ Deno.serve(async (req) => {
           invoiceMetadata.rocket_client_id !== transaction.client_id ||
           invoiceMetadata.rocket_product_id !== transaction.product_id) throw new Error("Invoice did not match the recorded Rocket purchase");
       settledFeeCents = registeredApplicationFee(invoiceForSettlement.amount_paid, purchasedProduct.platform_fee_bps);
+      await recordInvestorPayment(admin, {
+        p_transaction_id: transaction.id, p_payment_key: invoiceForSettlement.id,
+        p_invoice_id: invoiceForSettlement.id,
+        p_payment_intent_id: typeof invoiceForSettlement.payment_intent === "string" ? invoiceForSettlement.payment_intent : null,
+        p_amount_cents: invoiceForSettlement.amount_paid, p_fee_cents: settledFeeCents,
+        p_currency: invoiceForSettlement.currency,
+        p_paid_at: new Date((invoiceForSettlement.status_transitions?.paid_at || event.created) * 1000).toISOString(),
+        p_source_event_id: event.id,
+      });
     }
     if (invoiceForSettlement) { status = "active"; validUntil = new Date(settledPeriodEnd! * 1000).toISOString(); }
     if (event.type === "invoice.payment_failed") status = "past_due";
@@ -250,6 +315,9 @@ Deno.serve(async (req) => {
       isCurrentInvoiceFullyRefunded(!!object.refunded, resolvedInvoiceId, transaction.stripe_invoice_id) ||
       (!!object.refunded && !resolvedInvoiceId && typeof object.payment_intent === "string" && object.payment_intent === transaction.stripe_payment_intent_id)
     )) status = "refunded";
+    if (event.type === "charge.refunded") {
+      await recordInvestorRefunds(admin, stripe, accountId, resolvedInvoiceId || transaction.stripe_invoice_id, object.id);
+    }
     if (event.type === "charge.dispute.created") status = "disputed";
     // A won dispute does not by itself prove the subscription is still paid.
     // The next verified invoice settlement can restore access.

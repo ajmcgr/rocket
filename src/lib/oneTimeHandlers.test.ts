@@ -147,8 +147,8 @@ function webhookHarness(validSignature=true, mode=true) {
 }
 const webhookRequest=()=>new Request("https://mock.invalid/",{method:"POST",headers:{"stripe-signature":"mock"},body:"mock"});
 describe("actual one-time webhook handler (isolated)",()=>{
-  it("settles duplicate deliveries against the same canonical purchase",async()=>{const h=webhookHarness();for(let i=0;i<3;i++)expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.grants.size).toBe(1);expect(h.rpc.mock.calls[0][1].p_status).toBe("granted");});
+  it("settles duplicate deliveries against the same canonical purchase",async()=>{const h=webhookHarness();for(let i=0;i<3;i++)expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.grants.size).toBe(1);expect(h.rpc.mock.calls.find(([name])=>name==="connect_settle_one_time")?.[1].p_status).toBe("granted");});
   it.each([[false,true],[true,false]])("rejects signature or environment mismatch",async(sig,mode)=>{const h=webhookHarness(sig,mode);expect((await h.handler(webhookRequest())).status).toBe(400);expect(h.rpc).not.toHaveBeenCalled();});
   it("never fulfils unpaid or amount-mismatched checkouts",async()=>{const h=webhookHarness();h.checkout.payment_status="unpaid";expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc).not.toHaveBeenCalled();const g=webhookHarness();g.intent.amount_received=1;expect((await g.handler(webhookRequest())).status).toBe(500);expect(g.rpc).not.toHaveBeenCalled();});
-  it("keeps a canonically refunded charge revoked despite checkout delivery",async()=>{const h=webhookHarness();h.intent.latest_charge.refunded=true;expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc.mock.calls[0][1].p_status).toBe("refunded");});
+  it("keeps a canonically refunded charge revoked despite checkout delivery",async()=>{const h=webhookHarness();h.intent.latest_charge.refunded=true;expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc.mock.calls.find(([name])=>name==="connect_settle_one_time")?.[1].p_status).toBe("refunded");});
 });

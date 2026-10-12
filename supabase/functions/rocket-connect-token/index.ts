@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
     if (code.nonce) claims.nonce = code.nonce;
     if (code.scopes.includes("email")) { claims.email = userData.user.email || null; claims.email_verified = Boolean(userData.user.email_confirmed_at); }
     const idToken = await signIdToken(claims);
-    await admin.from("rocket_oauth_events").insert({ user_id: code.user_id, client_id: code.client_id, event_type: "token_issued", detail: {} });
+    // The database trigger writes the success event atomically with the token.
+    // A failed event write therefore prevents issuance instead of silently
+    // undercounting Connected Apps and Cross-App Users.
     return json({ access_token: token, id_token: idToken, token_type: "Bearer", expires_in: 3600, scope: code.scopes.join(" ") });
   } catch (error) { console.error("rocket-connect-token", error); return json({ error: "server_error" }, 500); }
 });
