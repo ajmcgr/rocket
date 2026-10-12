@@ -7,7 +7,7 @@ import {
 } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import AppMarketplaceContext from "@/components/AppMarketplaceContext";
-import { recordOutbound } from "@/lib/marketplace";
+import { recordOutbound, sourceAttribution } from "@/lib/marketplace";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -43,6 +43,8 @@ import {
 } from "@/lib/appCardMetadata";
 import TrendArrow from "@/components/TrendArrow";
 import type { SubmissionDetails } from "../../supabase/functions/_shared/appSubmission";
+import RocketShare from "@/components/RocketShare";
+import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -108,29 +110,18 @@ export default function PublicAppProfile({
   } | null>(null);
   const [saved, setSaved] = useState(false);
   const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
-  const [shareStatus, setShareStatus] = useState("");
+  const [justPublished, setJustPublished] = useState(false);
   const [loading, setLoading] = useState(initialApp === undefined);
   const [error, setError] = useState(initialApp === null);
-  const shareApp = async () => {
-    if (!app) return;
-    const url = `https://tryrocket.ai/apps/${app.slug || app.id}?utm_source=rocket_share`;
-    setShareStatus("");
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: app.name, url });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError")
-          return;
-      }
-    }
+  useEffect(() => {
+    if (!app?.id) return;
     try {
-      await navigator.clipboard.writeText(url);
-      setShareStatus("Link copied");
-    } catch {
-      setShareStatus("Could not copy the link");
-    }
-  };
+      if (sessionStorage.getItem("rocket:just-published") === app.id) {
+        sessionStorage.removeItem("rocket:just-published");
+        setJustPublished(true);
+      }
+    } catch { /* Sharing remains available in private browsing modes. */ }
+  }, [app?.id]);
   useDocumentMeta({
     title: app ? `${app.name} | Rocket` : "App profile | Rocket",
     description:
@@ -141,10 +132,7 @@ export default function PublicAppProfile({
     canonical: app
       ? `https://tryrocket.ai/apps/${app.slug || app.id}`
       : undefined,
-    image:
-      app?.logo_url && /^https:\/\//i.test(app.logo_url)
-        ? app.logo_url
-        : undefined,
+    image: app ? shareCardUrl("app", app.slug || app.id, "landscape", shareCardVersion(app.name, app.tagline, app.description, app.logo_url, media.map((item) => item.source_url))) : undefined,
   });
 
   useEffect(() => {
@@ -258,7 +246,7 @@ export default function PublicAppProfile({
         ) {
           void supabase.functions
             .invoke("rocket-app-view", {
-              body: { app_id: appResult.data.id, sponsorship_id: sponsorId },
+              body: { app_id: appResult.data.id, sponsorship_id: sponsorId, source: sourceAttribution(window.location.search) },
             })
             .catch(() => undefined);
         }
@@ -389,6 +377,7 @@ export default function PublicAppProfile({
         )}
         {app && !loading && !error && (
           <>
+            {justPublished && <div role="status" className="mt-5 rounded-2xl border border-sky-200 bg-white p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Your app is on Rocket</p><h2 className="mt-2 text-2xl font-bold">Share what you built.</h2><p className="mt-1 text-sm text-neutral-600">People can now discover and save your app. Sharing is always your choice.</p><div className="mt-4 flex flex-wrap gap-3"><RocketShare kind="app" identifier={app.slug || app.id} title={app.name} label="Share your app" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white" /><button type="button" className="min-h-11 rounded-xl border border-neutral-200 px-5 text-sm font-medium" onClick={() => setJustPublished(false)}>View app</button></div></div>}
             <div className="mt-5 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-7">
               <div className="flex items-start gap-4 sm:gap-6">
                 <AppLogo
@@ -443,18 +432,7 @@ export default function PublicAppProfile({
                   appName={app.name}
                   websiteUrl={app.website_url}
                 />
-                <button
-                  type="button"
-                  onClick={shareApp}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-sky-300 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
-                >
-                  Share
-                </button>
-                {shareStatus && (
-                  <span role="status" className="text-sm text-neutral-600">
-                    {shareStatus}
-                  </span>
-                )}
+                <RocketShare kind="app" identifier={app.slug || app.id} title={app.name} version={shareCardVersion(app.name, app.tagline, app.description, app.logo_url, media.map((item) => item.source_url))} />
                 <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
                   {app.canonical_host}
                 </span>

@@ -265,6 +265,7 @@ export default function LaunchPreview() {
         );
       sessionStorage.removeItem(STORAGE_KEY);
       sessionStorage.removeItem(DRAFT_KEY);
+      sessionStorage.setItem("rocket:just-published", result.app_id);
       track("launch_new_app_created", { app_id: result.app_id });
       navigate(`/apps/${encodeURIComponent(result.slug || result.app_id)}`);
     } catch (cause) {

@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { profileFromData, publicProfileColumns } from "@/lib/memberProfile";
 import PublicMemberProfile from "@/pages/PublicMemberProfile";
+import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 
 export const Route = createFileRoute("/@{$username}")({
   beforeLoad: ({ params, location }) => {
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/@{$username}")({
       { property: "og:title", content: `@${loaderData.username} | Rocket` },
       { property: "og:description", content: loaderData.bio || `Explore apps from @${loaderData.username} on Rocket.` },
       { property: "og:url", content: `https://tryrocket.ai/@${loaderData.username}` },
+      { property: "og:image", content: shareCardUrl("profile", loaderData.username, "landscape", shareCardVersion(loaderData.username, loaderData.bio, loaderData.avatar_url)) },
+      { name: "twitter:card", content: "summary_large_image" },
     ] : [{ title: "Profile not found | Rocket" }, { name: "robots", content: "noindex" }],
     links: loaderData ? [{ rel: "canonical", href: `https://tryrocket.ai/@${loaderData.username}` }] : [],
   }),

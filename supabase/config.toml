@@ -13,7 +13,10 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.send-email]
-verify_jwt = true
+verify_jwt = false # User templates call Auth.getUser; queue dispatches use one-time DB capabilities.
+
+[functions.rocket-share-card]
+verify_jwt = false # Public image reads are restricted to existing public projections.
 
 [functions.rocket-founder-outreach-test]
 verify_jwt = true

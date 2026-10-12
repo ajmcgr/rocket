@@ -6,3 +6,6 @@ export function appBadgeEmbed(appId: string, theme: BadgeTheme, appSlug?: string
   <img src="https://tryrocket.ai${badgePath(theme)}" alt="Discover it on Rocket" width="160" height="50" style="display:block;max-width:100%;height:auto;" />
 </a>`;
 }
+export function appBadgeMarkdown(appId: string, theme: BadgeTheme, appSlug?: string | null) {
+  return `[![Discover it on Rocket](https://tryrocket.ai${badgePath(theme)})](${appBadgeUrl(appId, appSlug)})`;
+}

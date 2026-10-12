@@ -3,6 +3,7 @@ import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
+import RocketShare from "@/components/RocketShare";
 
 const storageKey = "rocket:founder-claim-invitation";
 type Invitation = { token: string; appId: string };
@@ -14,6 +15,7 @@ export default function ClaimInvitation() {
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [message, setMessage] = useState("");
   const [done, setDone] = useState(false);
+  const [claimedApp, setClaimedApp] = useState<{ name: string; slug: string } | null>(null);
   const redeeming = useRef(false);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function ClaimInvitation() {
       sessionStorage.removeItem(storageKey);
       setDone(true);
       setMessage("Your app is now claimed on Rocket. Domain, traffic, revenue, and usage verification are separate checks.");
+      void supabase.from("public_apps").select("name,slug").eq("id", invitation.appId).maybeSingle().then(({ data: app }) => { if (app) setClaimedApp(app); });
     }).catch(() => {
       setMessage("We couldn't reach Rocket. Please try this link again shortly.");
       redeeming.current = false;
@@ -69,6 +72,6 @@ export default function ClaimInvitation() {
       to="/login?next=%2Fclaim-invitation"
       className="mt-6 inline-flex rounded-xl bg-[#167ac6] px-5 py-3 font-semibold text-white"
     >Sign in to claim</Link>}
-    {done && invitation && <Link to={`/apps/${invitation.appId}`} className="mt-6 inline-flex rounded-xl border border-[#167ac6] px-5 py-3 font-semibold text-[#167ac6] dark:text-sky-300">View your app</Link>}
+    {done && invitation && <div className="mt-6 flex flex-wrap gap-3"><RocketShare kind="app" identifier={claimedApp?.slug || invitation.appId} title={claimedApp?.name || "your app"} label="Share app" /><Link to={`/apps/${invitation.appId}`} className="inline-flex min-h-11 items-center rounded-xl border border-[#167ac6] px-5 py-3 font-semibold text-[#167ac6] dark:text-sky-300">View your app</Link></div>}
   </main></div>;
 }

@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { loadMyApps, myAppStatus } from "@/lib/myApps";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { BarChart3 } from "lucide-react";
+import RocketShare from "@/components/RocketShare";
 
 export default function MyAppSettings() {
   const { id } = useParams<{ id: string }>();
@@ -126,14 +127,15 @@ export default function MyAppSettings() {
           {item.owned && <nav aria-label="App developer toolkit" className="flex flex-wrap gap-2 pb-2 text-sm font-medium">
             {[["Overview", "overview"], ["Analytics", "analytics"], ["Improve", "improve"], ["Beta", "beta"], ["Verification", "verification"], ["Monetize", "monetize"]].map(([label, anchor]) => <a key={anchor} href={`#${anchor}`} className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-neutral-700 hover:border-sky-300 hover:text-sky-800">{label}</a>)}
           </nav>}
-          {item.app && (
+          {item.app && <div className="flex flex-wrap gap-3">
             <Link
               to={`/apps/${item.app.slug || item.app_id}`}
               className="inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white transition hover:bg-[#1268aa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6]"
             >
               View public profile
             </Link>
-          )}
+            <RocketShare kind="app" identifier={item.app.slug || item.app_id} title={item.app.name || "App"} />
+          </div>}
           <div
             key={item.id}
             id="overview"

@@ -3,9 +3,9 @@ import { lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import { loadAppMedia } from "@/lib/appMedia";
+import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 
 const siteUrl = "https://tryrocket.ai";
-const fallbackImage = `${siteUrl}/og-rocket-open-platform.png`;
 const Profile = lazy(() => import("@/pages/PublicAppProfile"));
 
 function summarize(description: string) {
@@ -59,10 +59,7 @@ export const Route = createFileRoute("/apps/$id")({
         ? summarize(app.description)
         : `Explore ${app.name} on Rocket.`);
     const canonical = `${siteUrl}/apps/${app.slug || app.id}`;
-    const image =
-      app.logo_url && /^https:\/\//i.test(app.logo_url)
-        ? app.logo_url
-        : fallbackImage;
+    const image = shareCardUrl("app", app.slug || app.id, "landscape", shareCardVersion(app.name, app.tagline, app.description, app.logo_url, loaderData?.media?.map((item) => item.source_url)));
     return {
       meta: [
         { title },
@@ -71,6 +68,9 @@ export const Route = createFileRoute("/apps/$id")({
         { property: "og:description", content: description },
         { property: "og:url", content: canonical },
         { property: "og:image", content: image },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
         { name: "twitter:image", content: image },

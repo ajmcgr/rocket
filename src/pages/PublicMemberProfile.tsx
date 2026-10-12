@@ -4,6 +4,7 @@ import PublicMemberCollections from '@/components/PublicMemberCollections';
 import MarketplaceFollow from "@/components/MarketplaceFollow";
 import ProfileAvatarImage from "@/components/ProfileAvatarImage";
 import { type MemberProfile, safeProfileUrl } from "@/lib/memberProfile";
+import RocketShare from "@/components/RocketShare";
 
 export default function PublicMemberProfile({ profile }: { profile: MemberProfile | null }) {
   const socials = profile ? [
@@ -25,6 +26,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
             <ProfileAvatarImage src={profile.avatar_url} alt={`@${profile.username}'s profile photo`} className="h-full w-full object-cover" fallback={profile.username[0].toUpperCase()} />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">@{profile.username}</h1>
+          <div className="mt-4"><RocketShare kind="profile" identifier={profile.username} title={`@${profile.username}`} label="Share profile" /></div>
           {profile.bio && <p className="mt-5 whitespace-pre-wrap break-words text-base leading-7">{profile.bio}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             {safeProfileUrl(profile.website) && <a href={safeProfileUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">Website ↗</a>}

@@ -1,6 +1,7 @@
 // redeploy: 2026-06-12-v11-inline
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { deliverClaimEmail } from "./claim-email.ts";
+import { deliverSharingEmail } from "./sharing-email.ts";
 
 // ---- Inlined branded email layout (self-contained, no shared imports) ----
 // Shared email layout — matches the "Launch" reference design.
@@ -97,6 +98,11 @@ Deno.serve(async (req) => {
     if (input.action === "claim_email") {
       const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const result = await deliverClaimEmail(admin, input, RESEND_API_KEY, FROM_EMAIL, renderEmail);
+      return new Response(JSON.stringify(result.body), { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (input.action === "sharing_email") {
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const result = await deliverSharingEmail(admin, input, RESEND_API_KEY, FROM_EMAIL, renderEmail);
       return new Response(JSON.stringify(result.body), { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });

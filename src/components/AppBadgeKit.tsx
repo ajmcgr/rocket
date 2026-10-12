@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { appBadgeEmbed, appBadgeUrl, badgePath, type BadgeTheme } from "@/lib/appBadge";
+import { appBadgeEmbed, appBadgeMarkdown, appBadgeUrl, badgePath, type BadgeTheme } from "@/lib/appBadge";
 
 export default function AppBadgeKit({ appId, appName, appSlug }: { appId: string; appName: string; appSlug?: string | null }) {
   const [theme, setTheme] = useState<BadgeTheme>("black");
   const [notice, setNotice] = useState("");
   const embed = appBadgeEmbed(appId, theme, appSlug);
+  const markdown = appBadgeMarkdown(appId, theme, appSlug);
   return <section aria-label={`${appName} Rocket badge`} className="mt-5 border-t border-neutral-100 pt-4">
     <div>
       <h3 className="text-lg font-semibold">Discover it on Rocket</h3>
@@ -31,6 +32,9 @@ export default function AppBadgeKit({ appId, appName, appSlug }: { appId: string
       </div>
       <label className="mt-4 block text-sm font-medium">Website embed code
         <textarea readOnly value={embed} aria-label={`${appName} Rocket badge embed code`} onFocus={(event) => event.currentTarget.select()} rows={4} className="mt-2 w-full rounded-lg border bg-neutral-50 p-3 font-mono text-xs" />
+      </label>
+      <label className="mt-4 block text-sm font-medium">Markdown
+        <textarea readOnly value={markdown} aria-label={`${appName} Rocket badge Markdown`} onFocus={(event) => event.currentTarget.select()} rows={2} className="mt-2 w-full rounded-lg border bg-neutral-50 p-3 font-mono text-xs" />
       </label>
       <p className="mt-3 text-xs text-neutral-500">Hosted artwork updates automatically. To resize an existing badge, replace its embed code or change the image width to 160px. Self-hosted SVGs need replacing. Keep the badge proportions, leave space around it, and display it at least 44px tall. Use the supplied artwork without animation or added claims. A listing badge does not imply Rocket endorsement or verification.</p>
       {notice && <p role="status" className="mt-3 text-sm">{notice}</p>}
