@@ -77,10 +77,12 @@ export default function HomeStory() {
           </p>
           <p>
             More people can build useful software than ever before. The hard
-            part is finding it. Promising apps are scattered across launch
-            sites, social posts, and personal websites. Rocket brings them
-            together so you can discover new arrivals, browse by category, and
-            save what you want to try.
+            part is finding it.
+          </p>
+          <p>
+            Promising apps are scattered across launch sites, social posts, and
+            personal websites. Rocket brings them together so you can discover
+            new arrivals, browse by category, and save what you want to try.
           </p>
           <p>
             For builders, an app profile is a clearer way to show what they have
