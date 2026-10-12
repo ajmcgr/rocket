@@ -19,7 +19,8 @@ describe("verified provider selection", () => {
     const confirm = vi.fn().mockReturnValue(true);
     vi.stubGlobal("confirm", confirm);
     render(<VerifiedProviderSelection appId="app-1" kind="analytics" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Use verified Google Analytics" }));
+    fireEvent.change(await screen.findByRole("combobox", { name: "Selected analytics provider" }),
+      { target: { value: "ga4" } });
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("rocket-app-provider-selection", {
       body: { action: "select", app_id: "app-1", kind: "analytics", provider: "ga4",
         expected_previous: "posthog", confirm_switch: true },
@@ -30,7 +31,8 @@ describe("verified provider selection", () => {
   it("leaves the source untouched when the owner cancels", async () => {
     vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
     render(<VerifiedProviderSelection appId="app-1" kind="analytics" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Use verified Google Analytics" }));
+    fireEvent.change(await screen.findByRole("combobox", { name: "Selected analytics provider" }),
+      { target: { value: "ga4" } });
     expect(invoke).toHaveBeenCalledTimes(1);
   });
 
@@ -40,7 +42,8 @@ describe("verified provider selection", () => {
       connected: { ga4: false, stripe: false },
     }, error: null });
     render(<VerifiedProviderSelection appId="app-1" kind="revenue" />);
-    await screen.findByText("None selected");
-    expect(screen.queryByRole("button", { name: /Use verified Stripe/ })).toBeNull();
+    const dropdown = await screen.findByRole("combobox", { name: "Selected revenue provider" });
+    expect((dropdown as HTMLSelectElement).value).toBe("");
+    expect((screen.getByRole("option", { name: /Stripe · connect and verify first/ }) as HTMLOptionElement).disabled).toBe(true);
   });
 });

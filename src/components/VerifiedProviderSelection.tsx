@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 
 type Kind = "analytics" | "revenue";
-type Provider = "ga4" | "stripe";
+type Provider = "ga4" | "posthog" | "stripe" | "revenuecat" | "polar" | "dodo";
 type Status = {
   analytics_provider: string | null;
   revenue_provider: string | null;
@@ -12,7 +12,15 @@ type Status = {
 
 const label: Record<Provider, string> = {
   ga4: "Google Analytics",
+  posthog: "PostHog",
   stripe: "Stripe",
+  revenuecat: "RevenueCat",
+  polar: "Polar",
+  dodo: "Dodo Payments",
+};
+const choices: Record<Kind, Provider[]> = {
+  analytics: ["ga4", "posthog"],
+  revenue: ["stripe", "revenuecat", "polar", "dodo"],
 };
 
 export function VerifiedProviderSelection({ appId, kind }: { appId: string; kind: Kind }) {
@@ -31,12 +39,11 @@ export function VerifiedProviderSelection({ appId, kind }: { appId: string; kind
     void request("status").then(setStatus).catch((cause) => setError((cause as Error).message));
   }, [request]);
   const selected = kind === "analytics" ? status?.analytics_provider : status?.revenue_provider;
-  const provider: Provider = kind === "analytics" ? "ga4" : "stripe";
   const choose = async (next: Provider | null) => {
     const previous = selected ?? null;
     if (next === previous) return;
     if (!window.confirm(next
-      ? `Use ${label[next]} as this app's active ${kind} source? The previous source remains connected, but its metrics will no longer appear publicly.`
+      ? `Use ${label[next]} as this app's only active ${kind} source? Other connected sources remain private.`
       : `Clear this app's active ${kind} source? Existing connections and private history remain.`)) return;
     setBusy(true); setError(""); setNotice("");
     try {
@@ -49,14 +56,20 @@ export function VerifiedProviderSelection({ appId, kind }: { appId: string; kind
   };
   return <section className="mt-6 rounded-2xl border bg-white p-6 text-sm">
     <h2 className="font-semibold">Active {kind} source</h2>
-    <p className="mt-2 text-neutral-600">{status ? selected || "None selected" : "Checking provider choice…"}</p>
+    <p className="mt-2 text-neutral-600">Choose one verified source. Connecting another provider does not add another public metric.</p>
     {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-3 text-green-800">{notice}</p>}
-    {status?.connected?.[provider] && selected !== provider && <button disabled={busy}
-      onClick={() => void choose(provider)} className="mt-4 rounded-xl border px-4 py-2 disabled:opacity-50">
-      Use verified {label[provider]}
-    </button>}
-    {selected && <button disabled={busy} onClick={() => void choose(null)}
-      className="mt-4 rounded-xl border px-4 py-2 disabled:opacity-50">Clear selection</button>}
+    <label className="mt-4 block">Selected {kind} provider
+      <select aria-label={`Selected ${kind} provider`} value={selected || ""}
+        disabled={!status || busy} onFocus={() => { void request("status").then(setStatus).catch(() => {}); }}
+        onChange={(event) => void choose(event.target.value ? event.target.value as Provider : null)}
+        className="mt-2 block w-full rounded-lg border p-2 disabled:opacity-50">
+        <option value="">None selected</option>
+        {choices[kind].map((provider) => <option key={provider} value={provider}
+          disabled={provider !== selected && !status?.connected?.[provider]}>
+          {label[provider]}{provider !== selected && !status?.connected?.[provider] ? " · connect and verify first" : ""}
+        </option>)}
+      </select>
+    </label>
   </section>;
 }

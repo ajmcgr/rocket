@@ -51,9 +51,7 @@ Deno.serve(async (request) => {
         return json({ error: "Provider choice changed; reload and try again" }, 409);
       if (previous && previous !== body.provider && body.confirm_switch !== true)
         return json({ error: "Confirm the provider switch" }, 400);
-      // Alternative providers select themselves only after a validated first
-      // sync commits the mapping and choice in one database transaction.
-      if (["posthog", "revenuecat", "polar", "dodo"].includes(String(body.provider)))
+      if (["polar", "dodo"].includes(String(body.provider)))
         return json({ error: "Connect and verify this provider before selecting it" }, 400);
       if (body.provider === "ga4") {
         const connection = await service.from("app_data_connections")
@@ -89,12 +87,22 @@ Deno.serve(async (request) => {
         if (point.error || !point.data?.length)
           return json({ error: "Stripe has no verified live revenue snapshot" }, 400);
       }
-      const result = await service.rpc("select_verified_app_provider", {
-        p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
-        p_kind: kind, p_provider: body.provider,
-        p_expected_previous: body.expected_previous,
-        p_confirm_switch: body.confirm_switch === true,
-      });
+      const result = body.provider === "posthog"
+        ? await service.rpc("activate_verified_posthog", {
+          p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
+          p_expected_previous: previous,
+        })
+        : body.provider === "revenuecat"
+          ? await service.rpc("activate_verified_revenuecat", {
+            p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
+            p_expected_previous: previous,
+          })
+          : await service.rpc("select_verified_app_provider", {
+            p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
+            p_kind: kind, p_provider: body.provider,
+            p_expected_previous: body.expected_previous,
+            p_confirm_switch: body.confirm_switch === true,
+          });
       if (result.error) throw result.error;
     } else if (body.action !== "status") {
       return json({ error: "Invalid action" }, 400);
@@ -110,7 +118,11 @@ Deno.serve(async (request) => {
       service.from("app_verified_revenue_sources").select("provider,connection_id")
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id).maybeSingle(),
     ]);
-    if (selection.error || traffic.error || revenue.error || alternative.error)
+    // Alternative revenue schema may not yet be deployed. GA4/PostHog choice
+    // must remain usable independently of revenue-provider rollout.
+    const alternativeMissing = alternative.error?.code === "PGRST205"
+      || alternative.error?.code === "42P01";
+    if (selection.error || traffic.error || revenue.error || (alternative.error && !alternativeMissing))
       throw new Error("Connection status unavailable");
     let stripe = false;
     if (revenue.data?.connection_id) {
