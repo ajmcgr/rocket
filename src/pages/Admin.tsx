@@ -7,6 +7,7 @@ import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketpla
 import AdminSponsorships from "@/components/AdminSponsorships";
 import AdminInvestorMetrics from "@/components/AdminInvestorMetrics";
 import AdminNewsletter from "@/components/AdminNewsletter";
+import AdminRocket100 from "@/components/AdminRocket100";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -190,6 +191,7 @@ export default function Admin() {
       <Panel title="Recent members">{rows(data.members).length ? <div className="rocket-admin-list">{rows(data.members).map((row) => <article key={String(row.id)}><strong>{String(row.email || "No email")}</strong><p>Joined {when(row.created_at)} · {row.email_confirmed_at ? "Confirmed" : "Unconfirmed"}</p></article>)}</div> : <Empty />}</Panel>
     </>}
     {data && section === "marketing" && <>
+      <AdminRocket100 />
       <AdminSponsorships />
       <Panel title="Task collections">{picks.map(row => <div key={String(row.id)} className="mb-4"><strong>{String(row.name)}</strong><PickCollection appId={String(row.app_id)} /></div>)}</Panel>
       <p className="rocket-admin-note">Signals nominate candidates; only a deliberate Feature action creates a Rocket Pick. Private metrics are not used here.</p>

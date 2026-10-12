@@ -52,7 +52,13 @@ export type AnalyticsEvent =
   | "share_link_copied"
   | "share_caption_copied"
   | "share_card_downloaded"
-  | "share_native_completed";
+  | "share_native_completed"
+  | "rocket100_page_viewed"
+  | "rocket100_cta_clicked"
+  | "rocket100_qualified"
+  | "rocket100_awarded"
+  | "rocket100_shared"
+  | "rocket100_profile_clicked";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;

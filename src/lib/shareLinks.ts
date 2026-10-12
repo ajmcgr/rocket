@@ -1,4 +1,4 @@
-export type ShareKind = "app" | "profile" | "collection";
+export type ShareKind = "app" | "profile" | "collection" | "rocket100";
 export type ShareVariant = "landscape" | "square" | "portrait";
 
 const base = "https://tryrocket.ai";
@@ -6,7 +6,7 @@ const cardEndpoint = "https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rock
 
 export function canonicalShareUrl(kind: ShareKind, identifier: string) {
   if (kind === "app") return `${base}/apps/${encodeURIComponent(identifier)}`;
-  if (kind === "profile") return `${base}/@${encodeURIComponent(identifier)}`;
+  if (kind === "profile" || kind === "rocket100") return `${base}/@${encodeURIComponent(identifier)}`;
   return `${base}/collections/${encodeURIComponent(identifier)}`;
 }
 
@@ -36,7 +36,7 @@ export function shareCardVersion(...values: unknown[]) {
 }
 
 export function shareTargets(title: string, url: string, kind: ShareKind = "app") {
-  const caption = kind === "app" ? `Just launched ${title} on Rocket.\n\n${url}` : kind === "profile" ? `Find ${title} on Rocket.\n\n${url}` : `Explore ${title} on Rocket.\n\n${url}`;
+  const caption = kind === "app" ? `Just launched ${title} on Rocket.\n\n${url}` : kind === "rocket100" ? `I'm ${title} on Rocket.\n\n${url}` : kind === "profile" ? `Find ${title} on Rocket.\n\n${url}` : `Explore ${title} on Rocket.\n\n${url}`;
   return {
     caption,
     x: `https://twitter.com/intent/tweet?${new URLSearchParams({ text: caption })}`,
