@@ -1,6 +1,5 @@
 import { Link } from "@/lib/router-compat";
 import IntegrationLogo from "@/components/IntegrationLogo";
-import { BarChart3, CircleDollarSign } from "lucide-react";
 
 export type MyApp = { id: string; app_id: string; status: string; verification_state: string;
   review_reason?: string | null; completed_at?: string | null; rejected_at?: string | null;
@@ -23,7 +22,7 @@ export default function AppJourney({ item }: { item: MyApp }) {
             <span aria-hidden="true" className="text-xl text-sky-800">→</span>
           </Link>
           <Link to={`/my-apps/${item.app_id}/analytics`} className="group flex min-h-24 items-center gap-4 rounded-xl border border-neutral-200 p-5 transition hover:border-sky-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
-            <BarChart3 size={20} aria-hidden="true" className="shrink-0 text-sky-700" />
+            <IntegrationLogo provider="posthog" />
             <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect PostHog</span><span className="mt-1 block text-sm text-neutral-600">Verify your app’s traffic.</span></span>
             <span aria-hidden="true" className="text-xl text-sky-800">→</span>
           </Link>
@@ -32,9 +31,13 @@ export default function AppJourney({ item }: { item: MyApp }) {
             <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect Stripe</span><span className="mt-1 block text-sm text-neutral-600">Verify revenue. Payment setup is separate.</span></span>
             <span aria-hidden="true" className="text-xl text-sky-800">→</span>
           </Link>
-          {(["RevenueCat", "Polar", "Dodo Payments"] as const).map((provider) => <Link key={provider} to={`/my-apps/${item.app_id}/revenue`} className="group flex min-h-24 items-center gap-4 rounded-xl border border-neutral-200 p-5 transition hover:border-sky-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
-            <CircleDollarSign size={20} aria-hidden="true" className="shrink-0 text-sky-700" />
-            <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect {provider}</span><span className="mt-1 block text-sm text-neutral-600">Verify revenue from your chosen provider.</span></span>
+          {([
+            { name: "RevenueCat", icon: "revenuecat" },
+            { name: "Polar", icon: "polar" },
+            { name: "Dodo Payments", icon: "dodopayments" },
+          ] as const).map((provider) => <Link key={provider.name} to={`/my-apps/${item.app_id}/revenue`} className="group flex min-h-24 items-center gap-4 rounded-xl border border-neutral-200 p-5 transition hover:border-sky-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+            <IntegrationLogo provider={provider.icon} />
+            <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-sky-800">Connect {provider.name}</span><span className="mt-1 block text-sm text-neutral-600">Verify revenue from your chosen provider.</span></span>
             <span aria-hidden="true" className="text-xl text-sky-800">→</span>
           </Link>)}
         </div>
