@@ -37,6 +37,9 @@ export function VerifiedProviderSelection({ appId, kind }: { appId: string; kind
   }, [appId]);
   useEffect(() => {
     void request("status").then(setStatus).catch((cause) => setError((cause as Error).message));
+    const refresh = () => { void request("status").then(setStatus).catch((cause) => setError((cause as Error).message)); };
+    window.addEventListener("rocket-provider-selection-updated", refresh);
+    return () => window.removeEventListener("rocket-provider-selection-updated", refresh);
   }, [request]);
   const selected = kind === "analytics" ? status?.analytics_provider : status?.revenue_provider;
   const choose = async (next: Provider | null) => {

@@ -51,8 +51,6 @@ Deno.serve(async (request) => {
         return json({ error: "Provider choice changed; reload and try again" }, 409);
       if (previous && previous !== body.provider && body.confirm_switch !== true)
         return json({ error: "Confirm the provider switch" }, 400);
-      if (["polar", "dodo"].includes(String(body.provider)))
-        return json({ error: "Connect and verify this provider before selecting it" }, 400);
       if (body.provider === "ga4") {
         const connection = await service.from("app_data_connections")
           .select("id,status,last_successful_sync").eq("app_id", body.app_id)
@@ -97,6 +95,11 @@ Deno.serve(async (request) => {
             p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
             p_expected_previous: previous,
           })
+          : body.provider === "polar" || body.provider === "dodo"
+            ? await service.rpc("activate_verified_alternative_revenue", {
+              p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
+              p_provider: body.provider, p_expected_previous: previous,
+            })
           : await service.rpc("select_verified_app_provider", {
             p_app_id: body.app_id, p_owner_user_id: user.data.user.id,
             p_kind: kind, p_provider: body.provider,
@@ -115,7 +118,7 @@ Deno.serve(async (request) => {
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id),
       service.from("app_revenue_bindings").select("connection_id")
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id).maybeSingle(),
-      service.from("app_verified_revenue_sources").select("provider,connection_id")
+      service.from("app_verified_revenue_sources").select("provider,connection_id,mapping_version,last_successful_sync")
         .eq("app_id", body.app_id).eq("owner_user_id", user.data.user.id).maybeSingle(),
     ]);
     // Alternative revenue schema may not yet be deployed. GA4/PostHog choice
@@ -131,13 +134,26 @@ Deno.serve(async (request) => {
       if (connected.error) throw connected.error;
       stripe = connected.data?.status === "active";
     }
-    let revenuecat = false;
-    if (alternative.data?.provider === "revenuecat") {
-      const linked = await service.from("app_verified_revenue_connections").select("status")
+    let alternativeProvider: string | null = null;
+    if (alternative.data?.provider) {
+      const linked = await service.from("app_verified_revenue_connections").select("status,last_successful_sync")
         .eq("id", alternative.data.connection_id)
         .eq("owner_user_id", user.data.user.id).maybeSingle();
       if (linked.error) throw linked.error;
-      revenuecat = linked.data?.status === "active";
+      const fresh = (value: string | null | undefined) => Boolean(value
+        && Date.now() - Date.parse(value) < 72 * 60 * 60 * 1000);
+      if (linked.data?.status === "active" && fresh(linked.data.last_successful_sync)
+        && fresh(alternative.data.last_successful_sync)) {
+        const point = await service.from("app_verified_revenue_points").select("id")
+          .eq("app_id", body.app_id).eq("connection_id", alternative.data.connection_id)
+          .eq("mapping_version", alternative.data.mapping_version)
+          .eq("provider", alternative.data.provider)
+          .eq("source_environment", "production")
+          .gt("verified_at", new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+          .limit(1);
+        if (point.error) throw point.error;
+        if (point.data?.length) alternativeProvider = alternative.data.provider;
+      }
     }
     return json({
       analytics_provider: selection.data?.analytics_provider ?? null,
@@ -145,7 +161,8 @@ Deno.serve(async (request) => {
       connected: {
         ga4: traffic.data?.some((item) => item.provider === "ga4" && item.status === "active") ?? false,
         posthog: traffic.data?.some((item) => item.provider === "posthog" && item.status === "active") ?? false,
-        stripe, revenuecat, polar: false, dodo: false,
+        stripe, revenuecat: alternativeProvider === "revenuecat",
+        polar: alternativeProvider === "polar", dodo: alternativeProvider === "dodo",
       },
     });
   } catch {

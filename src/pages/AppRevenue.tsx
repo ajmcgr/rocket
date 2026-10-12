@@ -3,6 +3,7 @@ import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { RevenueCatConnection } from "@/components/RevenueCatConnection";
+import { AlternativeRevenueConnection } from "@/components/AlternativeRevenueConnection";
 import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
@@ -72,6 +73,8 @@ export default function AppRevenue() {
     <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue stays private until you explicitly change its visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
     {id && <VerifiedProviderSelection appId={id} kind="revenue" />}
     {id && <RevenueCatConnection appId={id} />}
+    {id && <AlternativeRevenueConnection appId={id} provider="polar" />}
+    {id && <AlternativeRevenueConnection appId={id} provider="dodo" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
@@ -131,15 +134,5 @@ export default function AppRevenue() {
       {!status.connection.livemode && <p className="mt-3 text-sm text-amber-700">This is a sandbox Stripe connection. Visibility settings are saved, but no test revenue will be published.</p>}
       <Link to={`/apps/${id}`} className="mt-4 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
-    <section className="mt-6 rounded-2xl border bg-white p-6 text-sm text-neutral-600">
-      <h2 className="font-semibold text-neutral-900">Other revenue providers</h2>
-      <div className="mt-4 space-y-3">
-        {(["Polar", "Dodo Payments"] as const).map((provider) => <div key={provider} className="flex items-center justify-between gap-4 rounded-xl border bg-neutral-50 px-4 py-3">
-          <span className="font-medium text-neutral-800">{provider}</span>
-          <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-700">Coming soon</span>
-        </div>)}
-      </div>
-      <p className="mt-3">Neither provider is connected or verified yet.</p>
-    </section>
   </main>;
 }

@@ -33,10 +33,18 @@ function config() {
   return { clientId, clientSecret };
 }
 async function key() {
-  const raw = Deno.env.get("REVENUECAT_TOKEN_ENCRYPTION_KEY");
+  const raw = Deno.env.get("REVENUECAT_TOKEN_ENCRYPTION_KEY") ||
+    Deno.env.get("POSTHOG_TOKEN_ENCRYPTION_KEY");
   if (!raw) throw new Error("RevenueCat token encryption is not configured");
   const bytes = unb64(raw);
   if (bytes.length !== 32) throw new Error("RevenueCat token encryption is not configured");
+  if (!Deno.env.get("REVENUECAT_TOKEN_ENCRYPTION_KEY")) {
+    const material = await crypto.subtle.importKey("raw", bytes, "HKDF", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256",
+      salt: new TextEncoder().encode("rocket:revenuecat:v1"),
+      info: new TextEncoder().encode("revenuecat-credentials") }, material,
+    { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
   return crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 async function encrypt(value: string) {
@@ -78,6 +86,9 @@ async function connection(userId: string) {
   return result.data;
 }
 async function accessToken(row: Record<string, unknown>) {
+  // A project-scoped v2 secret key needs no OAuth refresh. All subsequent
+  // access remains read-only and bound to the same single-app project checks.
+  if (!row.refresh_token_ciphertext) return decrypt(row.access_token_ciphertext, row.access_token_iv);
   config();
   if (typeof row.access_token_expires_at === "string"
     && Date.parse(row.access_token_expires_at) > Date.now() + 120_000)
@@ -313,7 +324,7 @@ async function callback(request: Request) {
 }
 
 async function scheduledSync(request: Request) {
-  const expected = Deno.env.get("ROCKET_REVENUE_SYNC_SECRET");
+  const expected = Deno.env.get("ROCKET_REVENUE_SYNC_SECRET") || Deno.env.get("POSTHOG_SYNC_SECRET");
   const received = request.headers.get("x-rocket-revenue-sync");
   if (!expected || !received || expected.length !== received.length)
     return fail("Unauthorized", 401);
@@ -321,6 +332,7 @@ async function scheduledSync(request: Request) {
   for (let index = 0; index < expected.length; index++)
     mismatch |= expected.charCodeAt(index) ^ received.charCodeAt(index);
   if (mismatch) return fail("Unauthorized", 401);
+  await key();
   const due = await service.rpc("due_app_verified_revenue_sources", {
     p_provider: "revenuecat", p_limit: 20,
   });
@@ -360,12 +372,16 @@ async function handle(request: Request) {
       .eq("mapping_version", linked.mapping_version).order("verified_at", { ascending: false }).limit(1) : null;
     if (points?.error) throw points.error;
     let available = false;
-    try { config(); await key(); available = true; } catch { /* setup incomplete */ }
+    let oauthAvailable = false;
+    try { await key(); available = true; } catch { /* setup incomplete */ }
+    try { config(); oauthAvailable = true; } catch { /* registration pending */ }
     return json({ connect_available: available,
+      oauth_available: oauthAvailable,
       selected_provider: selected.data?.revenue_provider ?? null,
       connection: row && row.status !== "disconnected" ? {
         status: row.status, last_attempted_sync: row.last_attempted_sync,
         last_successful_sync: row.last_successful_sync, last_error: row.last_error,
+        auth_mode: row.refresh_token_ciphertext ? "oauth" : "api_key",
       } : null,
       source: linked?.provider === "revenuecat" ? {
         project_id: linked.external_account_id, app_id: linked.external_app_id,
@@ -388,6 +404,28 @@ async function handle(request: Request) {
     });
     if (saved.error) throw saved.error;
     return json({ authorization_url: revenueCatAuthorizationUrl(clientId, callbackUri, state, challenge) });
+  }
+  if (body.action === "connect_api_key") {
+    if (typeof body.credential !== "string" || body.credential.length < 12
+      || body.credential.length > 2048) return fail("Enter a RevenueCat v2 secret API key");
+    await key();
+    const projects = await rcList("/v2/projects", body.credential);
+    if (!projects.length) return fail("This key has no RevenueCat projects");
+    const encrypted = await encrypt(body.credential);
+    const saved = await service.from("app_verified_revenue_connections").upsert({
+      owner_user_id: userId, provider: "revenuecat", status: "active",
+      access_token_ciphertext: encrypted.ciphertext, access_token_iv: encrypted.iv,
+      refresh_token_ciphertext: null, refresh_token_iv: null,
+      access_token_expires_at: null, last_successful_sync: null,
+      last_error: null, updated_at: new Date().toISOString(),
+    }, { onConflict: "owner_user_id,provider" }).select("id").single();
+    if (saved.error || !saved.data) throw new Error("RevenueCat connection could not be saved");
+    const hidden = await service.rpc("invalidate_app_verified_revenue_connection", {
+      p_connection_id: saved.data.id, p_owner_user_id: userId,
+    });
+    if (hidden.error) throw hidden.error;
+    return json({ connected: true,
+      projects: projects.map((project) => ({ id: project.id, name: project.name })) });
   }
   const row = await connection(userId);
   if (!row || row.status === "disconnected") throw new Error("Connect RevenueCat first");
