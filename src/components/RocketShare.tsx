@@ -51,11 +51,13 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
       track("share_card_downloaded", { ...eventData, variant });
+      if (kind === "rocket100") track("rocket100_shared", { destination: "download", identifier });
     } catch { setNotice("The image is unavailable right now. You can still copy the link."); }
     finally { setDownloading(false); }
   };
   const openTarget = (destination: string, href: string) => {
     track("share_destination_clicked", { ...eventData, destination });
+    if (kind === "rocket100") track("rocket100_shared", { destination, identifier });
     window.open(href, "_blank", "noopener,noreferrer");
   };
   const nativeShare = async () => {
@@ -68,7 +70,7 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild><button type="button" className={className || "inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:border-sky-300 hover:text-sky-700"} onClick={() => track("share_button_clicked", eventData)}><Share2 size={16} aria-hidden="true" />{label}</button></DialogTrigger>
     <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto p-5 sm:p-6">
-      <DialogHeader><DialogTitle>Share {kind === "app" ? "this app" : kind === "profile" ? "this profile" : "this collection"}</DialogTitle><DialogDescription>Choose a place to share, or download a Rocket card.</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>Share {kind === "app" ? "this app" : kind === "profile" ? "this profile" : kind === "rocket100" ? "your Rocket 100 place" : "this collection"}</DialogTitle><DialogDescription>Choose a place to share, or download a Rocket card.</DialogDescription></DialogHeader>
       <img src={card} alt={`${title} share card preview`} className="mt-3 max-h-52 w-full rounded-xl border border-neutral-200 bg-white object-contain" loading="lazy" />
       <div className="mt-3 grid grid-cols-3 gap-2" role="group" aria-label="Share card format">{variants.map((item) => <button key={item.key} type="button" aria-pressed={variant === item.key} onClick={() => setVariant(item.key)} className={`min-h-11 rounded-lg border px-2 py-2 text-xs ${variant === item.key ? "border-sky-600 bg-sky-50 text-sky-900" : "border-neutral-200"}`}><span className="block font-semibold">{item.label}</span><span>{item.dimensions}</span></button>)}</div>
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">

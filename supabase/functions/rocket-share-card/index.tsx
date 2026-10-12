@@ -91,6 +91,16 @@ function truncateForCard(value: string, limit: number) {
 }
 
 async function loadCard(kind: string, id: string, includeCover: boolean): Promise<Card | null> {
+  if (kind === "rocket100") {
+    if (!/^[a-z0-9_]{2,30}$/.test(id)) return null;
+    const { data: cohort, error } = await db.rpc("get_rocket100_leaderboard");
+    if (error || !Array.isArray(cohort?.rows)) return null;
+    const builder = cohort.rows.find((row: { username: string }) => row.username === id);
+    if (!builder) return null;
+    const founding = String(builder.founding_number).padStart(3, "0");
+    return { title: builder.name || `@${id}`, detail: `@${id}  ·  Founding Builder #${founding}${builder.rank ? `  ·  Current rank #${builder.rank}` : ""}`,
+      kicker: "ROCKET 100", url: `tryrocket.ai/@${id}`, logo: await rasterDataUrl(builder.avatar_url), cover: null };
+  }
   if (kind === "app") {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id);
     if (!isUuid && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) return null;
@@ -184,7 +194,7 @@ Deno.serve(async (req) => {
   const id = params.get("id") || "";
   const variant = params.get("variant") || "landscape";
   const version = params.get("v");
-  if (!(variant in formats) || id.length > 120 || (version !== null && !/^[a-z0-9]{1,16}$/i.test(version)) || !["app", "profile", "collection"].includes(kind)) return notFound();
+  if (!(variant in formats) || id.length > 120 || (version !== null && !/^[a-z0-9]{1,16}$/i.test(version)) || !["app", "profile", "collection", "rocket100"].includes(kind)) return notFound();
   if (!allowRender(req, `${kind}:${id}:${variant}`)) return new Response("Card request limit reached", { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } });
   try {
     const card = await loadCard(kind, id, variant !== "portrait");
