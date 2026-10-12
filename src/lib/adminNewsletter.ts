@@ -215,7 +215,8 @@ export function newsletterCopy(sections: NewsletterSection[]) {
           .join("\n\n")}`,
     )
     .join("\n\n--------------------\n\n");
-  const html = `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#171717;line-height:1.5">${available
+  // Keep copied blocks flat: Beehiiv may discard content nested in a wrapper.
+  const html = available
     .map(
       (section) =>
         `<h2 style="color:#171717;font-size:24px;margin:28px 0 6px">${safeHtml(section.title)}</h2>` +
@@ -227,8 +228,6 @@ export function newsletterCopy(sections: NewsletterSection[]) {
           )
           .join(""),
     )
-    .join(
-      '<hr style="border:0;border-top:1px solid #e5e5e5;margin:28px 0">',
-    )}</div>`;
+    .join('<hr style="border:0;border-top:1px solid #e5e5e5;margin:28px 0">');
   return { html, plain };
 }
