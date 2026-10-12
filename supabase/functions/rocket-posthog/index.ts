@@ -62,7 +62,7 @@ async function tokenRequest(region: string, body: URLSearchParams) {
   if (!response.ok) throw new Error("PostHog authorization failed; reconnect");
   return await response.json() as Record<string, unknown>;
 }
-async function accessToken(row: Record<string, unknown>) {
+async function refreshedAccess(row: Record<string, unknown>) {
   const region = safeRegion(row.posthog_region);
   if (!region) throw new Error("Reconnect PostHog with a supported region");
   const tokens = await tokenRequest(region, new URLSearchParams({
@@ -75,7 +75,24 @@ async function accessToken(row: Record<string, unknown>) {
     }).eq("id", row.id);
     if (saved.error) throw saved.error;
   }
-  return tokens.access_token;
+  return { token: tokens.access_token, scopedProjects: Array.isArray(tokens.scoped_teams)
+    ? tokens.scoped_teams.map(String).filter((id) => /^\d{1,16}$/.test(id)) : [] };
+}
+async function accessToken(row: Record<string, unknown>) {
+  return (await refreshedAccess(row)).token;
+}
+async function authorizedProjects(row: Record<string, unknown>) {
+  // The OAuth consent limits access to a project. The collection endpoint can
+  // reject project-scoped tokens, so use the token's server-issued project IDs
+  // and retrieve only those projects individually.
+  const { token, scopedProjects } = await refreshedAccess(row);
+  if (!scopedProjects.length) throw new Error("PostHog project grant unavailable; reconnect");
+  const region = safeRegion(row.posthog_region)!;
+  const projects = await Promise.all(scopedProjects.map(async (id) => {
+    const data = await posthog(region, "/api/projects/" + id + "/", token);
+    return { id, name: String(data.name || id) };
+  }));
+  return { token, projects };
 }
 async function posthog(region: string, path: string, token: string, body?: unknown) {
   const response = await fetch(hostFor(region) + path, {
@@ -83,8 +100,13 @@ async function posthog(region: string, path: string, token: string, body?: unkno
     headers: { Authorization: "Bearer " + token, ...(body ? { "Content-Type": "application/json" } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(30_000),
   });
-  if (!response.ok) throw new Error(response.status === 401 || response.status === 403
-    ? "PostHog access was revoked or lacks read permission" : "PostHog query failed");
+  if (!response.ok) {
+    // Keep upstream details out of client responses and logs; status and route
+    // are enough to distinguish a scoped-project endpoint from a token failure.
+    console.error("rocket_posthog_upstream_failure", { path, status: response.status });
+    throw new Error(response.status === 401 || response.status === 403
+      ? "PostHog access was revoked or lacks read permission" : "PostHog query failed");
+  }
   return await response.json() as Record<string, unknown>;
 }
 async function owner(appId: string, userId: string) {
@@ -258,24 +280,15 @@ async function handle(request: Request) {
   if (!row || row.status === "disconnected" || row.owner_user_id !== user.data.user.id)
     return fail("Connect PostHog first");
   if (body.action === "projects") {
-    const token = await accessToken(row);
-    const region = safeRegion(row.posthog_region)!;
-    const data = await posthog(region, "/api/projects/?limit=100", token);
-    if (data.next) throw new Error("Too many projects to select safely");
-    return json({ projects: ((data.results || []) as Record<string, unknown>[])
-      .filter((project) => Number.isSafeInteger(project.id))
-      .map((project) => ({ id: String(project.id), name: String(project.name || project.id) })) });
+    const { projects } = await authorizedProjects(row);
+    return json({ projects });
   }
   if (body.action === "select_project") {
     if (row.property_id) return fail("Disconnect the existing project before choosing another");
     if (typeof body.project_id !== "string" || !/^\d{1,16}$/.test(body.project_id))
       return fail("Choose a valid PostHog project");
-    const token = await accessToken(row);
-    const region = safeRegion(row.posthog_region)!;
-    const data = await posthog(region, "/api/projects/?limit=100", token);
-    if (data.next) throw new Error("Too many projects to select safely");
-    const project = ((data.results || []) as Record<string, unknown>[])
-      .find((item) => String(item.id) === body.project_id);
+    const { projects } = await authorizedProjects(row);
+    const project = projects.find((item) => item.id === body.project_id);
     if (!project) return fail("This project is not accessible", 403);
     // Listing projects may rotate the refresh token.
     const candidate = { ...await connection(app.id), property_id: body.project_id };
