@@ -499,10 +499,11 @@ export default function PublicAppProfile({
                       {revenuePoint.source === "alternative" ? (
                         <PublicMetricCard
                           label={
-                            revenuePoint.point.metric_type ===
-                            "gross_revenue_30d"
+                            revenuePoint.point.metric_type === "gross_revenue_30d"
                               ? `Gross revenue · previous 30 days · ${revenuePoint.point.currency}`
-                              : `Subscription MRR · ${revenuePoint.point.currency}`
+                              : revenuePoint.point.metric_type === "paid_volume_30d"
+                                ? `Succeeded payment volume · previous 30 days · ${revenuePoint.point.currency}`
+                                : `Subscription MRR · ${revenuePoint.point.currency}`
                           }
                           icon={DollarSign}
                           value={publicRevenueValue(

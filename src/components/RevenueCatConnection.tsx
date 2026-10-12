@@ -5,9 +5,10 @@ import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Status = {
   connect_available: boolean;
+  oauth_available: boolean;
   selected_provider: string | null;
   connection: null | { status: string; last_attempted_sync: string | null;
-    last_successful_sync: string | null; last_error: string | null };
+    last_successful_sync: string | null; last_error: string | null; auth_mode: "oauth" | "api_key" };
   source: null | { project_id: string; app_id: string; product_ids: string[]; visibility: Visibility };
   latest: null | { metric_type: string; value_minor: number; currency: string;
     period_start: string; period_end: string; verified_at: string };
@@ -33,6 +34,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
   const [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false);
   const [notice, setNotice] = useState("");
+  const [apiKey, setApiKey] = useState("");
   const stale = Boolean(status?.connection?.last_successful_sync
     && Date.now() - Date.parse(status.connection.last_successful_sync) >= 72 * 60 * 60 * 1000);
   const request = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
@@ -58,6 +60,15 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
     const result = await request("projects");
     setProjects(result.projects || []);
   });
+  const connectKey = () => run(async () => {
+    const credential = apiKey;
+    setApiKey("");
+    const result = await request("connect_api_key", { credential });
+    setProjects(result.projects || []);
+    setProjectId(""); setApp(""); setPreview(null);
+    await refresh();
+    setNotice("Read-only RevenueCat connection saved. Choose the single-app project to verify privately.");
+  });
   const chooseProject = (id: string) => run(async () => {
     setProjectId(id); setApp(""); setApps([]); setPreview(null); setConfirmed(false);
     if (!id) return;
@@ -74,13 +85,22 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
     {unavailable && <p className="mt-4 text-sm text-neutral-600">Coming soon — RevenueCat verification is in rollout.</p>}
     {status && <>
       <p className="mt-3 text-sm text-neutral-600">{status.connection
-        ? `Connection: ${status.connection.status}` : status.connect_available ? "Available to connect" : "Coming soon — OAuth registration or secure server configuration is pending"}</p>
+        ? `Connection: ${status.connection.status}` : status.connect_available ? "Available to connect" : "Secure credential storage is not configured"}</p>
       {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last verified: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
       {stale && <p className="mt-2 text-sm text-amber-700">This verification is stale. Public revenue is hidden until a successful sync.</p>}
       {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Action required: {status.connection.last_error}</p>}
-      {status.connect_available && <button disabled={busy} onClick={() => run(async () => {
+      {status.connect_available && <div className="mt-4 flex flex-wrap items-end gap-2 text-sm">
+        <label className="min-w-60 flex-1">RevenueCat v2 read-only secret API key
+          <input type="password" autoComplete="off" value={apiKey} disabled={busy}
+            onChange={(event) => setApiKey(event.target.value)}
+            className="mt-2 block w-full rounded-lg border px-3 py-2" />
+        </label>
+        <button type="button" disabled={busy || !apiKey} onClick={connectKey}
+          className="rounded-xl border px-4 py-2 disabled:opacity-50">{status.connection ? "Replace key" : "Connect RevenueCat"}</button>
+      </div>}
+      {status.oauth_available && <button disabled={busy} onClick={() => run(async () => {
         const result = await request("start"); window.location.assign(result.authorization_url);
-      })} className="mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">{status.connection ? "Reauthorize RevenueCat" : "Connect RevenueCat"}</button>}
+      })} className="mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Connect with RevenueCat OAuth</button>}
       {status.connection && <button disabled={busy} onClick={loadProjects}
         className="ml-2 mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Choose project</button>}
       {projects.length > 0 && <label className="mt-5 block text-sm">RevenueCat project
@@ -120,7 +140,8 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
           await request("save_mapping", { project_id: preview.project_id,
             revenuecat_app_id: preview.app_id, confirm_all_products: true,
             confirm_switch: confirmSwitch });
-          await refresh(); setPreview(null); setNotice("RevenueCat revenue verified privately. Public visibility remains off.");
+          await refresh(); setPreview(null); window.dispatchEvent(new Event("rocket-provider-selection-updated"));
+          setNotice("RevenueCat revenue verified privately. Public visibility remains off.");
         })} className="mt-4 rounded-xl bg-brand px-4 py-2 text-white disabled:opacity-50">Save private source</button>
       </div>}
       {status.source && <div className="mt-5 border-t pt-4 text-sm">
@@ -140,8 +161,9 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
           </select>
         </label>
         <button disabled={busy} onClick={() => {
-          if (!window.confirm("Disconnect RevenueCat from this app and remove public verification? Provider-side OAuth access can be revoked in RevenueCat Account → Security.")) return;
+          if (!window.confirm("Disconnect RevenueCat from this app and remove public verification? Revoke the API key or OAuth grant separately in RevenueCat.")) return;
           void run(async () => { await request("disconnect"); await refresh(); setProjects([]); setApps([]); setPreview(null);
+            window.dispatchEvent(new Event("rocket-provider-selection-updated"));
             setNotice("Disconnected locally. Public verification was removed."); });
         }} className="mt-4 rounded-xl border px-4 py-2 text-red-700 disabled:opacity-50">Disconnect RevenueCat</button>
       </div>}
