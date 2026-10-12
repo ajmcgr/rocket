@@ -12,6 +12,7 @@ import RocketBetaPanel from "@/components/RocketBetaPanel";
 import RocketImprovePanel from "@/components/RocketImprovePanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { loadMyApps, myAppStatus } from "@/lib/myApps";
+import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { BarChart3 } from "lucide-react";
 
 export default function MyAppSettings() {
@@ -28,6 +29,8 @@ export default function MyAppSettings() {
   const [error, setError] = useState("");
   const [sourceOpen, setSourceOpen] = useState(false);
   const [sourceUrl, setSourceUrl] = useState("");
+  const [sourceError, setSourceError] = useState("");
+  const [submittingSource, setSubmittingSource] = useState(false);
   const [buildRefresh, setBuildRefresh] = useState(0);
   const [notice, setNotice] = useState("");
   useEffect(() => {
@@ -196,7 +199,7 @@ export default function MyAppSettings() {
                 <button
                   onClick={() => {
                     setSourceOpen((current) => !current);
-                    setError("");
+                    setSourceError("");
                   }}
                   className="text-neutral-500 hover:text-sky-700"
                 >
@@ -209,31 +212,34 @@ export default function MyAppSettings() {
                     className="mt-3 flex flex-wrap gap-2"
                     onSubmit={async (event) => {
                       event.preventDefault();
-                      setError("");
+                      setSourceError("");
                       setNotice("");
-                      const { data, error: requestError } =
-                        await supabase.functions.invoke("rocket-apps", {
-                          body: {
-                            action: "add_source",
-                            app_id: item.app_id,
-                            url: sourceUrl,
-                          },
-                        });
-                      if (requestError || data?.error)
-                        setError(
-                          data?.error ||
-                            requestError?.message ||
-                            "Could not attach source",
-                        );
-                      else {
-                        setNotice(
-                          data?.outcome === "already_attached"
-                            ? "Source already attached."
-                            : "Source attached to your app.",
-                        );
-                        setSourceOpen(false);
-                        setSourceUrl("");
-                        setBuildRefresh((current) => current + 1);
+                      setSubmittingSource(true);
+                      try {
+                        const { data, error: requestError } =
+                          await supabase.functions.invoke("rocket-apps", {
+                            body: {
+                              action: "add_source",
+                              app_id: item.app_id,
+                              url: sourceUrl,
+                            },
+                          });
+                        if (requestError || data?.error) {
+                          setSourceError(data?.error || await edgeFunctionErrorMessage(requestError, "Could not attach source"));
+                        } else {
+                          setNotice(
+                            data?.outcome === "already_attached"
+                              ? "Source already attached."
+                              : "Source attached to your app.",
+                          );
+                          setSourceOpen(false);
+                          setSourceUrl("");
+                          setBuildRefresh((current) => current + 1);
+                        }
+                      } catch (failure) {
+                        setSourceError(await edgeFunctionErrorMessage(failure, "Could not attach source"));
+                      } finally {
+                        setSubmittingSource(false);
                       }
                     }}
                   >
@@ -246,11 +252,12 @@ export default function MyAppSettings() {
                       aria-label="Public source URL"
                       className="min-w-0 flex-1 rounded-lg border px-3 py-2"
                     />
-                    <button className="rounded-lg bg-neutral-900 px-3 py-2 text-white">
-                      Add
+                    <button disabled={submittingSource} className="rounded-lg bg-neutral-900 px-3 py-2 text-white disabled:opacity-50">
+                      {submittingSource ? "Adding…" : "Add"}
                     </button>
                   </form>
                 )}
+                {sourceOpen && sourceError && <p role="alert" className="mt-2 text-sm text-red-700">{sourceError}</p>}
               </div>
             )}
             {item.owned && <div id="analytics">
