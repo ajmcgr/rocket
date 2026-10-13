@@ -64,7 +64,7 @@ export default function Discover({ initialCategories = [], initialView }: {
   const source = params.get("source") || "";
   const pricing = params.get("pricing") || "";
   const billing = params.get("billing") || "";
-  const mcp = params.get("mcp") === "true";
+  const mcp = params.get("mcp") === "available";
   const sort = params.get("sort") === "discovered" ? "discovered" : "launched";
   const page = Math.max(
     0,
@@ -405,7 +405,7 @@ export default function Discover({ initialCategories = [], initialView }: {
                 <option value="">All billing types</option><option value="one_time">One-time</option><option value="subscription">Subscription</option>
               </select>
               <label className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm text-neutral-700">
-                <input type="checkbox" checked={mcp} onChange={(event) => change("mcp", event.target.checked ? "true" : "")} />
+                <input type="checkbox" checked={mcp} onChange={(event) => change("mcp", event.target.checked ? "available" : "")} />
                 MCP Available
               </label>
               {search && <p className="w-full text-sm text-neutral-500">Matches are ranked by relevance before date.</p>}
