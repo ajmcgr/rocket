@@ -158,34 +158,44 @@ async function countPageviews(row: Record<string, unknown>, host: string, period
   return Number(count);
 }
 async function sync(row: Record<string, unknown>) {
-  const app = await owner(String(row.app_id), String(row.owner_user_id));
-  if (app.canonical_host !== row.verified_hostname) throw new Error("Verified app host changed");
   const now = new Date().toISOString();
-  const count = await countPageviews(row, app.canonical_host, "completed");
-  const metricDate = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-  const saved = await service.from("app_metric_points").upsert({
-    app_id: row.app_id, connection_id: row.id, provider: "posthog", metric_type: "views",
-    metric_date: metricDate, metric_value: count, property_id: row.property_id,
-    verified_hostname: app.canonical_host, time_zone: "UTC",
-    observed_through: now, verification_status: "verified", calculation_version: 1,
-    updated_at: now,
-  }, { onConflict: "connection_id,metric_type,metric_date" });
-  if (saved.error) throw saved.error;
-  // A zero day is valid after a previously verified day. It cannot be used
-  // as the first proof of a project's mapping to this app.
-  const complete = count > 0 || Boolean(row.last_successful_sync);
-  const status = complete ? "active" : "select_property";
-  const updated = await service.from("app_data_connections").update({
-    status, last_attempted_sync: now, last_successful_sync: complete ? now : null,
-    last_error: complete ? null : "No pageviews in the previous complete UTC day",
-    updated_at: now,
-  }).eq("id", row.id);
-  if (updated.error) throw updated.error;
-  if (complete) {
-    const projection = await service.rpc("refresh_app_traction_projection", { p_app_id: row.app_id });
-    if (projection.error) throw projection.error;
+  try {
+    const app = await owner(String(row.app_id), String(row.owner_user_id));
+    if (app.canonical_host !== row.verified_hostname) throw new Error("Verified app host changed");
+    const count = await countPageviews(row, app.canonical_host, "completed");
+    const metricDate = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const saved = await service.from("app_metric_points").upsert({
+      app_id: row.app_id, connection_id: row.id, provider: "posthog", metric_type: "views",
+      metric_date: metricDate, metric_value: count, property_id: row.property_id,
+      verified_hostname: app.canonical_host, time_zone: "UTC",
+      observed_through: now, verification_status: "verified", calculation_version: 1,
+      updated_at: now,
+    }, { onConflict: "connection_id,metric_type,metric_date" });
+    if (saved.error) throw saved.error;
+    // A zero day is valid after a previously verified day. It cannot be used
+    // as the first proof of a project's mapping to this app.
+    const complete = count > 0 || Boolean(row.last_successful_sync);
+    const status = complete ? "active" : "select_property";
+    const updated = await service.from("app_data_connections").update({
+      status, last_attempted_sync: now, last_successful_sync: complete ? now : null,
+      last_error: complete ? null : "No pageviews in the previous complete UTC day",
+      updated_at: now,
+    }).eq("id", row.id).neq("status", "disconnected");
+    if (updated.error) throw updated.error;
+    if (complete) {
+      const projection = await service.rpc("refresh_app_traction_projection", { p_app_id: row.app_id });
+      if (projection.error) throw projection.error;
+    }
+    return { metric: "PostHog pageviews", date: metricDate, count, complete };
+  } catch (error) {
+    // Failed refreshes must stop public display immediately and tell the owner
+    // that the connection needs attention. Never return upstream token details.
+    const message = error instanceof Error ? error.message : "PostHog sync failed";
+    await service.from("app_data_connections").update({ status: "error",
+      last_attempted_sync: now, last_error: message, updated_at: now,
+    }).eq("id", row.id).neq("status", "disconnected");
+    throw error;
   }
-  return { metric: "PostHog pageviews", date: metricDate, count, complete };
 }
 async function callback(request: Request) {
   const url = new URL(request.url);
@@ -204,14 +214,10 @@ async function callback(request: Request) {
       || !String(tokens.scope || "").split(/\s+/).includes("query:read")
       || !String(tokens.scope || "").split(/\s+/).includes("project:read"))
       throw new Error("PostHog did not grant required read scopes");
-    const existing = await connection(row.app_id);
-    const stored = await service.from("app_data_connections").upsert({
-      ...(existing ? { id: existing.id } : {}), app_id: row.app_id, owner_user_id: row.user_id,
-      provider: "posthog", status: "select_property", posthog_region: row.posthog_region,
-      property_id: null, property_name: null, stream_id: null, verified_hostname: null, time_zone: null,
-      last_error: null, last_successful_sync: null, ...await encrypt(tokens.refresh_token),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "app_id,provider" });
+    const stored = await service.rpc("replace_posthog_authorization", {
+      p_app_id: row.app_id, p_user_id: row.user_id, p_region: row.posthog_region,
+      p_token: await encrypt(tokens.refresh_token),
+    });
     if (stored.error) throw stored.error;
     return Response.redirect(frontend + "/my-apps/" + encodeURIComponent(row.app_id) + "/analytics?posthog=connected", 303);
   } catch {
@@ -227,13 +233,23 @@ async function handle(request: Request) {
     const secret = Deno.env.get("POSTHOG_SYNC_SECRET");
     if (!secret || secret.length < 32 || request.headers.get("x-rocket-sync-secret") !== secret)
       return fail("Unauthorized", 401);
-    const found = await service.from("app_data_connections").select("*")
-      .eq("provider", "posthog").in("status", ["active", "select_property", "error"]).limit(50);
-    if (found.error) throw found.error;
     const results: PromiseSettledResult<unknown>[] = [];
-    const candidates = (found.data || []).filter((row) => row.property_id);
-    for (let index = 0; index < candidates.length; index += 5) {
-      results.push(...await Promise.allSettled(candidates.slice(index, index + 5).map(sync)));
+    // Page through every linked project; the old fixed 50-row cap silently
+    // stopped syncing later owners as Rocket grew.
+    let lastId: string | null = null;
+    for (;;) {
+      let query = service.from("app_data_connections").select("*")
+        .eq("provider", "posthog").in("status", ["active", "select_property", "error"])
+        .not("property_id", "is", null).order("id").limit(50);
+      if (lastId) query = query.gt("id", lastId);
+      const found = await query;
+      if (found.error) throw found.error;
+      const candidates = found.data || [];
+      for (let index = 0; index < candidates.length; index += 5) {
+        results.push(...await Promise.allSettled(candidates.slice(index, index + 5).map(sync)));
+      }
+      if (candidates.length < 50) break;
+      lastId = candidates[candidates.length - 1].id;
     }
     return json({ attempted: results.length,
       succeeded: results.filter((result) => result.status === "fulfilled").length,
@@ -319,7 +335,9 @@ async function handle(request: Request) {
       return fail("Invalid visibility");
     const selected = await service.from("app_provider_selection").select("analytics_provider")
       .eq("app_id", app.id).eq("owner_user_id", user.data.user.id).maybeSingle();
-    if (selected.error || selected.data?.analytics_provider !== "posthog" || row.status !== "active")
+    if (selected.error || selected.data?.analytics_provider !== "posthog" || row.status !== "active"
+      || (body.visibility !== "private" && (!row.last_successful_sync
+        || Date.now() - Date.parse(String(row.last_successful_sync)) >= 72 * 60 * 60 * 1000)))
       return fail("Select verified PostHog before publishing traffic");
     const saved = await service.from("app_metric_visibility").upsert({
       app_id: app.id, provider: "posthog", metric_type: "views",
@@ -331,22 +349,10 @@ async function handle(request: Request) {
     return json({ visibility: body.visibility });
   }
   if (body.action === "disconnect") {
-    const updated = await service.from("app_data_connections").update({
-      status: "disconnected", refresh_token_ciphertext: null, refresh_token_iv: null,
-      last_successful_sync: null, last_error: null, updated_at: new Date().toISOString(),
-    }).eq("id", row.id);
-    if (updated.error) throw updated.error;
-    const selected = await service.from("app_provider_selection").select("analytics_provider")
-      .eq("app_id", app.id).maybeSingle();
-    if (selected.data?.analytics_provider === "posthog") {
-      const cleared = await service.rpc("set_app_provider_selection", {
-        p_app_id: app.id, p_owner_user_id: user.data.user.id,
-        p_kind: "analytics", p_provider: null,
-      });
-      if (cleared.error) throw cleared.error;
-    }
-    const projection = await service.rpc("refresh_app_traction_projection", { p_app_id: app.id });
-    if (projection.error) throw projection.error;
+    const disconnected = await service.rpc("disconnect_posthog_authorization", {
+      p_app_id: app.id, p_user_id: user.data.user.id,
+    });
+    if (disconnected.error) throw disconnected.error;
     return json({ disconnected: true });
   }
   return fail("Unknown action");
