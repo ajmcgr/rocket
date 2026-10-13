@@ -69,6 +69,10 @@ describe("Sidebar destinations", () => {
         );
         const appsHeading = await screen.findByText("Apps");
         const sidebar = within(appsHeading.closest("aside")!);
+        expect(sidebar.getByText("Grow")).toBeTruthy();
+        expect(sidebar.getByRole("link", { name: "Launch" }).getAttribute("href")).toBe("https://trylaunch.ai");
+        expect(sidebar.queryByRole("link", { name: "Post" })).toBeNull();
+        expect(sidebar.queryByRole("link", { name: "Media" })).toBeNull();
         if (signedIn) {
           const apps = sidebar.getByRole("link", { name: "My Apps" });
           const purchases = sidebar.getByRole("link", { name: "My Purchases" });

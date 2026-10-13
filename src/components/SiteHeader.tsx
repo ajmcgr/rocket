@@ -23,8 +23,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Send,
-  PenLine,
-  Database,
   Search,
   MessageCircle,
   CreditCard,
@@ -34,7 +32,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
-import { SHOW_GROW_SECTION } from "./sidebarVisibility";
 import sidebarIconWhite from "@/assets/rocket-sidebar-icon-white.png.asset.json";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfileHref } from "@/hooks/useMyProfileHref";
@@ -271,57 +268,42 @@ export default function SiteHeader({
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
-            {SHOW_GROW_SECTION && (
-              <div>
-                {sidebarCompact ? (
-                  <div
-                    className="mx-2 mb-2 border-t border-neutral-200"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
-                    Grow
-                  </p>
-                )}
-                {[
-                  { label: "Launch", href: "https://trylaunch.ai", icon: Send },
-                  { label: "Post", href: "https://trypost.ai", icon: PenLine },
-                  {
-                    label: "Media",
-                    href: "https://trymedia.ai",
-                    icon: Database,
-                  },
-                ].map(({ label, href, icon: Icon }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={sidebarCompact ? label : undefined}
-                    aria-label={
-                      sidebarCompact
-                        ? `${label} (opens in a new tab)`
-                        : undefined
-                    }
-                    className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
-                  >
-                    <Icon
-                      className="h-[18px] w-[18px] shrink-0"
+            <div>
+              {sidebarCompact ? (
+                <div
+                  className="mx-2 mb-2 border-t border-neutral-200"
+                  aria-hidden="true"
+                />
+              ) : (
+                <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
+                  Grow
+                </p>
+              )}
+              <a
+                href="https://trylaunch.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                title={sidebarCompact ? "Launch" : undefined}
+                aria-label={
+                  sidebarCompact ? "Launch (opens in a new tab)" : undefined
+                }
+                className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
+              >
+                <Send
+                  className="h-[18px] w-[18px] shrink-0"
+                  aria-hidden="true"
+                />
+                {!sidebarCompact && (
+                  <>
+                    <span>Launch</span>
+                    <ExternalLink
+                      className="ml-auto h-3.5 w-3.5"
                       aria-hidden="true"
                     />
-                    {!sidebarCompact && (
-                      <>
-                        <span>{label}</span>
-                        <ExternalLink
-                          className="ml-auto h-3.5 w-3.5"
-                          aria-hidden="true"
-                        />
-                      </>
-                    )}
-                  </a>
-                ))}
-              </div>
-            )}
+                  </>
+                )}
+              </a>
+            </div>
             <div>
               {sidebarCompact ? (
                 <div
