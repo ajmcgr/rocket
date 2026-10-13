@@ -65,7 +65,15 @@ export const faqSections = [
       },
       {
         q: "What can I do as a developer for free?",
-        a: "You can submit or claim an app, manage its basic listing, complete supported ownership checks, and connect available verification evidence without a Rocket Developer membership. Public app profiles and organic discovery are free.",
+        a: "You can submit or claim an app, manage its basic listing, complete supported ownership checks, add Agent Integrations after domain verification, and connect available verification evidence without a Rocket Developer membership. Public app profiles and organic discovery are free.",
+      },
+      {
+        q: "How do I add AI agent integrations to my app?",
+        a: "After verifying ownership of your app's domain, open My Apps → your app → Agent Integrations. You can add a public MCP server URL, API documentation, a GitHub repository, a deployment guide, and supported AI clients. Rocket displays only the links you provide under Works with AI Agents. These connections and compatibilities are developer-declared; Rocket does not test or run them. The setup is free.",
+      },
+      {
+        q: "How do I find apps with MCP servers?",
+        a: "In Discover, open Filters and sorting and select MCP Available. The filter shows public apps whose verified owners have declared an MCP server URL. It does not mean Rocket has verified that the server works or that a particular AI client is compatible.",
       },
       {
         q: "What does Rocket Developer add?",
@@ -76,12 +84,24 @@ export const faqSections = [
         a: "A public profile lets people discover your app through search, categories, New, Rising, and Top Ranked. You can improve your listing and share supported evidence about your app. Discovery and verification do not guarantee traffic, sales, or a ranking position.",
       },
       {
+        q: "Can I share my app or developer profile?",
+        a: "Yes. Public app profiles and developer profiles have Share actions with a link and downloadable Rocket cards. Public collections can be shared too. You choose when and where to post; Rocket does not publish to social accounts for you.",
+      },
+      {
+        q: "What are Rocket 100 and Rocket Recap?",
+        a: "Rocket 100 is an automated founding-builder leaderboard for the first 100 eligible members; its changing rank reflects qualifying app activity, not a paid placement. Rocket Recap gives signed-in owners a private view of eligible activity from completed months. You can choose which recorded visits or website clicks to include in a shareable recap and revoke its public link later.",
+      },
+      {
         q: "Can I connect Rocket Login or payments?",
         a: "Supported developers can configure Rocket identity and payments for apps they own. These capabilities require a deliberate integration and are not turned on for every indexed app.",
       },
       {
         q: "Can I show traffic or revenue on my profile?",
         a: "Only supported, connected evidence can be shown as verified. Provider metrics are private by default, and owners choose supported public visibility. Availability and verification depend on the specific integration and account.",
+      },
+      {
+        q: "Can I choose which analytics and revenue source appears on my app?",
+        a: "Yes. An app can select one supported analytics provider and one supported revenue provider at a time. Connections and verified data remain private by default; a provider appears publicly only when its evidence is eligible and you enable visibility. Connecting a provider alone does not verify its metrics.",
       },
       {
         q: "What is the difference between Verified Purchases and Verified Revenue?",
@@ -115,6 +135,15 @@ export const faqSections = [
       {
         q: "Are Stripe processing fees included in the 5%?",
         a: "No. Stripe processing fees and any other applicable charges are separate. On a $100 payment, Rocket's platform fee is $5, leaving $95 for the app before those separate costs.",
+      },
+    ],
+  },
+  {
+    title: "Advertising",
+    questions: [
+      {
+        q: "Can I promote my app on Rocket?",
+        a: "Rocket offers Featured App ($49 for 7 days) and Category Sponsor ($299 for 30 days), subject to available inventory and eligibility. Both are one-time purchases with clearly labelled sponsored placements. They do not change Rocket Picks, organic rankings, reviews, or verified metrics. See Advertise for current availability.",
       },
     ],
   },

@@ -29,9 +29,10 @@ const BUSINESS_FEATURES = [
 ];
 
 const FAQS = [
-  { q: "What can I use on Rocket for free?", a: "Browse and discover apps, save apps with a Rocket account, and submit, claim, manage, and verify your own app without a Developer membership. Personal workspaces remain free. Create has a free credit allowance; Launch, Post, and Media offer their own free plans." },
+  { q: "What can I use on Rocket for free?", a: "Browse and discover apps, save apps with a Rocket account, and submit, claim, manage, and verify your own app without a Developer membership. Domain-verified owners can add Agent Integrations for free. Personal workspaces remain free. Create has a free credit allowance; Launch, Post, and Media offer their own free plans." },
   { q: "Is there one subscription for every Rocket product?", a: "No. Create plans and credits, Rocket Developer, and the separate Launch, Post, and Media products have their own pricing. Buy only what you need; a subscription to one does not include the others." },
   { q: "Does submitting an app cost anything?", a: "App submission and basic listing management are free. Rocket ownership verification is separate from submission. Adding an app does not automatically activate Rocket ID or Buy with Rocket." },
+  { q: "Do Agent Integrations require Rocket Developer?", a: "No. A domain-verified app owner can add public MCP, API documentation, GitHub, and deployment links and declare supported AI clients for free. Rocket displays these as developer-declared, not Rocket-verified, connections." },
   { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. It brings app growth tools together: Verified Traction, Advanced Analytics, AI App Optimization, Beta Testing, Rocket ID, and Buy with Rocket. Some tools are in rollout. App submission, claiming, basic management, and verification remain free." },
   { q: "What is Rocket ID?", a: "Rocket ID lets users sign into an integrated app with their Rocket account. It requires an active Developer membership, verified ownership, and a configured and tested integration. Listing your app alone does not enable Rocket ID." },
   { q: "What is Buy with Rocket?", a: "Buy with Rocket lets eligible apps offer payment and verified access through Rocket. Live checkout is enabled, but a Buy option appears only for an offer that has passed its app-specific setup and readiness checks. It is not available on every listing." },
@@ -200,7 +201,7 @@ const Pricing = () => {
             <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
               <h3 className="text-2xl font-semibold tracking-tight">My Apps</h3>
               <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
-              <p className="mt-4 flex-1 text-neutral-600">See apps you own or claim, improve public profiles, and manage available trust connections.</p>
+              <p className="mt-4 flex-1 text-neutral-600">See apps you own or claim, improve public profiles, share your app, and add free Agent Integrations after domain verification.</p>
               <Link to="/your-apps" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Open My Apps →</Link>
             </div>
             <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
