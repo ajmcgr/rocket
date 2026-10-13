@@ -45,6 +45,7 @@ import TrendArrow from "@/components/TrendArrow";
 import type { SubmissionDetails } from "../../supabase/functions/_shared/appSubmission";
 import RocketShare from "@/components/RocketShare";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
+import AppAgentIntegrations, { type PublicAgentIntegrations } from "@/components/AppAgentIntegrations";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -85,6 +86,7 @@ export default function PublicAppProfile({
   const { user } = useAuth();
   const [app, setApp] = useState<App | null>(initialApp || null);
   const [sources, setSources] = useState<Source[]>([]);
+  const [agentIntegration, setAgentIntegration] = useState<PublicAgentIntegrations | null>(null);
   const [traction, setTraction] = useState<Traction[]>([]);
   const [revenue, setRevenue] = useState<Revenue[]>([]);
   const [alternativeRevenue, setAlternativeRevenue] = useState<
@@ -169,6 +171,7 @@ export default function PublicAppProfile({
       setLoading(false);
       // Core identity/description/CTAs render before optional evidence/media.
       setSources([]);
+      setAgentIntegration(null);
       setTraction([]);
       setRevenue([]);
       setAlternativeRevenue([]);
@@ -187,6 +190,7 @@ export default function PublicAppProfile({
         mediaResult,
         presentationResult,
         submissionResult,
+        agentIntegrationResult,
       ] = await Promise.all([
         supabase.from("public_app_sources").select("*").eq("app_id", appId),
         supabase.from("public_app_traction").select("*").eq("app_id", appId),
@@ -217,10 +221,14 @@ export default function PublicAppProfile({
           .select("details")
           .eq("app_id", appId)
           .maybeSingle(),
+        supabase.from("app_agent_integrations")
+          .select("mcp_url,api_docs_url,github_url,deployment_url,supported_clients")
+          .eq("app_id", appId).maybeSingle(),
       ]);
       if (canceled) return;
       setApp(appResult.data);
       setSources(sourceResult.data || []);
+      setAgentIntegration(agentIntegrationResult.data || null);
       setTraction(tractionResult.data || []);
       setRevenue(revenueResult.data || []);
       setAlternativeRevenue(alternativeRevenueResult.data || []);
@@ -513,6 +521,8 @@ export default function PublicAppProfile({
               )}
               <AppMediaGallery name={app.name} media={media} />
             </div>
+            <AppAgentIntegrations integration={agentIntegration}
+              linkedGithubUrl={sources.find((source) => source.source_type === "github")?.source_url} />
             <RocketBetaJoin appId={app.id} appSlug={app.slug || app.id} />
             {signals.length > 0 && (
               <section className="mt-8 pb-2">

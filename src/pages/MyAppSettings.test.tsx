@@ -5,7 +5,7 @@ import { fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import MyAppSettings from "./MyAppSettings";
 
-const mocks = vi.hoisted(() => ({ failSource: false }));
+const mocks = vi.hoisted(() => ({ failSource: false, verificationLevel: "domain_verified" }));
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
@@ -39,7 +39,7 @@ vi.mock("@/integrations/supabase/client", () => ({
                   id: "claim-owned",
                   app_id: "app-owned",
                   owned: true,
-                  owner_verification_level: "domain_verified",
+                  owner_verification_level: mocks.verificationLevel,
                   status: "verified",
                   app: {
                     name: "Owned app",
@@ -71,6 +71,9 @@ vi.mock("@/components/AppBadgeKit", () => ({
 vi.mock("@/components/AppDisconnectControls", () => ({
   default: () => <div>Disconnect controls</div>,
 }));
+vi.mock("@/components/AgentIntegrationsPanel", () => ({
+  default: () => <div>Agent integration form</div>,
+}));
 
 it("opens an owned app's settings from its card route", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
@@ -90,6 +93,7 @@ it("opens an owned app's settings from its card route", async () => {
     );
     expect(container.textContent).toContain("Owned app");
     expect(container.textContent).toContain("GitHub builds");
+    expect(container.textContent).toContain("Agent integration form");
     expect(container.textContent).toContain("Ownership and connections");
     expect(
       container.querySelector('a[href="/my-apps/app-owned/edit"]'),
@@ -98,6 +102,29 @@ it("opens an owned app's settings from its card route", async () => {
   } finally {
     await act(async () => root.unmount());
     container.remove();
+    vi.unstubAllGlobals();
+  }
+});
+
+it("does not offer Agent Integrations editing to an unverified owner", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.stubGlobal("scrollTo", vi.fn());
+  mocks.verificationLevel = "claimed";
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/my-apps/app-owned"]}>
+        <Routes><Route path="/my-apps/$id" element={<MyAppSettings />} /></Routes>
+      </MemoryRouter>,
+    ));
+    expect(container.textContent).not.toContain("Agent integration form");
+    expect(container.querySelector('a[href="#agent-integrations"]')).toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+    mocks.verificationLevel = "domain_verified";
     vi.unstubAllGlobals();
   }
 });

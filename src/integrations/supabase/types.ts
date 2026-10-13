@@ -349,6 +349,19 @@ export type Database = {
         };
         Relationships: [];
       };
+      app_agent_integrations: {
+        Row: {
+          app_id: string;
+          mcp_url: string | null;
+          api_docs_url: string | null;
+          github_url: string | null;
+          deployment_url: string | null;
+          supported_clients: string[];
+          updated_by: string;
+          updated_at: string;
+        };
+        Relationships: [];
+      };
       public_app_categories: {
         Row: { category: string; app_count: number };
         Relationships: [];
