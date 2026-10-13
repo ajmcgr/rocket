@@ -10,7 +10,8 @@ const steps = {
   builders: [
     { title: "Submit", body: "Paste your app URL. Rocket checks whether the app is already indexed before preparing a new listing, so you do not have to start from scratch." },
     { title: "Claim and verify", body: "Sign in to claim the right app. Domain ownership can be verified with a challenge; claiming alone is not the same as verification." },
-    { title: "Tell your story", body: "Manage your public profile in My Apps. Add accurate details and choose which supported evidence, if any, to make visible." },
+    { title: "Tell your story", body: "Manage your public profile in My Apps. Add accurate details, share your app, and choose which supported evidence, if any, to make visible." },
+    { title: "Show how agents can use it", body: "Once your app's domain is verified, add public MCP, API, source, or deployment links in Agent Integrations for free. Rocket labels these as developer-declared." },
     { title: "Connect where supported", body: "Rocket identity and payment integrations are available for apps that explicitly integrate them. They are not automatically enabled for every listing." },
   ],
 };
