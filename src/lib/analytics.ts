@@ -58,7 +58,13 @@ export type AnalyticsEvent =
   | "rocket100_qualified"
   | "rocket100_awarded"
   | "rocket100_shared"
-  | "rocket100_profile_clicked";
+  | "rocket100_profile_clicked"
+  | "rocket_recap_viewed"
+  | "rocket_recap_share_created"
+  | "rocket_recap_share_revoked"
+  | "rocket_recap_public_visited"
+  | "rocket_recap_profile_clicked"
+  | "rocket_recap_app_clicked";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;

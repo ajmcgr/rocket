@@ -81,7 +81,8 @@ async function rasterDataUrl(value: unknown): Promise<string | null> {
   } catch { return null; }
 }
 
-type Card = { title: string; detail: string; kicker: string; url: string; logo: string | null; cover: string | null; logos?: string[] };
+type Card = { title: string; detail: string; kicker: string; url: string; logo: string | null; cover: string | null; logos?: string[]; recapMetrics?: { label: string; value: string }[] };
+const recapImageCache = new Map<string, { bytes: Uint8Array; until: number }>();
 
 function truncateForCard(value: string, limit: number) {
   if (value.length <= limit) return value;
@@ -91,6 +92,20 @@ function truncateForCard(value: string, limit: number) {
 }
 
 async function loadCard(kind: string, id: string, includeCover: boolean): Promise<Card | null> {
+  if (kind === "recap") {
+    if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)) return null;
+    const { data, error } = await db.rpc("get_public_rocket_recap", { p_id: id });
+    if (error || !data?.snapshot || !data?.username) return null;
+    const month = new Date(`${data.snapshot.month}T00:00:00Z`).toLocaleString("en", { month: "long", year: "numeric", timeZone: "UTC" });
+    if (month === "Invalid Date") return null;
+    const app = data.snapshot.app;
+    const metrics = Object.entries(data.snapshot.metrics || {}).filter(([key, value]) =>
+      ["views", "clicks"].includes(key) && typeof value === "number" && Number.isFinite(value) && value > 0
+    ).map(([key, value]) => ({ label: key === "views" ? "Recorded app visits" : "Website clicks", value: Number(value).toLocaleString("en") }));
+    if (!metrics.length) return null;
+    return { title: app?.name || `@${data.username}`, detail: `${month} on Rocket`, kicker: "ROCKET RECAP",
+      url: `tryrocket.ai/recap/s/${id}`, logo: await rasterDataUrl(app?.logo_url || data.avatar_url), cover: null, recapMetrics: metrics };
+  }
   if (kind === "rocket100") {
     if (!/^[a-z0-9_]{2,30}$/.test(id)) return null;
     const { data: cohort, error } = await db.rpc("get_rocket100_leaderboard");
@@ -130,6 +145,25 @@ async function loadCard(kind: string, id: string, includeCover: boolean): Promis
 }
 
 function artwork(card: Card, width: number, height: number) {
+  if (card.recapMetrics) {
+    const portrait = height > width;
+    const square = height === width;
+    const pad = portrait ? 76 : 56;
+    return <div style={{ display: "flex", flexDirection: "column", width, height, padding: pad, backgroundColor: "#0b1522", color: "white", fontFamily: "Inter" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><img src={rocketLogo} width={portrait ? 245 : 190} height={portrait ? 85 : 65} style={{ objectFit: "contain" }} /><span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 27 : 22, fontWeight: 700, letterSpacing: 2 }}>ROCKET RECAP</span></div>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: portrait ? 210 : square ? 100 : 65 }}>
+        <span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 38 : 29, fontWeight: 700 }}>{card.detail}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 30, marginTop: 22 }}>
+          {card.logo && <img src={card.logo} width={portrait ? 150 : 110} height={portrait ? 150 : 110} style={{ borderRadius: 28, objectFit: "contain" }} />}
+          <span style={{ display: "flex", maxWidth: portrait ? 800 : square ? 820 : 930, overflow: "hidden", fontSize: portrait ? 86 : square ? 80 : 72, fontWeight: 700, letterSpacing: -3, lineHeight: 1.08 }}>{truncateForCard(card.title, portrait ? 42 : 38)}</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: portrait ? "column" : "row", gap: portrait ? 38 : 28, marginTop: portrait ? 135 : square ? 95 : 60 }}>
+        {card.recapMetrics.map((metric) => <div key={metric.label} style={{ display: "flex", flexDirection: "column", flex: 1, padding: portrait ? 42 : 28, borderRadius: 25, border: "2px solid #31536b", backgroundColor: "#132638" }}><span style={{ display: "flex", color: "white", fontSize: portrait ? 112 : square ? 92 : 73, fontWeight: 700 }}>{metric.value}</span><span style={{ display: "flex", color: "#bdd0dd", fontSize: portrait ? 30 : 24 }}>{metric.label}</span></div>)}
+      </div>
+      <div style={{ display: "flex", marginTop: "auto", paddingTop: 24, borderTop: "2px solid #31536b", justifyContent: "space-between", color: "#bdd0dd", fontSize: portrait ? 28 : 20 }}><span>The open app platform for builders.</span><span style={{ color: "#72c0ed" }}>{card.url}</span></div>
+    </div>;
+  }
   const portrait = height > width;
   const square = height === width;
   const pad = portrait ? 72 : square ? 64 : 48;
@@ -194,19 +228,30 @@ Deno.serve(async (req) => {
   const id = params.get("id") || "";
   const variant = params.get("variant") || "landscape";
   const version = params.get("v");
-  if (!(variant in formats) || id.length > 120 || (version !== null && !/^[a-z0-9]{1,16}$/i.test(version)) || !["app", "profile", "collection", "rocket100"].includes(kind)) return notFound();
+  if (!(variant in formats) || id.length > 120 || (version !== null && !/^[a-z0-9]{1,16}$/i.test(version)) || !["app", "profile", "collection", "rocket100", "recap"].includes(kind)) return notFound();
   if (!allowRender(req, `${kind}:${id}:${variant}`)) return new Response("Card request limit reached", { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } });
   try {
     const card = await loadCard(kind, id, variant !== "portrait");
     if (!card) return notFound();
-    if (req.method === "HEAD") return new Response(null, { headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*" } });
+    if (req.method === "HEAD") return new Response(null, { headers: { "Content-Type": "image/png", "Cache-Control": kind === "recap" ? "no-store" : "public, max-age=300", "Access-Control-Allow-Origin": "*" } });
+    if (kind === "recap") {
+      const key = `${id}:${variant}`;
+      const cached = recapImageCache.get(key);
+      if (cached && cached.until > Date.now()) return new Response(cached.bytes.slice(), { headers: { "Content-Type": "image/png", "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*", "X-Content-Type-Options": "nosniff" } });
+    }
     const [width, height] = formats[variant as keyof typeof formats];
     const image = new ImageResponse(artwork(card, width, height), { width, height, fonts: cardFonts });
     const headers = new Headers(image.headers);
     headers.set("Access-Control-Allow-Origin", "*");
-    headers.set("Cache-Control", kind === "collection" ? "public, max-age=30" : "public, max-age=300");
+    headers.set("Cache-Control", kind === "recap" ? "no-store" : kind === "collection" ? "public, max-age=30" : "public, max-age=300");
     headers.set("X-Content-Type-Options", "nosniff");
     if (req.method === "HEAD") return new Response(null, { headers });
+    if (kind === "recap") {
+      const bytes = new Uint8Array(await image.arrayBuffer());
+      if (recapImageCache.size > 100) recapImageCache.delete(recapImageCache.keys().next().value!);
+      recapImageCache.set(`${id}:${variant}`, { bytes, until: Date.now() + 300_000 });
+      return new Response(bytes.slice(), { status: 200, headers });
+    }
     return new Response(image.body, { status: image.status, headers });
   } catch (error) {
     console.error("share card render failed", error instanceof Error ? error.message : "unknown");
