@@ -11,7 +11,6 @@ import {
   Bookmark,
   Compass,
   Zap,
-  ExternalLink,
   Layers3,
   Plus,
   Flame,
@@ -293,15 +292,7 @@ export default function SiteHeader({
                   className="h-[18px] w-[18px] shrink-0"
                   aria-hidden="true"
                 />
-                {!sidebarCompact && (
-                  <>
-                    <span>Launch</span>
-                    <ExternalLink
-                      className="ml-auto h-3.5 w-3.5"
-                      aria-hidden="true"
-                    />
-                  </>
-                )}
+                {!sidebarCompact && <span>Launch</span>}
               </a>
             </div>
             <div>
