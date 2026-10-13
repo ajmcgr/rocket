@@ -64,6 +64,7 @@ export default function Discover({ initialCategories = [], initialView }: {
   const source = params.get("source") || "";
   const pricing = params.get("pricing") || "";
   const billing = params.get("billing") || "";
+  const mcp = params.get("mcp") === "1";
   const sort = params.get("sort") === "discovered" ? "discovered" : "launched";
   const page = Math.max(
     0,
@@ -83,7 +84,7 @@ export default function Discover({ initialCategories = [], initialView }: {
     !category &&
     !platform &&
     !source &&
-    !pricing && !billing &&
+    !pricing && !billing && !mcp &&
     page === 0;
 
   useEffect(() => {
@@ -149,6 +150,7 @@ export default function Discover({ initialCategories = [], initialView }: {
         const result = await marketplaceRpc("search_marketplace", {
           p_query: search, p_category: category, p_platform: platform, p_pricing: pricing,
           p_billing: billing, p_source: source, p_sort: view === "new" ? "discovered" : sort,
+          p_mcp: mcp,
           p_offset: page * PAGE_SIZE, p_limit: PAGE_SIZE,
         });
         if (result.error) throw result.error;
@@ -195,7 +197,7 @@ export default function Discover({ initialCategories = [], initialView }: {
     return () => {
       canceled = true;
     };
-  }, [search, category, platform, source, pricing, billing, sort, page, view, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
+  }, [search, category, platform, source, pricing, billing, mcp, sort, page, view, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
 
   useEffect(() => {
     if (!user || apps.length === 0) {
@@ -234,7 +236,7 @@ export default function Discover({ initialCategories = [], initialView }: {
     else next.delete(key);
     if (key !== "view") next.set("view", "all");
     if (key === "view" && value !== "all") {
-      for (const filter of ["q", "category", "platform", "source", "sort"])
+      for (const filter of ["q", "category", "platform", "source", "sort", "mcp"])
         next.delete(filter);
       setQuery("");
     }
@@ -402,6 +404,10 @@ export default function Discover({ initialCategories = [], initialView }: {
               <select aria-label="Billing type" value={billing} onChange={e => change("billing",e.target.value)} className="min-h-11 rounded-lg border bg-white px-3 text-sm">
                 <option value="">All billing types</option><option value="one_time">One-time</option><option value="subscription">Subscription</option>
               </select>
+              <label className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm text-neutral-700">
+                <input type="checkbox" checked={mcp} onChange={(event) => change("mcp", event.target.checked ? "1" : "")} />
+                MCP Available
+              </label>
               {search && <p className="w-full text-sm text-neutral-500">Matches are ranked by relevance before date.</p>}
               <select
                 aria-label="Category"

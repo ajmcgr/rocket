@@ -150,6 +150,25 @@ describe("New app feed pagination", () => {
   });
 });
 
+it("passes the MCP Available filter to server-side search before pagination", async () => {
+  mocks.rpc.mockResolvedValue({ data: { apps: [], total: 0 }, error: null });
+  mocks.from.mockImplementation(() => {
+    const builder: any = {};
+    for (const method of ["select", "order", "limit", "eq", "in"])
+      builder[method] = () => builder;
+    builder.then = (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve);
+    return builder;
+  });
+  render(<MemoryRouter initialEntries={["/discover?view=all&mcp=1"]}><Discover /></MemoryRouter>);
+  const filter = await screen.findByRole("checkbox", { name: "MCP Available" }) as HTMLInputElement;
+  expect(filter.checked).toBe(true);
+  await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({
+    p_mcp: true, p_offset: 0, p_limit: 24,
+  })));
+  fireEvent.click(filter);
+  await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({ p_mcp: false })));
+});
+
 describe("engagement rankings", () => {
   function setup(error: any = null) {
     mocks.rpc.mockResolvedValue({

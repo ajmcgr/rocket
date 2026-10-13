@@ -11,6 +11,7 @@ import {
   validateSubmission,
   type SubmissionDetails,
 } from "../_shared/appSubmission.ts";
+import { validateAgentIntegrations } from "../_shared/agentIntegrations.ts";
 
 const origin = Deno.env.get("SUPABASE_URL")!;
 const admin = createClient(origin, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -1070,6 +1071,27 @@ Deno.serve(async (req) => {
         });
         if (result.error) throw result.error;
         return json(result.data);
+      }
+      case "update_agent_integrations": {
+        const appId = text(body.app_id, 36);
+        if (!/^[0-9a-f-]{36}$/i.test(appId)) throw new Error("Invalid app");
+        const owner = await admin.from("app_owners").select("app_id")
+          .eq("app_id", appId).eq("user_id", user.id)
+          .eq("verification_level", "domain_verified")
+          .is("revoked_at", null).maybeSingle();
+        if (owner.error) throw owner.error;
+        if (!owner.data) throw new Error("Domain-verified app ownership is required");
+        const fields = await validateAgentIntegrations(body);
+        const hasIntegration = Boolean(fields.mcp_url || fields.api_docs_url ||
+          fields.github_url || fields.deployment_url || fields.supported_clients.length);
+        const result = hasIntegration
+          ? await admin.from("app_agent_integrations").upsert({
+              app_id: appId, ...fields, updated_by: user.id,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "app_id" })
+          : await admin.from("app_agent_integrations").delete().eq("app_id", appId);
+        if (result.error) throw result.error;
+        return json({ status: hasIntegration ? "saved" : "removed" });
       }
       case "github_build_info": {
         const appId = text(body.app_id, 36);
