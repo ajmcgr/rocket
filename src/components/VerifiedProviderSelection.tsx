@@ -53,6 +53,7 @@ export function VerifiedProviderSelection({ appId, kind }: { appId: string; kind
       setStatus(await request("select", {
         kind, provider: next, expected_previous: previous, confirm_switch: true,
       }));
+      if (kind === "analytics") window.dispatchEvent(new Event("rocket-provider-selection-updated"));
       setNotice(next ? `${label[next]} is now the selected ${kind} source.` : `No ${kind} source is selected.`);
     } catch (cause) { setError((cause as Error).message); }
     finally { setBusy(false); }

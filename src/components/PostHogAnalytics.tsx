@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 
 type Connection = { status: string; project_id: string | null; project_name: string | null;
-  verified_hostname: string | null; last_error: string | null };
+  verified_hostname: string | null; last_error: string | null; last_successful_sync: string | null };
 type Status = { connection: Connection | null; selected: boolean; active_provider: string | null;
   visibility: string; latest: { metric_date: string; metric_value: number } | null };
 type Project = { id: string; name: string };
@@ -31,6 +31,9 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
     if (result === "error") setError("PostHog authorization was not completed.");
     if (result === "connected") setNotice("PostHog authorized. Select the project for this app.");
     void refresh().catch((cause) => setError((cause as Error).message));
+    const changed = () => { void refresh().catch((cause) => setError((cause as Error).message)); };
+    window.addEventListener("rocket-provider-selection-updated", changed);
+    return () => window.removeEventListener("rocket-provider-selection-updated", changed);
   }, [refresh]);
   const run = async (task: () => Promise<void>) => {
     setBusy(true); setError(""); setNotice("");
@@ -38,6 +41,8 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
     finally { setBusy(false); }
   };
   const connected = status?.connection && status.connection.status !== "disconnected";
+  const fresh = Boolean(status?.connection?.last_successful_sync
+    && Date.now() - Date.parse(status.connection.last_successful_sync) < 72 * 60 * 60 * 1000);
   return <section className="mt-6 rounded-2xl border bg-white p-6 text-sm">
     <h2 className="font-semibold">PostHog</h2>
     <p className="mt-2 text-neutral-600">You can use one analytics provider at a time. Rocket counts pageviews on this app&apos;s verified website host. Connecting PostHog does not replace Google Analytics until you confirm a verified switch.</p>
@@ -49,6 +54,7 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
         ? status.connection!.status.replaceAll("_", " ") + " · " + (status.connection!.project_name || "Choose a project")
         : "Not connected"}</p>
       {status.connection?.verified_hostname && <p className="mt-1 text-neutral-500">Verified host: {status.connection.verified_hostname}</p>}
+      {status.connection?.last_successful_sync && <p className="mt-1 text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}{fresh ? "" : " · stale; sync again before sharing"}</p>}
       {status.connection?.last_error && <p className="mt-2 text-amber-700">{status.connection.last_error}</p>}
       {status.latest && <p className="mt-2 text-neutral-700">Private completed-day pageviews: {status.latest.metric_value.toLocaleString()} on {status.latest.metric_date} UTC</p>}
       {!connected && <div className="mt-4 flex flex-wrap items-end gap-3">
@@ -95,7 +101,9 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
             + (status.active_provider || "none") + " to PostHog? The new source starts private.")) return;
           void run(async () => {
             await request("activate", { expected_previous: status.active_provider, confirm_switch: true });
-            await refresh(); setNotice("PostHog selected. Its metrics remain private until you choose visibility.");
+            await refresh();
+            window.dispatchEvent(new Event("rocket-provider-selection-updated"));
+            setNotice("PostHog selected. Its metrics remain private until you choose visibility.");
           });
         }} className="ml-2 mt-4 rounded-xl bg-brand px-4 py-2 text-white disabled:opacity-50">
         Use verified PostHog</button>}
@@ -105,8 +113,8 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
             await request("set_visibility", { visibility: event.target.value }); await refresh();
             setNotice("PostHog visibility updated.");
           })} className="rounded-lg border p-2">
-            <option value="private">Private</option><option value="verified_only">Verified only</option>
-            <option value="range">Range</option><option value="exact">Exact</option>
+            <option value="private">Private</option><option value="verified_only" disabled={!fresh}>Verified only</option>
+            <option value="range" disabled={!fresh}>Range</option><option value="exact" disabled={!fresh}>Exact</option>
           </select>
         </label>
         <Link to={"/apps/" + appId} className="mt-3 inline-block text-sky-700">Preview public app profile →</Link>
@@ -115,7 +123,9 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
         if (!window.confirm("Disconnect PostHog? Rocket will stop syncing and remove its public traffic verification.")) return;
         void run(async () => {
           await request("disconnect"); setProjects([]); setProjectId("");
-          await refresh(); setNotice("PostHog disconnected.");
+          await refresh();
+          window.dispatchEvent(new Event("rocket-provider-selection-updated"));
+          setNotice("PostHog disconnected.");
         });
       }} className="mt-4 block rounded-xl border px-4 py-2 text-red-700 disabled:opacity-50">
         Disconnect PostHog</button>}

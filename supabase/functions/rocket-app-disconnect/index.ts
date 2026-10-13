@@ -9,7 +9,19 @@ Deno.serve(async (req) => {
     const body = await req.json();
     if (typeof body.app_id !== "string" || !/^[0-9a-f-]{36}$/i.test(body.app_id) ||
       !["status", "app", "posthog", "stripe_payments"].includes(body.action)) return json({ error: "Invalid request" }, 400);
-    const { data, error } = await getAdmin().rpc("manage_app_disconnection", {
+    const admin = getAdmin();
+    if (body.action === "posthog") {
+      const disconnected = await admin.rpc("disconnect_posthog_authorization", {
+        p_app_id: body.app_id, p_user_id: user.id,
+      });
+      if (disconnected.error) return json({ error: disconnected.error.message }, 409);
+      const status = await admin.rpc("manage_app_disconnection", {
+        p_app_id: body.app_id, p_user_id: user.id, p_action: "status",
+      });
+      if (status.error) return json({ error: status.error.message }, 409);
+      return json(status.data);
+    }
+    const { data, error } = await admin.rpc("manage_app_disconnection", {
       p_app_id: body.app_id, p_user_id: user.id, p_action: body.action,
     });
     if (error) return json({ error: error.message }, 409);
