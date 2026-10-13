@@ -159,7 +159,7 @@ it("passes the MCP Available filter to server-side search before pagination", as
     builder.then = (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve);
     return builder;
   });
-  render(<MemoryRouter initialEntries={["/discover?view=all&mcp=1"]}><Discover /></MemoryRouter>);
+  render(<MemoryRouter initialEntries={["/discover?view=all&mcp=true"]}><Discover /></MemoryRouter>);
   const filter = await screen.findByRole("checkbox", { name: "MCP Available" }) as HTMLInputElement;
   expect(filter.checked).toBe(true);
   await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({
