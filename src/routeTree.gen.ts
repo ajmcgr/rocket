@@ -54,6 +54,7 @@ import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppLogosRouteImport } from './routes/_app/logos'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppPresentRouteImport } from './routes/_app/present'
+import { Route as AppRecapRouteImport } from './routes/_app/recap'
 import { Route as AppSavedRouteImport } from './routes/_app/saved'
 import { Route as AppSavedAppsRouteImport } from './routes/_app/saved-apps'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
@@ -112,6 +113,7 @@ import { Route as AppSettingsTeamRouteImport } from './routes/_app/settings.team
 import { Route as AppStudioIndexRouteImport } from './routes/_app/studio.index'
 import { Route as AppStudioIdRouteImport } from './routes/_app/studio.$id'
 import { Route as BlogAuthorIdRouteImport } from './routes/blog.author.$id'
+import { Route as RecapSIdRouteImport } from './routes/recap.s.$id'
 import { Route as ShareAssetTokenRouteImport } from './routes/share.asset.$token'
 import { Route as ShareProjectTokenRouteImport } from './routes/share.project.$token'
 import { Route as AppBrandsIdIndexRouteImport } from './routes/_app/brands.$id.index'
@@ -357,6 +359,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
 const AppPresentRoute = AppPresentRouteImport.update({
   id: '/present',
   path: '/present',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecapRoute = AppRecapRouteImport.update({
+  id: '/recap',
+  path: '/recap',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSavedRoute = AppSavedRouteImport.update({
@@ -650,6 +657,11 @@ const BlogAuthorIdRoute = BlogAuthorIdRouteImport.update({
   path: '/blog/author/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecapSIdRoute = RecapSIdRouteImport.update({
+  id: '/recap/s/$id',
+  path: '/recap/s/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShareAssetTokenRoute = ShareAssetTokenRouteImport.update({
   id: '/share/asset/$token',
   path: '/share/asset/$token',
@@ -803,6 +815,7 @@ export interface FileRoutesByFullPath {
   '/logos': typeof AppLogosRoute
   '/notifications': typeof AppNotificationsRoute
   '/present': typeof AppPresentRoute
+  '/recap': typeof AppRecapRoute
   '/saved': typeof AppSavedRoute
   '/saved-apps': typeof AppSavedAppsRoute
   '/settings': typeof AppSettingsRouteWithChildren
@@ -851,6 +864,7 @@ export interface FileRoutesByFullPath {
   '/settings/team': typeof AppSettingsTeamRoute
   '/studio/$id': typeof AppStudioIdRoute
   '/blog/author/$id': typeof BlogAuthorIdRoute
+  '/recap/s/$id': typeof RecapSIdRoute
   '/share/asset/$token': typeof ShareAssetTokenRoute
   '/share/project/$token': typeof ShareProjectTokenRoute
   '/assets/': typeof AppAssetsIndexRoute
@@ -928,6 +942,7 @@ export interface FileRoutesByTo {
   '/logos': typeof AppLogosRoute
   '/notifications': typeof AppNotificationsRoute
   '/present': typeof AppPresentRoute
+  '/recap': typeof AppRecapRoute
   '/saved': typeof AppSavedRoute
   '/saved-apps': typeof AppSavedAppsRoute
   '/templates': typeof AppTemplatesRoute
@@ -974,6 +989,7 @@ export interface FileRoutesByTo {
   '/settings/team': typeof AppSettingsTeamRoute
   '/studio/$id': typeof AppStudioIdRoute
   '/blog/author/$id': typeof BlogAuthorIdRoute
+  '/recap/s/$id': typeof RecapSIdRoute
   '/share/asset/$token': typeof ShareAssetTokenRoute
   '/share/project/$token': typeof ShareProjectTokenRoute
   '/assets': typeof AppAssetsIndexRoute
@@ -1053,6 +1069,7 @@ export interface FileRoutesById {
   '/_app/logos': typeof AppLogosRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/present': typeof AppPresentRoute
+  '/_app/recap': typeof AppRecapRoute
   '/_app/saved': typeof AppSavedRoute
   '/_app/saved-apps': typeof AppSavedAppsRoute
   '/_app/settings': typeof AppSettingsRouteWithChildren
@@ -1101,6 +1118,7 @@ export interface FileRoutesById {
   '/_app/settings/team': typeof AppSettingsTeamRoute
   '/_app/studio/$id': typeof AppStudioIdRoute
   '/blog/author/$id': typeof BlogAuthorIdRoute
+  '/recap/s/$id': typeof RecapSIdRoute
   '/share/asset/$token': typeof ShareAssetTokenRoute
   '/share/project/$token': typeof ShareProjectTokenRoute
   '/_app/assets/': typeof AppAssetsIndexRoute
@@ -1180,6 +1198,7 @@ export interface FileRouteTypes {
     | '/logos'
     | '/notifications'
     | '/present'
+    | '/recap'
     | '/saved'
     | '/saved-apps'
     | '/settings'
@@ -1228,6 +1247,7 @@ export interface FileRouteTypes {
     | '/settings/team'
     | '/studio/$id'
     | '/blog/author/$id'
+    | '/recap/s/$id'
     | '/share/asset/$token'
     | '/share/project/$token'
     | '/assets/'
@@ -1305,6 +1325,7 @@ export interface FileRouteTypes {
     | '/logos'
     | '/notifications'
     | '/present'
+    | '/recap'
     | '/saved'
     | '/saved-apps'
     | '/templates'
@@ -1351,6 +1372,7 @@ export interface FileRouteTypes {
     | '/settings/team'
     | '/studio/$id'
     | '/blog/author/$id'
+    | '/recap/s/$id'
     | '/share/asset/$token'
     | '/share/project/$token'
     | '/assets'
@@ -1429,6 +1451,7 @@ export interface FileRouteTypes {
     | '/_app/logos'
     | '/_app/notifications'
     | '/_app/present'
+    | '/_app/recap'
     | '/_app/saved'
     | '/_app/saved-apps'
     | '/_app/settings'
@@ -1477,6 +1500,7 @@ export interface FileRouteTypes {
     | '/_app/settings/team'
     | '/_app/studio/$id'
     | '/blog/author/$id'
+    | '/recap/s/$id'
     | '/share/asset/$token'
     | '/share/project/$token'
     | '/_app/assets/'
@@ -1564,6 +1588,7 @@ export interface RootRouteChildren {
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   BlogAuthorIdRoute: typeof BlogAuthorIdRoute
+  RecapSIdRoute: typeof RecapSIdRoute
   ShareAssetTokenRoute: typeof ShareAssetTokenRoute
   ShareProjectTokenRoute: typeof ShareProjectTokenRoute
 }
@@ -1883,6 +1908,13 @@ declare module '@tanstack/react-router' {
       path: '/present'
       fullPath: '/present'
       preLoaderRoute: typeof AppPresentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/recap': {
+      id: '/_app/recap'
+      path: '/recap'
+      fullPath: '/recap'
+      preLoaderRoute: typeof AppRecapRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/saved': {
@@ -2291,6 +2323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogAuthorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recap/s/$id': {
+      id: '/recap/s/$id'
+      path: '/recap/s/$id'
+      fullPath: '/recap/s/$id'
+      preLoaderRoute: typeof RecapSIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/share/asset/$token': {
       id: '/share/asset/$token'
       path: '/share/asset/$token'
@@ -2512,6 +2551,7 @@ interface AppRouteChildren {
   AppLogosRoute: typeof AppLogosRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPresentRoute: typeof AppPresentRoute
+  AppRecapRoute: typeof AppRecapRoute
   AppSavedRoute: typeof AppSavedRoute
   AppSavedAppsRoute: typeof AppSavedAppsRoute
   AppSettingsRoute: typeof AppSettingsRouteWithChildren
@@ -2570,6 +2610,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLogosRoute: AppLogosRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPresentRoute: AppPresentRoute,
+  AppRecapRoute: AppRecapRoute,
   AppSavedRoute: AppSavedRoute,
   AppSavedAppsRoute: AppSavedAppsRoute,
   AppSettingsRoute: AppSettingsRouteWithChildren,
@@ -2671,6 +2712,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesIndexRoute: ResourcesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   BlogAuthorIdRoute: BlogAuthorIdRoute,
+  RecapSIdRoute: RecapSIdRoute,
   ShareAssetTokenRoute: ShareAssetTokenRoute,
   ShareProjectTokenRoute: ShareProjectTokenRoute,
 }
