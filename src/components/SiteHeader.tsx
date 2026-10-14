@@ -211,7 +211,7 @@ export default function SiteHeader({
         style={{ width: sidebarWidth }}
       >
         <div
-          className={`relative flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "gap-2 px-4"}`}
+          className={`marketplace-shell-divider relative flex h-[65px] shrink-0 items-center border-b border-[#e8edf2] ${sidebarCompact ? "justify-center px-2" : "gap-2 px-4"}`}
         >
           {sidebarCompact ? (
             <Link
@@ -328,7 +328,7 @@ export default function SiteHeader({
           </nav>
         </div>
       </aside>
-      <header className="sticky top-0 z-40 border-b border-[#e8edf2] bg-white/95 backdrop-blur-sm lg:transition-[margin-left] lg:duration-200">
+      <header className="marketplace-shell-divider sticky top-0 z-40 border-b border-[#e8edf2] bg-white/95 backdrop-blur-sm lg:transition-[margin-left] lg:duration-200">
         <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:gap-6 lg:px-8 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)_minmax(0,1fr)]">
           <div className="flex h-full shrink-0 items-center lg:hidden">
             <Logo size="md" />
