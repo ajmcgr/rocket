@@ -8,6 +8,7 @@ import {
   type FeaturedPlacement,
 } from "@/lib/featuredAds";
 import AppLogo from "./AppLogo";
+import SponsoredAdSkeleton from "./SponsoredAdSkeleton";
 
 function FeaturedCard({
   placement,
@@ -243,15 +244,14 @@ export default function FeaturedAdRows({
                 surface={surface}
                 reserved={reserved}
               />
+            ) : status === "loading" ? (
+              <SponsoredAdSkeleton key={`${surface}-${slotId}`} />
             ) : (
               <div
                 key={`${surface}-${slotId}`}
                 className="min-h-36 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900"
-                aria-busy={status === "loading"}
               >
-                {status === "error"
-                  ? "Sponsored placements are temporarily unavailable."
-                  : "Loading sponsored apps…"}
+                Sponsored placements are temporarily unavailable.
               </div>
             ),
           )}

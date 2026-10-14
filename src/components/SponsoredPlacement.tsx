@@ -3,6 +3,7 @@ import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import AppLogo from "./AppLogo";
+import SponsoredAdSkeleton from "./SponsoredAdSkeleton";
 
 type Placement = {
   sponsorship_id: string;
@@ -23,17 +24,21 @@ function recordPlacementMetric(placement: Placement, eventType: "view" | "click"
 /** Separate paid inventory; never mixed into editorial or ranked app arrays. */
 export default function SponsoredPlacement({ category }: { category?: string }) {
   const [placement, setPlacement] = useState<Placement | null>(null);
+  const [loading, setLoading] = useState(true);
   const element = useRef<HTMLElement | null>(null);
   useEffect(() => {
     let current = true;
     setPlacement(null);
+    setLoading(true);
     void supabase.functions.invoke("rocket-advertising", {
       body: { action: "active", category: category || null },
     }).then(({ data, error }) => {
-      if (!current || error) return;
+      if (!current) return;
+      setLoading(false);
+      if (error) return;
       const targetType = category ? "category_sponsor" : "featured_app";
       setPlacement((data?.placements || []).find((item: Placement) => item.sponsorship_type === targetType) || null);
-    });
+    }).catch(() => { if (current) setLoading(false); });
     return () => { current = false; };
   }, [category]);
   useEffect(() => {
@@ -49,6 +54,7 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
     observer.observe(element.current);
     return () => observer.disconnect();
   }, [placement]);
+  if (loading) return <SponsoredAdSkeleton category />;
   if (!placement) return null;
   const href = `/apps/${placement.app.slug || placement.app.id}?sponsor=${placement.sponsorship_id}`;
   const website = placement.destination_url?.startsWith("https://") ? placement.destination_url : null;
