@@ -23,10 +23,10 @@ export const Route = createFileRoute("/100")({
   },
   head: () => ({
     meta: [
-      { title: "Rocket 100 — Founding Builders Leaderboard | Rocket" },
-      { name: "description", content: "Discover the first 100 builders on Rocket, ranked by the popularity and number of apps they've built." },
-      { property: "og:title", content: "Rocket 100 — Founding Builders Leaderboard" },
-      { property: "og:description", content: "The first 100 builders shaping the open app platform." },
+      { title: "Rocket 100 — Builders Leaderboard | Rocket" },
+      { name: "description", content: "Builders ranked by their apps on Rocket." },
+      { property: "og:title", content: "Rocket 100 — Builders Leaderboard" },
+      { property: "og:description", content: "Builders ranked by their apps on Rocket." },
       { property: "og:url", content: "https://tryrocket.ai/100" },
     ],
     links: [{ rel: "canonical", href: "https://tryrocket.ai/100" }],

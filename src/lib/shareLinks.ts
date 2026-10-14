@@ -38,7 +38,7 @@ export function shareCardVersion(...values: unknown[]) {
 }
 
 export function shareTargets(title: string, url: string, kind: ShareKind = "app") {
-  const caption = kind === "app" ? `Just launched ${title} on Rocket.\n\n${url}` : kind === "rocket100" ? `I'm ${title} on Rocket.\n\n${url}` : kind === "recap" ? `My ${title} on Rocket.\n\n${url}` : kind === "profile" ? `Find ${title} on Rocket.\n\n${url}` : `Explore ${title} on Rocket.\n\n${url}`;
+  const caption = kind === "app" ? `Just launched ${title} on Rocket.\n\n${url}` : kind === "rocket100" ? `I'm in the Rocket 100.\n\n${url}` : kind === "recap" ? `My ${title} on Rocket.\n\n${url}` : kind === "profile" ? `Find ${title} on Rocket.\n\n${url}` : `Explore ${title} on Rocket.\n\n${url}`;
   return {
     caption,
     x: `https://twitter.com/intent/tweet?${new URLSearchParams({ text: caption })}`,

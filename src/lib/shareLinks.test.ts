@@ -20,5 +20,6 @@ describe("Rocket sharing links", () => {
     expect(new URL(targets.x).searchParams.get("text")).toContain("Launch");
     expect(targets.reddit).toContain("/submit?");
     expect(shareTargets("@alex", "https://tryrocket.ai/@alex", "profile").caption).toContain("Find @alex");
+    expect(shareTargets("Rocket 100 member #001", "https://tryrocket.ai/@alex", "rocket100").caption).toBe("I'm in the Rocket 100.\n\nhttps://tryrocket.ai/@alex");
   });
 });

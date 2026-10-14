@@ -8,7 +8,7 @@ const facts = [
   "Signed-in users can save apps and leave star ratings on individual app pages.",
   "Developers can submit an app and manage or claim its listing after applicable ownership checks.",
   "Domain-verified owners can add free, developer-declared AI agent links and supported clients to an app profile. Discover offers an MCP Available filter; Rocket does not verify compatibility or run MCP tools.",
-  "Public apps, developer profiles and public collections have sharing tools. Rocket 100 is an automated founding-builder leaderboard; Rocket Recap is private until an owner explicitly shares selected eligible activity.",
+  "Public apps, developer profiles and public collections have sharing tools. Rocket 100 is an automated builder leaderboard; Rocket Recap is private until an owner explicitly shares selected eligible activity.",
   "An app can select one analytics provider and one revenue provider at a time. Connected provider metrics remain private by default and are public only when eligible and enabled by the owner.",
   "Logo and icon creation tools are optional. Launch, Post and Media are separate linked products.",
 ];
