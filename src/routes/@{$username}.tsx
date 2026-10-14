@@ -30,7 +30,7 @@ export const Route = createFileRoute("/@{$username}")({
       { property: "og:title", content: `@${loaderData.profile.username} | Rocket` },
       { property: "og:description", content: loaderData.profile.bio || `Explore apps from @${loaderData.profile.username} on Rocket.` },
       { property: "og:url", content: `https://tryrocket.ai/@${loaderData.profile.username}` },
-      { property: "og:image", content: shareCardUrl(loaderData.rocket100 ? "rocket100" : "profile", loaderData.profile.username, "landscape", shareCardVersion(loaderData.profile.username, loaderData.profile.bio, loaderData.profile.avatar_url, loaderData.rocket100?.rank, loaderData.rocket100?.founding_number)) },
+      { property: "og:image", content: shareCardUrl(loaderData.rocket100 ? "rocket100" : "profile", loaderData.profile.username, "landscape", shareCardVersion("builder-copy", loaderData.profile.username, loaderData.profile.bio, loaderData.profile.avatar_url, loaderData.rocket100?.rank, loaderData.rocket100?.founding_number)) },
       { name: "twitter:card", content: "summary_large_image" },
     ] : [{ title: "Profile not found | Rocket" }, { name: "robots", content: "noindex" }],
     links: loaderData?.profile ? [{ rel: "canonical", href: `https://tryrocket.ai/@${loaderData.profile.username}` }] : [],

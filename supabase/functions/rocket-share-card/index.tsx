@@ -112,8 +112,8 @@ async function loadCard(kind: string, id: string, includeCover: boolean): Promis
     if (error || !Array.isArray(cohort?.rows)) return null;
     const builder = cohort.rows.find((row: { username: string }) => row.username === id);
     if (!builder) return null;
-    const founding = String(builder.founding_number).padStart(3, "0");
-    return { title: builder.name || `@${id}`, detail: `@${id}  ·  Founding Builder #${founding}${builder.rank ? `  ·  Current rank #${builder.rank}` : ""}`,
+    const memberNumber = String(builder.founding_number).padStart(3, "0");
+    return { title: builder.name || `@${id}`, detail: `@${id}  ·  Rocket 100 member #${memberNumber}${builder.rank ? `  ·  Current rank #${builder.rank}` : ""}`,
       kicker: "ROCKET 100", url: `tryrocket.ai/@${id}`, logo: await rasterDataUrl(builder.avatar_url), cover: null };
   }
   if (kind === "app") {

@@ -37,7 +37,7 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
     const { data: result, error } = await (supabase as any).rpc("rocket100_join");
     if (error) setNotice(error.message);
     else {
-      setNotice(result?.status === "full" ? "The founding cohort is complete." : result?.status === "revoked" ? "This account is ineligible for re-entry." : `You're one of the Rocket 100. Founding Builder #${number(result.founding_number)}.`);
+      setNotice(result?.status === "full" ? "The Rocket 100 is complete." : result?.status === "revoked" ? "This account is ineligible for re-entry." : `You're in the Rocket 100. Your member number is #${number(result.founding_number)}.`);
       if (result?.status === "awarded") {
         setStatus((previous) => ({ ...previous, founding_number: result.founding_number }));
         track("rocket100_awarded", { founding_number: result.founding_number });
@@ -70,7 +70,7 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
     <SiteHeader />
     <main className="rocket100-shell">
       <header className="rocket100-heading">
-        <div><h1>Rocket 100</h1><p>Founding builders ranked by their apps on Rocket.</p></div>
+        <div><h1>Rocket 100</h1><p>Builders ranked by their apps on Rocket.</p></div>
         <div className="rocket100-heading-actions"><span>{board.participants} / 100 builders</span>{action}</div>
       </header>
       {notice && <p role="status" className="rocket100-notice">{notice}</p>}
@@ -80,7 +80,7 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
           <div className="rocket100-table-header" role="row"><span>Rank</span><span>Builder</span><span>Apps</span><span>Score</span></div>
           {board.rows.length ? board.rows.map((builder) => <Link key={builder.username} to={`/@${builder.username}`} className="rocket100-row" role="row" onClick={() => track("rocket100_profile_clicked", { username: builder.username })}>
             <strong className="rocket100-rank">{builder.rank ? `#${builder.rank}` : "—"}</strong>
-            <span className="rocket100-person"><span className="rocket100-avatar"><ProfileAvatarImage src={builder.avatar_url} alt="" className="h-full w-full object-cover" fallback={builder.name?.slice(0, 1) || builder.username[0]} /></span><span><b>{builder.name || `@${builder.username}`}</b><small>@{builder.username} · Founding Builder #{number(builder.founding_number)}</small></span></span>
+            <span className="rocket100-person"><span className="rocket100-avatar"><ProfileAvatarImage src={builder.avatar_url} alt="" className="h-full w-full object-cover" fallback={builder.name?.slice(0, 1) || builder.username[0]} /></span><span><b>{builder.name || `@${builder.username}`}</b><small>@{builder.username} · Rocket 100 member #{number(builder.founding_number)}</small></span></span>
             <span className="rocket100-app-count">{builder.app_count}</span><strong className="rocket100-score">{builder.score ?? "—"}</strong>
           </Link>) : <div className="rocket100-empty"><strong>No builders yet.</strong><p>Eligible app owners can join above.</p></div>}
         </div>
