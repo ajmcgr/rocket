@@ -6,14 +6,14 @@ import Login from "./Login";
 
 const mocks = vi.hoisted(() => ({
   nav: vi.fn(), toast: vi.fn(), password: vi.fn(), signup: vi.fn(), oauth: vi.fn(),
-  invoke: vi.fn(), profile: vi.fn(),
+  invoke: vi.fn(), profile: vi.fn(), searchStr: "?next=%2Fconnect%2Fauthorize%3Fclient_id%3Dexample",
 }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock("@/lib/router-compat", () => ({
   useNavigate: () => mocks.nav,
-  useLocation: () => ({ search: "?next=%2Fconnect%2Fauthorize%3Fclient_id%3Dexample" }),
+  useLocation: () => ({ search: mocks.searchStr }),
   Link: ({ to, children }: any) => <a href={to}>{children}</a>,
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
@@ -38,6 +38,7 @@ async function fillAndSubmit() {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.searchStr = "?next=%2Fconnect%2Fauthorize%3Fclient_id%3Dexample";
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ external: { github: true } }) }));
   mocks.invoke.mockResolvedValue({ data: {}, error: null });
@@ -66,6 +67,15 @@ describe("Rocket's own account entry", () => {
     expect(mocks.password).toHaveBeenCalledWith({ email: "buyer@example.com", password: "secure-password" });
     expect(mocks.nav).toHaveBeenCalledWith("/connect/authorize?client_id=example", { replace: true });
     expect(mocks.oauth).not.toHaveBeenCalled();
+  });
+  it("keeps the intended app when switching from login to signup", async () => {
+    mocks.searchStr = "?next=%2Fapps%2Fadd%3Fapp%3D00d71c93-03a6-4a45-9a25-5eb56a6c42a3";
+    await render();
+    expect(container.querySelector('a[href^="/signup"]')?.getAttribute("href"))
+      .toBe("/signup?next=%2Fapps%2Fadd%3Fapp%3D00d71c93-03a6-4a45-9a25-5eb56a6c42a3");
+    await render("signup");
+    expect(container.querySelector('a[href^="/login"]')?.getAttribute("href"))
+      .toBe("/login?next=%2Fapps%2Fadd%3Fapp%3D00d71c93-03a6-4a45-9a25-5eb56a6c42a3");
   });
   it("preserves verification for unconfirmed accounts", async () => {
     mocks.password.mockResolvedValue({ data: { user: { id: "buyer", app_metadata: { provider: "email" } } }, error: null });
