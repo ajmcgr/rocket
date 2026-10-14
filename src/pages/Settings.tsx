@@ -22,7 +22,16 @@ const TABS = [
 export const SettingsLayout = () => {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 md:py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("rocket:start-tour"))}
+          className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+        >
+          Replay tour
+        </button>
+      </div>
       <div className="mt-8 flex flex-wrap gap-1 rounded-xl border border-neutral-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900">
         {TABS.map((t) => (
           <NavLink
@@ -113,16 +122,6 @@ export const AccountSettings = () => {
       <p className="mt-1 text-sm text-neutral-600">Permanently delete your Rocket account. This cannot be undone.</p>
       <button onClick={deleteAccount} disabled={loading === "delete"} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60">
         {loading === "delete" ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Delete account"}
-      </button>
-    </section>
-    <section className="rounded-2xl border border-neutral-200 bg-white p-6">
-      <h2 className="text-base font-semibold">Product tour</h2>
-      <p className="mt-1 text-sm text-neutral-600">Replay the guide to discovering apps and submitting or claiming your own.</p>
-      <button
-        onClick={() => window.dispatchEvent(new CustomEvent("rocket:start-tour"))}
-        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50"
-      >
-        Replay tour
       </button>
     </section>
     </div>
