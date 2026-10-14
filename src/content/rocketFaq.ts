@@ -77,7 +77,7 @@ export const faqSections = [
       },
       {
         q: "What does Rocket Developer add?",
-        a: "Rocket Developer costs $99/year per developer account. It brings together Verified Traction, Rocket ID, and Buy with Rocket for eligible apps you own. Advanced Analytics, AI App Optimization, and Beta Testing are in rollout. Each integration has its own setup and readiness checks; membership alone does not activate it.",
+        a: "Rocket Developer costs $99/year per developer account. It brings together Verified Traction, Rocket ID, and Buy with Rocket for eligible apps you own. Advanced Analytics, AI App Optimization, and Beta Testing are in beta. Each integration has its own setup and readiness checks; membership alone does not activate it.",
       },
       {
         q: "How can Rocket help my app grow?",
