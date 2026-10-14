@@ -150,7 +150,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           <Heading
             id="home-new"
             title="New & Noteworthy"
-            description="New to Rocket in the last 30 days, with product imagery and community interest."
+            description="New to Rocket in the last 30 days."
             href="/discover?view=new"
             action="All new apps"
           />
