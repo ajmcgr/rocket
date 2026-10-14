@@ -76,7 +76,7 @@ const Reserve = () => {
 
       <footer className="absolute inset-x-0 bottom-0 z-10 flex items-center gap-4 px-6 pb-6">
         <span className="text-xs text-cream/30">© Rocket 2026</span>
-        <a href="mailto:alex@trylaunch.ai" className="text-xs text-cream/30 transition-colors hover:text-[#FFFFFF]">Contact</a>
+        <a href="mailto:alex@tryrocket.ai" className="text-xs text-cream/30 transition-colors hover:text-[#FFFFFF]">Contact</a>
         <a href="https://x.com/tryrocketai" target="_blank" rel="noopener noreferrer" className="text-xs text-cream/30 transition-colors hover:text-[#FFFFFF]">X</a>
         <a href="https://www.instagram.com/tryrocketai/" target="_blank" rel="noopener noreferrer" className="text-xs text-cream/30 transition-colors hover:text-[#FFFFFF]">Instagram</a>
         <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noopener noreferrer" className="text-xs text-cream/30 transition-colors hover:text-[#FFFFFF]">Discord</a>
