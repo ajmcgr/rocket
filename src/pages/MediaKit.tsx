@@ -68,7 +68,7 @@ const MediaKit = () => (
       <section className="mt-14 rounded-2xl border border-neutral-200 bg-neutral-50 p-8">
         <h2 className="text-xl font-semibold tracking-tight">Press contact</h2>
         <p className="mt-2 text-neutral-700">For interviews, podcast invites, or partnerships:</p>
-        <a href="mailto:alex@trylaunch.ai" className="mt-3 inline-block text-brand hover:underline">alex@trylaunch.ai</a>
+        <a href="mailto:alex@tryrocket.ai" className="mt-3 inline-block text-brand hover:underline">alex@tryrocket.ai</a>
       </section>
     </main>
 
