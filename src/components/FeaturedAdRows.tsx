@@ -65,7 +65,7 @@ function FeaturedCard({
 
   if (!placement)
     return (
-      <article className="flex min-h-36 flex-col justify-between rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/60 p-5 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-100">
+      <article className="flex min-h-36 flex-col justify-between rounded-2xl border border-dashed border-neutral-300 bg-transparent p-5 text-neutral-800 dark:border-neutral-700 dark:text-neutral-100">
         <div>
           <p className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400">
             YOUR AD HERE
@@ -86,7 +86,7 @@ function FeaturedCard({
             }
             className="inline-flex min-h-11 items-center rounded-lg border border-sky-600 px-3 text-sm font-semibold text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950"
           >
-            Feature your app
+            Buy ad
           </Link>
         </div>
       </article>
