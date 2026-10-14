@@ -68,7 +68,7 @@ function FeaturedCard({
     return (
       <article className="flex min-h-36 flex-col justify-between rounded-2xl border border-dashed border-neutral-300 bg-transparent p-5 text-neutral-800 dark:border-neutral-700 dark:text-neutral-100">
         <div>
-          <p className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400">
+          <p className="text-xs font-bold tracking-wide text-neutral-500 dark:text-neutral-400">
             YOUR AD HERE
           </p>
         </div>
