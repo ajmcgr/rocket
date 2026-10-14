@@ -70,12 +70,14 @@ function FeaturedCard({
           <p className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400">
             YOUR AD HERE
           </p>
-          <p className="mt-2 text-sm">
-            Put your app in front of people discovering new software.
-          </p>
         </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm font-semibold">$49 / 7 days</span>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <span className="text-sm font-semibold">$49 / 7 days</span>
+            <p className="mt-1 text-sm">
+              Put your app in front of people discovering new software.
+            </p>
+          </div>
           <Link
             to="/advertise"
             onClick={() =>
