@@ -93,6 +93,29 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
   return (
     <>
       <SponsoredPlacement />
+      {data.rising.length > 0 && (
+        <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
+          <Heading
+            id="home-rising"
+            title="Rising"
+            description="Most viewed app pages on Rocket."
+            href="/rising"
+            action="View rising apps"
+          />
+          <div className="grid gap-x-7 lg:grid-cols-2">
+            {data.rising.map((row, index) => (
+              <div key={row.app.id} className="min-w-0">
+                <RankedAppRow
+                  app={row.app}
+                  {...save(row.app.id)}
+                  rank={index + 1}
+                  metadata={metadata.get(row.app.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       {data.picks.length > 0 && (
         <section className="mt-10 sm:mt-12" aria-labelledby="home-picks">
           <Heading
@@ -117,29 +140,6 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                     {row.pick.headline}
                   </p>
                 )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-      {data.rising.length > 0 && (
-        <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
-          <Heading
-            id="home-rising"
-            title="Rising"
-            description="Most viewed app pages on Rocket."
-            href="/rising"
-            action="View rising apps"
-          />
-          <div className="grid gap-x-7 lg:grid-cols-2">
-            {data.rising.map((row, index) => (
-              <div key={row.app.id} className="min-w-0">
-                <RankedAppRow
-                  app={row.app}
-                  {...save(row.app.id)}
-                  rank={index + 1}
-                  metadata={metadata.get(row.app.id)}
-                />
               </div>
             ))}
           </div>
