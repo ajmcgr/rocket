@@ -8,7 +8,7 @@ export default function SponsoredAdSkeleton({
       role="status"
       aria-label="Loading sponsored app"
       aria-busy="true"
-      className={`min-h-36 rounded-2xl border border-neutral-200 bg-transparent p-5 dark:border-neutral-800 ${category ? "mt-8 sm:p-6" : ""}`}
+      className={`min-h-36 min-w-0 rounded-2xl border border-neutral-200 bg-transparent p-5 dark:border-neutral-800 ${category ? "mt-8 sm:p-6" : ""}`}
     >
       <div aria-hidden="true" className="flex min-h-[6.5rem] flex-col justify-between motion-safe:animate-pulse">
         <div className="h-5 w-24 rounded-full bg-neutral-200 dark:bg-neutral-800" />
