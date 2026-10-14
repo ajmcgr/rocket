@@ -1126,7 +1126,7 @@ export default function DeveloperExperience({
                       "Everything in Free",
                       "Rocket ID",
                       "Buy with Rocket",
-                      "Beta Testing, AI Optimization and Advanced Analytics (in rollout)",
+                      "Beta Testing, AI Optimization and Advanced Analytics (beta)",
                     ]}
                   />
                   <p className="dev-small">

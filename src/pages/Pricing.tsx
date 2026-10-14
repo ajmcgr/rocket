@@ -35,7 +35,7 @@ const FAQS = [
   { q: "Is there one subscription for every Rocket product?", a: "No. Create plans and credits, Rocket Developer, and the separate Launch, Post, and Media products have their own pricing. Buy only what you need; a subscription to one does not include the others." },
   { q: "Does submitting an app cost anything?", a: "App submission and basic listing management are free. Rocket ownership verification is separate from submission. Adding an app does not automatically activate Rocket ID or Buy with Rocket." },
   { q: "Do Agent Integrations require Rocket Developer?", a: "No. A domain-verified app owner can add public MCP, API documentation, GitHub, and deployment links and declare supported AI clients for free. Rocket displays these as developer-declared, not Rocket-verified, connections." },
-  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. It brings app growth tools together: Verified Traction, Advanced Analytics, AI App Optimization, Beta Testing, Rocket ID, and Buy with Rocket. Some tools are in rollout. App submission, claiming, basic management, and verification remain free." },
+  { q: "What does Rocket Developer cost?", a: "Rocket Developer is $99 per year per developer account, not per app. It brings app growth tools together: Verified Traction, Advanced Analytics, AI App Optimization, Beta Testing, Rocket ID, and Buy with Rocket. Some tools are in beta. App submission, claiming, basic management, and verification remain free." },
   { q: "What is Rocket ID?", a: "Rocket ID lets users sign into an integrated app with their Rocket account. It requires an active Developer membership, verified ownership, and a configured and tested integration. Listing your app alone does not enable Rocket ID." },
   { q: "What is Buy with Rocket?", a: "Buy with Rocket lets eligible apps offer payment and verified access through Rocket. Live checkout is enabled, but a Buy option appears only for an offer that has passed its app-specific setup and readiness checks. It is not available on every listing." },
   { q: "What is the Buy with Rocket take rate?", a: "Rocket takes a 5% platform fee on payments through new Buy with Rocket plans. This transaction fee is separate from the $99/year Rocket Developer membership. Stripe processing fees and any other applicable charges are additional." },
@@ -222,24 +222,7 @@ const Pricing = () => {
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Monetize plans</h2>
             <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Submit, claim, manage, and verify your apps for free. Rocket Developer is the account-level membership for monetization.</p>
           </div>
-          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-            <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
-            <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
-            <p className="mt-4 text-neutral-600">Build trust, understand your audience, improve your app, and connect ready offers. One membership covers the apps you legitimately own.</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Verified Traction</h4><p className="mt-2 text-sm text-neutral-600">Connect supported evidence for your app. Basic verification remains free.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Advanced Analytics <span className="text-xs font-medium text-neutral-500">· In rollout</span></h4><p className="mt-2 text-sm text-neutral-600">Explore deeper app performance insights as access rolls out.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">AI App Optimization <span className="text-xs font-medium text-neutral-500">· In rollout</span></h4><p className="mt-2 text-sm text-neutral-600">Get help improving how your app is presented.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Beta Testing <span className="text-xs font-medium text-neutral-500">· In rollout</span></h4><p className="mt-2 text-sm text-neutral-600">Prepare to gather feedback from testers.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into an app you have integrated.</p></div>
-              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Offer Rocket checkout on individually configured, ready offers. Rocket's fee is 5% per payment; Stripe processing fees are separate.</p></div>
-            </div>
-            <p className="mt-5 text-sm text-neutral-600">Live checkout is enabled for offers that pass their app-specific readiness checks. It is not available on every listing.</p>
-            <Link to="/settings/developer" className={`${pricingCtaClass} mt-6`}>Join Rocket Developer →</Link>
-          </div>
-          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
-
-          <div className="mx-auto mt-14 max-w-3xl">
+          <div className="mx-auto mt-10 max-w-3xl">
             <h3 className="text-2xl font-semibold tracking-tight">Advertising</h3>
             <p className="mt-2 text-neutral-600">Give your app more visibility with a clearly labelled sponsored placement. Advertising is a separate one-time purchase, subject to available inventory.</p>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -258,6 +241,23 @@ const Pricing = () => {
             </div>
             <p className="mt-5 text-sm text-neutral-500">Sponsored placements do not change organic rankings or Rocket Picks.</p>
           </div>
+
+          <div className="mx-auto mt-14 max-w-3xl rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+            <h3 className="text-2xl font-semibold tracking-tight">Rocket Developer</h3>
+            <div className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-semibold tracking-tight">$99</span><span className="text-neutral-600">/ year, billed annually</span></div>
+            <p className="mt-4 text-neutral-600">Build trust, understand your audience, improve your app, and connect ready offers. One membership covers the apps you legitimately own.</p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Verified Traction</h4><p className="mt-2 text-sm text-neutral-600">Connect supported evidence for your app. Basic verification remains free.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Advanced Analytics <span className="text-xs font-medium text-neutral-500">· Beta</span></h4><p className="mt-2 text-sm text-neutral-600">Explore deeper app performance insights as access rolls out.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">AI App Optimization <span className="text-xs font-medium text-neutral-500">· Beta</span></h4><p className="mt-2 text-sm text-neutral-600">Get help improving how your app is presented.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Beta Testing <span className="text-xs font-medium text-neutral-500">· Beta</span></h4><p className="mt-2 text-sm text-neutral-600">Prepare to gather feedback from testers.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Rocket ID</h4><p className="mt-2 text-sm text-neutral-600">Let Rocket users sign into an app you have integrated.</p></div>
+              <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Offer Rocket checkout on individually configured, ready offers. Rocket's fee is 5% per payment; Stripe processing fees are separate.</p></div>
+            </div>
+            <p className="mt-5 text-sm text-neutral-600">Live checkout is enabled for offers that pass their app-specific readiness checks. It is not available on every listing.</p>
+            <Link to="/settings/developer" className={`${pricingCtaClass} mt-6`}>Join Rocket Developer →</Link>
+          </div>
+          <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
         </div>
       </section>
 

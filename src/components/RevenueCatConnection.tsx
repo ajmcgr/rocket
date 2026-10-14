@@ -82,7 +82,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
     {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
     {!status && !unavailable && !error && <p className="mt-4 text-sm text-neutral-500">Checking availability…</p>}
-    {unavailable && <p className="mt-4 text-sm text-neutral-600">Coming soon — RevenueCat verification is in rollout.</p>}
+    {unavailable && <p className="mt-4 text-sm text-neutral-600">RevenueCat verification is in beta and currently unavailable.</p>}
     {status && <>
       <p className="mt-3 text-sm text-neutral-600">{status.connection
         ? `Connection: ${status.connection.status}` : status.connect_available ? "Available to connect" : "Secure credential storage is not configured"}</p>
