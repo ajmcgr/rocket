@@ -55,7 +55,7 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
   };
   return <section ref={element} className="mt-8 rounded-2xl border border-sky-200 bg-white p-5 sm:p-6" aria-label={category ? `Sponsored in ${category}` : "Sponsored app"}>
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sky-800">Sponsored</span>
+      <span className="rocket-sponsored-label rounded-full bg-sky-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sky-800">Sponsored</span>
       <span className="text-xs text-neutral-500">Paid placement · organic rankings are separate</span>
     </div>
     <div className="mt-4 flex items-center gap-4">
@@ -74,9 +74,9 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
       </div>
       {website
         ? <a href={website} target="_blank" rel="sponsored noopener noreferrer" onClick={recordClick}
-            className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-sky-600 px-4 text-sm font-semibold text-sky-700 hover:bg-sky-50">Visit website</a>
+            className="rocket-sponsored-action inline-flex min-h-11 shrink-0 items-center rounded-xl border border-sky-600 px-4 text-sm font-semibold text-sky-700 hover:bg-sky-50">Visit website</a>
         : <Link to={href} onClick={recordClick}
-            className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-sky-600 px-4 text-sm font-semibold text-sky-700 hover:bg-sky-50">View app</Link>}
+            className="rocket-sponsored-action inline-flex min-h-11 shrink-0 items-center rounded-xl border border-sky-600 px-4 text-sm font-semibold text-sky-700 hover:bg-sky-50">View app</Link>}
     </div>
   </section>;
 }

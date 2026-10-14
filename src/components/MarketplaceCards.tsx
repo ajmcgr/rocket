@@ -297,7 +297,7 @@ export function RankedAppRow({
   onSave,
 }: BaseProps & SaveProps & { rank: number }) {
   return (
-    <article className="group flex min-h-20 min-w-0 flex-wrap items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70">
+    <article className="rocket-ranked-app-row group flex min-h-20 min-w-0 flex-wrap items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-white/70">
       <span className="w-5 shrink-0 text-sm font-semibold tabular-nums text-neutral-400">
         {rank}
       </span>
