@@ -255,10 +255,12 @@ export default function SiteHeader({
             {sidebarSections.map((section) => (
               <div key={section.heading}>
                 {sidebarCompact ? (
-                  <div
-                    className="mx-2 mb-2 border-t border-neutral-200"
-                    aria-hidden="true"
-                  />
+                  section.heading !== "Discover" && (
+                    <div
+                      className="mx-2 mb-2 border-t border-neutral-200"
+                      aria-hidden="true"
+                    />
+                  )
                 ) : (
                   <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
                     {section.heading}
