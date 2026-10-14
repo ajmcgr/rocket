@@ -27,6 +27,6 @@ describe("featured homepage inventory", () => {
       expect(screen.getByText("Sponsored placement reserved")).toBeTruthy(),
     );
     expect(screen.getAllByText("YOUR AD HERE")).toHaveLength(1);
-    expect(screen.getAllByText("Feature your app")).toHaveLength(1);
+    expect(screen.getAllByText("Buy ad")).toHaveLength(1);
   });
 });
