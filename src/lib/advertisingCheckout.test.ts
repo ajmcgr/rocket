@@ -24,8 +24,9 @@ function harness({ authenticated = true, canonical = true, owned = true, liveEna
     : { data: name === "is_rocket_admin" ? false : true, error: null });
   const from = (table: string) => {
     const query: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "is", "limit", "in"])
+    for (const method of ["select", "eq", "is", "limit", "in", "lte"])
       query[method] = () => query;
+    query.then = (resolve: (value: unknown) => void) => resolve({ data: [], error: null });
     query.update = (values: unknown) => { update(values); return query; };
     query.maybeSingle = async () => ({ data: null, error: null });
     query.single = async () => ({ data: table === "rocket_sponsorship_prices"

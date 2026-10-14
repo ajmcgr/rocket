@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
 import HomeMerchandising from "@/components/HomeMerchandising";
 import HomeStory from "@/components/HomeStory";
+import FeaturedAdRows from "@/components/FeaturedAdRows";
 import type { HomeMerchandising as HomeData } from "@/lib/homeMerchandising";
 import { track } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
@@ -148,6 +149,7 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
           </Link>
         </section>
         <HomeStory />
+        <FeaturedAdRows slots={[7, 8]} surface="homepage" />
       </main>
     </div>
   );

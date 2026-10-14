@@ -20,7 +20,7 @@ import {
 } from "./MarketplaceCards";
 import AppLogo from "./AppLogo";
 import { categoryGradients } from "@/lib/categoryCardStyles";
-import SponsoredPlacement from "./SponsoredPlacement";
+import FeaturedAdRows from "./FeaturedAdRows";
 
 function Heading({
   id,
@@ -92,7 +92,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
   );
   return (
     <>
-      <SponsoredPlacement />
+      <FeaturedAdRows slots={[1, 2]} surface="homepage" />
       {data.rising.length > 0 && (
         <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
           <Heading
@@ -145,6 +145,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           </div>
         </section>
       )}
+      <FeaturedAdRows slots={[3, 4]} surface="homepage" />
       {data.fresh.length > 0 && (
         <section className="mt-12 sm:mt-16" aria-labelledby="home-new">
           <Heading
@@ -156,20 +157,6 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {data.fresh.map((row) => card(row, "New to Rocket"))}
-          </div>
-        </section>
-      )}
-      {data.traction.length >= 3 && (
-        <section className="mt-12 sm:mt-16" aria-labelledby="home-traction">
-          <Heading
-            id="home-traction"
-            title="Proven Traction"
-            description="Public evidence shared by the app’s owner. Verification is not a quality endorsement."
-          />
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {data.traction.map((row) =>
-              card(row, tractionLabel(row.evidence!) || undefined),
-            )}
           </div>
         </section>
       )}
@@ -199,6 +186,42 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           >
             How rankings work →
           </Link>
+        </section>
+      )}
+      <FeaturedAdRows slots={[5, 6]} surface="homepage" />
+      {data.categories.length > 0 && (
+        <section className="mt-12 sm:mt-16" aria-labelledby="home-categories">
+          <Heading
+            id="home-categories"
+            title="Categories"
+            description="Find apps for what you want to do."
+            href="/discover?view=categories"
+            action="All categories"
+          />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {data.categories.map((category, index) => (
+              <Link
+                key={category.category}
+                to={`/discover?view=all&category=${encodeURIComponent(category.category)}`}
+                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} group flex min-h-44 items-end justify-between gap-3 rounded-2xl p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6] sm:p-6`}
+              >
+                <span className="min-w-0">
+                  <strong className="block text-xl font-bold leading-tight tracking-tight sm:text-2xl">
+                    {category.category}
+                  </strong>
+                  <span className="mt-2 block text-sm opacity-75">
+                    {category.app_count.toLocaleString()} apps
+                  </span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-white/25 text-lg transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                >
+                  →
+                </span>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
       {data.collections.length > 0 && (
@@ -243,38 +266,17 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           </div>
         </section>
       )}
-      {data.categories.length > 0 && (
-        <section className="mt-12 sm:mt-16" aria-labelledby="home-categories">
+      {data.traction.length >= 3 && (
+        <section className="mt-12 sm:mt-16" aria-labelledby="home-traction">
           <Heading
-            id="home-categories"
-            title="Categories"
-            description="Find apps for what you want to do."
-            href="/discover?view=categories"
-            action="All categories"
+            id="home-traction"
+            title="Proven Traction"
+            description="Public evidence shared by the app’s owner. Verification is not a quality endorsement."
           />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {data.categories.map((category, index) => (
-              <Link
-                key={category.category}
-                to={`/discover?view=all&category=${encodeURIComponent(category.category)}`}
-                className={`rocket-category-card ${categoryGradients[index % categoryGradients.length]} group flex min-h-44 items-end justify-between gap-3 rounded-2xl p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#167ac6] sm:p-6`}
-              >
-                <span className="min-w-0">
-                  <strong className="block text-xl font-bold leading-tight tracking-tight sm:text-2xl">
-                    {category.category}
-                  </strong>
-                  <span className="mt-2 block text-sm opacity-75">
-                    {category.app_count.toLocaleString()} apps
-                  </span>
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/15 bg-white/25 text-lg transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                >
-                  →
-                </span>
-              </Link>
-            ))}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {data.traction.map((row) =>
+              card(row, tractionLabel(row.evidence!) || undefined),
+            )}
           </div>
         </section>
       )}

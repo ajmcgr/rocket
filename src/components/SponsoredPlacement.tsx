@@ -15,7 +15,8 @@ type Placement = {
 function recordPlacementMetric(placement: Placement, eventType: "view" | "click") {
   void supabase.functions.invoke("rocket-advertising", {
     body: { action: "metric", sponsorship_id: placement.sponsorship_id,
-      app_id: placement.app.id, event_type: eventType },
+      app_id: placement.app.id, event_type: eventType,
+      placement_type: placement.sponsorship_type === "category_sponsor" ? "category" : "homepage" },
   });
 }
 
@@ -39,7 +40,9 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
     if (!placement || !element.current || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver((entries) => {
       if (!entries[0]?.isIntersecting) return;
-      track("sponsored_impression", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id });
+      track("sponsored_impression", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id,
+        slot_id: category ? `category:${category}` : "homepage_featured_1",
+        placement_type: category ? "category" : "homepage", occurred_at: new Date().toISOString() });
       recordPlacementMetric(placement, "view");
       observer.disconnect();
     }, { threshold: 0.5 });
@@ -50,7 +53,9 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
   const href = `/apps/${placement.app.slug || placement.app.id}?sponsor=${placement.sponsorship_id}`;
   const website = placement.destination_url?.startsWith("https://") ? placement.destination_url : null;
   const recordClick = () => {
-    track("sponsored_click", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id });
+    track("sponsored_click", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id,
+      slot_id: category ? `category:${category}` : "homepage_featured_1",
+      placement_type: category ? "category" : "homepage", occurred_at: new Date().toISOString() });
     recordPlacementMetric(placement, "click");
   };
   return <section ref={element} className="mt-8 rounded-2xl border border-sky-200 bg-white p-5 sm:p-6" aria-label={category ? `Sponsored in ${category}` : "Sponsored app"}>

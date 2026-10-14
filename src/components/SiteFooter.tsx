@@ -2,6 +2,9 @@ import { Link } from "@/lib/router-compat";
 import { tools } from "@/content/tools";
 import { marketplaceComparisons } from "@/content/marketplaceComparisons";
 import NewsletterCta from "@/components/blog/NewsletterCta";
+import { useRouterState } from "@tanstack/react-router";
+import FeaturedAdRows from "@/components/FeaturedAdRows";
+import { eligibleFooterAdPath } from "@/lib/featuredAds";
 
 const HEADER = "text-base font-semibold text-neutral-900";
 
@@ -17,8 +20,14 @@ const DiscordIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const SiteFooter = () => (
+const SiteFooter = () => {
+  const { path, routeError } = useRouterState({ select: (state) => ({
+    path: state.location.pathname,
+    routeError: state.matches.some((match) => match.status === "error" || match.status === "notFound"),
+  }) });
+  return (
   <>
+    {!routeError && eligibleFooterAdPath(path) && <FeaturedAdRows surface="footer" path={path} />}
     <NewsletterCta />
     <footer className="bg-neutral-50 pb-20 lg:pb-0">
     <div className="mx-auto max-w-6xl px-6 py-16">
@@ -159,6 +168,7 @@ const SiteFooter = () => (
     </div>
     </footer>
   </>
-);
+  );
+};
 
 export default SiteFooter;
