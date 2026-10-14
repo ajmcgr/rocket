@@ -16,6 +16,7 @@ function harness({ authenticated = true, canonical = true, owned = true, liveEna
     expires_at: 1_800_000_000,
   });
   const expire = vi.fn().mockResolvedValue({ status: "expired" });
+  const update = vi.fn();
   const rpc = vi.fn(async (name: string) => name === "reserve_rocket_sponsorship"
       ? owned ? { data: { id: bookingId, scheduled_start_at: "2027-01-01T00:00:00Z",
         scheduled_end_at: type === "featured_app" ? "2027-01-08T00:00:00Z" : "2027-01-31T00:00:00Z" }, error: null }
@@ -23,8 +24,9 @@ function harness({ authenticated = true, canonical = true, owned = true, liveEna
     : { data: name === "is_rocket_admin" ? false : true, error: null });
   const from = (table: string) => {
     const query: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "is", "limit", "update"])
+    for (const method of ["select", "eq", "is", "limit", "in"])
       query[method] = () => query;
+    query.update = (values: unknown) => { update(values); return query; };
     query.maybeSingle = async () => ({ data: null, error: null });
     query.single = async () => ({ data: table === "rocket_sponsorship_prices"
       ? { live_product_id: productId, live_price_id: priceId }
@@ -68,7 +70,7 @@ function harness({ authenticated = true, canonical = true, owned = true, liveEna
     method: "POST", headers: authorized ? { Authorization: "Bearer mock" } : {},
     body: JSON.stringify(body),
   }));
-  return { request, create, expire, rpc };
+  return { request, create, expire, rpc, update };
 }
 
 describe("Rocket-owned advertising Checkout", () => {
@@ -114,6 +116,38 @@ describe("Rocket-owned advertising Checkout", () => {
       p_type: "category_sponsor", p_category: "Productivity", p_livemode: true,
     }));
   });
+
+  it.each(["featured_app", "category_sponsor"] as const)(
+    "stores a validated external destination for %s without changing price or owned-app checks",
+    async (type) => {
+      const { request, create, rpc, update } = harness({ type });
+      const response = await request({ action: "checkout", type, app_id: appId,
+        category: type === "category_sponsor" ? "Productivity" : null,
+        destination_url: "https://launch.example/pricing?utm_source=rocket" });
+      expect(response.status).toBe(200);
+      expect(create).toHaveBeenCalledOnce();
+      expect(update).toHaveBeenCalledWith(expect.objectContaining({
+        stripe_checkout_session_id: "cs_live_approved",
+        destination_url: "https://launch.example/pricing?utm_source=rocket",
+      }));
+      expect(rpc).toHaveBeenCalledWith("reserve_rocket_sponsorship", expect.objectContaining({
+        p_user_id: appId, p_app_id: appId, p_type: type,
+      }));
+    },
+  );
+
+  it.each(["http://launch.example", "javascript:alert(1)", "https://localhost/path",
+    "https://127.0.0.1/path", "https://user:pass@launch.example/", "https://internal.local/",
+    "https://[::1]/", "https://launch.example:8443/", "https://launch.example/\n"])(
+    "rejects unsafe destination %s before reserving inventory or creating Stripe checkout",
+    async (destination) => {
+      const { request, create, rpc } = harness();
+      expect((await request({ action: "checkout", type: "featured_app", app_id: appId,
+        destination_url: destination })).status).toBe(400);
+      expect(rpc).not.toHaveBeenCalledWith("reserve_rocket_sponsorship", expect.anything());
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
 
   it("rejects an unauthenticated buyer before creating checkout", async () => {
     const { request, create } = harness({ authenticated: false });

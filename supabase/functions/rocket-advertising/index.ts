@@ -14,6 +14,23 @@ const products: Record<AdType, { name: string; amount: number; duration: number 
   category_sponsor: { name: "Rocket Category Sponsor", amount: 29900, duration: 30 },
 };
 
+function destinationUrl(value: unknown): string | null | undefined {
+  if (value == null) return null;
+  if (typeof value !== "string" || value.length < 9 || value.length > 2048
+    || value.trim() !== value || /[\u0000-\u001f\u007f]/.test(value)) return undefined;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    // This is a click-through link, never a server-side fetch. Still exclude
+    // local addresses and credentials so ads cannot masquerade as internal URLs.
+    if (url.protocol !== "https:" || url.username || url.password || url.port
+      || !host.includes(".") || host.startsWith(".") || host.endsWith(".")
+      || /^(localhost|.*\.(localhost|local|internal|test|invalid))$/.test(host)
+      || /^\d+(?:\.\d+){3}$/.test(host) || host.startsWith("[")) return undefined;
+    return url.toString();
+  } catch { return undefined; }
+}
+
 function reply(req: Request, body: Record<string, unknown>, status = 200) {
   const requestOrigin = req.headers.get("Origin");
   return new Response(JSON.stringify(body), { status, headers: {
@@ -94,7 +111,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return reply(req, { error: "method_not_allowed" }, 405);
   try {
     const raw = await req.text();
-    if (raw.length > 1024) return reply(req, { error: "invalid_request" }, 413);
+    if (raw.length > 4096) return reply(req, { error: "invalid_request" }, 413);
     const body = JSON.parse(raw);
     if (!body || typeof body !== "object" || Array.isArray(body))
       return reply(req, { error: "invalid_request" }, 400);
@@ -121,14 +138,22 @@ Deno.serve(async (req) => {
       const { data: slots, error } = await admin.rpc("active_rocket_sponsorships", { p_category: category });
       if (error) throw error;
       const appIds = [...new Set((slots || []).map((row: { app_id: string }) => row.app_id))];
+      const sponsorshipIds = (slots || []).map((row: { sponsorship_id: string }) => row.sponsorship_id);
+      const destinations = sponsorshipIds.length ? await admin.from("rocket_sponsorships")
+        .select("id,destination_url").in("id", sponsorshipIds)
+        : { data: [], error: null };
+      if (destinations.error) throw destinations.error;
       const apps = appIds.length ? await admin.from("public_discoverable_apps")
         .select("id,name,slug,tagline,logo_url,categories").in("id", appIds)
         : { data: [], error: null };
       if (apps.error) throw apps.error;
       const byId = new Map((apps.data || []).map((app) => [app.id, app]));
+      const destinationById = new Map((destinations.data || []).map((row) => [row.id, row.destination_url]));
       return reply(req, { placements: (slots || []).flatMap((slot: {
         sponsorship_id: string; sponsorship_type: string; app_id: string; category: string | null;
-      }) => byId.has(slot.app_id) ? [{ ...slot, app: byId.get(slot.app_id) }] : []) });
+      }) => byId.has(slot.app_id) ? [{ ...slot,
+        destination_url: destinationById.get(slot.sponsorship_id) || null,
+        app: byId.get(slot.app_id) }] : []) });
     }
     if (body.action === "metric") {
       // Public placement metrics are not buyer management actions. Keep their
@@ -158,7 +183,7 @@ Deno.serve(async (req) => {
       const [ownership, purchases, metrics] = await Promise.all([
         admin.from("app_owners").select("app_id").eq("user_id", user.id).is("revoked_at", null),
         admin.from("rocket_sponsorships")
-          .select("id,sponsorship_type,target_app_id,target_category,amount_cents,paid_amount_cents,currency,scheduled_start_at,scheduled_end_at,actual_start_at,actual_end_at,status,stripe_payment_status,stripe_livemode,moderation_hold,created_at")
+          .select("id,sponsorship_type,target_app_id,target_category,destination_url,amount_cents,paid_amount_cents,currency,scheduled_start_at,scheduled_end_at,actual_start_at,actual_end_at,status,stripe_payment_status,stripe_livemode,moderation_hold,created_at")
           .eq("purchaser_user_id", user.id).eq("stripe_livemode", true)
           .order("created_at", { ascending: false }).limit(50),
         admin.rpc("rocket_sponsorship_metrics_for_owner", { p_user_id: user.id }),
@@ -189,6 +214,9 @@ Deno.serve(async (req) => {
       || (type === "category_sponsor" && (typeof category !== "string" || category.length > 120))
       || (type === "featured_app" && body.category != null))
       return reply(req, { error: "invalid_sponsorship" }, 400);
+    const selectedDestination = destinationUrl(body.destination_url);
+    if (selectedDestination === undefined)
+      return reply(req, { error: "invalid_destination_url" }, 400);
     const testMode = body.mode === "test";
     if (testMode) {
       const client = createClient(Deno.env.get("SUPABASE_URL")!, anonKey,
@@ -248,7 +276,7 @@ Deno.serve(async (req) => {
       }, { idempotencyKey: `rocket-sponsorship-${booking.id}` });
       if (!session.id || !session.url) throw new Error("Checkout unavailable");
       const { data: saved, error: saveError } = await admin.from("rocket_sponsorships")
-        .update({ stripe_checkout_session_id: session.id })
+        .update({ stripe_checkout_session_id: session.id, destination_url: selectedDestination })
         .eq("id", booking.id).eq("status", "pending")
         .is("stripe_checkout_session_id", null).select("id").single();
       if (saveError || !saved) throw saveError || new Error("Checkout hold unavailable");

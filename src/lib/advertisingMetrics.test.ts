@@ -16,20 +16,28 @@ function harness({ metricsError = false } = {}) {
     if (name === "rocket_sponsorship_metrics_for_owner")
       return { data: args.p_user_id === buyerId ? [{ sponsorship_id: bookingId, views: 12, clicks: 3 }] : [],
         error: metricsError ? { message: "Metrics unavailable" } : null };
+    if (name === "active_rocket_sponsorships")
+      return { data: [{ sponsorship_id: bookingId, sponsorship_type: "featured_app",
+        app_id: appId, category: null }], error: null };
     return { data: null, error: { message: "Unexpected RPC" } };
   });
   const from = (table: string) => {
-    const query: Record<string, unknown> = { userId: "" };
+    const query: Record<string, unknown> = { userId: "", ids: [] };
     query.select = () => query;
     query.eq = (column: string, value: string) => {
       if (column === "purchaser_user_id") query.userId = value;
       return query;
     };
     for (const method of ["is", "order", "limit"]) query[method] = () => query;
+    query.in = (_column: string, ids: string[]) => { query.ids = ids; return query; };
     query.then = (resolve: (value: unknown) => void) => resolve({
-      data: table === "rocket_sponsorships" && query.userId === buyerId
-        ? [{ id: bookingId, status: "active", actual_start_at: "2026-10-11T00:00:00Z",
-          actual_end_at: "2026-10-18T00:00:00Z" }] : [],
+      data: table === "public_discoverable_apps" && (query.ids as string[]).includes(appId)
+        ? [{ id: appId, name: "Launch", slug: "launch", tagline: "Discover apps", logo_url: null }]
+        : table === "rocket_sponsorships" && (query.ids as string[]).includes(bookingId)
+          ? [{ id: bookingId, destination_url: "https://launch.example/pricing" }]
+          : table === "rocket_sponsorships" && query.userId === buyerId
+            ? [{ id: bookingId, status: "active", actual_start_at: "2026-10-11T00:00:00Z",
+              actual_end_at: "2026-10-18T00:00:00Z" }] : [],
       error: null,
     });
     return query;
@@ -40,7 +48,7 @@ function harness({ metricsError = false } = {}) {
   };
   runInNewContext(ts.transpileModule(
     readFileSync("supabase/functions/rocket-advertising/index.ts", "utf8"),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS } },
+    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
   ).outputText, {
     exports: {}, Request, Response, TextEncoder, crypto: webcrypto, console,
     require: (name: string) => name.startsWith("npm:stripe")
@@ -58,6 +66,16 @@ function harness({ metricsError = false } = {}) {
 }
 
 describe("paid placement analytics", () => {
+  it("returns only the active sponsored app and its selected click-through destination", async () => {
+    const { request } = harness();
+    const response = await request({ action: "active" });
+    expect(response.status).toBe(200);
+    expect((await response.json()).placements).toEqual([expect.objectContaining({
+      sponsorship_id: bookingId, destination_url: "https://launch.example/pricing",
+      app: expect.objectContaining({ id: appId, name: "Launch" }),
+    })]);
+  });
+
   it("rejects cross-origin and invalid metric requests before recording", async () => {
     const { request, rpc } = harness();
     const metric = { action: "metric", sponsorship_id: bookingId, app_id: appId, event_type: "view" };
