@@ -26,6 +26,8 @@
 .rocket-admin-list .rocket-admin-claim-selected{border:2px solid var(--rocket-blue,#167ac6);scroll-margin-top:100px}
 .rocket-admin-evidence{white-space:pre-wrap;overflow-wrap:anywhere}
 .rocket-admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rocket-admin-claim-evidence{display:grid;gap:8px;flex-basis:100%;font-size:.85rem;font-weight:600}
+.rocket-admin-claim-evidence textarea{width:100%;resize:vertical;border:1px solid var(--border-color,#ccc);border-radius:9px;background:var(--surface,#fff);color:inherit;padding:10px 12px;font:inherit;font-weight:400}
 .rocket-admin button,.rocket-admin-actions a{border:1px solid var(--border-color,#ccc);border-radius:9px;background:transparent;color:inherit;padding:8px 12px;font-size:.85rem;cursor:pointer;text-decoration:none}
 .rocket-admin button:hover,.rocket-admin-actions a:hover{border-color:#167ac6}
 .rocket-admin button:disabled{opacity:.45;cursor:not-allowed}
