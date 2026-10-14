@@ -15,9 +15,10 @@ afterEach(cleanup);
 it("shows real zero participation without inventing founders or ranks", async () => {
   const data: Rocket100Data = { participants: 0, calculated_at: null, rows: [] };
   render(<Rocket100 data={data} />);
-  expect(screen.getByRole("link", { name: "Become a Founding Builder" }).getAttribute("href")).toBe("/signup?next=%2F100");
-  expect(screen.getByText("100 places remaining")).toBeTruthy();
-  expect(screen.getByText("The first places are open.")).toBeTruthy();
+  expect((await screen.findByRole("link", { name: "Join Rocket 100" })).getAttribute("href")).toBe("/signup?next=%2F100");
+  expect(screen.getByText("0 / 100 builders")).toBeTruthy();
+  expect(screen.getByRole("table", { name: "Rocket 100 leaderboard" })).toBeTruthy();
+  expect(screen.getByText("No builders yet.")).toBeTruthy();
   expect(screen.queryByText("Founding Builder #001")).toBeNull();
 });
 
@@ -27,5 +28,5 @@ it("keeps permanent numbers distinct from dynamic ranks and scores", () => {
   expect(screen.getByText("Founding Builder #037", { exact: false })).toBeTruthy();
   expect(screen.getByText("#1")).toBeTruthy();
   expect(screen.getByText("72")).toBeTruthy();
-  expect(screen.getByText("99 places remaining")).toBeTruthy();
+  expect(screen.getByText("1 / 100 builders")).toBeTruthy();
 });
