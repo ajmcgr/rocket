@@ -142,6 +142,19 @@ describe("homepage section gates", () => {
     const view = await render(data);
     try {
       expect(
+        [...view.container.querySelectorAll('section[aria-label^="Sponsored apps, row"], section[aria-labelledby^="home-"]')]
+          .map((section) => section.getAttribute("aria-label") || section.querySelector("h2")?.textContent),
+      ).toEqual([
+        "Rising",
+        "Sponsored apps, row 1",
+        "Our picks",
+        "Sponsored apps, row 2",
+        "New & Noteworthy",
+        "Top Ranked",
+        "Sponsored apps, row 3",
+        "Categories",
+      ]);
+      expect(
         [...view.container.querySelectorAll("h2")].map((h) => h.textContent),
       ).toEqual([
         "Rising",
