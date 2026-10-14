@@ -14,6 +14,8 @@ type Step = {
   selector?: string;
   title: string;
   body: string;
+  image: string;
+  imageAlt: string;
   cta?: string;
   placement?: "bottom" | "right" | "left" | "center";
 };
@@ -24,27 +26,37 @@ const STEPS: Step[] = [
   {
     title: "The open app platform.",
     body: "Discover apps. Build your developer reputation. Grow and monetize what you build.",
+    image: "/tour/rocket-home.png",
+    imageAlt: "Rocket homepage showing sponsored and Rising apps",
     placement: "center",
     cta: "Start tour",
   },
   {
     title: "Build your developer profile",
     body: "Your public profile connects you with the apps you own. Submit or claim an app, then add accurate details and supported evidence.",
+    image: "/tour/rocket-profile.png",
+    imageAlt: "Example Rocket developer profile with a handle and public bio",
     placement: "center",
   },
   {
     title: "Get discovered",
     body: "People can find your app through search, categories, New, Rising, and Top Ranked. Your basic listing is free.",
+    image: "/tour/rocket-discover.png",
+    imageAlt: "Rocket Discover page with search, categories, and ranked apps",
     placement: "center",
   },
   {
     title: "Prove and grow",
     body: "Connect supported traffic or revenue evidence when available. Rocket Developer is $99/year; Rocket ID, Buy with Rocket, and rollout tools need app-specific setup.",
+    image: "/tour/rocket-app-profile.png",
+    imageAlt: "Example public Rocket app profile showing verified traffic",
     placement: "center",
   },
   {
     title: "You're ready",
     body: "Start with your app. You can explore the catalogue any time and replay this tour from Settings.",
+    image: "/tour/rocket-submit.png",
+    imageAlt: "Rocket app submission page where builders can add their app",
     placement: "center",
     cta: "Submit or claim my app",
   },
@@ -91,7 +103,7 @@ const OnboardingTour = () => {
   const step = STEPS[idx];
 
   const tipRef = useRef<HTMLDivElement | null>(null);
-  const [tipSize, setTipSize] = useState({ width: 360, height: 220 });
+  const [tipSize, setTipSize] = useState({ width: 480, height: 440 });
 
   useLayoutEffect(() => {
     const el = tipRef.current;
@@ -145,10 +157,16 @@ const OnboardingTour = () => {
   const last = idx === STEPS.length - 1;
   const tipStyle: React.CSSProperties = (() => {
     if (!rect || step.placement === "center") {
-      return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+      return {
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "calc(100dvh - 2rem)",
+        overflowY: "auto",
+      };
     }
     const margin = 16;
-    const width = Math.min(360, window.innerWidth - margin * 2);
+    const width = Math.min(480, window.innerWidth - margin * 2);
     const height = tipSize.height || 220;
     // Prefer below the target, flip above when it would overflow, then clamp.
     let top = rect.bottom + PAD;
@@ -229,7 +247,7 @@ const OnboardingTour = () => {
       {/* Tooltip */}
       <div
         ref={tipRef}
-        className="absolute w-[320px] sm:w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-neutral-200 bg-white p-5 shadow-2xl"
+        className="absolute w-[calc(100vw-2rem)] max-w-[480px] rounded-2xl border border-neutral-200 bg-white p-5 shadow-2xl"
         style={tipStyle}
         onClick={(e) => e.stopPropagation()}
       >
@@ -256,6 +274,15 @@ const OnboardingTour = () => {
         <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
           {step.body}
         </p>
+
+        <img
+          src={step.image}
+          alt={step.imageAlt}
+          width={960}
+          height={570}
+          className="mt-4 aspect-[16/9] w-full rounded-xl border border-neutral-200 object-cover object-top"
+          decoding="async"
+        />
 
         <div className="mt-4 flex items-center gap-1.5">
           {STEPS.map((_, i) => (
