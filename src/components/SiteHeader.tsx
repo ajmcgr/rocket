@@ -459,7 +459,7 @@ export default function SiteHeader({
             onCreateShareLink={async () => {
               const url = new URL("/", typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai");
               url.searchParams.set("utm_source", "rocket_share");
-              url.searchParams.set("utm_content", "card_20261014");
+              url.searchParams.set("utm_content", "official_card_20261014");
               return url.toString();
             }}
           />
