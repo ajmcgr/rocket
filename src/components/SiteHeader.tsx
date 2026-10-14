@@ -205,7 +205,7 @@ export default function SiteHeader({
 
   return (
     <>
-      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar)>main,*:has(>.marketplace-sidebar)>header,body:has(.marketplace-sidebar) .global-site-footer{margin-left:${sidebarWidth}px}}`}</style>
+      <style>{`@media(min-width:1024px){*:has(>.marketplace-sidebar){padding-left:${sidebarWidth}px}body:has(.marketplace-sidebar) .global-site-footer{margin-left:${sidebarWidth}px}}`}</style>
       <aside
         className="marketplace-sidebar app-shell-sidebar fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-[#e8edf2] transition-[width] duration-200 lg:flex"
         style={{ width: sidebarWidth }}
