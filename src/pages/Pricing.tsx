@@ -28,6 +28,8 @@ const BUSINESS_FEATURES = [
   "15,000 Rocket Credits each month",
 ];
 
+const pricingCtaClass = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-center text-sm font-semibold leading-5 text-brand-foreground shadow-xs transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2";
+
 const FAQS = [
   { q: "What can I use on Rocket for free?", a: "Browse and discover apps, save apps with a Rocket account, and submit, claim, manage, and verify your own app without a Developer membership. Domain-verified owners can add Agent Integrations for free. Personal workspaces remain free. Create has a free credit allowance; Launch, Post, and Media offer their own free plans." },
   { q: "Is there one subscription for every Rocket product?", a: "No. Create plans and credits, Rocket Developer, and the separate Launch, Post, and Media products have their own pricing. Buy only what you need; a subscription to one does not include the others." },
@@ -202,13 +204,13 @@ const Pricing = () => {
               <h3 className="text-2xl font-semibold tracking-tight">My Apps</h3>
               <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
               <p className="mt-4 flex-1 text-neutral-600">See apps you own or claim, improve public profiles, share your app, and add free Agent Integrations after domain verification.</p>
-              <Link to="/your-apps" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Open My Apps →</Link>
+              <Link to="/your-apps" className={`${pricingCtaClass} mt-7`}>Open My Apps →</Link>
             </div>
             <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
               <h3 className="text-2xl font-semibold tracking-tight">Submit my app</h3>
               <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
               <p className="mt-4 flex-1 text-neutral-600">Add an app to Rocket for discovery. Claiming and verification follow the existing ownership checks.</p>
-              <Link to="/submit" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Submit my app →</Link>
+              <Link to="/submit" className={`${pricingCtaClass} mt-7`}>Submit my app →</Link>
             </div>
           </div>
         </div>
@@ -233,7 +235,7 @@ const Pricing = () => {
               <div className="rounded-xl border border-neutral-200 p-4"><h4 className="font-semibold">Buy with Rocket</h4><p className="mt-2 text-sm text-neutral-600">Offer Rocket checkout on individually configured, ready offers. Rocket's fee is 5% per payment; Stripe processing fees are separate.</p></div>
             </div>
             <p className="mt-5 text-sm text-neutral-600">Live checkout is enabled for offers that pass their app-specific readiness checks. It is not available on every listing.</p>
-            <Link to="/settings/developer" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white">Join Rocket Developer →</Link>
+            <Link to="/settings/developer" className={`${pricingCtaClass} mt-6`}>Join Rocket Developer →</Link>
           </div>
           <p className="mt-5 text-sm text-neutral-500">Rocket Developer is separate from Create subscriptions and credits. New Buy with Rocket purchases carry a 5% Rocket platform fee, plus separate Stripe processing fees.</p>
 
@@ -245,13 +247,13 @@ const Pricing = () => {
                 <h4 className="text-xl font-semibold tracking-tight">Featured App</h4>
                 <p className="mt-3"><span className="text-4xl font-semibold tracking-tight">$49</span><span className="ml-2 text-sm text-neutral-600">one-time · 7 days</span></p>
                 <p className="mt-4 flex-1 text-neutral-600">Feature an eligible app in Rocket’s designated Sponsored discovery placement.</p>
-                <Link to="/advertise" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50">Feature an app →</Link>
+                <Link to="/advertise" className={`${pricingCtaClass} mt-7`}>Feature an app →</Link>
               </div>
               <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-7">
                 <h4 className="text-xl font-semibold tracking-tight">Category Sponsor</h4>
                 <p className="mt-3"><span className="text-4xl font-semibold tracking-tight">$299</span><span className="ml-2 text-sm text-neutral-600">one-time · 30 days</span></p>
                 <p className="mt-4 flex-1 text-neutral-600">Sponsor an available Rocket category with a clearly labelled placement.</p>
-                <Link to="/advertise" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50">Sponsor a category →</Link>
+                <Link to="/advertise" className={`${pricingCtaClass} mt-7`}>Sponsor a category →</Link>
               </div>
             </div>
             <p className="mt-5 text-sm text-neutral-500">Sponsored placements do not change organic rankings or Rocket Picks.</p>
@@ -307,8 +309,8 @@ const Pricing = () => {
               <Button
                 onClick={() => startCheckout(productId("starter"))}
                 disabled={loading === productId("starter")}
-                variant="outline"
-                className="mt-8 w-full"
+                variant="brand"
+                className={`${pricingCtaClass} mt-8 w-full`}
               >
                 {loading === productId("starter") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Start 7-day free trial"}
               </Button>
@@ -336,8 +338,8 @@ const Pricing = () => {
               <Button
                 onClick={() => startCheckout(productId("growth"))}
                 disabled={loading === productId("growth")}
-                variant="outline"
-                className="mt-8 w-full"
+                variant="brand"
+                className={`${pricingCtaClass} mt-8 w-full`}
               >
                 {loading === productId("growth") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Pro"}
               </Button>
@@ -362,8 +364,8 @@ const Pricing = () => {
               <Button
                 onClick={() => startCheckout(productId("business"))}
                 disabled={loading === productId("business")}
-                variant="outline"
-                className="mt-8 w-full"
+                variant="brand"
+                className={`${pricingCtaClass} mt-8 w-full`}
               >
                 {loading === productId("business") ? <ControlLoader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Business"}
               </Button>
@@ -408,7 +410,7 @@ const Pricing = () => {
                         </ul>
                         {plan.note && <p className="mt-4 text-xs leading-relaxed text-neutral-500">{plan.note}</p>}
                         <div className="mt-auto pt-6">
-                          <a href={product.href} target="_blank" rel="noopener noreferrer" aria-label={`${plan.cta} on ${product.name} (opens in a new tab)`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#167ac6] px-3 py-3 text-center text-sm font-semibold leading-5 text-white hover:bg-[#1268aa]">
+                          <a href={product.href} target="_blank" rel="noopener noreferrer" aria-label={`${plan.cta} on ${product.name} (opens in a new tab)`} className={`${pricingCtaClass} w-full whitespace-nowrap`}>
                             <span>{plan.cta}</span>
                             <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                           </a>
@@ -447,10 +449,10 @@ const Pricing = () => {
           <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Build, launch, and grow with Rocket</h2>
           <p className="mx-auto mt-4 max-w-xl text-neutral-600">Discover useful apps, submit your own for free, and choose the tools you need to create, monetize, and grow.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg" className="bg-brand text-white hover:bg-brand/90">
+            <Button asChild size="lg" variant="brand" className={pricingCtaClass}>
               <Link to="/submit">Submit my app</Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="brand" className={pricingCtaClass}>
               <Link to="/discover">Explore apps</Link>
             </Button>
           </div>
@@ -467,7 +469,7 @@ const Pricing = () => {
             <h3 className="text-2xl font-semibold tracking-tight">Discord</h3>
             <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
             <p className="mt-4 flex-1 text-neutral-600">Join the Rocket community, ask questions, and connect with other builders.</p>
-            <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#167ac6] px-5 text-sm font-semibold text-[#167ac6] hover:bg-neutral-50 dark:text-[#dcefff]">Join Discord ↗</a>
+            <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noopener noreferrer" className={`${pricingCtaClass} mt-7`}>Join Discord ↗</a>
           </div>
         </div>
       </section>
