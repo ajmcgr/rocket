@@ -40,6 +40,6 @@ export const Route = createFileRoute("/@{$username}")({
 });
 
 function PublicMemberProfileRoute() {
-  const { profile, rocket100 } = Route.useLoaderData();
-  return <PublicMemberProfile profile={profile} rocket100={rocket100} />;
+  const { profile } = Route.useLoaderData();
+  return <PublicMemberProfile profile={profile} />;
 }
