@@ -14,6 +14,7 @@ export function canonicalShareUrl(kind: ShareKind, identifier: string) {
 export function attributedShareUrl(kind: ShareKind, identifier: string, source = "share") {
   const url = new URL(canonicalShareUrl(kind, identifier));
   url.searchParams.set("utm_source", source === "share" ? "rocket_share" : `rocket_${source}`);
+  url.searchParams.set("utm_content", "card_20261014");
   return url.toString();
 }
 
@@ -23,7 +24,7 @@ export function shareCardUrl(kind: ShareKind, identifier: string, variant: Share
   url.searchParams.set("id", identifier);
   url.searchParams.set("variant", variant);
   const contentVersion = version ? (/^[a-z0-9]{1,12}$/i.test(version) ? version : shareCardVersion(version)) : "base";
-  url.searchParams.set("v", `b3${contentVersion}`);
+  url.searchParams.set("v", `b4${contentVersion}`);
   return url.toString();
 }
 

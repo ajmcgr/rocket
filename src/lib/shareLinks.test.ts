@@ -7,11 +7,12 @@ describe("Rocket sharing links", () => {
     const share = new URL(attributedShareUrl("app", "launch"));
     expect(share.pathname).toBe("/apps/launch");
     expect(share.searchParams.get("utm_source")).toBe("rocket_share");
+    expect(share.searchParams.get("utm_content")).toBe("card_20261014");
   });
   it("generates one image endpoint with the requested dimensions variant", () => {
     const image = new URL(shareCardUrl("app", "launch", "portrait", "v2"));
     expect(image.searchParams.get("variant")).toBe("portrait");
-    expect(image.searchParams.get("v")).toBe("b3v2");
+    expect(image.searchParams.get("v")).toBe("b4v2");
   });
   it("uses supported intent URLs without suggesting a post was published", () => {
     const targets = shareTargets("Launch", canonicalShareUrl("app", "launch"));
