@@ -92,7 +92,6 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
   );
   return (
     <>
-      <FeaturedAdRows slots={[1, 2]} surface="homepage" />
       {data.rising.length > 0 && (
         <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
           <Heading
@@ -116,6 +115,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           </div>
         </section>
       )}
+      <FeaturedAdRows slots={[1, 2]} surface="homepage" />
       {data.picks.length > 0 && (
         <section className="mt-10 sm:mt-12" aria-labelledby="home-picks">
           <Heading
