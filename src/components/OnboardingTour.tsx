@@ -198,7 +198,7 @@ const OnboardingTour = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[100]"
+      className="fixed inset-0 z-[1000002]"
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
