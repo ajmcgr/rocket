@@ -28,7 +28,7 @@ function harness({ metricsError = false } = {}) {
       if (column === "purchaser_user_id") query.userId = value;
       return query;
     };
-    for (const method of ["is", "order", "limit"]) query[method] = () => query;
+    for (const method of ["is", "order", "limit", "lt", "gt"]) query[method] = () => query;
     query.in = (_column: string, ids: string[]) => { query.ids = ids; return query; };
     query.then = (resolve: (value: unknown) => void) => resolve({
       data: table === "public_discoverable_apps" && (query.ids as string[]).includes(appId)
@@ -37,7 +37,8 @@ function harness({ metricsError = false } = {}) {
           ? [{ id: bookingId, destination_url: "https://launch.example/pricing" }]
           : table === "rocket_sponsorships" && query.userId === buyerId
             ? [{ id: bookingId, status: "active", actual_start_at: "2026-10-11T00:00:00Z",
-              actual_end_at: "2026-10-18T00:00:00Z" }] : [],
+              actual_end_at: "2026-10-18T00:00:00Z" }]
+            : table === "rocket_sponsorships" ? [{ homepage_slot_id: "homepage_featured_1" }] : [],
       error: null,
     });
     return query;
@@ -70,7 +71,9 @@ describe("paid placement analytics", () => {
     const { request } = harness();
     const response = await request({ action: "active" });
     expect(response.status).toBe(200);
-    expect((await response.json()).placements).toEqual([expect.objectContaining({
+    const data = await response.json();
+    expect(data.occupied_homepage_slots).toEqual(["homepage_featured_1"]);
+    expect(data.placements).toEqual([expect.objectContaining({
       sponsorship_id: bookingId, destination_url: "https://launch.example/pricing",
       app: expect.objectContaining({ id: appId, name: "Launch" }),
     })]);
@@ -78,7 +81,7 @@ describe("paid placement analytics", () => {
 
   it("rejects cross-origin and invalid metric requests before recording", async () => {
     const { request, rpc } = harness();
-    const metric = { action: "metric", sponsorship_id: bookingId, app_id: appId, event_type: "view" };
+    const metric = { action: "metric", sponsorship_id: bookingId, app_id: appId, event_type: "view", placement_type: "homepage" };
     expect((await request(metric)).status).toBe(403);
     expect((await request({ ...metric, event_type: "purchase" }, {
       Origin: "https://tryrocket.ai", "cf-connecting-ip": "192.0.2.1",
@@ -93,7 +96,7 @@ describe("paid placement analytics", () => {
     const { request, rpc } = harness();
     const headers = { Origin: "https://tryrocket.ai", "cf-connecting-ip": "192.0.2.1",
       "User-Agent": "test-browser" };
-    const body = { action: "metric", sponsorship_id: bookingId, app_id: appId, event_type: "click" };
+    const body = { action: "metric", sponsorship_id: bookingId, app_id: appId, event_type: "click", placement_type: "homepage" };
     expect((await request(body, headers)).status).toBe(200);
     expect((await request(body, headers)).status).toBe(200);
     expect((await request({ ...body, app_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" }, headers)).status).toBe(200);
@@ -105,6 +108,7 @@ describe("paid placement analytics", () => {
     expect(JSON.stringify(first)).not.toContain("192.0.2.1");
     expect(rpc).toHaveBeenCalledWith("record_rocket_sponsorship_metric", expect.objectContaining({
       p_sponsorship_id: bookingId, p_app_id: appId, p_event_type: "click",
+      p_placement_type: "homepage",
     }));
     expect(rpc).toHaveBeenCalledTimes(3);
   });

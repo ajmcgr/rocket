@@ -7,7 +7,7 @@ describe("shell scroll surfaces", () => {
     const header = readFileSync("src/components/SiteHeader.tsx", "utf8");
     expect(shell).toContain("<SiteHeader");
     expect(shell).toContain('className="app-shell');
-    expect(header).toContain('className="sticky top-0 z-40');
+    expect(header).toContain('className="marketplace-shell-divider sticky top-0 z-40');
     expect(header).toContain(
       "marketplace-sidebar app-shell-sidebar fixed inset-y-0",
     );

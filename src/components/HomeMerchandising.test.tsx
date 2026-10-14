@@ -107,10 +107,11 @@ describe("homepage section gates", () => {
       await view.close();
     }
   });
-  it("shows no empty or private sections to signed-out visitors and makes no private requests", async () => {
+  it("shows only reserved sponsored positions to signed-out visitors and makes no private requests", async () => {
     const view = await render(emptyMerchandising());
     try {
-      expect(view.container.querySelectorAll("section")).toHaveLength(0);
+      expect(view.container.querySelectorAll('section[aria-label^="Sponsored apps, row"]')).toHaveLength(3);
+      expect(view.container.textContent).not.toContain("Continue exploring");
       expect(mocks.from).not.toHaveBeenCalled();
     } finally {
       await view.close();

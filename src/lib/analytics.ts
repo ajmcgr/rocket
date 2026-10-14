@@ -47,6 +47,7 @@ export type AnalyticsEvent =
   | "sponsorship_checkout_started"
   | "sponsored_impression"
   | "sponsored_click"
+  | "empty_sponsorship_cta_clicked"
   | "share_button_clicked"
   | "share_destination_clicked"
   | "share_link_copied"

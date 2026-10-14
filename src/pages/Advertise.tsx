@@ -9,19 +9,19 @@ import { track } from "@/lib/analytics";
 type AdType = "featured_app" | "category_sponsor";
 type OwnedApp = { id: string; name: string; categories: string[] };
 type Sponsorship = {
-  id: string; sponsorship_type: AdType; target_app_id: string; target_category: string | null; destination_url: string | null;
+  id: string; sponsorship_type: AdType; target_app_id: string; target_category: string | null; homepage_slot_id: string | null; destination_url: string | null;
   amount_cents: number; paid_amount_cents: number | null; status: string; stripe_payment_status: string; stripe_livemode: boolean;
   scheduled_start_at: string; scheduled_end_at: string;
   actual_start_at: string | null; actual_end_at: string | null;
   views?: number | null; clicks?: number | null;
 };
 type Quote = { available: boolean; reason?: string; start?: string; end?: string; amount_cents?: number };
-type ReservedCheckout = { url: string; start: string; end: string; checkout_expires_at: string; destination: string };
+type ReservedCheckout = { url: string; sponsorship_id: string; homepage_slot_id: string | null; start: string; end: string; checkout_expires_at: string; destination: string };
 const offers = {
   featured_app: {
     title: "Featured App", price: "$49", duration: "7 days", button: "Feature an app",
-    description: "Feature your app across designated Rocket discovery inventory for 7 days.",
-    details: "Clearly labelled Sponsored placement. Does not affect organic rankings, Rocket Picks, or verified traction. Traffic and sales are not guaranteed.",
+    description: "One of eight homepage Featured App positions, plus placements across eligible public Rocket pages for 7 days.",
+    details: "Slots are assigned automatically. Sponsorships are clearly labelled and do not affect organic rankings or Rocket Picks. Traffic and sales are not guaranteed.",
   },
   category_sponsor: {
     title: "Category Sponsor", price: "$299", duration: "30 days", button: "Sponsor a category",
@@ -49,6 +49,8 @@ export default function Advertise() {
   const [apps, setApps] = useState<OwnedApp[]>([]);
   const [history, setHistory] = useState<Sponsorship[]>([]);
   const [ready, setReady] = useState<Record<AdType, boolean>>({ featured_app: false, category_sponsor: false });
+  const [availableSlots, setAvailableSlots] = useState<number | null>(null);
+  const [inventoryFailed, setInventoryFailed] = useState(false);
   const [type, setType] = useState<AdType | null>(null);
   const [appId, setAppId] = useState("");
   const [category, setCategory] = useState("");
@@ -73,6 +75,11 @@ export default function Advertise() {
             [product.type, product.ready])) as Record<AdType, boolean>);
         }
       });
+    void supabase.functions.invoke("rocket-advertising", { body: { action: "inventory" } })
+      .then(({ data, error }) => {
+        if (!error && Number.isInteger(data?.featured_available)) setAvailableSlots(data.featured_available);
+        else setInventoryFailed(true);
+      }).catch(() => setInventoryFailed(true));
   }, []);
   useEffect(() => {
     if (!user) { setApps([]); setHistory([]); return; }
@@ -114,7 +121,8 @@ export default function Advertise() {
       if (requestError || !data?.url || !/^https:\/\/checkout\.stripe\.com\//.test(data.url)
         || !data.start || !data.end || !data.checkout_expires_at)
         throw new Error("Checkout is unavailable. No payment was made.");
-      setReservedCheckout({ url: data.url, start: data.start, end: data.end,
+      setReservedCheckout({ url: data.url, sponsorship_id: data.sponsorship_id,
+        homepage_slot_id: data.homepage_slot_id || null, start: data.start, end: data.end,
         checkout_expires_at: data.checkout_expires_at,
         destination: destinationMode === "website" ? websiteUrl : `Rocket app page · ${selectedApp?.name || "App"}` });
       setPending(false);
@@ -136,8 +144,14 @@ export default function Advertise() {
           <p className="mt-2 text-4xl font-bold">{offers[key].price}<span className="ml-2 text-base font-medium text-neutral-500">USD</span></p>
           <p className="mt-5 text-neutral-700">{offers[key].description}</p>
           <p className="mt-3 text-sm leading-relaxed text-neutral-500">{offers[key].details}</p>
+          {key === "featured_app" && <p className="mt-3 text-sm font-semibold text-neutral-700">
+            {inventoryFailed ? "Live availability is temporarily unavailable"
+              : availableSlots === null ? "Checking live availability…" : `${availableSlots} of 8 homepage slots available`}
+          </p>}
           {user ? <button className="mt-7 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white hover:bg-[#1268aa] disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => selectOffer(key)} disabled={!ready[key]}>{ready[key] ? offers[key].button : "Booking unavailable"}</button>
+            onClick={() => selectOffer(key)} disabled={!ready[key] || (key === "featured_app" && availableSlots === null || availableSlots === 0)}>
+              {key === "featured_app" && availableSlots === 0 ? "Featured App is currently sold out"
+                : ready[key] ? offers[key].button : "Booking unavailable"}</button>
             : <Link to="/login" className="mt-7 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 font-semibold text-white hover:bg-[#1268aa]">Sign in to {key === "featured_app" ? "feature an app" : "sponsor a category"}</Link>}
         </article>)}
       </div>
@@ -173,7 +187,7 @@ export default function Advertise() {
         </fieldset>}
         {quote && !quote.available && <p className="mt-5 text-amber-800">{quote.reason || "This slot is temporarily unavailable."}</p>}
         {quote?.available && quote.start && quote.end && <div className="mt-6 rounded-xl bg-sky-50 p-5 text-sm text-neutral-800">
-          <p><strong>Placement:</strong> {type === "featured_app" ? "Sponsored app on Rocket discovery" : `Sponsored app in ${category}`}</p>
+          <p><strong>Placement:</strong> {type === "featured_app" ? "One of eight homepage positions and eligible public pages" : `Sponsored app in ${category}`}</p>
           <p className="mt-1"><strong>App:</strong> {selectedApp?.name}</p>
           <p className="mt-1"><strong>Ad destination:</strong> {destinationMode === "website" ? websiteUrl || "Enter a website URL" : "Rocket app page"}</p>
           <p className="mt-1"><strong>Starts:</strong> {formatDate(quote.start)}</p>
@@ -184,11 +198,14 @@ export default function Advertise() {
         </div>}
         {reservedCheckout && <div className="mt-5 rounded-xl border border-sky-200 bg-white p-5 text-sm">
           <p className="font-semibold">Final booking review</p>
-          <p className="mt-2">{selectedApp?.name} · {type === "featured_app" ? "Sponsored app on Rocket discovery" : `Sponsored app in ${category}`}</p>
+          <p className="mt-2">{selectedApp?.name} · {type === "featured_app" ? "Homepage Featured App and eligible public pages" : `Sponsored app in ${category}`}</p>
           <p className="mt-1">Ad destination: {reservedCheckout.destination}</p>
           <p className="mt-1">{formatDate(reservedCheckout.start)} – {formatDate(reservedCheckout.end)}</p>
           <p className="mt-1">{offers[type].price} USD, one-time. Stripe checkout expires {formatDate(reservedCheckout.checkout_expires_at)}.</p>
-          <button onClick={() => { track("sponsorship_checkout_started", { sponsorship_type: type }); window.location.assign(reservedCheckout.url); }}
+          <button onClick={() => { track("sponsorship_checkout_started", { sponsorship_type: type,
+            sponsorship_id: reservedCheckout.sponsorship_id, slot_id: reservedCheckout.homepage_slot_id,
+            placement_type: type === "featured_app" ? "homepage" : "category",
+            occurred_at: new Date().toISOString() }); window.location.assign(reservedCheckout.url); }}
             className="mt-4 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white">Open Stripe Checkout</button>
         </div>}
         {error && <p role="alert" className="mt-4 text-red-700">{error}</p>}
