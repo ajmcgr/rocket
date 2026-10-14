@@ -143,8 +143,8 @@ describe("homepage section gates", () => {
       expect(
         [...view.container.querySelectorAll("h2")].map((h) => h.textContent),
       ).toEqual([
-        "Our picks",
         "Rising",
+        "Our picks",
         "New & Noteworthy",
         "Top Ranked",
         "Categories",
