@@ -54,7 +54,7 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
   const action = !statusLoaded ? null : !status
     ? <Link to="/signup?next=%2F100" className="rocket100-button" onClick={() => track("rocket100_cta_clicked", { state: "signed_out" })}>Join Rocket 100</Link>
     : status.founding_number
-    ? <Link to={`/@${status.username}`} className="rocket100-button">Your profile</Link>
+    ? null
     : board.participants >= 100
     ? <span className="rocket100-note">The Rocket 100 is complete.</span>
     : status.revoked
