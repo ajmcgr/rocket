@@ -609,6 +609,9 @@ html.dark .marketplace-sidebar {
   background-color: #161c24 !important;
   border-color: #303a45 !important;
 }
+html.dark .marketplace-shell-divider {
+  border-color: #303a45 !important;
+}
 /* Navigation is interactive content, not muted supporting copy. */
 html.dark .marketplace-sidebar nav a,
 html.dark .marketplace-sidebar a[href="/settings"] {
