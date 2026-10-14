@@ -63,7 +63,7 @@ function subscriptionPeriod(sub: Stripe.Subscription) {
 
 const BRAND = {
   blue: "#167ac6",
-  ink: "#167ac6",
+  ink: "#000000",
   text: "#1F2937",
   muted: "#9CA3AF",
   border: "#E5E7EB",
