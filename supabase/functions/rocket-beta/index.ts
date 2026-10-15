@@ -71,7 +71,7 @@ async function sendEmail(membership: { id: string; user_id: string }, kind: "joi
             to: [address],
             subject,
             tags: [{ name: "category", value: "rocket_beta" }],
-            html: `<div style="font-family:system-ui,sans-serif;max-width:600px"><h1 style="color:#000000">${html(appName)}</h1><p>${html(message).replace(/\n/g, "<br>")}</p><p><a href="https://tryrocket.ai/apps/${appId}">View app and manage Beta updates</a></p></div>`,
+            html: `<div style="font-family:system-ui,sans-serif;max-width:600px"><h1 style="color:#000000">${html(appName)}</h1><p>${html(message).replace(/\n/g, "<br>")}</p><p><a href="https://tryrocket.ai/apps/${appId}" style="color:#00598a;">View app and manage Beta updates</a></p></div>`,
           }),
         });
         if (!response.ok) throw new Error(`Email rejected (${response.status})`);
