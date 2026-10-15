@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
+import "./AppVerification.css";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Metric = "active_users" | "sessions" | "views";
@@ -51,7 +52,7 @@ export default function AppAnalytics() {
     try { await work(); } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
   };
   const visible = (metric: Metric) => status?.visibility.find((item) => item.metric_type === metric)?.visibility || "private";
-  return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
+  return <main className="rocket-verification-page mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Traffic connection</h1>
     <p className="mt-2 text-sm text-neutral-600">Connect a traffic source for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
@@ -69,7 +70,7 @@ export default function AppAnalytics() {
         {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Sync needs attention: {status.connection.last_error}</p>}
         {(!status.connection || status.connection.status === "disconnected") && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
-        })} className="mt-4 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Connect Google Analytics</button>}
+        })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Connect Google Analytics</button>}
         {status.connection?.status === "select_property" && <div className="mt-5 space-y-4">
           <button disabled={busy} onClick={() => run(async () => { const data = await request("properties"); setProperties(data.properties || []); })}
             className="rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Reload properties</button>
