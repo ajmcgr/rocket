@@ -69,7 +69,7 @@ export function claimEmailContent(kind: string, c: Record<string, unknown>) {
         : "Open your claim in Rocket to read the decision or correction details. A rejected request does not grant app ownership.";
   return {
     title,
-    bodyHtml: `<p>${notice}</p><table>${rows.map(([k, v]) => `<tr><th style="text-align:left;padding:6px 12px 6px 0">${escape(k)}</th><td>${escape(v)}</td></tr>`).join("")}</table>${kind === "approved" && /^[0-9a-f-]{36}$/i.test(String(c.app_id || "")) ? `<p><a href="https://tryrocket.ai/apps/${encodeURIComponent(String(c.app_id))}?utm_source=rocket&amp;utm_medium=email">Share app</a> · <a href="https://tryrocket.ai/your-apps">Manage app</a></p>` : ""}`,
+    bodyHtml: `<p>${notice}</p><table>${rows.map(([k, v]) => `<tr><th style="text-align:left;padding:6px 12px 6px 0">${escape(k)}</th><td>${escape(v)}</td></tr>`).join("")}</table>${kind === "approved" && /^[0-9a-f-]{36}$/i.test(String(c.app_id || "")) ? `<p><a href="https://tryrocket.ai/apps/${encodeURIComponent(String(c.app_id))}?utm_source=rocket&amp;utm_medium=email" style="color:#00598a;">Share app</a> · <a href="https://tryrocket.ai/your-apps" style="color:#00598a;">Manage app</a></p>` : ""}`,
     ctaLabel: admin ? "Review ownership claim" : "View your claim",
     ctaUrl: admin
       ? `https://tryrocket.ai/admin/ops?claim=${encodeURIComponent(String(c.claim_id))}#claim-${encodeURIComponent(String(c.claim_id))}`
