@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { marketplaceRpc } from "./marketplace";
 import type { Tables } from "@/integrations/supabase/types";
-import { loadAppMedia, coverMedia, type PublicAppMedia } from "./appMedia";
+import { loadAppMedia, type PublicAppMedia } from "./appMedia";
 
 export type HomeApp = Tables<"public_apps">;
 export type RocketViewRanking = Pick<
@@ -120,7 +120,7 @@ export function composeHome(input: {
   apps: HomeApp[];
   picks: HomePick[];
   rising: RocketViewRanking[];
-  fresh: HomeSignal[];
+  fresh: HomeApp[];
   rankedIds: string[];
   evidence: HomeEvidence[];
   categories: Tables<"public_app_categories">[];
@@ -141,16 +141,15 @@ export function composeHome(input: {
     const now = input.now ?? Date.now();
     return t <= now && t >= now - 30 * 86400000;
   };
-  const fresh = input.fresh.flatMap((signal) => {
-    const row = item(signal.app_id);
-    return row &&
-      recent(row.app) &&
-      (row.app.tagline || row.app.description || "").trim().length >= 20 &&
-      row.app.logo_url &&
-      coverMedia(input.media.get(row.app.id))
-      ? [{ ...row, signal }]
-      : [];
-  });
+  const fresh = input.fresh
+    .filter(recent)
+    .sort(
+      (a, b) =>
+        Date.parse(b.discovered_at) - Date.parse(a.discovered_at) ||
+        a.id.localeCompare(b.id),
+    )
+    .slice(0, 4)
+    .map((app) => ({ app }));
   const evidenceByApp = new Map<string, HomeEvidence>();
   for (const evidence of input.evidence)
     if (tractionLabel(evidence) && !evidenceByApp.has(evidence.app_id))
@@ -186,7 +185,7 @@ export function composeHome(input: {
         return row ? [{ ...row, viewCount: signal.rocket_view_count }] : [];
       })
       .slice(0, 6),
-    fresh: fresh.slice(0, 4),
+    fresh,
     traction: traction.length >= 3 ? traction.slice(0, 4) : [],
     top: input.rankedIds
       .flatMap((id) => {
@@ -205,6 +204,7 @@ export function composeHome(input: {
 export async function loadHomeMerchandising({
   strict = false,
 }: { strict?: boolean } = {}): Promise<HomeMerchandising> {
+  const now = Date.now();
   const readRows = <T>(
     request: PromiseLike<{ data: T[] | null; error?: unknown }>,
   ) => optionalRows(request, strict);
@@ -214,13 +214,13 @@ export async function loadHomeMerchandising({
       readRows(risingQuery()),
       readRows(
         supabase
-          .from("public_discoverable_app_intelligence")
+          .from("public_discoverable_apps")
           .select("*")
-          .eq("signal_type", "new_interesting")
-          .order("percentile_rank", { ascending: false })
-          .order("net_votes", { ascending: false })
-          .order("app_id", { ascending: true })
-          .limit(24),
+          .gte("discovered_at", new Date(now - 30 * 86400000).toISOString())
+          .lte("discovered_at", new Date(now).toISOString())
+          .order("discovered_at", { ascending: false })
+          .order("id", { ascending: true })
+          .limit(4),
       ),
       readRows(rankingsQuery()),
       readRows(
@@ -243,7 +243,7 @@ export async function loadHomeMerchandising({
     ]);
   const ids = [
     ...new Set(
-      [...picks, ...rising, ...fresh, ...rankings, ...evidence].map(
+      [...picks, ...rising, ...rankings, ...evidence].map(
         (row) => row.app_id,
       ),
     ),
@@ -255,7 +255,7 @@ export async function loadHomeMerchandising({
         )
       : Promise.resolve([]),
     loadAppMedia(
-      [...new Set([...picks, ...fresh].map((row) => row.app_id))],
+      [...new Set([...picks.map((row) => row.app_id), ...fresh.map((app) => app.id)])],
       true,
       strict,
     ).catch((error) => {
@@ -264,7 +264,7 @@ export async function loadHomeMerchandising({
     }),
   ]);
   return composeHome({
-    apps,
+    apps: [...apps, ...fresh],
     picks,
     rising,
     fresh,

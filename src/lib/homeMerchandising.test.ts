@@ -27,13 +27,6 @@ const app = (id: string) =>
     tagline: "A real useful app for independent software builders",
     discovered_at: "2026-10-06T00:00:00Z",
   }) as any;
-const signal = (app_id: string) =>
-  ({
-    app_id,
-    signal_type: "rising",
-    net_votes: 21,
-    percentile_rank: 0.9,
-  }) as any;
 const evidence = (app_id: string) =>
   ({
     app_id,
@@ -72,6 +65,8 @@ describe("truthful homepage merchandising", () => {
         select: () => chain,
         eq: () => chain,
         gt: () => chain,
+        gte: () => chain,
+        lte: () => chain,
         in: () => chain,
         order: () => chain,
         limit: () => chain,
@@ -90,7 +85,7 @@ describe("truthful homepage merchandising", () => {
       "Picks unavailable",
     );
   });
-  it("keeps public rankings and categories when optional editorial/signals queries fail", async () => {
+  it("keeps public rankings and categories when optional editorial queries fail", async () => {
     db.rpc.mockResolvedValue({
       data: [{ app_id: "b", rank_position: 1 }],
       error: null,
@@ -107,8 +102,7 @@ describe("truthful homepage merchandising", () => {
       const result = {
         data: rows,
         error:
-          table === "public_rocket_picks" ||
-          table === "public_discoverable_app_intelligence"
+          table === "public_rocket_picks"
             ? new Error("Optional module failure")
             : null,
       };
@@ -116,6 +110,8 @@ describe("truthful homepage merchandising", () => {
         select: () => chain,
         eq: () => chain,
         gt: () => chain,
+        gte: () => chain,
+        lte: () => chain,
         in: () => chain,
         order: () => chain,
         limit: () => chain,
@@ -166,17 +162,48 @@ describe("truthful homepage merchandising", () => {
     expect(result.picks.map((r) => r.app.id)).toEqual(["b", "a"]);
     expect(result.picks[1].pick?.headline).toBeNull();
   });
-  it("requires recent listing, real description, logo and media for noteworthy apps", () => {
+  it("shows the newest recent listings even without logos or media", () => {
     const input = base();
-    input.apps.push(
-      { ...app("old"), discovered_at: "2020-01-01" },
-      { ...app("future"), discovered_at: "2027-01-01" },
-    );
     const result = composeHome({
       ...input,
-      fresh: ["a", "b", "old", "future"].map(signal),
+      fresh: [
+        { ...app("old"), discovered_at: "2020-01-01" },
+        { ...app("b"), discovered_at: "2026-10-07T09:00:00Z", logo_url: null },
+        { ...app("a"), discovered_at: "2026-10-07T10:00:00Z" },
+        { ...app("future"), discovered_at: "2027-01-01" },
+      ],
     });
-    expect(result.fresh.map((r) => r.app.id)).toEqual(["a"]);
+    expect(result.fresh.map((r) => r.app.id)).toEqual(["a", "b"]);
+  });
+  it("loads newest public listings instead of intelligence scores", async () => {
+    const newest = [
+      { ...app("newest"), discovered_at: new Date(Date.now() - 60_000).toISOString() },
+      { ...app("second"), discovered_at: new Date(Date.now() - 120_000).toISOString(), logo_url: null },
+    ];
+    db.rpc.mockResolvedValue({ data: [], error: null });
+    const freshQuery: any = {};
+    for (const method of ["select", "gte", "lte", "order", "limit"])
+      freshQuery[method] = vi.fn(() => freshQuery);
+    freshQuery.then = (resolve: any) => Promise.resolve({ data: newest, error: null }).then(resolve);
+    db.from.mockImplementation((table) => {
+      if (table === "public_discoverable_apps") return freshQuery;
+      const chain: any = {
+        select: () => chain,
+        gt: () => chain,
+        in: () => chain,
+        order: () => chain,
+        limit: () => chain,
+        then: (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve),
+      };
+      return chain;
+    });
+    const result = await loadHomeMerchandising();
+    expect(result.fresh.map((row) => row.app.id)).toEqual(["newest", "second"]);
+    expect(freshQuery.order.mock.calls.map(([column]: string[]) => column)).toEqual([
+      "discovered_at", "id",
+    ]);
+    expect(freshQuery.limit).toHaveBeenCalledWith(4);
+    expect(db.from.mock.calls.map(([table]) => table)).not.toContain("public_discoverable_app_intelligence");
   });
   it("hides evidence with fewer than three distinct eligible apps", () =>
     expect(
