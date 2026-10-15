@@ -36,7 +36,7 @@ export default function AppShell() {
 
   return (
     <AppShellContext.Provider value={context}>
-      <div className="app-shell min-h-screen bg-[#f5f7fb] pb-20 font-body text-neutral-900 lg:pb-0">
+      <div className="app-shell min-h-screen bg-[#f5f7fb] pb-16 font-body text-neutral-900 lg:pb-0">
         <SiteHeader
           headerLeft={headerLeft}
           headerCenter={headerCenter}
