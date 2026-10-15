@@ -89,7 +89,8 @@ describe("Rocket's own account entry", () => {
     await render("signup"); await clickRocket();
     await act(async () => { fireEvent.change(container.querySelector('[aria-label="Username"]')!, { target: { value: "buyer" } }); });
     await fillAndSubmit();
-    expect(mocks.signup).toHaveBeenCalledWith(expect.objectContaining({ email: "buyer@example.com", options: { data: { username: "buyer", ref: undefined } } }));
+    expect(mocks.signup).toHaveBeenCalledWith(expect.objectContaining({ email: "buyer@example.com", options: { data: { username: "buyer", ref: undefined, rocket_newsletter_signup_v1: true } } }));
+    expect(container.textContent).toContain("subscribe you to Rocket's newsletter");
     await act(async () => { buttons()[1].click(); });
     expect(mocks.oauth).toHaveBeenCalledWith({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback?next=%2Fconnect%2Fauthorize%3Fclient_id%3Dexample` } });
   });
