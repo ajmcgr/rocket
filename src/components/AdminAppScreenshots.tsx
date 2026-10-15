@@ -54,6 +54,7 @@ export default function AdminAppScreenshots() {
   }, [query]);
 
   const selectApp = async (appId: string) => {
+    setQuery(""); setResults([]);
     setLoading(true); setPreview(null); setError(""); setMessage("");
     try { setPreview(await loadPreview(appId)); }
     catch (cause) { setError((cause as Error).message); }
@@ -117,7 +118,7 @@ export default function AdminAppScreenshots() {
           <div className="rocket-admin-screenshot-app-logo">
             {preview.app.logo_url ? <img src={preview.app.logo_url} alt="" /> : <span>{preview.app.name.slice(0, 1).toUpperCase()}</span>}
           </div>
-          <div className="rocket-admin-screenshot-title"><p>{preview.app.categories?.[0] || "App on Rocket"}</p><h3>{preview.app.name}</h3><div>{preview.app.tagline || preview.app.description?.trim().split(/\n/)[0] || ""}</div></div>
+          <div className="rocket-admin-screenshot-title"><h3>{preview.app.name}</h3><div>{preview.app.tagline || preview.app.description?.trim().split(/\n/)[0] || ""}</div><p>{preview.app.categories?.[0] || "App on Rocket"}</p></div>
         </div>
         {preview.metrics.length > 0 && <div className="rocket-admin-screenshot-metrics">
           {preview.metrics.map((metric) => <div key={`${metric.label}-${metric.source}`} className="rocket-admin-screenshot-metric">
