@@ -72,9 +72,6 @@ export default function AppRevenue() {
     <h1 className="mt-5 font-display text-3xl">Revenue verification</h1>
     <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue stays private until you explicitly change its visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
     {id && <VerifiedProviderSelection appId={id} kind="revenue" />}
-    {id && <RevenueCatConnection appId={id} />}
-    {id && <AlternativeRevenueConnection appId={id} provider="polar" />}
-    {id && <AlternativeRevenueConnection appId={id} provider="dodo" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
@@ -134,5 +131,8 @@ export default function AppRevenue() {
       {!status.connection.livemode && <p className="mt-3 text-sm text-amber-700">This is a sandbox Stripe connection. Visibility settings are saved, but no test revenue will be published.</p>}
       <Link to={`/apps/${id}`} className="mt-4 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
+    {id && <RevenueCatConnection appId={id} />}
+    {id && <AlternativeRevenueConnection appId={id} provider="polar" />}
+    {id && <AlternativeRevenueConnection appId={id} provider="dodo" />}
   </main>;
 }
