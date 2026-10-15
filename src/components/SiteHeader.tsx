@@ -46,9 +46,17 @@ import { MobilePrimaryNav, PublicMobileNav } from "./PrimaryNav";
 import ThemeToggle from "./ThemeToggle";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import NotificationsBell from "./NotificationsBell";
+import HeaderShareBoundary from "./HeaderShareBoundary";
 const ShareExportModal = lazy(() => import("./ShareExportModal"));
 import LanguageSelector from "./LanguageSelector";
 import { createNavigationItems } from "@/lib/createNavigation";
+
+const siteShareUrl = () => {
+  const url = new URL("/", typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai");
+  url.searchParams.set("utm_source", "rocket_share");
+  url.searchParams.set("utm_content", "official_card_20261014");
+  return url.toString();
+};
 
 type NavItem = { label: string; to: string; icon: LucideIcon; match?: string };
 export const isMarketplaceSidebarItemActive = (
@@ -453,19 +461,16 @@ export default function SiteHeader({
         </div>
       </header>
       {shareOpen && (
-        <Suspense fallback={null}>
-          <ShareExportModal
-            open={shareOpen}
-            onOpenChange={setShareOpen}
-            asset={{ id: "site", title: "The open app platform." }}
-            onCreateShareLink={async () => {
-              const url = new URL("/", typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai");
-              url.searchParams.set("utm_source", "rocket_share");
-              url.searchParams.set("utm_content", "official_card_20261014");
-              return url.toString();
-            }}
-          />
-        </Suspense>
+        <HeaderShareBoundary onClose={() => setShareOpen(false)} url={siteShareUrl()}>
+          <Suspense fallback={null}>
+            <ShareExportModal
+              open={shareOpen}
+              onOpenChange={setShareOpen}
+              asset={{ id: "site", title: "The open app platform." }}
+              onCreateShareLink={async () => siteShareUrl()}
+            />
+          </Suspense>
+        </HeaderShareBoundary>
       )}
       {user ? <MobilePrimaryNav /> : <PublicMobileNav />}
     </>
