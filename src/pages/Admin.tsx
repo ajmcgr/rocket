@@ -8,13 +8,15 @@ import AdminSponsorships from "@/components/AdminSponsorships";
 import AdminInvestorMetrics from "@/components/AdminInvestorMetrics";
 import AdminNewsletter from "@/components/AdminNewsletter";
 import AdminRocket100 from "@/components/AdminRocket100";
+import AdminAppScreenshots from "@/components/AdminAppScreenshots";
 
-type Section = "home" | "metrics" | "ops" | "marketing" | "outreach" | "developer-testing";
+type Section = "home" | "metrics" | "ops" | "marketing" | "screenshots" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
 type Row = Record<string, unknown>;
 const sections: Array<{ id: Section; label: string }> = [
   { id: "home", label: "Overview" }, { id: "metrics", label: "Metrics" },
   { id: "ops", label: "Ops" }, { id: "marketing", label: "Marketing" },
+  { id: "screenshots", label: "App screenshots" },
   { id: "outreach", label: "Outreach" },
   { id: "developer-testing", label: "Developer testing" },
 ];
@@ -73,7 +75,7 @@ export default function Admin() {
   const refresh = useCallback(async () => {
     setError(""); setData(null); setInvestor(null); setToday([]); setInternalTests([]);
     const [result, batch, claims, tests, investorResult] = await Promise.all([
-      adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section, p_period: period }),
+      adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section === "screenshots" ? "marketing" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_first_batch", {}) : Promise.resolve(null),
       section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
       section === "outreach" ? adminRpc("rocket_admin_outreach_test_candidates", {}) : Promise.resolve(null),
@@ -152,6 +154,7 @@ export default function Admin() {
     </header>
     <nav className="rocket-admin-tabs" aria-label="Admin sections">{sections.map((item) => <Link key={item.id} to={item.id === "home" ? "/admin" : `/admin/${item.id}`} className={section === item.id ? "active" : ""}>{item.label}</Link>)}</nav>
     {data && section === "developer-testing" && <AdminDeveloperTesting />}
+    {data && section === "screenshots" && <AdminAppScreenshots />}
     {error && <p className="rocket-admin-error" role="alert">{error}</p>}
     {!data && !error && <div className="rocket-admin-loading" role="status" aria-label="Loading admin data"><div /><div /><div /><div /></div>}
     {data && (section === "home" || section === "metrics") && <>
