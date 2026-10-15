@@ -5,6 +5,7 @@ import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { RevenueCatConnection } from "@/components/RevenueCatConnection";
 import { AlternativeRevenueConnection } from "@/components/AlternativeRevenueConnection";
 import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
+import "./AppVerification.css";
 
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Price = { id: string; product_id: string; product_name: string; currency: string;
@@ -67,7 +68,7 @@ export default function AppRevenue() {
     const result = await request("catalog");
     setPrices(result.prices || []);
   });
-  return <main className="mx-auto max-w-3xl px-6 py-10 text-neutral-900">
+  return <main className="rocket-verification-page mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Revenue verification</h1>
     <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue stays private until you explicitly change its visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
@@ -87,10 +88,10 @@ export default function AppRevenue() {
         {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Coming soon. Stripe revenue verification is not available until the read-only external integration has passed acceptance testing.</p>}
         {!status.connection && status.connect_available && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
-        })} className="mt-4 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Connect Stripe</button>}
+        })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Connect Stripe</button>}
         {status.connection?.status === "error" && status.connect_available && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
-        })} className="mt-4 rounded-xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50">Reconnect Stripe</button>}
+        })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Reconnect Stripe</button>}
         {status.connection && <button disabled={busy} onClick={() => {
           if (!window.confirm("Disconnect this app from Stripe revenue verification? Private historical points remain, but public verification is removed. Uninstall the Stripe App separately in Stripe if you no longer want it installed.")) return;
           run(async () => { await request("disconnect"); setPrices([]); setSelected([]); await refresh(); setNotice("Disconnected. Public revenue verification has been removed."); });
