@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { profileFromData, publicProfileColumns } from "@/lib/memberProfile";
 import PublicMemberProfile from "@/pages/PublicMemberProfile";
@@ -14,10 +14,10 @@ export const Route = createFileRoute("/@{$username}")({
   },
   loader: async ({ params }) => {
     const username = params.username.toLowerCase();
-    if (!/^[a-z0-9_]{2,30}$/.test(username)) return { profile: null, rocket100: null };
+    if (!/^[a-z0-9_]{2,30}$/.test(username)) throw notFound();
     const { data, error } = await (supabase as any).from("member_public_profiles").select(publicProfileColumns).eq("username", username).maybeSingle();
     if (error) throw error;
-    if (!data) return { profile: null, rocket100: null };
+    if (!data) throw notFound();
     const result = await (supabase as any).rpc("get_rocket100_leaderboard");
     const rocket100 = !result.error && Array.isArray(result.data?.rows)
       ? (result.data.rows as Rocket100Builder[]).find((row) => row.username === username) || null : null;
@@ -36,6 +36,7 @@ export const Route = createFileRoute("/@{$username}")({
     links: loaderData?.profile ? [{ rel: "canonical", href: `https://tryrocket.ai/@${loaderData.profile.username}` }] : [],
   }),
   component: PublicMemberProfileRoute,
+  notFoundComponent: () => <PublicMemberProfile profile={null} />,
   errorComponent: ({ reset }) => <main className="mx-auto max-w-3xl p-10"><h1 className="text-2xl font-semibold">Profile could not be loaded</h1><button onClick={reset} className="mt-4 underline">Try again</button></main>,
 });
 
