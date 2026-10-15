@@ -40,9 +40,9 @@ export function MobilePrimaryNav() {
           to={to}
           aria-label={label}
           aria-current={pathname === to ? "page" : undefined}
-          className={`my-1 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium ${pathname === to ? "bg-neutral-200 text-neutral-900" : "text-neutral-600"}`}
+          className={`my-0.5 flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium ${pathname === to ? "bg-neutral-200 text-neutral-900" : "text-neutral-600"}`}
         >
-          <Icon className="h-5 w-5" aria-hidden="true" />
+          <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
           <span className="whitespace-nowrap">{label}</span>
         </NavLink>
       ))}
@@ -70,9 +70,9 @@ export function PublicMobileNav() {
           to={to}
           aria-label={label}
           aria-current={pathname === to ? "page" : undefined}
-          className={`my-1 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium ${pathname === to ? "bg-neutral-200 text-neutral-900" : "text-neutral-600"}`}
+          className={`my-0.5 flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-medium ${pathname === to ? "bg-neutral-200 text-neutral-900" : "text-neutral-600"}`}
         >
-          <Icon className="h-5 w-5" aria-hidden="true" />
+          <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
           <span>{label}</span>
         </NavLink>
       ))}
