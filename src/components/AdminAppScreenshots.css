@@ -1,0 +1,35 @@
+.rocket-admin-screenshot-tool{max-width:1260px}
+.rocket-admin-screenshot-tool>p{max-width:850px}
+.rocket-admin-screenshot-search{display:grid;gap:8px;max-width:520px;margin:24px 0 12px;font-size:.9rem;font-weight:700}
+.rocket-admin-screenshot-search input{width:100%;padding:12px 14px;border:1px solid var(--border-color,#ddd);border-radius:10px;background:var(--surface,#fff);color:var(--text-primary,#171717);font:inherit;font-weight:400}
+.rocket-admin-screenshot-results{display:grid;max-width:520px;max-height:275px;overflow-y:auto;border:1px solid var(--border-color,#ddd);border-radius:12px}
+.rocket-admin .rocket-admin-screenshot-results button{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border:0;border-radius:0;text-align:left}
+.rocket-admin-screenshot-results button+button{border-top:1px solid var(--border-color,#eee)!important}
+.rocket-admin-screenshot-results button:hover{background:var(--muted-bg,#f5f5f5)}
+.rocket-admin-screenshot-results span{font-size:.8rem;color:var(--text-secondary,#666);overflow:hidden;text-overflow:ellipsis}
+.rocket-admin-screenshot-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:28px 0 14px}
+.rocket-admin-screenshot-actions p{margin:0;font-size:.9rem;color:var(--text-secondary,#666)}
+.rocket-admin-screenshot-scroll{overflow-x:auto;padding-bottom:8px}
+.rocket-admin-screenshot-card{box-sizing:border-box;width:1200px;height:900px;padding:44px 54px 30px;overflow:hidden;display:flex;flex-direction:column;flex:none;background:#fff;color:#0a0a0a;border:1px solid #e6e9ed;border-radius:24px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.rocket-admin-screenshot-top{height:52px;display:flex;align-items:center;justify-content:space-between;flex:none;border-bottom:1px solid #e7e9ec;padding-bottom:19px}
+.rocket-admin-screenshot-top img{width:151px;height:auto;max-height:42px;object-fit:contain;object-position:left center}
+.rocket-admin-screenshot-top span{font-size:13px;letter-spacing:.13em;font-weight:800;color:#637282}
+.rocket-admin-screenshot-identity{display:flex;align-items:center;gap:26px;min-height:174px;padding:25px 0 22px;flex:none}
+.rocket-admin-screenshot-app-logo{width:114px;height:114px;flex:none;border-radius:25px;background:#eef5fa;display:grid;place-items:center;overflow:hidden;border:1px solid #e8edf2}
+.rocket-admin-screenshot-app-logo img{display:block;width:100%;height:100%;object-fit:contain}
+.rocket-admin-screenshot-app-logo span{font-size:60px;font-weight:750;color:#167ac6}
+.rocket-admin-screenshot-title{min-width:0}
+.rocket-admin-screenshot-title p{margin:0 0 5px;color:#11679e;font-size:15px;font-weight:700}
+.rocket-admin-screenshot-title h3{margin:0;font-size:54px;line-height:1.04;letter-spacing:-.055em;font-weight:760;max-height:112px;overflow:hidden;overflow-wrap:anywhere}
+.rocket-admin-screenshot-title div{margin-top:8px;color:#566170;font-size:23px;line-height:1.25;max-height:58px;overflow:hidden}
+.rocket-admin-screenshot-metrics{display:flex;gap:18px;flex:none;margin-bottom:20px}
+.rocket-admin-screenshot-metric{flex:1;min-width:0;min-height:158px;padding:20px 24px;border:1px solid #dce5ec;border-left:5px solid #167ac6;border-radius:17px;background:#f8fbfd}
+.rocket-admin-screenshot-metric p{margin:0;color:#5c6874;font-size:17px;font-weight:600}
+.rocket-admin-screenshot-metric strong{display:block;margin:7px 0;font-size:46px;line-height:1.04;letter-spacing:-.045em;color:#11679e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rocket-admin-screenshot-metric span{font-size:13px;color:#566170;font-weight:600}
+.rocket-admin-screenshot-images{display:flex;gap:16px;min-height:0;flex:1;margin-bottom:18px}
+.rocket-admin-screenshot-image{flex:1;min-width:0;overflow:hidden;border:1px solid #e1e5e9;border-radius:17px;background:#f7f9fb;display:grid;place-items:center}
+.rocket-admin-screenshot-image img{display:block;width:100%;height:100%;object-fit:contain}
+.rocket-admin-screenshot-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;flex:none;border-top:1px solid #e7e9ec;padding-top:16px;color:#65717d;font-size:16px}
+.rocket-admin-screenshot-bottom strong{color:#11679e;font-weight:700}
+@media(max-width:700px){.rocket-admin-screenshot-actions{align-items:flex-start;flex-direction:column}.rocket-admin-screenshot-scroll{margin-right:-16px}.rocket-admin-screenshot-tool{padding:16px}}
