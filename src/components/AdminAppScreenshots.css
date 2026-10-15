@@ -64,6 +64,35 @@
   font-size: 0.9rem;
   color: var(--text-secondary, #666);
 }
+.rocket-admin-screenshot-format-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rocket-admin-screenshot-export {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 20px;
+  max-width: 900px;
+}
+.rocket-admin-screenshot-export p {
+  margin: 0;
+  color: var(--text-secondary, #666);
+  font-size: 0.9rem;
+}
+.rocket-admin-screenshot-export img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 12px;
+}
+.rocket-admin-screenshot-export a {
+  width: fit-content;
+  color: #075985;
+  font-weight: 700;
+  text-decoration: underline;
+}
 .rocket-admin-screenshot-scroll {
   overflow-x: auto;
   padding-bottom: 8px;
@@ -156,10 +185,10 @@
 }
 .rocket-admin-screenshot-title h3 {
   margin: 0;
-  font-size: 43px;
-  line-height: 1.1;
-  letter-spacing: -0.035em;
-  font-weight: 750;
+  font-size: 36px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  font-weight: 700;
   max-height: 95px;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -202,7 +231,7 @@
   margin-top: 22px;
   padding-bottom: 24px;
   border-bottom: 1px solid #e5e5e5;
-  font-size: 16px;
+  font-size: 14px;
 }
 .rocket-admin-screenshot-visit,
 .rocket-admin-screenshot-icon-action,
@@ -214,12 +243,12 @@
   justify-content: center;
   gap: 10px;
   border-radius: 12px;
-  font-weight: 650;
 }
 .rocket-admin-screenshot-visit {
   padding: 0 24px;
   background: #167ac6;
   color: #fff;
+  font-weight: 600;
 }
 .rocket-admin-screenshot-icon-action {
   width: 49px;
@@ -230,6 +259,7 @@
   padding: 0 20px;
   border: 1px solid #e5e5e5;
   color: #404040;
+  font-weight: 500;
 }
 .rocket-admin-screenshot-host {
   color: #737373;
