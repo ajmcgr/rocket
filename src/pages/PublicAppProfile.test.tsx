@@ -63,6 +63,17 @@ it("includes useful profile identity in server-rendered HTML", () => {
   expect(html).toContain("Visit website");
   expect(html).not.toContain('aria-label="Loading app profile"');
 });
+it("shows category and readable platform labels below the app description", () => {
+  const html = renderToStaticMarkup(
+    <PublicAppProfile
+      initialApp={{ ...app, platforms: ["web", "ios", "android", "hardware"] }}
+    />,
+  );
+  expect(html.indexOf("Useful software")).toBeLessThan(html.indexOf("Productivity"));
+  for (const label of ["Web", "iOS", "Android", "Hardware"]) {
+    expect(html).toContain(`>${label}</span>`);
+  }
+});
 it("does not hide the profile while optional queries remain pending", () => {
   render(<PublicAppProfile initialApp={app} />);
   expect(
