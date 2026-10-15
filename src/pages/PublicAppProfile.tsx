@@ -42,7 +42,10 @@ import {
   type AppCardMetadata,
 } from "@/lib/appCardMetadata";
 import TrendArrow from "@/components/TrendArrow";
-import type { SubmissionDetails } from "../../supabase/functions/_shared/appSubmission";
+import {
+  SUBMISSION_PLATFORMS,
+  type SubmissionDetails,
+} from "../../supabase/functions/_shared/appSubmission";
 import RocketShare from "@/components/RocketShare";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 import AppAgentIntegrations, { type PublicAgentIntegrations } from "@/components/AppAgentIntegrations";
@@ -395,9 +398,6 @@ export default function PublicAppProfile({
                   eager
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="mb-1 text-xs font-semibold text-sky-800">
-                    {app.categories[0] || "App"}
-                  </p>
                   <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
                     {app.name}
                   </h1>
@@ -407,6 +407,17 @@ export default function PublicAppProfile({
                         ? descriptionSummary(app.description)
                         : app.canonical_host)}
                   </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
+                    <span className="text-sky-800">
+                      {app.categories[0] || "App"}
+                    </span>
+                    {app.platforms.map((platform) => (
+                      <span key={platform} className="text-neutral-600">
+                        {SUBMISSION_PLATFORMS.find(({ id }) => id === platform)
+                          ?.label || platform}
+                      </span>
+                    ))}
+                  </div>
                   {reviewSummary && (
                     <p className="mt-2 text-sm font-medium text-neutral-700">
                       <span className="text-amber-500">★</span>{" "}
