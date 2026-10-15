@@ -110,6 +110,7 @@ import { Route as AppSettingsIntegrationsRouteImport } from './routes/_app/setti
 import { Route as AppSettingsNotificationsRouteImport } from './routes/_app/settings.notifications'
 import { Route as AppSettingsProfileRouteImport } from './routes/_app/settings.profile'
 import { Route as AppSettingsTeamRouteImport } from './routes/_app/settings.team'
+import { Route as AppStripeRevenueInstallRouteImport } from './routes/_app/stripe-revenue.install'
 import { Route as AppStudioIndexRouteImport } from './routes/_app/studio.index'
 import { Route as AppStudioIdRouteImport } from './routes/_app/studio.$id'
 import { Route as BlogAuthorIdRouteImport } from './routes/blog.author.$id'
@@ -642,6 +643,11 @@ const AppSettingsTeamRoute = AppSettingsTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppStripeRevenueInstallRoute = AppStripeRevenueInstallRouteImport.update({
+  id: '/stripe-revenue/install',
+  path: '/stripe-revenue/install',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStudioIndexRoute = AppStudioIndexRouteImport.update({
   id: '/studio/',
   path: '/studio/',
@@ -862,6 +868,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AppSettingsNotificationsRoute
   '/settings/profile': typeof AppSettingsProfileRoute
   '/settings/team': typeof AppSettingsTeamRoute
+  '/stripe-revenue/install': typeof AppStripeRevenueInstallRoute
   '/studio/$id': typeof AppStudioIdRoute
   '/blog/author/$id': typeof BlogAuthorIdRoute
   '/recap/s/$id': typeof RecapSIdRoute
@@ -987,6 +994,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AppSettingsNotificationsRoute
   '/settings/profile': typeof AppSettingsProfileRoute
   '/settings/team': typeof AppSettingsTeamRoute
+  '/stripe-revenue/install': typeof AppStripeRevenueInstallRoute
   '/studio/$id': typeof AppStudioIdRoute
   '/blog/author/$id': typeof BlogAuthorIdRoute
   '/recap/s/$id': typeof RecapSIdRoute
@@ -1116,6 +1124,7 @@ export interface FileRoutesById {
   '/_app/settings/notifications': typeof AppSettingsNotificationsRoute
   '/_app/settings/profile': typeof AppSettingsProfileRoute
   '/_app/settings/team': typeof AppSettingsTeamRoute
+  '/_app/stripe-revenue/install': typeof AppStripeRevenueInstallRoute
   '/_app/studio/$id': typeof AppStudioIdRoute
   '/blog/author/$id': typeof BlogAuthorIdRoute
   '/recap/s/$id': typeof RecapSIdRoute
@@ -1245,6 +1254,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/profile'
     | '/settings/team'
+    | '/stripe-revenue/install'
     | '/studio/$id'
     | '/blog/author/$id'
     | '/recap/s/$id'
@@ -1370,6 +1380,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/profile'
     | '/settings/team'
+    | '/stripe-revenue/install'
     | '/studio/$id'
     | '/blog/author/$id'
     | '/recap/s/$id'
@@ -1498,6 +1509,7 @@ export interface FileRouteTypes {
     | '/_app/settings/notifications'
     | '/_app/settings/profile'
     | '/_app/settings/team'
+    | '/_app/stripe-revenue/install'
     | '/_app/studio/$id'
     | '/blog/author/$id'
     | '/recap/s/$id'
@@ -2302,6 +2314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsTeamRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/stripe-revenue/install': {
+      id: '/_app/stripe-revenue/install'
+      path: '/stripe-revenue/install'
+      fullPath: '/stripe-revenue/install'
+      preLoaderRoute: typeof AppStripeRevenueInstallRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/studio/': {
       id: '/_app/studio/'
       path: '/studio'
@@ -2571,6 +2590,7 @@ interface AppRouteChildren {
   AppProjectsIdRoute: typeof AppProjectsIdRoute
   AppProjectsNewRoute: typeof AppProjectsNewRoute
   AppRocketIdRoute: typeof AppRocketIdRoute
+  AppStripeRevenueInstallRoute: typeof AppStripeRevenueInstallRoute
   AppStudioIdRoute: typeof AppStudioIdRoute
   AppAssetsIndexRoute: typeof AppAssetsIndexRoute
   AppBrandIndexRoute: typeof AppBrandIndexRoute
@@ -2630,6 +2650,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjectsIdRoute: AppProjectsIdRoute,
   AppProjectsNewRoute: AppProjectsNewRoute,
   AppRocketIdRoute: AppRocketIdRoute,
+  AppStripeRevenueInstallRoute: AppStripeRevenueInstallRoute,
   AppStudioIdRoute: AppStudioIdRoute,
   AppAssetsIndexRoute: AppAssetsIndexRoute,
   AppBrandIndexRoute: AppBrandIndexRoute,
