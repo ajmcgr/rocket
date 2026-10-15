@@ -29,6 +29,53 @@ type Preview = {
   review: ReviewSummary | null;
 };
 
+type ScreenshotFormat = "x" | "linkedin";
+type GeneratedScreenshot = {
+  url: string;
+  filename: string;
+  width: number;
+  height: number;
+};
+
+const SCREENSHOT_FORMATS = {
+  x: { width: 1600, height: 900, label: "X" },
+  linkedin: { width: 1200, height: 627, label: "LinkedIn" },
+} as const;
+
+async function imageDimensions(dataUrl: string): Promise<HTMLImageElement> {
+  const image = new Image();
+  image.src = dataUrl;
+  await image.decode();
+  return image;
+}
+
+async function formatScreenshot(
+  source: string,
+  format: ScreenshotFormat,
+): Promise<string> {
+  if (format === "x") return source;
+  const image = await imageDimensions(source);
+  const { width, height } = SCREENSHOT_FORMATS.linkedin;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("This browser cannot create a PNG canvas.");
+  const sourceHeight = (image.naturalWidth * height) / width;
+  context.drawImage(
+    image,
+    0,
+    (image.naturalHeight - sourceHeight) / 2,
+    image.naturalWidth,
+    sourceHeight,
+    0,
+    0,
+    width,
+    height,
+  );
+  return canvas.toDataURL("image/png");
+}
+
 const descriptionSummary = (description: string) => {
   const firstParagraph = description.trim().split(/\n\s*\n/)[0];
   return firstParagraph.length > 360
@@ -95,7 +142,22 @@ export default function AdminAppScreenshots() {
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [generated, setGenerated] = useState<GeneratedScreenshot | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const generatedUrlRef = useRef<string | null>(null);
+
+  useEffect(
+    () => () => {
+      if (generatedUrlRef.current) URL.revokeObjectURL(generatedUrlRef.current);
+    },
+    [],
+  );
+
+  const clearGenerated = () => {
+    if (generatedUrlRef.current) URL.revokeObjectURL(generatedUrlRef.current);
+    generatedUrlRef.current = null;
+    setGenerated(null);
+  };
 
   useEffect(() => {
     const term = query.trim().slice(0, 80);
@@ -123,6 +185,7 @@ export default function AdminAppScreenshots() {
   }, [query]);
 
   const selectApp = async (appId: string) => {
+    clearGenerated();
     setQuery("");
     setResults([]);
     setLoading(true);
@@ -138,7 +201,7 @@ export default function AdminAppScreenshots() {
     }
   };
 
-  const download = async () => {
+  const download = async (format: ScreenshotFormat) => {
     if (!preview || !cardRef.current) return;
     setExporting(true);
     setError("");
@@ -153,6 +216,7 @@ export default function AdminAppScreenshots() {
         JSON.stringify(current.app) !== JSON.stringify(preview.app) ||
         JSON.stringify(current.review) !== JSON.stringify(preview.review)
       ) {
+        clearGenerated();
         setPreview(current);
         setMessage(
           "Public app data changed. Review the updated preview, then download again.",
@@ -165,18 +229,37 @@ export default function AdminAppScreenshots() {
           img.decode().catch(() => undefined),
         ),
       );
-      const image = await toPng(cardRef.current, {
+      const pageImage = await toPng(cardRef.current, {
         width: 1600,
         height: 900,
         pixelRatio: 1,
         backgroundColor: "#f6f8fb",
         cacheBust: true,
       });
+      const image = await formatScreenshot(pageImage, format);
+      const decoded = await imageDimensions(image);
+      const { width, height, label } = SCREENSHOT_FORMATS[format];
+      if (decoded.naturalWidth !== width || decoded.naturalHeight !== height) {
+        throw new Error("The exported image has the wrong dimensions.");
+      }
+      const blob = await fetch(image).then((response) => response.blob());
+      if (blob.type !== "image/png" || blob.size === 0) {
+        throw new Error("The exported image is not a valid PNG.");
+      }
+      clearGenerated();
+      const url = URL.createObjectURL(blob);
+      generatedUrlRef.current = url;
+      const filename = `rocket-${preview.app.slug || preview.app.id}-profile-${format}-${width}x${height}.png`;
+      setGenerated({ url, filename, width, height });
       const link = document.createElement("a");
-      link.href = image;
-      link.download = `rocket-${preview.app.slug || preview.app.id}-profile-1600x900.png`;
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
       link.click();
-      setMessage("PNG downloaded. You can post it wherever you choose.");
+      link.remove();
+      setMessage(
+        `${label} PNG ready. If the download did not start, use the link below.`,
+      );
     } catch (cause) {
       setError(`Screenshot download failed: ${(cause as Error).message}`);
     } finally {
@@ -188,10 +271,10 @@ export default function AdminAppScreenshots() {
     <section className="rocket-admin-panel rocket-admin-screenshot-tool">
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
-        Download a 1600 × 900 image styled like the public app page for X or
-        LinkedIn. It uses the app’s public details, product images, and any
-        currently public verified traffic or revenue cards. Private, expired, or
-        disconnected metrics are excluded. Nothing is posted automatically.
+        Download an app-page image sized for X or LinkedIn. It uses the app’s
+        public details, product images, and any currently public verified
+        traffic or revenue cards. Private, expired, or disconnected metrics are
+        excluded. Nothing is posted automatically.
       </p>
       <label className="rocket-admin-screenshot-search">
         Find a public app
@@ -241,14 +324,41 @@ export default function AdminAppScreenshots() {
               · {preview.images.length} product image
               {preview.images.length === 1 ? "" : "s"}
             </p>
-            <button
-              className="rocket-admin-primary"
-              disabled={exporting}
-              onClick={() => void download()}
-            >
-              {exporting ? "Creating PNG…" : "Download PNG"}
-            </button>
+            <div className="rocket-admin-screenshot-format-actions">
+              <button
+                className="rocket-admin-primary"
+                disabled={exporting}
+                onClick={() => void download("x")}
+              >
+                {exporting ? "Creating PNG…" : "Download for X"}
+              </button>
+              <button
+                className="rocket-admin-primary"
+                disabled={exporting}
+                onClick={() => void download("linkedin")}
+              >
+                Download for LinkedIn
+              </button>
+            </div>
           </div>
+          {generated && (
+            <div
+              className="rocket-admin-screenshot-export"
+              role="region"
+              aria-label="Generated screenshot"
+            >
+              <p>
+                Generated PNG · {generated.width} × {generated.height}
+              </p>
+              <img
+                src={generated.url}
+                alt={`${preview.app.name} screenshot ready to download`}
+              />
+              <a href={generated.url} download={generated.filename}>
+                Download generated PNG
+              </a>
+            </div>
+          )}
           <div className="rocket-admin-screenshot-scroll">
             <div className="rocket-admin-screenshot-page" ref={cardRef}>
               <div className="rocket-admin-screenshot-site-header">
