@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeletons";
@@ -29,7 +29,8 @@ export const Route = createFileRoute("/apps/$id")({
       .eq(isId ? "id" : "slug", params.id)
       .maybeSingle();
     if (error) throw error;
-    if (isId && data?.slug) {
+    if (!data) throw notFound();
+    if (isId && data.slug) {
       throw redirect({
         href: `/apps/${encodeURIComponent(data.slug)}${location.searchStr}${location.hash ? `#${location.hash}` : ""}`,
         statusCode: 301,
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/apps/$id")({
     }
     // Primary gallery metadata reserves its final geometry in the SSR response.
     // Images still load responsively/lazily; reviews/evidence remain independent.
-    const media = data ? (await loadAppMedia([data.id], false)).get(data.id) || [] : [];
+    const media = (await loadAppMedia([data.id], false)).get(data.id) || [];
     return { app: data, media };
   },
   head: ({ loaderData }) => {
@@ -79,6 +80,7 @@ export const Route = createFileRoute("/apps/$id")({
     };
   },
   component: AppProfileRoute,
+  notFoundComponent: () => <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={null} initialMedia={[]} /></Suspense>,
 });
 
 function AppProfileRoute() {

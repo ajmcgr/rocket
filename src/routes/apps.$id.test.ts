@@ -15,5 +15,6 @@ it("loads canonical name URLs without a redirect loop", async () => {
 });
 it("keeps missing legacy app URLs as not-found", async () => {
   mocks.query.mockResolvedValue({ data: null, error: null });
-  await expect(load(id)).resolves.toEqual({ app: null, media: [] });
+  await expect(load(id)).rejects.toMatchObject({ isNotFound: true });
+  expect(mocks.media).not.toHaveBeenCalled();
 });

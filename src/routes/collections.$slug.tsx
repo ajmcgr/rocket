@@ -1,19 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import CollectionDetail from "@/pages/CollectionDetail";
 import { collectionApps, collectionDetail } from "@/lib/collections";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
+import NotFound from "@/pages/NotFound";
 
 export const Route = createFileRoute("/collections/$slug")({
   staleTime: 0,
   gcTime: 0,
   shouldReload: true,
   loader: async ({ params }) => {
-    if (!/^[a-z0-9-]{1,100}$/.test(params.slug))
-      return { collection: null, apps: [] };
+    if (!/^[a-z0-9-]{1,100}$/.test(params.slug)) throw notFound();
     const collection = await collectionDetail(params.slug);
+    if (!collection) throw notFound();
     return {
       collection,
-      apps: collection?.id ? await collectionApps(collection.id) : [],
+      apps: collection.id ? await collectionApps(collection.id) : [],
     };
   },
   head: ({ loaderData }) => {
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/collections/$slug")({
       initial={Route.useLoaderData()}
     />
   ),
+  notFoundComponent: NotFound,
   errorComponent: ({ reset }) => (
     <main className="p-10">
       <h1>Collection could not be loaded</h1>

@@ -90,6 +90,15 @@ const ToolDetail = () => {
           </div>
         )}
 
+        {tool.slug === "brand-name-generator" && (
+          <section className="mt-12 space-y-5 text-neutral-700" aria-labelledby="brand-name-guide">
+            <h2 id="brand-name-guide" className="text-2xl font-semibold tracking-tight text-neutral-900">How to use the name ideas</h2>
+            <p>Describe the product, who it helps, and the feeling you want the name to convey. For example: “A calm habit tracker for couples who want to build routines together.” Specific context gives the generator more to work with than a category such as “productivity app.”</p>
+            <p>The tool proposes 15 short names with a reason for each. Say your favorites aloud and ask someone unfamiliar with the product to spell them back to you. A name that is easy to say, remember, and distinguish from competitors is more useful than one that only looks clever on a screen.</p>
+            <p>These are ideas, not availability checks. Before choosing a name, search for existing businesses and trademarks in the markets where you operate, check the domain and relevant social handles, and make sure the name still fits if your product expands. If the first set misses the mark, add your audience, tone, or words to avoid to your description and generate another set.</p>
+          </section>
+        )}
+
         <div className="mt-12 rounded-2xl border border-neutral-200 bg-neutral-50 p-8 text-center">
           <h3 className="text-2xl font-semibold tracking-tight">Want the full launch kit?</h3>
           <p className="mt-2 text-neutral-600">Get all of this plus positioning, social copy, and a launch plan — in one click.</p>
