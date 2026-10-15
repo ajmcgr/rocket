@@ -65,7 +65,7 @@ async function formatScreenshot(
   context.drawImage(
     image,
     0,
-    (image.naturalHeight - sourceHeight) / 2,
+    0,
     image.naturalWidth,
     sourceHeight,
     0,
