@@ -5,7 +5,6 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-  useRouter,
 } from "@tanstack/react-router";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { recoverStaleAsset } from "@/lib/staleAssetRecovery";
 import NotFound from "@/pages/NotFound";
 import SiteFooter from "@/components/SiteFooter";
 import appCss from "../styles.css?url";
@@ -130,6 +130,14 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    const onPreloadError = (event: Event) => {
+      const error = (event as Event & { payload?: unknown }).payload;
+      if (recoverStaleAsset(error)) event.preventDefault();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+  }, []);
   // Google Translate mutates the DOM (body styles + widget markup); loading it
   // before hydration causes a mismatch on every page, so defer it until after.
   useEffect(() => {
@@ -168,34 +176,25 @@ function RootComponent() {
   );
 }
 
-function RootErrorComponent({
-  error,
-  reset,
-}: {
-  error: unknown;
-  reset: () => void;
-}) {
-  const router = useRouter();
+function RootErrorComponent({ error }: { error: unknown }) {
   useEffect(() => {
     console.error(error);
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    recoverStaleAsset(error);
   }, [error]);
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-center font-body text-neutral-900">
       <h1 className="font-display text-2xl">This page didn't load</h1>
       <p className="max-w-md text-sm text-neutral-500">
-        Something went wrong on our end. You can try again or head back home.
+        Something went wrong on our end. Reload the page or head back home.
       </p>
       <div className="flex gap-3">
         <button
           type="button"
-          onClick={() => {
-            void router.invalidate();
-            reset();
-          }}
+          onClick={() => window.location.reload()}
           className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
         >
-          Try again
+          Reload page
         </button>
         <a
           href="/"
