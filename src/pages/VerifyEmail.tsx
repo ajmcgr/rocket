@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { safeReturnPath } from "@/lib/navigation";
+import { syncNewAccountToBeehiiv } from "@/lib/beehiivAccountSync";
 
 const VerifyEmail = () => {
   const [params] = useSearchParams();
@@ -99,6 +100,9 @@ const VerifyEmail = () => {
         if (payload?.signInUrl) {
           setTimeout(() => { window.location.href = payload.signInUrl!; }, 400);
         } else {
+          void supabase.auth.getUser().then(({ data: fresh }) => {
+            if (fresh.user) void syncNewAccountToBeehiiv(fresh.user);
+          });
           setTimeout(() => nav(next, { replace: true }), 600);
         }
       } catch (e) {

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
+import { NEWSLETTER_SIGNUP_FLAG } from "@/lib/beehiivAccountSync";
 const supabase = _sb as any;
 
 type Status = "idle" | "checking" | "available" | "taken" | "collecting" | "reserving" | "reserved" | "invalid";
@@ -79,7 +80,7 @@ const HandleReserveForm = () => {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: { handle: normalized, username: normalized },
+        data: { handle: normalized, username: normalized, [NEWSLETTER_SIGNUP_FLAG]: true },
       },
     });
     if (error) {
@@ -147,6 +148,7 @@ const HandleReserveForm = () => {
         >
           {status === "reserving" ? <><ControlLoader2 className="h-4 w-4 animate-spin" /> Creating account…</> : <>Claim @{normalized} <ArrowRight className="h-4 w-4" /></>}
         </button>
+        <p className="text-center text-xs text-cream/70">Creating an account also subscribes you to Rocket's newsletter. Unsubscribe anytime.</p>
         <button type="button" onClick={() => setStatus("idle")} className="block w-full text-center text-xs text-cream/50 hover:text-cream/80">
           ← try a different handle
         </button>

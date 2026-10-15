@@ -34,7 +34,7 @@ const Privacy = () => {
 
       <section>
         <h2>4. How we use information</h2>
-        <p>We use information to provide accounts and app discovery; publish and manage listings; verify claims; generate and save requested assets; authenticate users and connected apps; process subscriptions, payments and entitlements; respond to support; send opted-in newsletters; measure use and improve the service; prevent fraud and abuse; and meet legal, tax and accounting duties. Where privacy law requires a legal basis, these purposes rely on performance of our agreement, legitimate interests in operating and securing Rocket, legal obligations, or your consent for optional activities.</p>
+        <p>We use information to provide accounts and app discovery; publish and manage listings; verify claims; generate and save requested assets; authenticate users and connected apps; process subscriptions, payments and entitlements; respond to support; send Rocket newsletters to new account holders and people who subscribe separately; measure use and improve the service; prevent fraud and abuse; and meet legal, tax and accounting duties. Where privacy law requires a legal basis, these purposes rely on performance of our agreement, legitimate interests in operating and securing Rocket, legal obligations, or your consent for optional activities.</p>
       </section>
 
       <section>
@@ -50,7 +50,7 @@ const Privacy = () => {
 
       <section>
         <h2>7. Cookies, analytics and communications</h2>
-        <p>Rocket uses essential storage for sign-in, security, preferences and theme. Analytics and support providers may use cookies or similar technologies to measure visits and operate chat. Browser settings can limit some tracking, but essential functions may then stop working. If you subscribe to the newsletter, you can unsubscribe using the link in each message. Service and transaction messages are different from marketing and may still be sent when needed.</p>
+        <p>Rocket uses essential storage for sign-in, security, preferences and theme. Analytics and support providers may use cookies or similar technologies to measure visits and operate chat. Browser settings can limit some tracking, but essential functions may then stop working. New Rocket accounts are subscribed to our newsletter after email verification. You can unsubscribe using the link in each newsletter without affecting account access. Service and transaction messages are different from marketing and may still be sent when needed.</p>
       </section>
 
       <section>

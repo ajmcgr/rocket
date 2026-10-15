@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { seedDemoBrandOnce } from "@/lib/seedDemoBrand";
+import { syncNewAccountToBeehiiv } from "@/lib/beehiivAccountSync";
 
 type Ctx = { user: User | null; session: Session | null; loading: boolean; signOut: () => Promise<void> };
 const AuthContext = createContext<Ctx>({ user: null, session: null, loading: true, signOut: async () => {} });
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(s);
       if (s?.user?.id) {
         setTimeout(() => { seedDemoBrandOnce(s.user!.id); }, 0);
+        setTimeout(() => { void syncNewAccountToBeehiiv(s.user!); }, 0);
       }
     });
     supabase.auth.getSession()
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(data.session);
         if (data.session?.user?.id) {
           setTimeout(() => { seedDemoBrandOnce(data.session!.user.id); }, 0);
+          setTimeout(() => { void syncNewAccountToBeehiiv(data.session!.user); }, 0);
         }
       })
       .catch((error) => {
