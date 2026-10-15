@@ -129,8 +129,8 @@
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(40 30% 95%);
 
-  --border: hsl(40 15% 20%);
-  --input: hsl(40 15% 20%);
+  --border: #e5e5e5;
+  --input: #e5e5e5;
   --ring: hsl(40 70% 55%);
 
   --radius: 0.75rem;
@@ -388,6 +388,8 @@ body {
  * ThemeToggle stores light, dark, or system in localStorage("theme"); the
  * pre-hydration script in __root.tsx applies the resolved class before paint. */
 html.dark {
+  --border: #404040;
+  --input: #404040;
   color-scheme: dark;
   background-color: #0f0e0c;
 }
