@@ -22,21 +22,7 @@ const TABS = [
 export const SettingsLayout = () => {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 md:py-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <NavLink to="/recap" className="inline-flex items-center rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-            Rocket Recap
-          </NavLink>
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("rocket:start-tour"))}
-            className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
-          >
-            Replay tour
-          </button>
-        </div>
-      </div>
+      <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
       <div className="mt-8 flex flex-wrap gap-1 rounded-xl border border-neutral-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900">
         {TABS.map((t) => (
           <NavLink
