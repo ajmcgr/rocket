@@ -23,10 +23,11 @@ it("shows real zero participation without inventing builders or ranks", async ()
   expect(screen.queryByText("Rocket 100 member #001")).toBeNull();
 });
 
-it("keeps permanent numbers distinct from dynamic ranks and scores", () => {
+it("shows builder rank and score without displaying a member number", () => {
   const data: Rocket100Data = { participants: 1, calculated_at: "2026-10-12T04:05:00Z", rows: [{ username: "builder", name: "A Builder", avatar_url: "", founding_number: 37, awarded_at: "2026-10-11T12:00:00Z", rank: 1, score: 72, popularity: 60, app_count: 2 }] };
   render(<Rocket100 data={data} />);
-  expect(screen.getByText("Rocket 100 member #037", { exact: false })).toBeTruthy();
+  expect(screen.getByText("@builder")).toBeTruthy();
+  expect(screen.queryByText(/Rocket 100 member #/)).toBeNull();
   expect(screen.queryByText(/founding builder/i)).toBeNull();
   expect(screen.getByText("#1")).toBeTruthy();
   expect(screen.getByText("72")).toBeTruthy();
