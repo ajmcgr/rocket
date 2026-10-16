@@ -23,7 +23,7 @@ const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&
 
 const SITE_TITLE = "Rocket — The open app platform";
 const SITE_DESCRIPTION =
-  "Discover apps. Build your developer reputation. Grow and monetize what you build.";
+  "Discover apps. Grow and monetize yours.";
 const SOCIAL_IMAGE = "https://tryrocket.ai/og-rocket-official-20261014.png";
 type GoogleTranslateWindow = Window & {
   googleTranslateElementInit?: () => void;
