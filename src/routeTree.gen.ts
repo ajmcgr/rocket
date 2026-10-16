@@ -38,6 +38,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RisingRouteImport } from './routes/rising'
 import { Route as RocketIdRouteImport } from './routes/rocket-id'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -280,6 +281,11 @@ const RocketIdRoute = RocketIdRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StartRoute = StartRouteImport.update({
@@ -805,6 +811,7 @@ export interface FileRoutesByFullPath {
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
   '/terms': typeof TermsRoute
@@ -933,6 +940,7 @@ export interface FileRoutesByTo {
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
   '/terms': typeof TermsRoute
@@ -1061,6 +1069,7 @@ export interface FileRoutesById {
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
   '/terms': typeof TermsRoute
@@ -1191,6 +1200,7 @@ export interface FileRouteTypes {
     | '/rising'
     | '/rocket-id'
     | '/signup'
+    | '/sitemap.xml'
     | '/start'
     | '/submit'
     | '/terms'
@@ -1319,6 +1329,7 @@ export interface FileRouteTypes {
     | '/rising'
     | '/rocket-id'
     | '/signup'
+    | '/sitemap.xml'
     | '/start'
     | '/submit'
     | '/terms'
@@ -1446,6 +1457,7 @@ export interface FileRouteTypes {
     | '/rising'
     | '/rocket-id'
     | '/signup'
+    | '/sitemap.xml'
     | '/start'
     | '/submit'
     | '/terms'
@@ -1576,6 +1588,7 @@ export interface RootRouteChildren {
   RisingRoute: typeof RisingRoute
   RocketIdRoute: typeof RocketIdRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   SubmitRoute: typeof SubmitRoute
   TermsRoute: typeof TermsRoute
@@ -1808,6 +1821,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/start': {
@@ -2709,6 +2729,7 @@ const rootRouteChildren: RootRouteChildren = {
   RisingRoute: RisingRoute,
   RocketIdRoute: RocketIdRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   SubmitRoute: SubmitRoute,
   TermsRoute: TermsRoute,

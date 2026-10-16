@@ -30,13 +30,14 @@ const safeSearch = (value: string) =>
     .trim()
     .slice(0, 80);
 
-export default function Discover({ initialCategories = [], initialView }: {
+export default function Discover({ initialCategories = [], initialView, initialSearchData }: {
   initialCategories?: Tables<"public_app_categories">[];
   initialView?: string | null;
+  initialSearchData?: { key: string; apps: App[]; count: number };
 }) {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(params.get("q") || "");
-  const [apps, setApps] = useState<App[]>([]);
+  const [apps, setApps] = useState<App[]>(initialSearchData?.apps || []);
   const [categories, setCategories] = useState<Tables<"public_app_categories">[]>(initialCategories);
   const [categorySignals, setCategorySignals] = useState<Tables<"public_category_intelligence">[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -55,9 +56,9 @@ export default function Discover({ initialCategories = [], initialView }: {
       return next;
     }),
   });
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(initialSearchData?.count || 0);
   const [rankingHasMore, setRankingHasMore] = useState(false);
-  const [loading, setLoading] = useState(initialView !== "categories");
+  const [loading, setLoading] = useState(initialView !== "categories" && !initialSearchData);
   const [error, setError] = useState<string | null>(null);
   const category = params.get("category") || "";
   const platform = params.get("platform") || "";
@@ -68,8 +69,14 @@ export default function Discover({ initialCategories = [], initialView }: {
   const sort = params.get("sort") === "discovered" ? "discovered" : "launched";
   const page = Math.max(
     0,
-    Math.min(Number(params.get("page") || 0) || 0, 1000),
+    Math.min(Math.floor(Number(params.get("page") || 0) || 0), 1000),
   );
+  const categoryPageKey = `${category}:${page}:${sort}`;
+  const categoryPageHref = (targetPage: number) => {
+    const next = new URLSearchParams(params);
+    next.set("page", String(targetPage));
+    return `/discover?${next.toString()}`;
+  };
   const rawSearch = params.get("q") || "";
   const search = safeSearch(rawSearch);
   const view = ["rankings", "new", "categories", "all"].includes(
@@ -77,6 +84,8 @@ export default function Discover({ initialCategories = [], initialView }: {
   )
     ? params.get("view")!
     : "all";
+  const hasServerCategoryData = initialSearchData?.key === categoryPageKey && view === "all"
+    && !search && !platform && !source && !pricing && !billing && !mcp;
   const pageTitle = view === "rankings" ? "Rankings" : view === "new" ? "New" : view === "categories" ? "Categories" : category && view === "all" ? `${category} Apps` : "Discover";
   const showOverview =
     !params.get("view") &&
@@ -90,6 +99,14 @@ export default function Discover({ initialCategories = [], initialView }: {
   useEffect(() => {
     setQuery(rawSearch);
   }, [rawSearch]);
+
+  useEffect(() => {
+    if (!hasServerCategoryData || !initialSearchData) return;
+    setApps(initialSearchData.apps);
+    setCount(initialSearchData.count);
+    setError(null);
+    setLoading(false);
+  }, [initialSearchData, hasServerCategoryData]);
 
   useEffect(() => {
     Promise.resolve(supabase
@@ -116,6 +133,7 @@ export default function Discover({ initialCategories = [], initialView }: {
 
   useEffect(() => {
     let canceled = false;
+    if (hasServerCategoryData) return;
     setLoading(true);
     setError(null);
     const load = async () => {
@@ -197,7 +215,7 @@ export default function Discover({ initialCategories = [], initialView }: {
     return () => {
       canceled = true;
     };
-  }, [search, category, platform, source, pricing, billing, mcp, sort, page, view, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
+  }, [search, category, platform, source, pricing, billing, mcp, sort, page, view, hasServerCategoryData, view === "rankings" ? rankingCategories : null, view === "rankings" ? rankingCategoriesLoading : false]);
 
   useEffect(() => {
     if (!user || apps.length === 0) {
@@ -261,7 +279,9 @@ export default function Discover({ initialCategories = [], initialView }: {
           {pageTitle}
         </h1>
         <p className="mt-1 text-sm text-neutral-600">
-          Apps worth using, from new arrivals to category rankings.
+          {category && view === "all"
+            ? `Explore ${category} apps on Rocket and find software worth trying.`
+            : "Apps worth using, from new arrivals to category rankings."}
         </p>
         <form
           role="search"
@@ -599,31 +619,43 @@ export default function Discover({ initialCategories = [], initialView }: {
           ))}
         {!error && view !== "categories" && (view === "rankings" ? page > 0 || rankingHasMore : count > PAGE_SIZE) && (
           <div className="mt-8 flex items-center justify-center gap-4">
-            <button
-              disabled={page === 0 || loading}
-              onClick={() => {
-                const next = new URLSearchParams(params);
-                next.set("page", String(page - 1));
-                setParams(next);
-              }}
-              className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm disabled:opacity-40"
-            >
-              Previous
-            </button>
+            {category && view === "all" ? (
+              page === 0 ? <span className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm opacity-40">Previous</span> : <a
+                href={categoryPageHref(page - 1)}
+                aria-label={`Previous ${category} apps page`}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm"
+              >Previous</a>
+            ) : (
+              <button
+                disabled={page === 0 || loading}
+                onClick={() => {
+                  const next = new URLSearchParams(params);
+                  next.set("page", String(page - 1));
+                  setParams(next);
+                }}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm disabled:opacity-40"
+              >Previous</button>
+            )}
             <span className="text-sm text-neutral-500">
               {view === "rankings" ? `Page ${page + 1}` : `Page ${page + 1} of ${Math.ceil(count / PAGE_SIZE)}`}
             </span>
-            <button
-              disabled={(view === "rankings" ? !rankingHasMore : (page + 1) * PAGE_SIZE >= count) || loading}
-              onClick={() => {
-                const next = new URLSearchParams(params);
-                next.set("page", String(page + 1));
-                setParams(next);
-              }}
-              className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm disabled:opacity-40"
-            >
-              Next
-            </button>
+            {category && view === "all" ? (
+              (page + 1) * PAGE_SIZE >= count ? <span className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm opacity-40">Next</span> : <a
+                href={categoryPageHref(page + 1)}
+                aria-label={`Next ${category} apps page`}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm"
+              >Next</a>
+            ) : (
+              <button
+                disabled={(view === "rankings" ? !rankingHasMore : (page + 1) * PAGE_SIZE >= count) || loading}
+                onClick={() => {
+                  const next = new URLSearchParams(params);
+                  next.set("page", String(page + 1));
+                  setParams(next);
+                }}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm disabled:opacity-40"
+              >Next</button>
+            )}
           </div>
         )}
       </main>
