@@ -17,6 +17,13 @@ describe("sharing email outbox", () => {
     expect(content.bodyHtml).not.toContain("Share your app");
     expect(content.ctaLabel).toBe("Manage app");
   });
+  it("keeps monthly recap email private and links to the owner view", () => {
+    const content = sharingEmailContent({ id, recipient: "owner@example.com", kind: "recap", context: { month: "2026-10-01" } });
+    expect(content.title).toBe("Your October 2026 Rocket Recap is ready");
+    expect(content.bodyHtml).toContain("private until you choose to share");
+    expect(content.ctaUrl).toBe("https://tryrocket.ai/recap");
+    expect(() => sharingEmailContent({ id, recipient: "owner@example.com", kind: "recap", context: { month: "<script>" } })).toThrow();
+  });
   it("rejects a caller without a valid leased capability", async () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
     const fetch = vi.fn();
