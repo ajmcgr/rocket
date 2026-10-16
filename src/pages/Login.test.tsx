@@ -25,7 +25,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
 let root: Root;
 let container: HTMLDivElement;
 const buttons = () => Array.from(container.querySelectorAll("button"));
-const clickRocket = () => act(async () => { buttons()[0].click(); });
+const buttonNamed = (name: string) => buttons().find(button => button.textContent === name)!;
 async function render(mode: "login" | "signup" = "login") {
   await act(async () => { root.render(<Login mode={mode} />); });
 }
@@ -48,17 +48,13 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); });
 
 describe("Rocket's own account entry", () => {
-  it.each(["login", "signup"] as const)("puts Rocket first in %s and focuses email without starting OAuth", async (mode) => {
+  it.each(["login", "signup"] as const)("shows social sign-in above the email form in %s without a redundant button", async (mode) => {
     await render(mode);
-    expect(buttons().slice(0, 4).map(button => button.textContent)).toEqual([
-      "Continue with email", "Continue with Google", "Continue with X", "Continue with GitHub",
-    ]);
+    expect(buttons().map(button => button.textContent)).not.toContain("Continue with email");
     expect(container.querySelector("form")!.hidden).toBe(false);
     expect(container.querySelector("form")!.hasAttribute("hidden")).toBe(false);
-    await clickRocket();
-    expect(container.querySelector("form")!.hidden).toBe(false);
-    expect(buttons()[0].hasAttribute("aria-expanded")).toBe(false);
-    expect(document.activeElement).toBe(container.querySelector('[aria-label="Email"]'));
+    expect(buttonNamed("Continue with Google").compareDocumentPosition(buttonNamed(mode === "signup" ? "Create account" : "Log in")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector('[aria-label="Email"]')).not.toBeNull();
     expect(mocks.oauth).not.toHaveBeenCalled(); expect(mocks.password).not.toHaveBeenCalled();
   });
   it("uses existing verified email login and preserves the safe return path", async () => {
@@ -80,24 +76,24 @@ describe("Rocket's own account entry", () => {
   it("preserves verification for unconfirmed accounts", async () => {
     mocks.password.mockResolvedValue({ data: { user: { id: "buyer", app_metadata: { provider: "email" } } }, error: null });
     mocks.profile.mockResolvedValue({ data: { email_verified: false } });
-    await render(); await clickRocket(); await fillAndSubmit();
+    await render(); await fillAndSubmit();
     expect(mocks.invoke).toHaveBeenCalledWith("send-verification", { body: { next: "/connect/authorize?client_id=example" } });
     expect(mocks.nav.mock.calls[0][0]).toContain("/verify-email?email=buyer%40example.com");
   });
   it("preserves signup and third-party login", async () => {
     mocks.signup.mockResolvedValue({ data: { session: {} }, error: null });
-    await render("signup"); await clickRocket();
+    await render("signup");
     await act(async () => { fireEvent.change(container.querySelector('[aria-label="Username"]')!, { target: { value: "buyer" } }); });
     await fillAndSubmit();
     expect(mocks.signup).toHaveBeenCalledWith(expect.objectContaining({ email: "buyer@example.com", options: { data: { username: "buyer", ref: undefined, rocket_newsletter_signup_v1: true } } }));
     expect(container.textContent).not.toContain("Start with 500 free credits.");
     expect(container.textContent).not.toContain("subscribe you to Rocket's newsletter");
-    await act(async () => { buttons()[1].click(); });
+    await act(async () => { buttonNamed("Continue with Google").click(); });
     expect(mocks.oauth).toHaveBeenCalledWith({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback?next=%2Fconnect%2Fauthorize%3Fclient_id%3Dexample` } });
   });
   it("shows password errors without redirecting", async () => {
     mocks.password.mockResolvedValue({ data: {}, error: { message: "Invalid login credentials" } });
-    await render(); await clickRocket(); await fillAndSubmit();
+    await render(); await fillAndSubmit();
     expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ description: "Invalid login credentials" }));
     expect(mocks.nav).not.toHaveBeenCalled();
   });
