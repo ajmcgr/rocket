@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import Rocket100 from "./Rocket100";
 import type { Rocket100Data } from "@/routes/100";
 import type { ReactNode } from "react";
@@ -14,7 +14,7 @@ afterEach(cleanup);
 it("shows real zero participation without inventing builders or ranks", async () => {
   const data: Rocket100Data = { participants: 0, calculated_at: null, rows: [] };
   render(<Rocket100 data={data} />);
-  expect(screen.getByText("Builders ranked by their apps on Rocket.")).toBeTruthy();
+  expect(screen.getByText("Builders ranked by their MRR on Rocket.")).toBeTruthy();
   expect((await screen.findByRole("link", { name: "Join Rocket 100" })).getAttribute("href")).toBe("/signup?next=%2F100");
   expect(screen.getByText("0 / 100 builders")).toBeTruthy();
   expect(screen.getByRole("table", { name: "Rocket 100 leaderboard" })).toBeTruthy();
@@ -39,4 +39,30 @@ it("does not invent revenue or growth when no public snapshot exists", () => {
   const data: Rocket100Data = { participants: 1, calculated_at: null, rows: [{ username: "builder", name: "A Builder", avatar_url: "", founding_number: 37, awarded_at: "2026-10-11T12:00:00Z", rank: 1, score: 72, popularity: 60, app_count: 2, mrr_minor: null, mrr_currency: null, mrr_growth_percent: null }] };
   render(<Rocket100 data={data} />);
   expect(screen.getAllByText("—")).toHaveLength(2);
+});
+
+it("sorts by public MRR and growth in both directions, keeping missing values last", () => {
+  const builder = (username: string, rank: number, mrr_minor: number | null, mrr_growth_percent: number | null) => ({
+    username, name: username, avatar_url: "", founding_number: rank, awarded_at: "2026-10-11T12:00:00Z",
+    rank, score: null, popularity: null, app_count: 1, mrr_minor,
+    mrr_currency: mrr_minor === null ? null : "USD", mrr_growth_percent,
+  });
+  const data: Rocket100Data = { participants: 4, calculated_at: null, rows: [
+    builder("bravo", 1, 20000, -5), builder("alpha", 2, 10000, 10),
+    builder("charlie", 3, 5000, null), builder("missing", 4, null, null),
+  ] };
+  render(<Rocket100 data={data} />);
+  const order = () => Array.from(screen.getByRole("table").querySelectorAll(".rocket100-row"), (row) => row.getAttribute("href"));
+  expect(order()).toEqual(["/@bravo", "/@alpha", "/@charlie", "/@missing"]);
+  fireEvent.click(screen.getByRole("button", { name: /MRR/ }));
+  expect(order()).toEqual(["/@bravo", "/@alpha", "/@charlie", "/@missing"]);
+  expect(screen.getByRole("columnheader", { name: /MRR/ }).getAttribute("aria-sort")).toBe("descending");
+  fireEvent.click(screen.getByRole("button", { name: /MRR/ }));
+  expect(order()).toEqual(["/@charlie", "/@alpha", "/@bravo", "/@missing"]);
+  fireEvent.click(screen.getByRole("button", { name: /Growth/ }));
+  expect(order()).toEqual(["/@alpha", "/@bravo", "/@charlie", "/@missing"]);
+  fireEvent.click(screen.getByRole("button", { name: /Growth/ }));
+  expect(order()).toEqual(["/@bravo", "/@alpha", "/@charlie", "/@missing"]);
+  fireEvent.click(screen.getByRole("button", { name: /Rank/ }));
+  expect(order()).toEqual(["/@bravo", "/@alpha", "/@charlie", "/@missing"]);
 });

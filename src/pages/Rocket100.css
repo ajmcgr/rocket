@@ -109,6 +109,23 @@
   text-transform: uppercase;
 }
 
+.rocket100-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.rocket100-sort-button:hover { color: #167ac6; }
+.rocket100-sort-button:focus-visible { outline: 2px solid #167ac6; outline-offset: 4px; border-radius: 2px; }
+
 .rocket100-row {
   min-height: 80px;
   border-top: 1px solid #e8eef3;
@@ -150,6 +167,7 @@
 
 .dark .rocket100-board { background: #171e29; border-color: #34404d; }
 .dark .rocket100-table-header { background: #1f2b38; color: #b4c0cf; }
+.dark .rocket100-sort-button:hover { color: #76c8ff; }
 .dark .rocket100-row { border-color: #34404d; }
 .dark .rocket100-row:hover { background: #1e2b39; }
 .dark .rocket100-revenue-note { color: #aeb9c7; border-color: #34404d; }
