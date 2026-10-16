@@ -1,10 +1,22 @@
 type RpcClient = { rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> };
-type Job = { id: string; recipient: string; kind: "published" | "claimed"; context: Record<string, unknown> };
+type Job = { id: string; recipient: string; kind: "published" | "claimed" | "recap"; context: Record<string, unknown> };
 type Layout = (data: { title: string; bodyHtml: string; ctaLabel: string; ctaUrl: string; footer: string }) => string;
 const escape = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&#34;", "'": "&#39;" })[char]!);
 
 export function sharingEmailContent(job: Job) {
   const c = job.context;
+  if (job.kind === "recap") {
+    const month = typeof c.month === "string" && /^\d{4}-(0[1-9]|1[0-2])-01$/.test(c.month) ? c.month : "";
+    if (!month) throw new Error("Invalid month in recap email queue");
+    const date = new Date(`${month}T00:00:00Z`);
+    const label = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(date);
+    return {
+      title: `Your ${label} Rocket Recap is ready`,
+      bodyHtml: `<p>See how people explored your apps on Rocket in ${escape(label)}.</p><p>Your Recap is private until you choose to share it.</p>`,
+      ctaLabel: "View my Recap", ctaUrl: "https://tryrocket.ai/recap",
+      footer: "You received this because your apps had eligible Rocket activity during the month.",
+    };
+  }
   const slug = typeof c.app_slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(c.app_slug) ? c.app_slug : "";
   const subjectName = String(c.app_name || "Your app").replace(/[\r\n]+/g, " ").slice(0, 120);
   const name = escape(subjectName);
