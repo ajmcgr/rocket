@@ -27,6 +27,7 @@ const About = () => {
 
         <div className="mt-14">
           <img src={alexAvatar.url} alt="Alex MacGregor" className="h-28 w-28 rounded-none object-cover" />
+          <img src="/alex-macgregor-signature.png" alt="Alex MacGregor’s signature" className="mt-4 h-auto w-32 object-contain dark:invert dark:mix-blend-screen" />
           <p className="mt-4 font-semibold text-neutral-950 dark:text-white">Alex MacGregor</p>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">Founder, Rocket</p>
           <a href="https://x.com/alexmacgregor__" target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium text-[#267cbb] underline underline-offset-4 dark:text-[#80c7f4]">

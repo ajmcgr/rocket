@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const templatesSource = readFileSync("src/data/templates.ts", "utf8");
-const sitemapPath = "public/sitemap.xml";
+const sitemapPath = "src/data/sitemap-static.xml";
 const sitemap = readFileSync(sitemapPath, "utf8");
 
 // Only a template explicitly marked indexable is published. This keeps draft,

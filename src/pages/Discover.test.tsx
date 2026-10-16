@@ -12,10 +12,11 @@ import Discover from "./Discover";
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
   rpc: vi.fn(),
+  invoke: vi.fn(),
   queries: [] as { table: string; range?: number[]; orders: string[] }[],
 }));
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { from: mocks.from, rpc: mocks.rpc },
+  supabase: { from: mocks.from, rpc: mocks.rpc, functions: { invoke: mocks.invoke } },
 }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
@@ -38,13 +39,45 @@ vi.mock("@/components/MarketplaceCards", () => ({
       {rank}. {app.name}
     </article>
   ),
-  MarketplaceListRow: () => null,
+  MarketplaceListRow: ({ app }: { app: { name: string } }) => (
+    <article>{app.name}</article>
+  ),
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("scrollTo", vi.fn());
   mocks.queries.length = 0;
+});
+
+it("renders server-loaded category results immediately with crawlable pagination", async () => {
+  mocks.from.mockImplementation(() => {
+    const builder = {
+      select: () => builder,
+      order: () => builder,
+      limit: () => builder,
+      then: (resolve: (value: unknown) => unknown) =>
+        Promise.resolve({ data: [], error: null }).then(resolve),
+    };
+    return builder;
+  });
+  mocks.invoke.mockResolvedValue({ data: null, error: null });
+  const initialSearchData = {
+    key: "Productivity:0:launched",
+    apps: [{ id: "app-1", name: "Productivity App" }] as never,
+    count: 30,
+  };
+  render(
+    <MemoryRouter initialEntries={["/discover?view=all&category=Productivity"]}>
+      <Discover initialSearchData={initialSearchData} />
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByText("Productivity App")).toBeTruthy();
+  expect(screen.getByText("Page 1 of 2")).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Next Productivity apps page" }).getAttribute("href"))
+    .toContain("page=1");
+  expect(mocks.rpc).not.toHaveBeenCalled();
 });
 
 afterEach(() => {

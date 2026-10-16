@@ -2,13 +2,14 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import Discover from "@/pages/Discover";
 import { APP_CATEGORIES } from "@/lib/appCategories";
 import { supabase } from "@/integrations/supabase/client";
+import { marketplaceRpc } from "@/lib/marketplace";
 
 const discoverView = (value: unknown) =>
   typeof value === "string" && ["rankings", "new", "categories", "all"].includes(value) ? value : "all";
 
 function DiscoverRoute() {
-  const { categories, initialView } = Route.useLoaderData();
-  return <Discover initialCategories={categories} initialView={initialView} />;
+  const { categories, initialView, initialSearchData } = Route.useLoaderData();
+  return <Discover initialCategories={categories} initialView={initialView} initialSearchData={initialSearchData} />;
 }
 
 export const Route = createFileRoute("/discover")({
@@ -18,12 +19,33 @@ export const Route = createFileRoute("/discover")({
     }
   },
   validateSearch: (search: Record<string, unknown>) => search,
-  loaderDeps: ({ search }) => ({ view: typeof search.view === "string" ? search.view : null }),
+  loaderDeps: ({ search }) => ({
+    view: typeof search.view === "string" ? search.view : null,
+    category: typeof search.category === "string" ? search.category : "",
+    page: Math.max(0, Math.min(1000, Math.floor(Number(search.page) || 0))),
+    sort: search.sort === "discovered" ? "discovered" : "launched",
+    hasOtherFilters: ["q", "platform", "source", "pricing", "billing", "mcp"].some((key) => Boolean(search[key])),
+  }),
   loader: async ({ deps }) => {
     const { data, error } = await supabase.from("public_app_categories")
       .select("category,app_count").order("app_count", { ascending: false }).limit(100);
     if (error) throw error;
-    return { categories: data || [], initialView: deps.view };
+    const validCategory = APP_CATEGORIES.some((item) => item.name === deps.category);
+    let initialSearchData;
+    if (deps.view !== "categories" && deps.view !== "rankings" && deps.view !== "new" && validCategory && !deps.hasOtherFilters) {
+      const result = await marketplaceRpc("search_marketplace", {
+        p_query: "", p_category: deps.category, p_platform: "", p_pricing: "",
+        p_billing: "", p_source: "", p_sort: deps.sort, p_mcp: false,
+        p_offset: deps.page * 24, p_limit: 24,
+      });
+      if (result.error) throw result.error;
+      initialSearchData = {
+        key: `${deps.category}:${deps.page}:${deps.sort}`,
+        apps: result.data?.apps || [],
+        count: result.data?.total || 0,
+      };
+    }
+    return { categories: data || [], initialView: deps.view, initialSearchData };
   },
   head: ({ match }) => {
     const search = match.search as Record<string, unknown>;
