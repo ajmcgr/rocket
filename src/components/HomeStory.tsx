@@ -94,7 +94,7 @@ export default function HomeStory() {
           <img
             src={alexAvatar.url}
             alt="Alex MacGregor"
-            className="h-20 w-20 rounded-none object-cover"
+            className="h-28 w-28 rounded-none object-cover"
           />
           <p className="mt-4 font-semibold text-neutral-950 dark:text-white">
             Alex MacGregor
