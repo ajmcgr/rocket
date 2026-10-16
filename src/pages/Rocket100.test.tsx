@@ -23,13 +23,21 @@ it("shows real zero participation without inventing builders or ranks", async ()
   expect(screen.queryByText("Rocket 100 member #001")).toBeNull();
 });
 
-it("shows builder rank and score without displaying a member number", () => {
-  const data: Rocket100Data = { participants: 1, calculated_at: "2026-10-12T04:05:00Z", rows: [{ username: "builder", name: "A Builder", avatar_url: "", founding_number: 37, awarded_at: "2026-10-11T12:00:00Z", rank: 1, score: 72, popularity: 60, app_count: 2 }] };
+it("shows public MRR and comparable growth without displaying a score or member number", () => {
+  const data: Rocket100Data = { participants: 1, calculated_at: "2026-10-12T04:05:00Z", rows: [{ username: "builder", name: "A Builder", avatar_url: "", founding_number: 37, awarded_at: "2026-10-11T12:00:00Z", rank: 1, score: 72, popularity: 60, app_count: 2, mrr_minor: 125000, mrr_currency: "USD", mrr_growth_percent: 25 }] };
   render(<Rocket100 data={data} />);
   expect(screen.getByText("@builder")).toBeTruthy();
   expect(screen.queryByText(/Rocket 100 member #/)).toBeNull();
   expect(screen.queryByText(/founding builder/i)).toBeNull();
   expect(screen.getByText("#1")).toBeTruthy();
-  expect(screen.getByText("72")).toBeTruthy();
+  expect(screen.getByText("$1.3K")).toBeTruthy();
+  expect(screen.getByText("+25.0%")).toBeTruthy();
+  expect(screen.queryByText("Score")).toBeNull();
   expect(screen.getByText("1 / 100 builders")).toBeTruthy();
+});
+
+it("does not invent revenue or growth when no public snapshot exists", () => {
+  const data: Rocket100Data = { participants: 1, calculated_at: null, rows: [{ username: "builder", name: "A Builder", avatar_url: "", founding_number: 37, awarded_at: "2026-10-11T12:00:00Z", rank: 1, score: 72, popularity: 60, app_count: 2, mrr_minor: null, mrr_currency: null, mrr_growth_percent: null }] };
+  render(<Rocket100 data={data} />);
+  expect(screen.getAllByText("—")).toHaveLength(2);
 });
