@@ -19,6 +19,7 @@ import {
 } from "@/lib/adminAppScreenshot";
 import { SUBMISSION_PLATFORMS } from "../../supabase/functions/_shared/appSubmission";
 import "./AdminAppScreenshots.css";
+import AppScreenshot from "./AppScreenshot";
 
 type App = Tables<"public_apps">;
 type ReviewSummary = Tables<"public_app_review_summary">;
@@ -458,7 +459,7 @@ export default function AdminAppScreenshots() {
                             key={item.id}
                             className="rocket-admin-screenshot-image"
                           >
-                            <img
+                            <AppScreenshot
                               src={item.source_url}
                               alt={`${preview.app.name} screenshot ${index + 1}`}
                             />

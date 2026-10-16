@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { optimizedMediaUrl, type PublicAppMedia } from "@/lib/appMedia";
+import AppScreenshot from "./AppScreenshot";
 
 export default function AppMediaGallery({
   name,
@@ -46,7 +47,7 @@ export default function AppMediaGallery({
               rel="noopener noreferrer"
               className="group relative w-[min(78vw,23rem)] shrink-0 snap-start overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 focus-visible:outline-2 focus-visible:outline-sky-500 sm:w-[calc((100%-1.5rem)/3)]"
             >
-              <img
+              <AppScreenshot
                 src={
                   original.has(item.id)
                     ? item.source_url
@@ -60,7 +61,7 @@ export default function AppMediaGallery({
                     ? setFailed((current) => new Set(current).add(item.id))
                     : setOriginal((current) => new Set(current).add(item.id))
                 }
-                className="h-48 w-full object-contain sm:h-56"
+                className="h-48 w-full sm:h-56"
               />
               <span className="absolute bottom-3 right-3 rounded-full bg-white/90 p-2 text-neutral-800 opacity-0 transition group-hover:opacity-100">
                 <span aria-hidden="true">→</span>

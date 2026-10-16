@@ -4,6 +4,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { PublicAppMedia } from "@/lib/appMedia";
 import { coverMedia, optimizedMediaUrl } from "@/lib/appMedia";
 import AppLogo from "./AppLogo";
+import AppScreenshot from "./AppScreenshot";
 import SaveAppButton from "./SaveAppButton";
 import TrendArrow from "./TrendArrow";
 import AppPurchaseActions from "./AppPurchaseActions";
@@ -137,9 +138,10 @@ function Artwork({
   const cover = coverMedia(media);
   const [failed, setFailed] = useState(false);
   return (
-    <div className={`overflow-hidden ${className}`}>
+    <div className={`relative isolate overflow-hidden ${className}`}>
       {cover && !failed ? (
-        <img
+        <AppScreenshot
+          fit={fit}
           src={optimizedMediaUrl(cover.source_url, 720, 440, fit)}
           srcSet={`${optimizedMediaUrl(cover.source_url, 480, 300, fit)} 480w, ${optimizedMediaUrl(cover.source_url, 720, 440, fit)} 720w, ${optimizedMediaUrl(cover.source_url, 1200, 750, fit)} 1200w`}
           sizes={
@@ -151,7 +153,7 @@ function Artwork({
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
           decoding="async"
-          className={`h-full w-full ${fit === "cover" ? "object-cover" : "object-contain"}`}
+          className="h-full w-full"
           onError={() => setFailed(true)}
         />
       ) : (
