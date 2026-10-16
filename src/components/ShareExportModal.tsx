@@ -1,16 +1,12 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Mail, MessageCircle, MessageSquare, Facebook, Send, Copy, Link as LinkIcon, FileText, Image as ImageIcon, Cloud, Lock } from "@/components/EmojiIcons";
+import { Mail, Copy, Link as LinkIcon, FileText, Image as ImageIcon, Lock } from "lucide-react";
+import { XLogo, FacebookLogo, MessengerLogo, WhatsAppLogo, MessagesLogo, GoogleDriveLogo, OneDriveLogo, DropboxLogo, BoxLogo } from "@/components/ShareBrandIcons";
 import { exportAsset, formatsForAsset, FORMAT_LABEL, type ExportFormat } from "@/lib/exporters";
 import { supabase as _sb } from "@/integrations/supabase/client";
 const supabase = _sb as any;
 
-const XLogo = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
 
 type Asset = {
   id: string;
@@ -131,7 +127,7 @@ export default function ShareExportModal({
       className="flex flex-col items-center gap-1.5 rounded-xl border border-neutral-200 bg-white p-3 text-center text-neutral-800 transition hover:border-brand hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconClass || "bg-neutral-100 text-neutral-700"}`}>
-        <Icon className="h-5 w-5" />
+        <Icon className="h-6 w-6" />
       </div>
       <div className="text-[11px] font-medium text-neutral-800">{label}</div>
     </button>
@@ -158,10 +154,10 @@ export default function ShareExportModal({
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             <Tile Icon={LinkIcon} label="Copy link" onClick={copyLink} />
             <Tile Icon={XLogo} label="X" onClick={() => openShare("twitter")} iconClass="bg-neutral-900 text-white" />
-            <Tile Icon={Facebook} label="Facebook" onClick={() => openShare("facebook")} iconClass="bg-blue-600 text-white" />
-            <Tile Icon={Send} label="Messenger" onClick={() => openShare("messenger")} iconClass="bg-gradient-to-br from-purple-500 to-pink-500 text-white" />
-            <Tile Icon={MessageCircle} label="WhatsApp" onClick={() => openShare("whatsapp")} iconClass="bg-green-500 text-white" />
-            <Tile Icon={MessageSquare} label="iMessage" onClick={() => openShare("imessage")} iconClass="bg-green-400 text-white" />
+            <Tile Icon={FacebookLogo} label="Facebook" onClick={() => openShare("facebook")} iconClass="bg-transparent" />
+            <Tile Icon={MessengerLogo} label="Messenger" onClick={() => openShare("messenger")} iconClass="bg-transparent" />
+            <Tile Icon={WhatsAppLogo} label="WhatsApp" onClick={() => openShare("whatsapp")} iconClass="bg-transparent" />
+            <Tile Icon={MessagesLogo} label="iMessage" onClick={() => openShare("imessage")} iconClass="bg-transparent" />
             <Tile Icon={Mail} label="Email" onClick={() => openShare("email")} iconClass="bg-neutral-100 text-neutral-700" />
           </div>
           <p className="mt-2 text-[11px] text-neutral-500">Instagram / TikTok / YouTube don't allow direct web-share — use the system share sheet on mobile.</p>
@@ -180,10 +176,10 @@ export default function ShareExportModal({
               />
             ))}
             <Tile Icon={Copy} label={isImage ? "Copy image URL" : "Copy text"} onClick={async () => { await navigator.clipboard.writeText(isImage ? (asset.image_url || "") : (asset.content || "")); toast({ title: "Copied" }); }} iconClass="bg-neutral-100 text-neutral-700" />
-            <Tile Icon={Cloud} label="Google Drive" onClick={cloudPlaceholder("Google Drive")} iconClass="bg-amber-50 text-amber-600" />
-            <Tile Icon={Cloud} label="OneDrive" onClick={cloudPlaceholder("OneDrive")} iconClass="bg-blue-50 text-blue-600" />
-            <Tile Icon={Cloud} label="Dropbox" onClick={cloudPlaceholder("Dropbox")} iconClass="bg-sky-50 text-sky-600" />
-            <Tile Icon={Cloud} label="Box" onClick={cloudPlaceholder("Box")} iconClass="bg-blue-50 text-blue-700" />
+            <Tile Icon={GoogleDriveLogo} label="Google Drive" onClick={cloudPlaceholder("Google Drive")} iconClass="bg-transparent" />
+            <Tile Icon={OneDriveLogo} label="OneDrive" onClick={cloudPlaceholder("OneDrive")} iconClass="bg-transparent" />
+            <Tile Icon={DropboxLogo} label="Dropbox" onClick={cloudPlaceholder("Dropbox")} iconClass="bg-transparent" />
+            <Tile Icon={BoxLogo} label="Box" onClick={cloudPlaceholder("Box")} iconClass="bg-transparent" />
           </div>
           <p className="mt-2 flex items-center gap-1 text-[11px] text-neutral-500"><Lock className="h-3 w-3" /> Cloud destinations need per-user OAuth — coming soon. SVG exports embed the raster image; true vectorization is a separate pipeline.</p>
         </div>

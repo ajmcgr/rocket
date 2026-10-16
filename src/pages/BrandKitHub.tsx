@@ -1,3 +1,5 @@
+import { XLogo, FacebookLogo, MessengerLogo, WhatsAppLogo, MessagesLogo } from "@/components/ShareBrandIcons";
+import { Mail, Link as LinkIcon, Lock } from "lucide-react";
 import { Loader2 as ControlLoader2, Sparkles as ControlSparkles, Share2 as ControlShare2, FileImage as ControlFileImage, Globe as ControlGlobe, Palette as ControlPalette, Type as ControlTypeIcon, Megaphone as ControlMegaphone, BookOpen as ControlBookOpen, Check as ControlCheck, Trash2 as ControlTrash2, Plus as ControlPlus, X as ControlX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "@/lib/router-compat";
@@ -5,7 +7,7 @@ import { supabase as _sb } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Sparkles, Palette, Type, MessageSquare, Layers, Shapes, Image as ImageIcon,
   Twitter, Linkedin, Instagram, Hash, Rocket as RocketIcon, Megaphone, Newspaper, Plus, Check, Trash2, X,
-  Share2, Facebook, Send, MessageCircle, MessageSquare as MessageSquareIcon, Mail, Link as LinkIcon, Lock,
+  Share2,
   Download, Loader2, FileImage, Globe, ChevronRight, Type as TypeIcon,
   BookOpen,
 } from "@/components/EmojiIcons";
@@ -117,11 +119,6 @@ const BRAND_KIT_ESSENTIALS = [
   { key: "guidelines", label: "Guidelines", types: ["brand_guidelines", "design_style_direction"] },
 ];
 
-const XLogo = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
 
 const BrandKitHub = () => {
   const { id } = useParams();
@@ -271,7 +268,7 @@ const BrandKitHub = () => {
       className="flex flex-col items-center gap-1.5 rounded-xl border border-neutral-200 bg-white p-3 text-center text-neutral-800 transition hover:border-brand hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconClass || "bg-neutral-100 text-neutral-700"}`}>
-        <Icon className="h-5 w-5" />
+        <Icon className="h-6 w-6" />
       </div>
       <div className="text-[11px] font-medium text-neutral-800">{label}</div>
     </button>
@@ -657,10 +654,10 @@ const BrandKitHub = () => {
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
               <ShareTile Icon={LinkIcon} label="Copy link" onClick={copyLink} />
               <ShareTile Icon={XLogo} label="X" onClick={() => openSocial("twitter")} iconClass="bg-neutral-900 text-white" />
-              <ShareTile Icon={Facebook} label="Facebook" onClick={() => openSocial("facebook")} iconClass="bg-blue-600 text-white" />
-              <ShareTile Icon={Send} label="Messenger" onClick={() => openSocial("messenger")} iconClass="bg-gradient-to-br from-purple-500 to-pink-500 text-white" />
-              <ShareTile Icon={MessageCircle} label="WhatsApp" onClick={() => openSocial("whatsapp")} iconClass="bg-green-500 text-white" />
-              <ShareTile Icon={MessageSquareIcon} label="iMessage" onClick={() => openSocial("imessage")} iconClass="bg-green-400 text-white" />
+              <ShareTile Icon={FacebookLogo} label="Facebook" onClick={() => openSocial("facebook")} iconClass="bg-transparent" />
+              <ShareTile Icon={MessengerLogo} label="Messenger" onClick={() => openSocial("messenger")} iconClass="bg-transparent" />
+              <ShareTile Icon={WhatsAppLogo} label="WhatsApp" onClick={() => openSocial("whatsapp")} iconClass="bg-transparent" />
+              <ShareTile Icon={MessagesLogo} label="iMessage" onClick={() => openSocial("imessage")} iconClass="bg-transparent" />
               <ShareTile Icon={Mail} label="Email" onClick={() => openSocial("email")} iconClass="bg-neutral-100 text-neutral-700" />
             </div>
             <p className="mt-2 text-[11px] text-neutral-500">Instagram / TikTok / YouTube don't allow direct web-share — use the system share sheet on mobile.</p>
