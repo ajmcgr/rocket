@@ -48,11 +48,11 @@ const Contact = () => {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="contact-name" className="mb-2 block text-sm font-semibold">Name</label>
-              <Input id="contact-name" autoComplete="name" required maxLength={100} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Your name" />
+              <Input id="contact-name" autoComplete="name" required maxLength={100} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Your name" className="dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500" />
             </div>
             <div>
               <label htmlFor="contact-email" className="mb-2 block text-sm font-semibold">Email</label>
-              <Input id="contact-email" type="email" autoComplete="email" required maxLength={254} value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@example.com" />
+              <Input id="contact-email" type="email" autoComplete="email" required maxLength={254} value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@example.com" className="dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500" />
             </div>
           </div>
 
@@ -65,7 +65,7 @@ const Contact = () => {
 
           <div>
             <label htmlFor="contact-message" className="mb-2 block text-sm font-semibold">Message</label>
-            <Textarea id="contact-message" required minLength={10} maxLength={4000} rows={7} value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="Tell us what happened or what you need help with. Include a relevant app URL if useful." />
+            <Textarea id="contact-message" required minLength={10} maxLength={4000} rows={7} value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="Tell us what happened or what you need help with. Include a relevant app URL if useful." className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus-visible:border-brand focus-visible:ring-brand/40 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500" />
           </div>
 
           <div className="absolute -left-[10000px]" aria-hidden="true">
