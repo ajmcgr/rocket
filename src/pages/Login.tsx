@@ -146,8 +146,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
         <div className="w-full max-w-md">
           <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-xs">
           <h1 className="text-2xl font-semibold tracking-tight">{isSignup ? "Create your account" : "Log in"}</h1>
-          <p className="mt-1.5 text-sm text-neutral-500">{isSignup ? "Start with 500 free credits." : "Welcome back."}</p>
-          <p className="mt-3 text-xs text-neutral-500">If this creates a new account, we'll subscribe you to Rocket's newsletter. You can unsubscribe from any newsletter email.</p>
+          {!isSignup && <p className="mt-1.5 text-sm text-neutral-500">Welcome back.</p>}
 
           <div className="mt-6 space-y-2">
           <Button
