@@ -5,7 +5,6 @@ import type { Rocket100Data } from "@/routes/100";
 import type { ReactNode } from "react";
 
 vi.mock("@/components/SiteHeader", () => ({ default: () => <header>Rocket</header> }));
-vi.mock("@/components/SiteFooter", () => ({ default: () => <footer /> }));
 vi.mock("@/components/ProfileAvatarImage", () => ({ default: () => <span /> }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth: { getUser: async () => ({ data: { user: null } }) } } }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));

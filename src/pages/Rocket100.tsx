@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import ProfileAvatarImage from "@/components/ProfileAvatarImage";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
@@ -96,6 +95,6 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
         </div>
         <p className="rocket100-revenue-note">MRR and 30-day growth include only live, verified subscription revenue that app owners have chosen to show exactly. A dash means no public or comparable data is available.</p>
       </section>
-    </main><SiteFooter />
+    </main>
   </div>;
 }
