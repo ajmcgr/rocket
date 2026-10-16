@@ -29,8 +29,7 @@
 
   <text x="79" y="272" fill="#111318" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700" letter-spacing="-3.5">The open app</text>
   <text x="79" y="349" fill="#111318" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700" letter-spacing="-3.5">platform.</text>
-  <text x="82" y="423" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="26">Discover apps. Build your developer reputation.</text>
-  <text x="82" y="460" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="26">Grow and monetize what you build.</text>
+  <text x="82" y="423" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="26">Discover apps. Grow and monetize yours.</text>
 
   <rect x="80" y="535" width="230" height="2" rx="1" fill="#009bd8"/>
   <text x="80" y="575" fill="#126996" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">tryrocket.ai</text>
