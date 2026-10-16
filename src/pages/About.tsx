@@ -26,7 +26,7 @@ const About = () => {
         </div>
 
         <div className="mt-14">
-          <img src={alexAvatar.url} alt="Alex MacGregor" className="h-20 w-20 rounded-full object-cover" />
+          <img src={alexAvatar.url} alt="Alex MacGregor" className="h-20 w-20 rounded-none object-cover" />
           <p className="mt-4 font-semibold text-neutral-950 dark:text-white">Alex MacGregor</p>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">Founder, Rocket</p>
           <a href="https://x.com/alexmacgregor__" target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium text-[#267cbb] underline underline-offset-4 dark:text-[#80c7f4]">
