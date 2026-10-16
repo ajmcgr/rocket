@@ -129,6 +129,7 @@ export default function SiteHeader({
   const [shareOpen, setShareOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sidebarCompact, setSidebarCompact] = useState(false);
+  const [avatarImageLoaded, setAvatarImageLoaded] = useState(false);
   const { user, loading, signOut } = useAuth();
   const profileHref = useMyProfileHref(user);
   const sidebarSections = sections
@@ -406,11 +407,11 @@ export default function SiteHeader({
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="Account menu"
-                  className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#167ac6]"
+                  className={`${avatarImageLoaded ? "rounded-full" : "rounded-lg"} outline-none focus-visible:ring-2 focus-visible:ring-[#167ac6]`}
                 >
-                  <Avatar className="h-9 w-9 border border-neutral-200">
-                    {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
-                    <AvatarFallback>{initial}</AvatarFallback>
+                  <Avatar className={`h-9 w-9 border border-neutral-200 ${avatarImageLoaded ? "rounded-full" : "rounded-lg"}`}>
+                    {avatarUrl && <AvatarImage src={avatarUrl} alt="" onLoadingStatusChange={(status) => setAvatarImageLoaded(status === "loaded")} />}
+                    <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 bg-white p-2">
