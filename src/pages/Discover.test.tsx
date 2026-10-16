@@ -63,20 +63,22 @@ it("renders server-loaded category results immediately with crawlable pagination
   });
   mocks.invoke.mockResolvedValue({ data: null, error: null });
   const initialSearchData = {
-    key: "Productivity:0:launched",
+    key: "Productivity:1:launched",
     apps: [{ id: "app-1", name: "Productivity App" }] as never,
-    count: 30,
+    count: 60,
   };
   render(
-    <MemoryRouter initialEntries={["/discover?view=all&category=Productivity"]}>
+    <MemoryRouter initialEntries={["/discover?view=all&category=Productivity&page=1"]}>
       <Discover initialSearchData={initialSearchData} />
     </MemoryRouter>,
   );
 
   expect(await screen.findByText("Productivity App")).toBeTruthy();
-  expect(screen.getByText("Page 1 of 2")).toBeTruthy();
+  expect(screen.getByText("Page 2 of 3")).toBeTruthy();
   expect(screen.getByRole("link", { name: "Next Productivity apps page" }).getAttribute("href"))
-    .toContain("page=1");
+    .toContain("page=2");
+  expect(screen.getByRole("link", { name: "Previous Productivity apps page" }).getAttribute("href"))
+    .toBe("/discover?view=all&category=Productivity");
   expect(mocks.rpc).not.toHaveBeenCalled();
 });
 

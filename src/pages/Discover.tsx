@@ -74,7 +74,8 @@ export default function Discover({ initialCategories = [], initialView, initialS
   const categoryPageKey = `${category}:${page}:${sort}`;
   const categoryPageHref = (targetPage: number) => {
     const next = new URLSearchParams(params);
-    next.set("page", String(targetPage));
+    if (targetPage === 0) next.delete("page");
+    else next.set("page", String(targetPage));
     return `/discover?${next.toString()}`;
   };
   const rawSearch = params.get("q") || "";
