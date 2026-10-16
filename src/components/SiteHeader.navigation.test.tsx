@@ -77,6 +77,7 @@ describe("Sidebar destinations", () => {
           const apps = sidebar.getByRole("link", { name: "My Apps" });
           const purchases = sidebar.getByRole("link", { name: "My Purchases" });
           expect(sidebar.getByRole("link", { name: "Saved" })).toBeTruthy();
+          expect(sidebar.queryByRole("link", { name: "Rocket Recap" })).toBeNull();
           expect(purchases.getAttribute("href")).toBe("/library");
           expect(
             apps.compareDocumentPosition(purchases) &
