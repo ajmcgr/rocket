@@ -80,7 +80,7 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
           <div className="rocket100-table-header" role="row"><span>Rank</span><span>Builder</span><span>Apps</span><span>Score</span></div>
           {board.rows.length ? board.rows.map((builder) => <Link key={builder.username} to={`/@${builder.username}`} className="rocket100-row" role="row" onClick={() => track("rocket100_profile_clicked", { username: builder.username })}>
             <strong className="rocket100-rank">{builder.rank ? `#${builder.rank}` : "—"}</strong>
-            <span className="rocket100-person"><span className="rocket100-avatar"><ProfileAvatarImage src={builder.avatar_url} alt="" className="h-full w-full object-cover" fallback={builder.name?.slice(0, 1) || builder.username[0]} /></span><span><b>{builder.name || `@${builder.username}`}</b><small>@{builder.username} · Rocket 100 member #{number(builder.founding_number)}</small></span></span>
+            <span className="rocket100-person"><span className="rocket100-avatar"><ProfileAvatarImage src={builder.avatar_url} alt="" className="h-full w-full object-cover" fallback={builder.name?.slice(0, 1) || builder.username[0]} /></span><span><b>{builder.name || `@${builder.username}`}</b><small>@{builder.username}</small></span></span>
             <span className="rocket100-app-count">{builder.app_count}</span><strong className="rocket100-score">{builder.score ?? "—"}</strong>
           </Link>) : <div className="rocket100-empty"><strong>No builders yet.</strong><p>Eligible app owners can join above.</p></div>}
         </div>
