@@ -4,6 +4,7 @@ import { MemoryRouter } from "@/test/MemoryRouter";
 import { describe, expect, it, vi } from "vitest";
 import AppJourney from "@/components/AppJourney";
 import MyApps from "./MyApps";
+const integrationStatuses = vi.hoisted(() => ({ responses: {} as Record<string, unknown> }));
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
@@ -38,7 +39,8 @@ vi.mock("@/integrations/supabase/client", () => ({
                   app: { name: "Pending app" },
                 },
               ]
-            : {
+            : integrationStatuses.responses[options.body.provider || _endpoint] || {
+                connection: null,
                 ga4: false,
                 posthog: false,
                 stripe_revenue: false,
@@ -172,6 +174,49 @@ describe("My Apps next actions", () => {
       ).not.toBeNull();
       expect(container.textContent).toContain("Payment setup is separate");
     } finally {
+      await cleanup();
+    }
+  });
+
+  it("shows connected and manage for each linked integration", async () => {
+    for (const endpoint of ["rocket-ga4", "rocket-posthog", "rocket-stripe-revenue", "rocket-revenuecat", "polar", "dodo"]) {
+      integrationStatuses.responses[endpoint] = { connection: { status: "active" }, source: {} };
+    }
+    const { container, cleanup } = await render(true);
+    try {
+      const cards = container.querySelectorAll('[aria-label="Connect analytics and revenue"] a');
+      expect(cards).toHaveLength(6);
+      for (const card of cards) {
+        expect(card.textContent).toContain("Connected");
+        expect(card.textContent).toContain("Manage");
+        expect(card.textContent).not.toMatch(/Connect (Google Analytics|PostHog|Stripe|RevenueCat|Polar|Dodo Payments)/);
+      }
+    } finally {
+      integrationStatuses.responses = {};
+      await cleanup();
+    }
+  });
+
+  it("distinguishes unfinished setup, sync errors, and unavailable status from disconnected integrations", async () => {
+    integrationStatuses.responses = {
+      "rocket-ga4": { connection: { status: "select_property" } },
+      "rocket-posthog": { connection: { status: "error" } },
+      "rocket-stripe-revenue": { error: "Unavailable" },
+      "rocket-revenuecat": { connection: { status: "active" }, source: null },
+      polar: { connection: { status: "disconnected" } },
+    };
+    const { container, cleanup } = await render(true);
+    try {
+      const cards = container.querySelectorAll('[aria-label="Connect analytics and revenue"] a');
+      expect(cards[0].textContent).toContain("Finish setup");
+      expect(cards[1].textContent).toContain("Needs attention");
+      expect(cards[2].textContent).toContain("Status unavailable");
+      expect(cards[2].textContent).not.toContain("Connect Stripe");
+      expect(cards[3].textContent).toContain("Finish setup");
+      expect(cards[4].textContent).toContain("Connect Polar");
+      expect(cards[5].textContent).toContain("Connect Dodo Payments");
+    } finally {
+      integrationStatuses.responses = {};
       await cleanup();
     }
   });

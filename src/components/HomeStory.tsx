@@ -96,6 +96,11 @@ export default function HomeStory() {
             alt="Alex MacGregor"
             className="h-24 w-24 rounded-none object-cover"
           />
+          <img
+            src="/alex-macgregor-signature.png"
+            alt="Alex MacGregor’s signature"
+            className="mt-4 h-auto w-28 object-contain dark:invert dark:mix-blend-screen"
+          />
           <p className="mt-4 font-semibold text-neutral-950 dark:text-white">
             Alex MacGregor
           </p>
