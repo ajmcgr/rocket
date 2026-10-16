@@ -1,6 +1,6 @@
 # Rocket
 
-> The open app platform. Discover apps. Grow and monetize yours.
+> The open app platform. Discover apps. Grow your own.
 
 Official site: https://tryrocket.ai
 Canonical AI information: https://tryrocket.ai/ai-info

@@ -23,7 +23,7 @@ const extensionErrorSuppression = `(function(){var isExt=function(r){var t=((r&&
 
 const SITE_TITLE = "Rocket — The open app platform";
 const SITE_DESCRIPTION =
-  "Discover apps. Grow and monetize yours.";
+  "Discover apps. Grow your own.";
 const SOCIAL_IMAGE = "https://tryrocket.ai/og-rocket-official-20261014.png";
 type GoogleTranslateWindow = Window & {
   googleTranslateElementInit?: () => void;
@@ -52,8 +52,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: "og:description", content: SITE_DESCRIPTION },
         { property: "og:image", content: SOCIAL_IMAGE },
         { property: "og:image:alt", content: "Rocket — The open app platform" },
-        { property: "og:image:width", content: "1200" },
-        { property: "og:image:height", content: "630" },
+        { property: "og:image:width", content: "1731" },
+        { property: "og:image:height", content: "909" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:site", content: "@tryrocketai" },
         { name: "twitter:title", content: SITE_TITLE },

@@ -37,7 +37,7 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
               The open app platform.
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
-              Discover apps. Grow and monetize yours.
+              Discover apps. Grow your own.
             </p>
             <form
               onSubmit={search}

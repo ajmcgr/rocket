@@ -25,7 +25,7 @@ const STORAGE_KEY = "rocket.onboarding.v2";
 const STEPS: Step[] = [
   {
     title: "The open app platform.",
-    body: "Discover apps. Grow and monetize yours.",
+    body: "Discover apps. Grow your own.",
     image: "/tour/rocket-home.png",
     imageAlt: "Rocket homepage showing sponsored and Rising apps",
     placement: "center",
