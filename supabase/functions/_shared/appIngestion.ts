@@ -123,6 +123,92 @@ async function pinnedAddress(
   return records[0];
 }
 
+// A framed HTTP response is complete before the peer closes its TLS socket.
+// Do not read past Content-Length or the final chunk: some public sites omit
+// TLS close_notify, and others keep the connection open despite Connection: close.
+function completedResponse(raw: Buffer, maxBytes: number, ended = false) {
+  const end = raw.indexOf("\r\n\r\n");
+  if (end < 0) {
+    if (raw.length > 16384) throw new Error("Invalid website response headers");
+    return;
+  }
+  if (end > 16384) throw new Error("Invalid website response headers");
+  const lines = raw.subarray(0, end).toString("utf8").split("\r\n");
+  const status = Number(
+    /^HTTP\/1\.[01] (\d{3})/.exec(lines.shift() || "")?.[1],
+  );
+  if (!status) throw new Error("Invalid website response status");
+  const headers = new Headers();
+  for (const line of lines) {
+    const colon = line.indexOf(":");
+    if (colon <= 0) throw new Error("Invalid website response headers");
+    headers.append(line.slice(0, colon), line.slice(colon + 1).trim());
+  }
+  const transfer = headers.get("transfer-encoding");
+  const declared = headers.get("content-length");
+  if (transfer && (transfer.toLowerCase() !== "chunked" || declared !== null))
+    throw new Error("Unsupported website response framing");
+  let bytes: Uint8Array = raw.subarray(end + 4);
+  if (status === 204 || status === 304) bytes = new Uint8Array();
+  else if (transfer) {
+    const body = raw.subarray(end + 4);
+    const decoded: Uint8Array[] = [];
+    let offset = 0;
+    let total = 0;
+    while (true) {
+      const lineEnd = body.indexOf("\r\n", offset);
+      if (lineEnd < 0) return;
+      const lengthText = body
+        .subarray(offset, lineEnd)
+        .toString("ascii")
+        .split(";")[0];
+      if (!/^[0-9a-f]+$/i.test(lengthText))
+        throw new Error("Invalid chunked website response");
+      const length = parseInt(lengthText, 16);
+      if (!Number.isSafeInteger(length) || total + length > maxBytes)
+        throw new Error("Website response is too large");
+      offset = lineEnd + 2;
+      if (!length) {
+        // Require the complete trailer terminator, including when no trailers exist.
+        if (body[offset] === 13 && body[offset + 1] === 10) break;
+        const trailerEnd = body.indexOf("\r\n\r\n", offset);
+        if (trailerEnd < 0) return;
+        if (trailerEnd - offset > 16384)
+          throw new Error("Invalid website response trailers");
+        break;
+      }
+      if (offset + length + 2 > body.length) return;
+      if (body[offset + length] !== 13 || body[offset + length + 1] !== 10)
+        throw new Error("Invalid chunked website response");
+      decoded.push(body.subarray(offset, offset + length));
+      total += length;
+      offset += length + 2;
+    }
+    bytes = Buffer.concat(decoded);
+  } else if (declared !== null) {
+    if (!/^\d+$/.test(declared))
+      throw new Error("Invalid website response length");
+    const length = Number(declared);
+    if (!Number.isSafeInteger(length) || length > maxBytes)
+      throw new Error("Website response is too large");
+    if (bytes.length < length) return;
+    if (bytes.length !== length)
+      throw new Error("Invalid website response length");
+  } else {
+    if (bytes.length > maxBytes)
+      throw new Error("Website response is too large");
+    if (!ended) return;
+  }
+  return {
+    status,
+    location: headers.get("location") || undefined,
+    contentType: (headers.get("content-type") || "")
+      .split(";")[0]
+      .toLowerCase(),
+    bytes,
+  };
+}
+
 // Native Deno sockets preserve TLS SNI while connecting to a vetted address.
 // The Node HTTP compatibility layer ignores servername in Edge Runtime.
 export async function denoRequest(url: URL, address: string, maxBytes: number) {
@@ -150,81 +236,21 @@ export async function denoRequest(url: URL, address: string, maxBytes: number) {
     );
     for (let sent = 0; sent < request.length;)
       sent += await conn.write(request.subarray(sent));
-    const chunks: Uint8Array[] = [];
-    let size = 0;
+    let raw = Buffer.alloc(0);
     while (true) {
+      const complete = completedResponse(raw, maxBytes);
+      if (complete) return complete;
       const buffer = new Uint8Array(16384);
       const n = await conn.read(buffer);
-      if (n === null) break;
-      size += n;
-      if (size > maxBytes + 65536)
-        throw new Error("Website response is too large");
-      chunks.push(buffer.slice(0, n));
-    }
-    const raw = Buffer.concat(chunks);
-    const end = raw.indexOf("\r\n\r\n");
-    if (end < 0 || end > 16384)
-      throw new Error("Invalid website response headers");
-    const lines = raw.subarray(0, end).toString("utf8").split("\r\n");
-    const status = Number(
-      /^HTTP\/1\.[01] (\d{3})/.exec(lines.shift() || "")?.[1],
-    );
-    if (!status) throw new Error("Invalid website response status");
-    const headers = new Headers();
-    for (const line of lines) {
-      const colon = line.indexOf(":");
-      if (colon > 0)
-        headers.append(line.slice(0, colon), line.slice(colon + 1).trim());
-    }
-    if (Number(headers.get("content-length")) > maxBytes)
-      throw new Error("Website response is too large");
-    let bytes: Uint8Array = raw.subarray(end + 4);
-    if (/chunked/i.test(headers.get("transfer-encoding") || "")) {
-      const decoded: Uint8Array[] = [];
-      let offset = 0;
-      let total = 0;
-      while (true) {
-        const lineEnd = raw.indexOf("\r\n", end + 4 + offset);
-        if (lineEnd < 0) throw new Error("Invalid chunked website response");
-        const lengthText = raw
-          .subarray(end + 4 + offset, lineEnd)
-          .toString("ascii")
-          .split(";")[0];
-        if (!/^[0-9a-f]+$/i.test(lengthText))
-          throw new Error("Invalid chunked website response");
-        const length = parseInt(lengthText, 16);
-        offset = lineEnd - end - 4 + 2;
-        if (!length) break;
-        total += length;
-        if (total > maxBytes) throw new Error("Website response is too large");
-        if (
-          offset + length + 2 > bytes.length ||
-          bytes[offset + length] !== 13 ||
-          bytes[offset + length + 1] !== 10
-        )
-          throw new Error("Truncated website response");
-        decoded.push(bytes.subarray(offset, offset + length));
-        offset += length + 2;
+      if (n === null) {
+        const response = completedResponse(raw, maxBytes, true);
+        if (!response) throw new Error("Truncated website response");
+        return response;
       }
-      bytes = Buffer.concat(decoded);
+      if (raw.length + n > maxBytes + 65536)
+        throw new Error("Website response is too large");
+      raw = Buffer.concat([raw, buffer.subarray(0, n)]);
     }
-    if (bytes.length > maxBytes)
-      throw new Error("Website response is too large");
-    const declared = headers.get("content-length");
-    if (
-      declared &&
-      !headers.has("transfer-encoding") &&
-      Number(declared) !== bytes.length
-    )
-      throw new Error("Truncated website response");
-    return {
-      status,
-      location: headers.get("location") || undefined,
-      contentType: (headers.get("content-type") || "")
-        .split(";")[0]
-        .toLowerCase(),
-      bytes,
-    };
   };
   try {
     return await Promise.race([
@@ -239,6 +265,16 @@ export async function denoRequest(url: URL, address: string, maxBytes: number) {
         }, 6000);
       }),
     ]);
+  } catch (error) {
+    if (/close_notify|rustls|unexpected[ _-]?eof/i.test(String(error))) {
+      console.warn("App website TLS response incomplete", {
+        hostname: url.hostname,
+      });
+      throw new Error(
+        "We could not securely read the complete website response. Try again, or add the app details manually.",
+      );
+    }
+    throw error;
   } finally {
     clearTimeout(timer!);
     try {
