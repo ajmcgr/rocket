@@ -561,191 +561,192 @@ export default function PublicAppProfile({
                 </p>
               </section>
             )}
-            <AppMarketplaceContext key={app.id} appId={app.id} />
-            <AppReviews appId={app.id} onSummary={setReviewSummary} />
-            {trustLabels(trust).length > 0 && (
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">Trust</h2>
-                <div className="mt-4">
-                  <AppTrustBadges trust={trust} />
-                </div>
-                {trust?.domain_verified ? (
-                  <p className="mt-3 text-sm text-neutral-600">
-                    The developer proved control of this app’s website domain.
-                  </p>
-                ) : trust?.claimed ? (
-                  <p className="mt-3 text-sm text-neutral-600">
-                    A developer has claimed this app; domain control has not
-                    been verified.
-                  </p>
-                ) : null}
-              </section>
-            )}
-            <section className="mt-8 border-t border-neutral-200 pt-6">
-              <h2 className="text-xl font-semibold tracking-tight">About</h2>
-              {app.description && (
-                <>
-                  <p className="mt-4 max-w-3xl whitespace-pre-wrap text-neutral-700">
-                    {descriptionSummary(app.description)}
-                  </p>
-                  {descriptionSummary(app.description) !==
-                    app.description.trim() && (
-                    <details open className="mt-3 text-sm">
-                      <summary className="cursor-pointer font-medium text-sky-700">
-                        Read full description
-                      </summary>
-                      <p className="mt-3 whitespace-pre-wrap text-neutral-700">
-                        {app.description}
-                      </p>
-                    </details>
-                  )}
-                </>
+            <AppMarketplaceContext key={app.id} appId={app.id}>
+              <AppReviews appId={app.id} onSummary={setReviewSummary} />
+              {trustLabels(trust).length > 0 && (
+                <section className="mt-8 border-t border-neutral-200 pt-6">
+                  <h2 className="text-xl font-semibold tracking-tight">Trust</h2>
+                  <div className="mt-4">
+                    <AppTrustBadges trust={trust} />
+                  </div>
+                  {trust?.domain_verified ? (
+                    <p className="mt-3 text-sm text-neutral-600">
+                      The developer proved control of this app’s website domain.
+                    </p>
+                  ) : trust?.claimed ? (
+                    <p className="mt-3 text-sm text-neutral-600">
+                      A developer has claimed this app; domain control has not
+                      been verified.
+                    </p>
+                  ) : null}
+                </section>
               )}
-              <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
-                {submission && (
+              <section className="mt-8 border-t border-neutral-200 pt-6">
+                <h2 className="text-xl font-semibold tracking-tight">About</h2>
+                {app.description && (
                   <>
-                    {submission.developer_handle && (
-                      <div>
-                        <dt className="text-neutral-500">
-                          Submitted developer
-                        </dt>
-                        <dd className="mt-1 font-medium">
-                          @{submission.developer_handle}{" "}
-                          <span className="font-normal text-neutral-500">
-                            (self-reported)
-                          </span>
-                        </dd>
-                      </div>
-                    )}
-                    {submission.pricing_display && (
-                      <div>
-                        <dt className="text-neutral-500">
-                          Pricing (self-reported)
-                        </dt>
-                        <dd className="mt-1 font-medium">
-                          {submission.pricing_display}
-                        </dd>
-                      </div>
-                    )}
-                    {submission.stack?.length > 0 && (
-                      <div>
-                        <dt className="text-neutral-500">Build stack</dt>
-                        <dd className="mt-1 font-medium">
-                          {submission.stack.join(", ")}
-                        </dd>
-                      </div>
-                    )}
-                    {submission.languages?.length > 0 && (
-                      <div>
-                        <dt className="text-neutral-500">Languages</dt>
-                        <dd className="mt-1 font-medium">
-                          {submission.languages.join(", ")}
-                        </dd>
-                      </div>
-                    )}
-                    {submission.coupon_code && (
-                      <div>
-                        <dt className="text-neutral-500">
-                          Developer offer (self-reported)
-                        </dt>
-                        <dd className="mt-1 font-medium">
-                          {submission.coupon_code}
-                          {submission.coupon_description
-                            ? ` — ${submission.coupon_description}`
-                            : ""}
-                        </dd>
-                      </div>
+                    <p className="mt-4 max-w-3xl whitespace-pre-wrap text-neutral-700">
+                      {descriptionSummary(app.description)}
+                    </p>
+                    {descriptionSummary(app.description) !==
+                      app.description.trim() && (
+                      <details open className="mt-3 text-sm">
+                        <summary className="cursor-pointer font-medium text-sky-700">
+                          Read full description
+                        </summary>
+                        <p className="mt-3 whitespace-pre-wrap text-neutral-700">
+                          {app.description}
+                        </p>
+                      </details>
                     )}
                   </>
                 )}
-                <div>
-                  <dt className="text-neutral-500">Category</dt>
-                  <dd className="mt-1 font-medium">
-                    {app.categories.join(", ") || "Not specified"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-neutral-500">Available on</dt>
-                  <dd className="mt-1 font-medium">
-                    {app.platforms.join(", ") || "Not specified"}
-                  </dd>
-                </div>
-                {app.launched_at && (
+                <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
+                  {submission && (
+                    <>
+                      {submission.developer_handle && (
+                        <div>
+                          <dt className="text-neutral-500">
+                            Submitted developer
+                          </dt>
+                          <dd className="mt-1 font-medium">
+                            @{submission.developer_handle}{" "}
+                            <span className="font-normal text-neutral-500">
+                              (self-reported)
+                            </span>
+                          </dd>
+                        </div>
+                      )}
+                      {submission.pricing_display && (
+                        <div>
+                          <dt className="text-neutral-500">
+                            Pricing (self-reported)
+                          </dt>
+                          <dd className="mt-1 font-medium">
+                            {submission.pricing_display}
+                          </dd>
+                        </div>
+                      )}
+                      {submission.stack?.length > 0 && (
+                        <div>
+                          <dt className="text-neutral-500">Build stack</dt>
+                          <dd className="mt-1 font-medium">
+                            {submission.stack.join(", ")}
+                          </dd>
+                        </div>
+                      )}
+                      {submission.languages?.length > 0 && (
+                        <div>
+                          <dt className="text-neutral-500">Languages</dt>
+                          <dd className="mt-1 font-medium">
+                            {submission.languages.join(", ")}
+                          </dd>
+                        </div>
+                      )}
+                      {submission.coupon_code && (
+                        <div>
+                          <dt className="text-neutral-500">
+                            Developer offer (self-reported)
+                          </dt>
+                          <dd className="mt-1 font-medium">
+                            {submission.coupon_code}
+                            {submission.coupon_description
+                              ? ` — ${submission.coupon_description}`
+                              : ""}
+                          </dd>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div>
-                    <dt className="text-neutral-500">Launched</dt>
+                    <dt className="text-neutral-500">Category</dt>
                     <dd className="mt-1 font-medium">
-                      {date(app.launched_at)}
+                      {app.categories.join(", ") || "Not specified"}
                     </dd>
                   </div>
-                )}
-              </dl>
-              {app.tags.length > 0 && (
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {app.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {presentation?.public_links?.length ? (
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {presentation.public_links
-                    .filter((url) => /^https:\/\//i.test(url))
-                    .map((url) => (
-                      <a
-                        key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="text-sm font-medium text-sky-800 underline"
+                  <div>
+                    <dt className="text-neutral-500">Available on</dt>
+                    <dd className="mt-1 font-medium">
+                      {app.platforms.join(", ") || "Not specified"}
+                    </dd>
+                  </div>
+                  {app.launched_at && (
+                    <div>
+                      <dt className="text-neutral-500">Launched</dt>
+                      <dd className="mt-1 font-medium">
+                        {date(app.launched_at)}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+                {app.tags.length > 0 && (
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {app.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600"
                       >
-                        {linkHost(url)}
-                      </a>
+                        {tag}
+                      </span>
                     ))}
-                </div>
-              ) : null}
-              {!trust?.claimed && app.claim_state === "unclaimed" && (
-                <Link
-                  to={`/apps/add?app=${app.id}`}
-                  className="mt-6 inline-block text-sm font-semibold text-sky-700 hover:underline"
-                >
-                  Is this your app? Claim it
-                </Link>
-              )}
-            </section>
-            {sources.length > 0 && (
-              <details open className="mt-10 border-t border-neutral-200 pt-6">
-                <summary className="cursor-pointer text-xl font-semibold tracking-tight">
-                  How we know
-                </summary>
-                <p className="mt-3 text-sm text-neutral-600">
-                  Rocket lists this app from public sources. A listing is not an
-                  endorsement.
-                </p>
-                <ul className="mt-4 space-y-3">
-                  {sources.map((source) => (
-                    <li
-                      key={`${source.source_type}-${source.source_url}`}
-                      className="flex items-center justify-between gap-3 border-t border-neutral-100 pt-3 text-sm"
-                    >
-                      <span className="capitalize">{source.source_type}</span>
-                      <a
-                        href={source.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="inline-flex items-center gap-1 text-sky-700 hover:underline"
+                  </div>
+                )}
+                {presentation?.public_links?.length ? (
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {presentation.public_links
+                      .filter((url) => /^https:\/\//i.test(url))
+                      .map((url) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="text-sm font-medium text-sky-800 underline"
+                        >
+                          {linkHost(url)}
+                        </a>
+                      ))}
+                  </div>
+                ) : null}
+                {!trust?.claimed && app.claim_state === "unclaimed" && (
+                  <Link
+                    to={`/apps/add?app=${app.id}`}
+                    className="mt-6 inline-block text-sm font-semibold text-sky-700 hover:underline"
+                  >
+                    Is this your app? Claim it
+                  </Link>
+                )}
+              </section>
+              {sources.length > 0 && (
+                <details open className="mt-10 border-t border-neutral-200 pt-6">
+                  <summary className="cursor-pointer text-xl font-semibold tracking-tight">
+                    How we know
+                  </summary>
+                  <p className="mt-3 text-sm text-neutral-600">
+                    Rocket lists this app from public sources. A listing is not an
+                    endorsement.
+                  </p>
+                  <ul className="mt-4 space-y-3">
+                    {sources.map((source) => (
+                      <li
+                        key={`${source.source_type}-${source.source_url}`}
+                        className="flex items-center justify-between gap-3 border-t border-neutral-100 pt-3 text-sm"
                       >
-                        View source <span aria-hidden="true">→</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
+                        <span className="capitalize">{source.source_type}</span>
+                        <a
+                          href={source.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="inline-flex items-center gap-1 text-sky-700 hover:underline"
+                        >
+                          View source <span aria-hidden="true">→</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </AppMarketplaceContext>
             {similar.length > 0 && (
               <section
                 className="mt-10 border-t border-neutral-200 pt-6"

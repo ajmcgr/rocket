@@ -10,6 +10,11 @@ vi.mock("@/lib/router-compat", () => ({
 }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("@/components/MarketplaceFollow", () => ({ default: () => null }));
+vi.mock("@/components/MarketplaceCards", () => ({
+  MarketplaceListRow: ({ app }: { app: { name: string } }) => (
+    <article>{app.name}</article>
+  ),
+}));
 vi.mock("@/hooks/useSavedAppControls", () => ({
   useSavedAppControls: () => () => ({}),
 }));
@@ -18,7 +23,10 @@ vi.mock("@/lib/marketplace", () => ({
     data:
       name === "get_app_developer"
         ? { username: "alex", full_name: "Alex MacGregor" }
-        : [],
+        : [
+            { id: "app-1", name: "Current app" },
+            { id: "app-2", name: "Other app" },
+          ],
     error: null,
   }),
   marketplaceTable: (name: string) => {
@@ -41,4 +49,23 @@ it("credits the verified app developer by public handle, not real name", async (
   expect(byline.getAttribute("href")).toBe("/@alex");
   expect(byline.parentElement?.textContent).toBe("By @alex");
   expect(screen.queryByText("Alex MacGregor")).toBeNull();
+});
+
+it("places developer recommendations after profile evidence and excludes the current app", async () => {
+  render(
+    <AppMarketplaceContext appId="app-1">
+      <details open>
+        <summary>How we know</summary>Public sources
+      </details>
+    </AppMarketplaceContext>,
+  );
+  const recommendations = await screen.findByRole("region", {
+    name: "More from this developer",
+  });
+  expect(
+    screen.getByText("How we know").compareDocumentPosition(recommendations) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(recommendations.textContent).toContain("Other app");
+  expect(screen.queryByText("Current app")).toBeNull();
 });
