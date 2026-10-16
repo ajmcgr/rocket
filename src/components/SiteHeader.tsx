@@ -27,7 +27,6 @@ import {
   CreditCard,
   UserRound,
   Share2,
-  CalendarDays,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -97,7 +96,6 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "Submit my app", to: "/submit", icon: Plus },
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
-      { label: "Rocket Recap", to: "/recap", icon: CalendarDays },
       { label: "My Purchases", to: "/library", icon: CreditCard },
       { label: "Saved", to: "/my-collections", icon: Bookmark },
     ],
