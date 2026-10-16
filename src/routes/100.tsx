@@ -12,6 +12,9 @@ export type Rocket100Builder = {
   score: number | null;
   popularity: number | null;
   app_count: number;
+  mrr_minor: number | null;
+  mrr_currency: string | null;
+  mrr_growth_percent: number | null;
 };
 export type Rocket100Data = { participants: number; calculated_at: string | null; rows: Rocket100Builder[] };
 

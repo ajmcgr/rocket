@@ -94,7 +94,7 @@
 .rocket100-table-header,
 .rocket100-row {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 90px 80px;
+  grid-template-columns: 72px minmax(0, 1fr) 64px 90px 72px;
   align-items: center;
   gap: 16px;
   padding: 14px 28px;
@@ -118,7 +118,9 @@
 
 .rocket100-row:hover { background: #f5faff; }
 .rocket100-rank { font-size: 20px; }
-.rocket100-score { color: #167ac6; font-size: 22px; }
+.rocket100-mrr { color: #167ac6; font-size: 18px; white-space: nowrap; }
+.rocket100-growth { font-weight: 650; white-space: nowrap; }
+.rocket100-revenue-note { margin: 0; padding: 14px 28px 18px; color: #69778a; font-size: 12px; line-height: 1.5; border-top: 1px solid #e8eef3; }
 
 .rocket100-person {
   display: flex;
@@ -150,6 +152,7 @@
 .dark .rocket100-table-header { background: #1f2b38; color: #b4c0cf; }
 .dark .rocket100-row { border-color: #34404d; }
 .dark .rocket100-row:hover { background: #1e2b39; }
+.dark .rocket100-revenue-note { color: #aeb9c7; border-color: #34404d; }
 .dark .rocket100-heading p,
 .dark .rocket100-heading-actions > span,
 .dark .rocket100-note,
@@ -164,10 +167,13 @@
   .rocket100-heading-actions { justify-content: space-between; margin-top: 20px; }
   .rocket100-board-head { padding: 20px 16px; }
   .rocket100-table-header,
-  .rocket100-row { grid-template-columns: 42px minmax(0, 1fr) 42px 52px; gap: 8px; padding: 12px 14px; }
+  .rocket100-row { grid-template-columns: 38px minmax(0, 1fr) 74px 58px; gap: 8px; padding: 12px 14px; }
+  .rocket100-app-count { display: none; }
+  .rocket100-revenue-note { padding: 12px 14px 16px; }
   .rocket100-person { gap: 8px; }
   .rocket100-avatar { width: 36px; height: 36px; border-radius: 9px; }
   .rocket100-person small { font-size: 10px; }
-  .rocket100-rank,
-  .rocket100-score { font-size: 18px; }
+  .rocket100-rank { font-size: 18px; }
+  .rocket100-mrr,
+  .rocket100-growth { font-size: 13px; }
 }

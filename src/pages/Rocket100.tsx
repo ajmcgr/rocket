@@ -10,6 +10,16 @@ import "./Rocket100.css";
 
 type MyStatus = { username?: string; qualified?: boolean; profile_complete?: boolean; eligible_app_count?: number; owned_app_count?: number; founding_number?: number | null; revoked?: boolean };
 const number = (value: number) => String(value).padStart(3, "0");
+const displayMrr = (minor: number | null, currency: string | null) => {
+  if (minor === null || !currency || !Number.isFinite(Number(minor))) return "—";
+  try {
+    const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 });
+    const digits = new Intl.NumberFormat("en-US", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
+    return formatter.format(Number(minor) / 10 ** digits);
+  } catch { return "—"; }
+};
+const displayGrowth = (percent: number | null) => percent === null || !Number.isFinite(Number(percent))
+  ? "—" : `${Number(percent) > 0 ? "+" : ""}${Number(percent).toFixed(1)}%`;
 
 export default function Rocket100({ data }: { data: Rocket100Data }) {
   const [board, setBoard] = useState(data);
@@ -77,13 +87,14 @@ export default function Rocket100({ data }: { data: Rocket100Data }) {
       <section id="leaderboard" className="rocket100-board" aria-labelledby="rocket100-board-title">
         <div className="rocket100-board-head"><h2 id="rocket100-board-title">Leaderboard</h2>{board.calculated_at && <small>Updated {new Date(board.calculated_at).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })} UTC</small>}</div>
         <div className="rocket100-table" role="table" aria-label="Rocket 100 leaderboard">
-          <div className="rocket100-table-header" role="row"><span>Rank</span><span>Builder</span><span>Apps</span><span>Score</span></div>
+          <div className="rocket100-table-header" role="row"><span>Rank</span><span>Builder</span><span className="rocket100-app-count">Apps</span><span>MRR</span><span>Growth</span></div>
           {board.rows.length ? board.rows.map((builder) => <Link key={builder.username} to={`/@${builder.username}`} className="rocket100-row" role="row" onClick={() => track("rocket100_profile_clicked", { username: builder.username })}>
             <strong className="rocket100-rank">{builder.rank ? `#${builder.rank}` : "—"}</strong>
             <span className="rocket100-person"><span className="rocket100-avatar"><ProfileAvatarImage src={builder.avatar_url} alt="" className="h-full w-full object-cover" fallback={builder.name?.slice(0, 1) || builder.username[0]} /></span><span><b>{builder.name || `@${builder.username}`}</b><small>@{builder.username}</small></span></span>
-            <span className="rocket100-app-count">{builder.app_count}</span><strong className="rocket100-score">{builder.score ?? "—"}</strong>
+            <span className="rocket100-app-count">{builder.app_count}</span><strong className="rocket100-mrr">{displayMrr(builder.mrr_minor, builder.mrr_currency)}</strong><span className="rocket100-growth">{displayGrowth(builder.mrr_growth_percent)}</span>
           </Link>) : <div className="rocket100-empty"><strong>No builders yet.</strong><p>Eligible app owners can join above.</p></div>}
         </div>
+        <p className="rocket100-revenue-note">MRR and 30-day growth include only live, verified subscription revenue that app owners have chosen to show exactly. A dash means no public or comparable data is available.</p>
       </section>
     </main><SiteFooter />
   </div>;
