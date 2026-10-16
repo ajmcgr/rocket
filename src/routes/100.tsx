@@ -27,9 +27,9 @@ export const Route = createFileRoute("/100")({
   head: () => ({
     meta: [
       { title: "Rocket 100 — Builders Leaderboard | Rocket" },
-      { name: "description", content: "Builders ranked by their apps on Rocket." },
+      { name: "description", content: "Builders ranked by their MRR on Rocket." },
       { property: "og:title", content: "Rocket 100 — Builders Leaderboard" },
-      { property: "og:description", content: "Builders ranked by their apps on Rocket." },
+      { property: "og:description", content: "Builders ranked by their MRR on Rocket." },
       { property: "og:url", content: "https://tryrocket.ai/100" },
     ],
     links: [{ rel: "canonical", href: "https://tryrocket.ai/100" }],
