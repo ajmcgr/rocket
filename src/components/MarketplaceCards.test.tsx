@@ -14,7 +14,7 @@ import {
 } from "./MarketplaceCards";
 import TrendArrow from "./TrendArrow";
 import { renderToStaticMarkup } from "react-dom/server";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 const app = {
   id: "app-1",
@@ -27,6 +27,27 @@ const app = {
 } as Tables<"public_apps">;
 
 describe("marketplace content treatments", () => {
+  it("fills screenshot gaps without cropping the foreground and removes both layers on failure", async () => {
+    window.scrollTo = vi.fn();
+    const { container } = render(
+      <MemoryRouter>
+        <StandardAppCard app={app} media={[{
+          id: "portrait", app_id: app.id, media_type: "screenshot",
+          source_type: "owner", source_url: "https://example.com/portrait.png", sort_order: 0,
+        }]} />
+      </MemoryRouter>,
+    );
+    const foreground = await screen.findByAltText("Product image for Sample app");
+    const backdrop = container.querySelector(".app-screenshot-backdrop");
+    expect(foreground.className).toContain("object-contain");
+    expect(backdrop?.getAttribute("src")).toBe(foreground.getAttribute("src"));
+    expect(backdrop?.getAttribute("srcset")).toBe(foreground.getAttribute("srcset"));
+    expect(backdrop?.getAttribute("aria-hidden")).toBe("true");
+    fireEvent.error(foreground);
+    expect(screen.queryByAltText("Product image for Sample app")).toBeNull();
+    expect(container.querySelector(".app-screenshot-backdrop")).toBeNull();
+    cleanup();
+  });
   it("omits the owner handle and keeps rating before saves in ranked rows", async () => {
     window.scrollTo = vi.fn();
     const { container } = render(
