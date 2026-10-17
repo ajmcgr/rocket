@@ -53,7 +53,7 @@ it("credits the verified app developer by public handle, not real name", async (
 
 it("places developer recommendations after profile evidence and excludes the current app", async () => {
   render(
-    <AppMarketplaceContext appId="app-1">
+    <AppMarketplaceContext appId="app-1" beforeDeveloper={<h2>Trust</h2>}>
       <details open>
         <summary>How we know</summary>Public sources
       </details>
@@ -62,6 +62,17 @@ it("places developer recommendations after profile evidence and excludes the cur
   const recommendations = await screen.findByRole("region", {
     name: "More from this developer",
   });
+  const developer = screen.getByRole("region", {
+    name: "App evaluation and developer",
+  });
+  expect(
+    screen.getByRole("heading", { name: "Trust" }).compareDocumentPosition(developer) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    developer.compareDocumentPosition(screen.getByText("How we know")) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
   expect(
     screen.getByText("How we know").compareDocumentPosition(recommendations) &
       Node.DOCUMENT_POSITION_FOLLOWING,

@@ -17,9 +17,11 @@ type Detail = {
 };
 export default function AppMarketplaceContext({
   appId,
+  beforeDeveloper,
   children,
 }: {
   appId: string;
+  beforeDeveloper?: ReactNode;
   children?: ReactNode;
 }) {
   const { user } = useAuth();
@@ -98,6 +100,7 @@ export default function AppMarketplaceContext({
   }
   return (
     <>
+      {beforeDeveloper}
       <section
         className="mt-7 space-y-6 border-t pt-6"
         aria-label="App evaluation and developer"

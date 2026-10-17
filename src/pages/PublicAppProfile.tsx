@@ -48,7 +48,9 @@ import {
 } from "../../supabase/functions/_shared/appSubmission";
 import RocketShare from "@/components/RocketShare";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
-import AppAgentIntegrations, { type PublicAgentIntegrations } from "@/components/AppAgentIntegrations";
+import AppAgentIntegrations, {
+  type PublicAgentIntegrations,
+} from "@/components/AppAgentIntegrations";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -89,7 +91,8 @@ export default function PublicAppProfile({
   const { user } = useAuth();
   const [app, setApp] = useState<App | null>(initialApp || null);
   const [sources, setSources] = useState<Source[]>([]);
-  const [agentIntegration, setAgentIntegration] = useState<PublicAgentIntegrations | null>(null);
+  const [agentIntegration, setAgentIntegration] =
+    useState<PublicAgentIntegrations | null>(null);
   const [traction, setTraction] = useState<Traction[]>([]);
   const [revenue, setRevenue] = useState<Revenue[]>([]);
   const [alternativeRevenue, setAlternativeRevenue] = useState<
@@ -125,7 +128,9 @@ export default function PublicAppProfile({
         sessionStorage.removeItem("rocket:just-published");
         setJustPublished(true);
       }
-    } catch { /* Sharing remains available in private browsing modes. */ }
+    } catch {
+      /* Sharing remains available in private browsing modes. */
+    }
   }, [app?.id]);
   useDocumentMeta({
     title: app ? `${app.name} | Rocket` : "App profile | Rocket",
@@ -137,7 +142,20 @@ export default function PublicAppProfile({
     canonical: app
       ? `https://tryrocket.ai/apps/${app.slug || app.id}`
       : undefined,
-    image: app ? shareCardUrl("app", app.slug || app.id, "landscape", shareCardVersion(app.name, app.tagline, app.description, app.logo_url, media.map((item) => item.source_url))) : undefined,
+    image: app
+      ? shareCardUrl(
+          "app",
+          app.slug || app.id,
+          "landscape",
+          shareCardVersion(
+            app.name,
+            app.tagline,
+            app.description,
+            app.logo_url,
+            media.map((item) => item.source_url),
+          ),
+        )
+      : undefined,
   });
 
   useEffect(() => {
@@ -224,9 +242,13 @@ export default function PublicAppProfile({
           .select("details")
           .eq("app_id", appId)
           .maybeSingle(),
-        supabase.from("app_agent_integrations")
-          .select("mcp_url,api_docs_url,github_url,deployment_url,supported_clients")
-          .eq("app_id", appId).maybeSingle(),
+        supabase
+          .from("app_agent_integrations")
+          .select(
+            "mcp_url,api_docs_url,github_url,deployment_url,supported_clients",
+          )
+          .eq("app_id", appId)
+          .maybeSingle(),
       ]);
       if (canceled) return;
       setApp(appResult.data);
@@ -257,7 +279,11 @@ export default function PublicAppProfile({
         ) {
           void supabase.functions
             .invoke("rocket-app-view", {
-              body: { app_id: appResult.data.id, sponsorship_id: sponsorId, source: sourceAttribution(window.location.search) },
+              body: {
+                app_id: appResult.data.id,
+                sponsorship_id: sponsorId,
+                source: sourceAttribution(window.location.search),
+              },
             })
             .catch(() => undefined);
         }
@@ -388,7 +414,39 @@ export default function PublicAppProfile({
         )}
         {app && !loading && !error && (
           <>
-            {justPublished && <div role="status" className="mt-5 rounded-2xl border border-sky-200 bg-white p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Your app is on Rocket</p><h2 className="mt-2 text-2xl font-bold">Share what you built.</h2><p className="mt-1 text-sm text-neutral-600">People can now discover and save your app. Sharing is always your choice.</p><div className="mt-4 flex flex-wrap gap-3"><RocketShare kind="app" identifier={app.slug || app.id} title={app.name} label="Share your app" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white" /><button type="button" className="min-h-11 rounded-xl border border-neutral-200 px-5 text-sm font-medium" onClick={() => setJustPublished(false)}>View app</button></div></div>}
+            {justPublished && (
+              <div
+                role="status"
+                className="mt-5 rounded-2xl border border-sky-200 bg-white p-5 sm:p-6"
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-sky-700">
+                  Your app is on Rocket
+                </p>
+                <h2 className="mt-2 text-2xl font-bold">
+                  Share what you built.
+                </h2>
+                <p className="mt-1 text-sm text-neutral-600">
+                  People can now discover and save your app. Sharing is always
+                  your choice.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <RocketShare
+                    kind="app"
+                    identifier={app.slug || app.id}
+                    title={app.name}
+                    label="Share your app"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white"
+                  />
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-xl border border-neutral-200 px-5 text-sm font-medium"
+                    onClick={() => setJustPublished(false)}
+                  >
+                    View app
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="mt-5 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-7">
               <div className="flex items-start gap-4 sm:gap-6">
                 <AppLogo
@@ -446,16 +504,27 @@ export default function PublicAppProfile({
                   saved={saved}
                   onChange={setSaved}
                 />
-                <RocketShare kind="app" identifier={app.slug || app.id} title={app.name} version={shareCardVersion(app.name, app.tagline, app.description, app.logo_url, media.map((item) => item.source_url))} />
+                <RocketShare
+                  kind="app"
+                  identifier={app.slug || app.id}
+                  title={app.name}
+                  version={shareCardVersion(
+                    app.name,
+                    app.tagline,
+                    app.description,
+                    app.logo_url,
+                    media.map((item) => item.source_url),
+                  )}
+                />
                 <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
                   {app.canonical_host}
                 </span>
               </div>
-                <AppProfileBuyAction
-                  appId={app.id}
-                  appName={app.name}
-                  websiteUrl={app.website_url}
-                />
+              <AppProfileBuyAction
+                appId={app.id}
+                appName={app.name}
+                websiteUrl={app.website_url}
+              />
               {presentation?.pricing_display && (
                 <p className="mt-3 text-xs text-neutral-500">
                   Pricing: {presentation.pricing_display} · Information supplied
@@ -496,9 +565,11 @@ export default function PublicAppProfile({
                       {revenuePoint.source === "alternative" ? (
                         <PublicMetricCard
                           label={
-                            revenuePoint.point.metric_type === "gross_revenue_30d"
+                            revenuePoint.point.metric_type ===
+                            "gross_revenue_30d"
                               ? `Gross revenue · previous 30 days · ${revenuePoint.point.currency}`
-                              : revenuePoint.point.metric_type === "paid_volume_30d"
+                              : revenuePoint.point.metric_type ===
+                                  "paid_volume_30d"
                                 ? `Succeeded payment volume · previous 30 days · ${revenuePoint.point.currency}`
                                 : `Subscription MRR · ${revenuePoint.point.currency}`
                           }
@@ -532,8 +603,13 @@ export default function PublicAppProfile({
               )}
               <AppMediaGallery name={app.name} media={media} />
             </div>
-            <AppAgentIntegrations integration={agentIntegration}
-              linkedGithubUrl={sources.find((source) => source.source_type === "github")?.source_url} />
+            <AppAgentIntegrations
+              integration={agentIntegration}
+              linkedGithubUrl={
+                sources.find((source) => source.source_type === "github")
+                  ?.source_url
+              }
+            />
             <RocketBetaJoin appId={app.id} appSlug={app.slug || app.id} />
             {signals.length > 0 && (
               <section className="mt-8 pb-2">
@@ -561,170 +637,185 @@ export default function PublicAppProfile({
                 </p>
               </section>
             )}
-            <AppMarketplaceContext key={app.id} appId={app.id}>
-              <section className="mt-8 border-t border-neutral-200 pt-6">
-                <h2 className="text-xl font-semibold tracking-tight">About</h2>
-                {app.description && (
-                  <>
-                    <p className="mt-4 max-w-3xl whitespace-pre-wrap text-neutral-700">
-                      {descriptionSummary(app.description)}
-                    </p>
-                    {descriptionSummary(app.description) !==
-                      app.description.trim() && (
-                      <details open className="mt-3 text-sm">
-                        <summary className="cursor-pointer font-medium text-sky-700">
-                          Read full description
-                        </summary>
-                        <p className="mt-3 whitespace-pre-wrap text-neutral-700">
-                          {app.description}
+            <AppMarketplaceContext
+              key={app.id}
+              appId={app.id}
+              beforeDeveloper={
+                <>
+                  <section className="mt-8 border-t border-neutral-200 pt-6">
+                    <h2 className="text-xl font-semibold tracking-tight">
+                      About
+                    </h2>
+                    {app.description && (
+                      <>
+                        <p className="mt-4 max-w-3xl whitespace-pre-wrap text-neutral-700">
+                          {descriptionSummary(app.description)}
                         </p>
-                      </details>
+                        {descriptionSummary(app.description) !==
+                          app.description.trim() && (
+                          <details open className="mt-3 text-sm">
+                            <summary className="cursor-pointer font-medium text-sky-700">
+                              Read full description
+                            </summary>
+                            <p className="mt-3 whitespace-pre-wrap text-neutral-700">
+                              {app.description}
+                            </p>
+                          </details>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-                <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
-                  {submission && (
-                    <>
-                      {submission.developer_handle && (
+                    <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
+                      {submission && (
+                        <>
+                          {submission.developer_handle && (
+                            <div>
+                              <dt className="text-neutral-500">
+                                Submitted developer
+                              </dt>
+                              <dd className="mt-1 font-medium">
+                                @{submission.developer_handle}{" "}
+                                <span className="font-normal text-neutral-500">
+                                  (self-reported)
+                                </span>
+                              </dd>
+                            </div>
+                          )}
+                          {submission.pricing_display && (
+                            <div>
+                              <dt className="text-neutral-500">
+                                Pricing (self-reported)
+                              </dt>
+                              <dd className="mt-1 font-medium">
+                                {submission.pricing_display}
+                              </dd>
+                            </div>
+                          )}
+                          {submission.stack?.length > 0 && (
+                            <div>
+                              <dt className="text-neutral-500">Build stack</dt>
+                              <dd className="mt-1 font-medium">
+                                {submission.stack.join(", ")}
+                              </dd>
+                            </div>
+                          )}
+                          {submission.languages?.length > 0 && (
+                            <div>
+                              <dt className="text-neutral-500">Languages</dt>
+                              <dd className="mt-1 font-medium">
+                                {submission.languages.join(", ")}
+                              </dd>
+                            </div>
+                          )}
+                          {submission.coupon_code && (
+                            <div>
+                              <dt className="text-neutral-500">
+                                Developer offer (self-reported)
+                              </dt>
+                              <dd className="mt-1 font-medium">
+                                {submission.coupon_code}
+                                {submission.coupon_description
+                                  ? ` — ${submission.coupon_description}`
+                                  : ""}
+                              </dd>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <div>
+                        <dt className="text-neutral-500">Category</dt>
+                        <dd className="mt-1 font-medium">
+                          {app.categories.join(", ") || "Not specified"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-neutral-500">Available on</dt>
+                        <dd className="mt-1 font-medium">
+                          {app.platforms.join(", ") || "Not specified"}
+                        </dd>
+                      </div>
+                      {app.launched_at && (
                         <div>
-                          <dt className="text-neutral-500">
-                            Submitted developer
-                          </dt>
+                          <dt className="text-neutral-500">Launched</dt>
                           <dd className="mt-1 font-medium">
-                            @{submission.developer_handle}{" "}
-                            <span className="font-normal text-neutral-500">
-                              (self-reported)
-                            </span>
+                            {date(app.launched_at)}
                           </dd>
                         </div>
                       )}
-                      {submission.pricing_display && (
-                        <div>
-                          <dt className="text-neutral-500">
-                            Pricing (self-reported)
-                          </dt>
-                          <dd className="mt-1 font-medium">
-                            {submission.pricing_display}
-                          </dd>
-                        </div>
-                      )}
-                      {submission.stack?.length > 0 && (
-                        <div>
-                          <dt className="text-neutral-500">Build stack</dt>
-                          <dd className="mt-1 font-medium">
-                            {submission.stack.join(", ")}
-                          </dd>
-                        </div>
-                      )}
-                      {submission.languages?.length > 0 && (
-                        <div>
-                          <dt className="text-neutral-500">Languages</dt>
-                          <dd className="mt-1 font-medium">
-                            {submission.languages.join(", ")}
-                          </dd>
-                        </div>
-                      )}
-                      {submission.coupon_code && (
-                        <div>
-                          <dt className="text-neutral-500">
-                            Developer offer (self-reported)
-                          </dt>
-                          <dd className="mt-1 font-medium">
-                            {submission.coupon_code}
-                            {submission.coupon_description
-                              ? ` — ${submission.coupon_description}`
-                              : ""}
-                          </dd>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <div>
-                    <dt className="text-neutral-500">Category</dt>
-                    <dd className="mt-1 font-medium">
-                      {app.categories.join(", ") || "Not specified"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-neutral-500">Available on</dt>
-                    <dd className="mt-1 font-medium">
-                      {app.platforms.join(", ") || "Not specified"}
-                    </dd>
-                  </div>
-                  {app.launched_at && (
-                    <div>
-                      <dt className="text-neutral-500">Launched</dt>
-                      <dd className="mt-1 font-medium">
-                        {date(app.launched_at)}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-                {app.tags.length > 0 && (
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {app.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600"
+                    </dl>
+                    {app.tags.length > 0 && (
+                      <div className="mt-6 flex flex-wrap gap-2">
+                        {app.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {presentation?.public_links?.length ? (
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        {presentation.public_links
+                          .filter((url) => /^https:\/\//i.test(url))
+                          .map((url) => (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="text-sm font-medium text-sky-800 underline"
+                            >
+                              {linkHost(url)}
+                            </a>
+                          ))}
+                      </div>
+                    ) : null}
+                    {!trust?.claimed && app.claim_state === "unclaimed" && (
+                      <Link
+                        to={`/apps/add?app=${app.id}`}
+                        className="mt-6 inline-block text-sm font-semibold text-sky-700 hover:underline"
                       >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {presentation?.public_links?.length ? (
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    {presentation.public_links
-                      .filter((url) => /^https:\/\//i.test(url))
-                      .map((url) => (
-                        <a
-                          key={url}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer nofollow"
-                          className="text-sm font-medium text-sky-800 underline"
-                        >
-                          {linkHost(url)}
-                        </a>
-                      ))}
-                  </div>
-                ) : null}
-                {!trust?.claimed && app.claim_state === "unclaimed" && (
-                  <Link
-                    to={`/apps/add?app=${app.id}`}
-                    className="mt-6 inline-block text-sm font-semibold text-sky-700 hover:underline"
-                  >
-                    Is this your app? Claim it
-                  </Link>
-                )}
-              </section>
-              <AppReviews appId={app.id} onSummary={setReviewSummary} />
-              {trustLabels(trust).length > 0 && (
-                <section className="mt-8 border-t border-neutral-200 pt-6">
-                  <h2 className="text-xl font-semibold tracking-tight">Trust</h2>
-                  <div className="mt-4">
-                    <AppTrustBadges trust={trust} />
-                  </div>
-                  {trust?.domain_verified ? (
-                    <p className="mt-3 text-sm text-neutral-600">
-                      The developer proved control of this app’s website domain.
-                    </p>
-                  ) : trust?.claimed ? (
-                    <p className="mt-3 text-sm text-neutral-600">
-                      A developer has claimed this app; domain control has not
-                      been verified.
-                    </p>
-                  ) : null}
-                </section>
-              )}
+                        Is this your app? Claim it
+                      </Link>
+                    )}
+                  </section>
+                  <AppReviews appId={app.id} onSummary={setReviewSummary} />
+                  {trustLabels(trust).length > 0 && (
+                    <section className="mt-8 border-t border-neutral-200 pt-6">
+                      <h2 className="text-xl font-semibold tracking-tight">
+                        Trust
+                      </h2>
+                      <div className="mt-4">
+                        <AppTrustBadges trust={trust} />
+                      </div>
+                      {trust?.domain_verified ? (
+                        <p className="mt-3 text-sm text-neutral-600">
+                          The developer proved control of this app’s website
+                          domain.
+                        </p>
+                      ) : trust?.claimed ? (
+                        <p className="mt-3 text-sm text-neutral-600">
+                          A developer has claimed this app; domain control has
+                          not been verified.
+                        </p>
+                      ) : null}
+                    </section>
+                  )}
+                </>
+              }
+            >
               {sources.length > 0 && (
-                <details open className="mt-10 border-t border-neutral-200 pt-6">
+                <details
+                  open
+                  className="mt-10 border-t border-neutral-200 pt-6"
+                >
                   <summary className="cursor-pointer text-xl font-semibold tracking-tight">
                     How we know
                   </summary>
                   <p className="mt-3 text-sm text-neutral-600">
-                    Rocket lists this app from public sources. A listing is not an
-                    endorsement.
+                    Rocket lists this app from public sources. A listing is not
+                    an endorsement.
                   </p>
                   <ul className="mt-4 space-y-3">
                     {sources.map((source) => (
