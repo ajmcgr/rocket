@@ -1,3 +1,4 @@
+import { purchaseTestOptional } from "../../supabase/functions/_shared/purchaseTestPolicy";
 import LaunchPurchaseTestSetup from "./LaunchPurchaseTestSetup";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
@@ -659,8 +660,8 @@ export default function ProductionBuySetup({
             <p className="text-sm text-neutral-600">
               Copy the integration prompt above into your coding agent. Test
               Continue with Rocket and server-side entitlement checks in your
-              app. An independent purchase test must be verified before
-              activation.
+              app. Purchase testing is recommended for Launch Pro. Other plans
+              require a verified purchase test before activation.
             </p>
             {status.products.map((plan) => (
               <div key={plan.id} className="mt-4">
@@ -668,7 +669,9 @@ export default function ProductionBuySetup({
                   {plan.name}:{" "}
                   {plan.integration_confirmed_at
                     ? "Entitlement integration verified"
-                    : "Entitlement verification required"}
+                    : purchaseTestOptional(appId, plan.id)
+                      ? "Purchase test recommended (optional)"
+                      : "Entitlement verification required"}
                 </p>
                 {appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" &&
                   !plan.is_active &&
@@ -686,7 +689,8 @@ export default function ProductionBuySetup({
                     plan.is_active ||
                     !status.launch_ready ||
                     !status.merchant?.ready ||
-                    !plan.integration_confirmed_at
+                    (!plan.integration_confirmed_at &&
+                      !purchaseTestOptional(appId, plan.id))
                   }
                   className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold disabled:opacity-50"
                 >

@@ -16,6 +16,30 @@ const client: DeveloperClient = {
   redirect_uris: ["https://example.com/auth/rocket"],
 };
 describe("Developer readiness", () => {
+  it("shows activated Launch Pro as live without a purchase test, but not another offer", () => {
+    const status = {
+      app_id: "b202d75a-02ae-46e6-8419-5b3410cbaac8",
+      merchant: { ready: true, status: "active" },
+      platform_fee_bps: 500,
+      launch_ready: true,
+      products: [
+        {
+          id: "315fa89b-c31e-49e6-b05f-3a9f870cca19",
+          is_active: true,
+          activated_at: "now",
+          integration_confirmed_at: null,
+        },
+      ],
+    };
+    expect(buyStatus(status)).toBe("Live");
+    expect(buyStatus({ ...status, app_id: "another-app" })).toBe("Testing");
+    expect(
+      buyStatus({
+        ...status,
+        products: [{ ...status.products[0], id: "another-plan" }],
+      }),
+    ).toBe("Testing");
+  });
   it("uses actual ID environment and enabled state", () => {
     expect(idStatus()).toBe("Not set up");
     expect(idStatus(client)).toBe("Live");
@@ -53,9 +77,29 @@ describe("Developer readiness", () => {
 });
 describe("Safe app-specific integration prompt", () => {
   it("includes only registered product facts and replay-safe one-time semantics", () => {
-    const prompt = integrationPrompt(client, "owned-app", [{ id: "real-product", product_key: "real-key", name: "Actual product", amount_cents: 3900, currency: "usd", billing_type: "one_time", interval: null, is_active: false, secret_key: "NEVER_COPY" } as any])!;
-    expect(prompt).toContain("real-key"); expect(prompt).toContain('"amount_cents":3900'); expect(prompt).toContain('"billing_type":"one_time"'); expect(prompt).toContain('"enabled":false'); expect(prompt).toContain("purchase_id"); expect(prompt).toContain("Do not activate inactive products"); expect(prompt).not.toContain("NEVER_COPY");
-    expect(integrationPrompt(client, "owned-app")!).toContain("Do not invent a plan or enable payments.");
+    const prompt = integrationPrompt(client, "owned-app", [
+      {
+        id: "real-product",
+        product_key: "real-key",
+        name: "Actual product",
+        amount_cents: 3900,
+        currency: "usd",
+        billing_type: "one_time",
+        interval: null,
+        is_active: false,
+        secret_key: "NEVER_COPY",
+      } as any,
+    ])!;
+    expect(prompt).toContain("real-key");
+    expect(prompt).toContain('"amount_cents":3900');
+    expect(prompt).toContain('"billing_type":"one_time"');
+    expect(prompt).toContain('"enabled":false');
+    expect(prompt).toContain("purchase_id");
+    expect(prompt).toContain("Do not activate inactive products");
+    expect(prompt).not.toContain("NEVER_COPY");
+    expect(integrationPrompt(client, "owned-app")!).toContain(
+      "Do not invent a plan or enable payments.",
+    );
   });
   it("selects public fields only and instructs fail-closed identity and access checks", () => {
     const prompt = integrationPrompt(
@@ -71,8 +115,12 @@ describe("Safe app-specific integration prompt", () => {
     expect(prompt).toContain("Preserve its current authentication");
     expect(prompt).toContain("fail closed");
     expect(prompt).toContain("connect-entitlements");
-    expect(prompt).toContain("Existing prices can be imported as inactive plans");
-    expect(prompt).toContain("Rocket currently supports only one active offer per app");
+    expect(prompt).toContain(
+      "Existing prices can be imported as inactive plans",
+    );
+    expect(prompt).toContain(
+      "Rocket currently supports only one active offer per app",
+    );
     expect(prompt).toContain("Never grant access from a checkout return URL");
     expect(prompt).not.toContain("NEVER_COPY");
   });

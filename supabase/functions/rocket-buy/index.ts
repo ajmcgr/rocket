@@ -1,3 +1,4 @@
+import { OPTIONAL_TEST_APP_ID, OPTIONAL_TEST_PLAN_ID } from "../_shared/purchaseTestPolicy.ts";
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, getAdmin, getRocketUser, getConnectToken, json } from "../_shared/rocketConnect.ts";
 import { buyMerchantReadiness } from "../_shared/buyMerchant.ts";
@@ -30,10 +31,13 @@ async function offer(appId: string) {
   if (accountError) throw accountError;
   if (!account || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
   if (!(await buyMerchantReadiness(account, stripe)).ready) return null;
-  const { data: products, error: productError } = await admin.from("connect_products")
+  const productQuery = admin.from("connect_products")
     .select("id,client_id,developer_account_id,developer_user_id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,checkout_return_uris,stripe_product_id,stripe_price_id,is_active,activated_at,integration_confirmed_at")
     .eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("developer_user_id", client.created_by)
-    .eq("is_active", true).not("activated_at", "is", null).not("integration_confirmed_at", "is", null).limit(2);
+    .eq("is_active", true).not("activated_at", "is", null).limit(2);
+  if (appId === OPTIONAL_TEST_APP_ID) productQuery.or(`integration_confirmed_at.not.is.null,id.eq.${OPTIONAL_TEST_PLAN_ID}`);
+  else productQuery.not("integration_confirmed_at", "is", null);
+  const { data: products, error: productError } = await productQuery;
   if (productError) throw productError;
   if (!products || products.length !== 1 || products[0].platform_fee_bps !== configuration.platform_fee_bps) return null;
   if (billingType(products[0]) === "one_time" && (!products[0].product_key || !products[0].checkout_return_uris?.length)) return null;
