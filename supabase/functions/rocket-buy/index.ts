@@ -455,16 +455,18 @@ Deno.serve(async (req) => {
         )
           return json({ error: "checkout_pending_reconciliation" }, 409);
       } else {
-        const { data: existing, error: attemptError } = await admin.from("connect_checkout_attempts").select("stripe_checkout_session_id")
-        .eq("user_id", user.id).eq("client_id", client.client_id).eq("product_id", product.id)
-        .eq("stripe_account_id", account.stripe_account_id)
-        .eq("idempotency_key", requestKey).maybeSingle();
-        if (attemptError)throw attemptError;
-      if (existing?.stripe_checkout_session_id) {
-        const prior = await stripe.checkout.sessions.retrieve(existing.stripe_checkout_session_id, { stripeAccount: account.stripe_account_id });
-        if (prior.status === "open" && prior.url) return json({ checkout_url: prior.url, reused: true });
-        return json({ error: "purchase_request_already_used", checkout_status: prior.status }, 409);
-      }
+        const { data: existing, error: attemptError } = await admin.from("connect_checkout_attempts")
+          .select("stripe_checkout_session_id,expires_at")
+          .eq("user_id", user.id).eq("client_id", client.client_id).eq("product_id", product.id)
+          .eq("stripe_account_id", account.stripe_account_id).eq("idempotency_key", requestKey).maybeSingle();
+        if (attemptError) throw attemptError;
+        if (existing && !existing.stripe_checkout_session_id && new Date(existing.expires_at).getTime() <= Date.now())
+          return json({ error: "checkout_pending_reconciliation" }, 409);
+        if (existing?.stripe_checkout_session_id) {
+          const prior = await stripe.checkout.sessions.retrieve(existing.stripe_checkout_session_id, { stripeAccount: account.stripe_account_id });
+          if (prior.status === "open" && prior.url) return json({ checkout_url: prior.url, reused: true });
+          return json({ error: "purchase_request_already_used", checkout_status: prior.status }, 409);
+        }
       }
       const { data: customerRow } = await admin.from("connect_customers").select("stripe_customer_id")
         .eq("user_id", user.id).eq("developer_account_id", account.id).maybeSingle();
@@ -486,6 +488,14 @@ Deno.serve(async (req) => {
         rocket_checkout_key: reservation?.idempotency_key || requestKey!,
       };
       if (oneTime && product.platform_fee_bps !== 500) return json({ error: "platform_fee_configuration_invalid" }, 409);
+      const { data: frozen, error: freezeError } = await admin.rpc("connect_freeze_checkout", {
+        p_user_id: user.id, p_client_id: client.client_id, p_product_id: product.id,
+        p_account: account.stripe_account_id, p_key: idempotencyKey, p_entitlement_key: product.entitlement_key,
+        p_origin: reservation?.origin || origin,
+        p_expires_at: reservation?.expires_at || new Date(Date.now()+24*60*60_000).toISOString(),
+      });
+      if (freezeError) throw freezeError;
+      if (!frozen) return json({ error: "checkout_offer_changed" }, 409);
       const session = await stripe.checkout.sessions.create({
         ...(reservation
             ? {

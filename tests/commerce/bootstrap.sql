@@ -9,7 +9,7 @@ create table rocket_buy_configuration(singleton boolean primary key,platform_fee
 insert into rocket_buy_configuration values(true,500,true);
 create table connect_products(id uuid primary key,client_id text,developer_account_id uuid,developer_user_id uuid,product_key text,name text,stripe_price_id text,stripe_product_id text,amount_cents int,currency text,interval text,billing_type text,platform_fee_bps int,is_active boolean,activated_at timestamptz);
 create unique index connect_products_one_active_client_idx on connect_products(client_id) where is_active;
-create table connect_checkout_attempts(product_id uuid);
+create table connect_checkout_attempts(product_id uuid,user_id uuid,client_id text,stripe_account_id text,idempotency_key text unique,origin text,expires_at timestamptz,stripe_checkout_session_id text);
 create table connect_transactions(product_id uuid);
 create function can_monetize_rocket_app(uuid,uuid) returns boolean language sql as $$select true$$;
 insert into auth.users values('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
