@@ -55,7 +55,7 @@ const StartHere = () => {
         </div>
 
         <p className="mx-auto mt-10 max-w-3xl text-center text-sm leading-6 text-neutral-500 dark:text-neutral-400">
-          A Rocket account saves your apps and supports Rocket features; it does not automatically sign you in to every app in the catalogue. Have a question? <Link to="/faq" className="font-semibold text-[#267cbb] underline underline-offset-4">Read the FAQ</Link> or <Link to="/contact" className="font-semibold text-[#267cbb] underline underline-offset-4">contact us</Link>.
+          A Rocket account saves your apps and supports Rocket features; it does not automatically sign you in to every app in the catalogue. For step-by-step help, <Link to="/docs" className="font-semibold text-[#267cbb] underline underline-offset-4">read the Docs</Link>. Have a quick question? <Link to="/faq" className="font-semibold text-[#267cbb] underline underline-offset-4">Read the FAQ</Link> or <Link to="/contact" className="font-semibold text-[#267cbb] underline underline-offset-4">contact us</Link>.
         </p>
       </main>
 

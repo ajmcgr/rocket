@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import staticSitemap from "@/data/sitemap-static.xml?raw";
+import { docArticles } from "@/content/rocketDocs";
 
 const baseUrl = "https://tryrocket.ai";
 const pageSize = 1000;
@@ -95,6 +96,12 @@ async function getSitemap() {
       loc.replaceAll("&amp;", "&"),
       `  <url><loc>${loc}</loc>${content}</url>`,
     );
+
+  entries.set(`${baseUrl}/docs`, urlEntry(`${baseUrl}/docs`));
+  for (const article of docArticles) {
+    const loc = `${baseUrl}/docs/${article.slug}`;
+    entries.set(loc, urlEntry(loc));
+  }
 
   for (const row of apps) {
     if (

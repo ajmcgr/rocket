@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { docArticles } from "@/content/rocketDocs";
 
 async function getSitemap() {
   const { Route } = await import("./sitemap[.]xml");
@@ -67,6 +68,11 @@ describe("dynamic public sitemap", () => {
     );
     expect(xml).toContain("https://tryrocket.ai/collections/staff-picks");
     expect(xml).toContain("https://tryrocket.ai/@builder_1");
+    expect(xml).toContain("<loc>https://tryrocket.ai/docs</loc>");
+    for (const article of docArticles)
+      expect(xml).toContain(
+        `<loc>https://tryrocket.ai/docs/${article.slug}</loc>`,
+      );
     expect(xml).toContain("<lastmod>2026-10-16T00:00:00.000Z</lastmod>");
     const locations = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
       (match) => match[1],

@@ -69,6 +69,7 @@ describe("Sidebar destinations", () => {
         );
         const appsHeading = await screen.findByText("Apps");
         const sidebar = within(appsHeading.closest("aside")!);
+        expect(sidebar.getByRole("link", { name: "Docs" }).getAttribute("href")).toBe("/docs");
         expect(sidebar.getByText("Grow")).toBeTruthy();
         expect(sidebar.getByRole("link", { name: "Launch" }).getAttribute("href")).toBe("https://trylaunch.ai");
         expect(sidebar.queryByRole("link", { name: "Post" })).toBeNull();

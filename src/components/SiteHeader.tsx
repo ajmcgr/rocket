@@ -27,6 +27,8 @@ import {
   CreditCard,
   UserRound,
   Share2,
+  BookOpen,
+  CircleHelp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -76,6 +78,7 @@ export const isMarketplaceSidebarItemActive = (
         pathname === "/saved-apps")) ||
     (to === "/submit" && pathname === "/submit") ||
     (to === "/create" && pathname === "/create") ||
+    (to === "/docs" && pathname.startsWith("/docs/")) ||
     (label === "Developer" && pathname.startsWith("/developer"))
   );
 };
@@ -111,6 +114,13 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Create",
     items: createNavigationItems,
+  },
+  {
+    heading: "Resources",
+    items: [
+      { label: "Docs", to: "/docs", icon: BookOpen },
+      { label: "FAQ", to: "/faq", icon: CircleHelp },
+    ],
   },
 ];
 type SiteHeaderProps = {
