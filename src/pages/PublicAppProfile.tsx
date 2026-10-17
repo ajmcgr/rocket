@@ -562,25 +562,6 @@ export default function PublicAppProfile({
               </section>
             )}
             <AppMarketplaceContext key={app.id} appId={app.id}>
-              <AppReviews appId={app.id} onSummary={setReviewSummary} />
-              {trustLabels(trust).length > 0 && (
-                <section className="mt-8 border-t border-neutral-200 pt-6">
-                  <h2 className="text-xl font-semibold tracking-tight">Trust</h2>
-                  <div className="mt-4">
-                    <AppTrustBadges trust={trust} />
-                  </div>
-                  {trust?.domain_verified ? (
-                    <p className="mt-3 text-sm text-neutral-600">
-                      The developer proved control of this app’s website domain.
-                    </p>
-                  ) : trust?.claimed ? (
-                    <p className="mt-3 text-sm text-neutral-600">
-                      A developer has claimed this app; domain control has not
-                      been verified.
-                    </p>
-                  ) : null}
-                </section>
-              )}
               <section className="mt-8 border-t border-neutral-200 pt-6">
                 <h2 className="text-xl font-semibold tracking-tight">About</h2>
                 {app.description && (
@@ -717,6 +698,25 @@ export default function PublicAppProfile({
                   </Link>
                 )}
               </section>
+              <AppReviews appId={app.id} onSummary={setReviewSummary} />
+              {trustLabels(trust).length > 0 && (
+                <section className="mt-8 border-t border-neutral-200 pt-6">
+                  <h2 className="text-xl font-semibold tracking-tight">Trust</h2>
+                  <div className="mt-4">
+                    <AppTrustBadges trust={trust} />
+                  </div>
+                  {trust?.domain_verified ? (
+                    <p className="mt-3 text-sm text-neutral-600">
+                      The developer proved control of this app’s website domain.
+                    </p>
+                  ) : trust?.claimed ? (
+                    <p className="mt-3 text-sm text-neutral-600">
+                      A developer has claimed this app; domain control has not
+                      been verified.
+                    </p>
+                  ) : null}
+                </section>
+              )}
               {sources.length > 0 && (
                 <details open className="mt-10 border-t border-neutral-200 pt-6">
                   <summary className="cursor-pointer text-xl font-semibold tracking-tight">
