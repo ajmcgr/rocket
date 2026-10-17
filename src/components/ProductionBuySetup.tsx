@@ -660,6 +660,7 @@ export default function ProductionBuySetup({
               Copy the integration prompt above into your coding agent. Test
               Continue with Rocket and server-side entitlement checks in your
               app. A purchase test is recommended, but optional for activation.
+              App ownership and Stripe readiness are still required.
             </p>
             {status.products.map((plan) => (
               <div key={plan.id} className="mt-4">
