@@ -85,6 +85,15 @@ Deno.serve(async (req) => {
         const chargeId = typeof object.charge === "string" ? object.charge : object.charge?.id;
         if (!chargeId) throw new Error("Dispute charge missing");
         const disputedCharge = await stripe.charges.retrieve(chargeId, {}, { stripeAccount: accountId });
+        // Older dispute payloads contain only a charge reference. Resolve the
+        // authoritative payment relationship for entitlement revocation too.
+        if (
+          !object.payment_intent &&
+          typeof disputedCharge.payment_intent === "string"
+        )
+          object.payment_intent = disputedCharge.payment_intent;
+        if (!object.invoice && typeof disputedCharge.invoice === "string")
+          object.invoice = disputedCharge.invoice;
         const paymentKey = typeof disputedCharge.invoice === "string" ? disputedCharge.invoice :
           typeof disputedCharge.payment_intent === "string" ? disputedCharge.payment_intent : null;
         if (!paymentKey) throw new Error("Dispute payment mapping missing");
@@ -156,7 +165,13 @@ Deno.serve(async (req) => {
       const state = charge?.disputed ? "disputed" : charge?.refunded ? "refunded" : "granted";
       const { error: settlementError } = await admin.rpc("connect_settle_one_time", { p_transaction_id: transaction.id, p_environment: environment, p_status: state });
       if (settlementError) throw settlementError;
-      const { error: receiptError } = await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { purchase_id: transaction.id, status: state } }).eq("event_id", event.id);
+      const { error: receiptError } = await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { purchase_id: transaction.id, status: state ,
+            commerce_event: state === "granted" ? "purchase_completed" : null,
+            commerce_event_key: state === "granted" ? `purchase:${transaction.id}` : null,
+            origin: attempt.origin || "UNKNOWN",
+            environment,
+            offer_id: product.id,
+          } }).eq("event_id", event.id);
       if (receiptError) throw receiptError;
       return reply({ received: true });
     }
@@ -168,7 +183,10 @@ Deno.serve(async (req) => {
         return reply({ received: true, ignored: true });
       }
       const { data: product } = await admin.from("connect_products").select("*").eq("id", attempt.product_id).eq("client_id", attempt.client_id).maybeSingle();
-      if (!product) throw new Error("Missing registered product");
+      if (!product||
+        product.developer_account_id !== account.id ||
+        attempt.client_id !== account.client_id
+      ) throw new Error("Missing registered product");
       // Retrieve the canonical Checkout object because connected-account event
       // payloads can omit payment_intent. Persisting it makes later charge
       // refunds an exact, account-scoped transaction lookup.
@@ -349,7 +367,27 @@ Deno.serve(async (req) => {
         .insert({ entitlement_id: saved.id, event_type: event.type, detail: { status, stripe_event_id: event.id, transaction_id: transaction.id } });
       if (entitlementEventError) throw entitlementEventError;
     }
-    await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status, transaction_id: transaction.id } }).eq("event_id", event.id);
+    const { data: originalAttempt } = await admin
+      .from("connect_checkout_attempts")
+      .select("origin")
+      .eq("stripe_checkout_session_id", transaction.stripe_checkout_session_id)
+      .eq("client_id", transaction.client_id)
+      .eq("user_id", transaction.user_id)
+      .maybeSingle();
+    const commerceEvent = invoiceForSettlement
+      ? invoiceForSettlement.billing_reason === "subscription_cycle"
+        ? "subscription_renewed"
+        : "purchase_completed"
+      : status === "canceling" || event.type === "customer.subscription.deleted"
+        ? "subscription_cancelled"
+        : null;
+    await admin.from("connect_webhook_events").update({ processing_result: "applied", detail: { status, transaction_id: transaction.id ,
+          commerce_event: commerceEvent,
+        commerce_event_key: commerceEvent === "subscription_renewed" ? `renewal:${invoiceForSettlement.id}` : commerceEvent === "purchase_completed" ? `purchase:${transaction.id}` : commerceEvent ? `cancellation:${transaction.id}:${status}` : null,
+          origin: originalAttempt?.origin || "UNKNOWN",
+          environment,
+          offer_id: transaction.product_id,
+        } }).eq("event_id", event.id);
     return reply({ received: true });
   } catch (error) {
     console.error("connect-payment-webhook", error);

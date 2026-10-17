@@ -541,14 +541,18 @@ Use the intended merchant account. A read-only Stripe revenue-verification conne
 
 Offers are saved inactive until the developer activates them. A purchase test is recommended, but is not mandatory for activation. Check amount, currency, interval and access mapping in the portal. Stripe readiness and live payment validation still apply; your app must grant access only from verified payment or entitlement state.
 
-Use the official Buy with Rocket button and attach your purchase handler. The button itself makes no payment requests and grants no access.`,
+Publish multiple offers for one app, including one-time, monthly and annual prices. Edit each offer's name, short description and entitlement key. Give monthly and annual prices the same entitlement key when they grant the same tier. An entitlement key cannot change after an offer is used in checkout. Unpublishing stops new checkout without removing existing paid access.
+
+The public listing shows a native plan picker with actual Stripe prices and available billing intervals. Buyers choose a plan before Buy with Rocket. Visit website remains available separately. Copy the hosted picker or plan-specific link from setup for your own website. The official button supports public app-id and optional offer-id attributes for the same hosted flow; no secret credentials belong in it. It never grants access.`,
       ),
       section(
         "entitlements",
         "Grant access only from verified payment state",
-        `The buyer pays through Stripe Checkout for the connected merchant. Rocket confirms payment server-side; your app must check the current verified purchase or entitlement before granting the mapped access.
+        `The buyer pays through Stripe Checkout for the connected merchant. Rocket confirms payment server-side; your app must check the current verified purchase or entitlement before granting the mapped access. The entitlement_key filter selects a logical tier across monthly and annual offers; product_key still selects an exact offer. Check the matching client, active state, expiry and revocation on your server.
 
 A checkout return URL or a browser success screen is not proof of payment. Handle pending and failed payments, duplicate delivery, cancellations, refunds and disputes. Revoked or refunded access must not remain active solely because an earlier callback said success.
+
+V1 does not support upgrades or downgrades during an existing app subscription. Buyers can manage cancellation in My Purchases and buy a different plan after the existing subscription ends. Another subscription or open checkout for the same app blocks duplicate checkout.
 
 Rocket's platform fee is 5% on new Buy with Rocket plans, separate from Stripe processing fees and the Developer membership. On a $100 payment, the Rocket fee is $5 before separate costs. Stripe controls the connected merchant's payout timing. Test and live transactions must remain separate.`,
       ),

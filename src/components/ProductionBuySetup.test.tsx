@@ -187,7 +187,8 @@ describe("Buy with Rocket activation UI", () => {
         billing.value = "one_time";
         billing.dispatchEvent(new Event("change", { bubbles: true }));
       });
-      const inputs = container.querySelectorAll("input");
+      const form = [...container.querySelectorAll("form")].find((form) => form.textContent?.includes("Create a new price"))!;
+      const inputs = form.querySelectorAll("input");
       const values = [
         "Launch Pro",
         "39.00",
@@ -203,9 +204,7 @@ describe("Buy with Rocket activation UI", () => {
         });
       });
       await act(async () =>
-        container
-          .querySelector("form")!
-          .dispatchEvent(
+        form.dispatchEvent(
             new Event("submit", { bubbles: true, cancelable: true }),
           ),
       );

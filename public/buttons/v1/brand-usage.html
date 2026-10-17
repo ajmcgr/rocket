@@ -129,5 +129,16 @@ button.removeAttribute("loading");</pre>
       </ul>
     </section>
     <p><a href="/buy-with-rocket#rocket-buttons">Back to Buy with Rocket</a></p>
-  </body>
+  <section style="max-width:800px;margin:2rem auto;padding:1rem">
+<h2>Hosted pricing and plan-specific buttons</h2>
+<p>Use the same published offers as your Rocket listing. The buyer reviews the selected plan on Rocket before checkout. No secret keys belong in this markup.</p>
+<pre>&lt;script defer src="https://tryrocket.ai/buttons/v1/rocket-buttons.js"&gt;&lt;/script&gt;
+&lt;rocket-button action="buy" app-id="YOUR_APP_UUID"&gt;&lt;/rocket-button&gt;
+&lt;rocket-button action="buy" app-id="YOUR_APP_UUID" offer-id="YOUR_OFFER_UUID"&gt;&lt;/rocket-button&gt;</pre>
+<p>Without offer-id, Rocket shows the hosted plan picker. Copy exact app and offer UUIDs from payment setup. An unpublished offer cannot be purchased. Existing rocket-activate listeners continue to work; call event.preventDefault() to override navigation when app-id is set.</p>
+<p>For a plain link: https://tryrocket.ai/apps/YOUR_APP_UUID?buy=1&amp;offer=YOUR_OFFER_UUID&amp;source=developer_website#pricing. Omit offer to show all published plans. Rocket resolves the exact merchant, price, fee and entitlement on its server.</p>
+<p>After payment, check connect-entitlements from your server using the buyer's Rocket ID access token. Use entitlement_key for a logical tier (monthly and annual), or the legacy product_key for an exact offer. Check the matching app/client, active status, expiry and revocation. A return URL is never payment proof. One-time fulfilment requires verified_paid and granted, deduplicated by purchase_id.</p>
+<p>Plan changes are not supported in V1. Buyers manage existing subscriptions in My Purchases and must wait for the current subscription to end before buying another. An inline pricing widget is deferred; these buttons and hosted links require no additional integration infrastructure.</p>
+</section>
+</body>
 </html>

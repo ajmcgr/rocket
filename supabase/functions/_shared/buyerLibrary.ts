@@ -20,6 +20,7 @@ type Product = {
   id: string;
   client_id: string;
   name: string;
+  entitlement_key?: string;
   amount_cents: number;
   currency: string;
   interval?: string | null;
@@ -69,12 +70,15 @@ export function libraryPurchases(
     const active =
       client.is_active !== false &&
       (entry.one_time
-        ? entry.status === "granted"
+        ? entry.status === "granted" && order?.status === "paid"
         : ["active", "canceling"].includes(entry.status) &&
           (!entry.valid_until || new Date(entry.valid_until).getTime() > now));
     return [
       {
         purchase_id: entry.purchase_id || entry.id,
+        offer_id: product.id,
+        entitlement_key: product.entitlement_key,
+        renewal_date: !entry.one_time && entry.status === "active" ? entry.valid_until : null,
         app_id: client.app_id || "",
         // Do not leak hidden listing metadata or a disabled outbound URL.
         app_name: app?.name || "Unavailable listing",

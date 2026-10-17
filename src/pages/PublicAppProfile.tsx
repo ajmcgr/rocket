@@ -446,16 +446,16 @@ export default function PublicAppProfile({
                   saved={saved}
                   onChange={setSaved}
                 />
-                <AppProfileBuyAction
-                  appId={app.id}
-                  appName={app.name}
-                  websiteUrl={app.website_url}
-                />
                 <RocketShare kind="app" identifier={app.slug || app.id} title={app.name} version={shareCardVersion(app.name, app.tagline, app.description, app.logo_url, media.map((item) => item.source_url))} />
                 <span className="w-full truncate text-sm text-neutral-500 sm:w-auto">
                   {app.canonical_host}
                 </span>
               </div>
+                <AppProfileBuyAction
+                  appId={app.id}
+                  appName={app.name}
+                  websiteUrl={app.website_url}
+                />
               {presentation?.pricing_display && (
                 <p className="mt-3 text-xs text-neutral-500">
                   Pricing: {presentation.pricing_display} · Information supplied

@@ -64,7 +64,8 @@ Deno.serve(async (req) => {
     if (action === "status") {
       const account = await currentAccount(admin, client.client_id, user.id);
       const { data: products, error } = await admin.from("connect_products")
-        .select("id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active,activated_at,integration_confirmed_at,developer_account_id")
+        .select("id,product_key,entitlement_key,description,stripe_price_id,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active,activated_at,integration_confirmed_at,developer_account_id",
+        )
         .eq("client_id", client.client_id).eq("developer_user_id", user.id).order("created_at", { ascending: false });
       if (error) throw error;
       const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
@@ -140,7 +141,8 @@ Deno.serve(async (req) => {
         id: crypto.randomUUID(), client_id: client.client_id, developer_account_id: account.id, developer_user_id: user.id,
         product_key: accessKey || productKey(selected.name), ...selected,
         platform_fee_bps: configuration.platform_fee_bps, is_active: false, checkout_return_uris: [returnUri],
-      }).select("id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active").single();
+      }).select("id,product_key,entitlement_key,description,stripe_price_id,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active",
+        ).single();
       if (error) throw error;
       return json({ plan: saved }, 201);
     }
@@ -156,10 +158,6 @@ Deno.serve(async (req) => {
       const returnUri = kind === "one_time" ? body.payment_return_uri : APP_URL;
       if (kind === "one_time" && !approvedPaymentReturn(returnUri, client.redirect_uris)) return json({ error: "approved_payment_return_uri_required" }, 400);
       if (!name || !Number.isInteger(amount) || amount < 100 || amount > 100000 || (kind === "subscription" && !["month", "year"].includes(interval))) return json({ error: "invalid_plan" }, 400);
-      const { data: existing, error: existingError } = await admin.from("connect_products")
-        .select("id").eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("is_active", true).limit(1);
-      if (existingError) throw existingError;
-      if (existing?.length) return json({ error: "one_active_plan_per_app" }, 409);
       const { data: configuration, error: configurationError } = await admin.from("rocket_buy_configuration")
         .select("platform_fee_bps").eq("singleton", true).single();
       if (configurationError) throw configurationError;
@@ -174,9 +172,62 @@ Deno.serve(async (req) => {
         product_key: productKey(name), name, stripe_product_id: product.id, stripe_price_id: price.id,
         amount_cents: amount, currency: "usd", interval, billing_type: kind, platform_fee_bps: configuration.platform_fee_bps,
         is_active: false, checkout_return_uris: [returnUri],
-      }).select("id,product_key,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active").single();
+      }).select("id,product_key,entitlement_key,description,stripe_price_id,name,amount_cents,currency,interval,billing_type,platform_fee_bps,is_active",
+        ).single();
       if (error) throw error;
       return json({ plan: saved }, 201);
+    }
+
+    if (action === "edit_plan" || action === "deactivate_plan") {
+      const planId = shortText(body.plan_id, 36);
+      if (!planId || !uuid.test(planId))
+        return json({ error: "invalid_plan" }, 400);
+      const account = await currentAccount(admin, client.client_id, user.id);
+      if (!account) return json({ error: "merchant_required" }, 409);
+      const { data: plan, error: lookupError } = await admin
+        .from("connect_products")
+        .select("id,entitlement_key")
+        .eq("id", planId)
+        .eq("client_id", client.client_id)
+        .eq("developer_account_id", account.id)
+        .eq("developer_user_id", user.id)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (!plan) return json({ error: "plan_not_found" }, 404);
+      let changes: Record<string, unknown> = { is_active: false };
+      if (action === "edit_plan") {
+        const name = shortText(body.name, 120);
+        if (
+          !name ||
+          typeof body.description !== "string" ||
+          body.description.length > 500 ||
+          typeof body.entitlement_key !== "string" ||
+          !/^[a-z0-9][a-z0-9_-]{2,80}$/.test(body.entitlement_key)
+        )
+          return json({ error: "invalid_plan_details" }, 400);
+        changes = {
+          name,
+          description: body.description.trim(),
+          entitlement_key: body.entitlement_key,
+        };
+      }
+      const { error } = await admin
+        .from("connect_products")
+        .update({ ...changes, updated_at: new Date().toISOString() })
+        .eq("id", planId)
+        .eq("client_id", client.client_id)
+        .eq("developer_user_id", user.id)
+        .eq("developer_account_id", account.id);
+      if (error)
+        return json(
+          {
+            error: error.message?.includes("purchased_entitlement_immutable")
+              ? "purchased_entitlement_immutable"
+              : "plan_group_conflict",
+          },
+          409,
+        );
+      return json({ saved: true });
     }
 
     if (action === "activate_plan") {
@@ -190,12 +241,19 @@ Deno.serve(async (req) => {
         .eq("id", planId).eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("developer_user_id", user.id).maybeSingle();
       if (planError) throw planError;
       if (!plan) return json({ error: "plan_not_found" }, 404);
+      if (plan.platform_fee_bps !== 500)
+        return json({ error: "platform_fee_configuration_invalid" }, 409);
       const price = await stripe.prices.retrieve(plan.stripe_price_id, { stripeAccount: account.stripe_account_id });
       if (!priceMatches(plan, price, true)) return json({ error: "stripe_plan_mismatch" }, 409);
-      const { data: active } = await admin.from("connect_products").select("id").eq("client_id", client.client_id).eq("is_active", true).neq("id", plan.id).limit(1);
-      if (active?.length) return json({ error: "one_active_plan_per_app" }, 409);
       const { error } = await admin.from("connect_products").update({ is_active: true, activated_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", plan.id).eq("is_active", false);
-      if (error) throw error;
+      if (error) return json(
+          {
+            error: error.message?.includes("multi_plan_not_enabled")
+              ? "multi_plan_not_enabled"
+              : "plan_group_conflict",
+          },
+          409,
+        );
       return json({ activated: true });
     }
 

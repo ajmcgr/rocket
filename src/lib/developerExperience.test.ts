@@ -119,7 +119,7 @@ describe("Safe app-specific integration prompt", () => {
       "Existing prices can be imported as inactive plans",
     );
     expect(prompt).toContain(
-      "Rocket currently supports only one active offer per app",
+      "Rocket supports multiple explicitly published offers per app",
     );
     expect(prompt).toContain("Never grant access from a checkout return URL");
     expect(prompt).not.toContain("NEVER_COPY");

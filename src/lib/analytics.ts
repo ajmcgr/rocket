@@ -4,6 +4,9 @@
 // Zero cost when no provider is loaded.
 
 export type AnalyticsEvent =
+  | "plan_picker_viewed"
+  | "plan_selected"
+  | "billing_interval_changed"
   | "asset_generated"
   | "asset_exported"
   | "asset_shared"

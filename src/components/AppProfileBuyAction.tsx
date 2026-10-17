@@ -1,34 +1,19 @@
 import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
+import PlanPicker, { type CommercePlan } from "./PlanPicker";
 import RocketButton from "./RocketButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-type Plan = {
-  id: string;
-  name: string;
-  amount_cents: number;
-  currency: string;
-  interval: "month" | "year" | null;
-  billing_type?: "one_time" | "subscription";
-  product_key?: string;
-  return_uri?: string;
-};
+type Plan = CommercePlan;
 type Entitlement = {
+  offer_id?: string;
+  plan_name?: string;
+  billing_type?: string;
   status: string;
   valid_until: string | null;
   active: boolean;
 } | null;
-const money = (plan: Plan) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: plan.currency.toUpperCase(),
-  }).format(plan.amount_cents / 100);
-
-const billingPeriod = (plan: Plan) =>
-  plan.billing_type === "one_time" || plan.interval === null
-    ? "one-time"
-    : plan.interval;
-
 async function request<T>(
   action: string,
   appId: string,
@@ -56,8 +41,19 @@ export default function AppProfileBuyAction({
   const { user } = useAuth();
   const userId = user?.id;
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [ownedPlan, setOwnedPlan] = useState<Plan | null>(null);
+  const source =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("source") ===
+      "developer_website"
+      ? "developer_website"
+      : "marketplace";
   const [canBuy, setCanBuy] = useState(false);
-  const [entitlement, setEntitlement] = useState<Entitlement>(null);
+  const [rawEntitlement, setEntitlement] = useState<Entitlement>(null);
+  const [entitlementOwner, setEntitlementOwner] = useState("");
+  const entitlement =
+    entitlementOwner === `${appId}:${userId}` ? rawEntitlement : null;
   const [busy, setBusy] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const purchaseRequestId = useRef<string | null>(null);
@@ -73,6 +69,8 @@ export default function AppProfileBuyAction({
   useEffect(() => {
     let cancelled = false;
     setCanBuy(false);
+    setPlans([]);
+    setError("");
     setPlan(null);
     setAcceptedTerms(false);
     const catalog = pilot
@@ -84,12 +82,35 @@ export default function AppProfileBuyAction({
               return { plan: data?.available ? data.plan : null };
             })
         : Promise.resolve({ plan: null })
-      : request<{ plan: Plan | null }>("catalog", appId);
+      : request<{ plan: Plan | null; plans?: Plan[] }>("catalog", appId);
     catalog
       .then((result) => {
         if (!cancelled) {
-          setCanBuy(!!result.plan);
-          if (result.plan) setPlan(result.plan);
+          const offers =
+            ("plans" in result ? (result.plans as Plan[]) : undefined) ||
+            (result.plan ? [result.plan] : []);
+          setPlans(offers);
+          setCanBuy(offers.length > 0);
+          const explicit = new URLSearchParams(window.location.search).get(
+            "offer",
+          );
+          setPlan(
+            explicit
+              ? offers.find((p) => p.id === explicit) || null
+              : offers.length === 1
+                ? offers[0]
+                : null,
+          );
+          if (explicit && !offers.some((p) => p.id === explicit))
+            setError(
+              "This offer is no longer available. Review and select a published plan below.",
+            );
+          if (offers.length)
+            track("plan_picker_viewed", {
+              app_id: appId,
+              source,
+              offer_count: offers.length,
+            });
         }
       })
       .catch(() => {
@@ -100,6 +121,8 @@ export default function AppProfileBuyAction({
     };
   }, [appId, pilot, userId]);
   useEffect(() => {
+    setEntitlement(null);
+    setOwnedPlan(null);
     if (!userId) return;
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | undefined;
@@ -107,8 +130,9 @@ export default function AppProfileBuyAction({
       request<{ plan: Plan | null; entitlement: Entitlement }>("status", appId)
         .then((result) => {
           if (!cancelled) {
+            setEntitlementOwner(`${appId}:${userId}`);
             setEntitlement(result.entitlement || null);
-            if (result.plan) setPlan(result.plan);
+            if (result.plan) setOwnedPlan(result.plan);
           }
           if (result.entitlement?.active && timer) clearInterval(timer);
         })
@@ -146,15 +170,33 @@ export default function AppProfileBuyAction({
         )}
       </div>
     );
-  if (!plan) return null;
-  if (entitlement?.active)
+  if (!plan && !plans.length && !entitlement?.active)
+    return typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("buy") === "1" ? (
+      <section
+        id="pricing"
+        className="mt-6 border-t border-neutral-200 pt-4"
+        role="status"
+      >
+        This app has no published Buy with Rocket plans available. Visit its
+        website for available options.
+      </section>
+    ) : null;
+  if (
+    userId &&
+    entitlement?.active &&
+    (entitlement.billing_type === "subscription" || !canBuy)
+  )
     return (
       <div
         className="rounded-xl border border-emerald-300 px-4 py-2 text-sm"
         role="status"
       >
         <span className="font-semibold">You&apos;re in.</span> {appName} ·{" "}
-        {plan.name} · {money(plan)}/{billingPeriod(plan)}
+        {entitlement.plan_name || ownedPlan?.name || "Purchased plan"}
+        <a href="/library" className="ml-3 underline">
+          Manage subscription
+        </a>
         <a
           href={websiteUrl}
           target="_blank"
@@ -166,14 +208,21 @@ export default function AppProfileBuyAction({
       </div>
     );
   const buy = async () => {
+    if (busy || !plan) return;
     if (!user) {
-      const next = `${window.location.pathname}?buy=1`;
+      const next = `${window.location.pathname}?buy=1&offer=${encodeURIComponent(plan.id)}&source=${source}#pricing`;
       window.location.assign(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
     setBusy(true);
     setError("");
     try {
+      track("checkout_started", {
+        app_id: appId,
+        offer_id: plan.id,
+        source,
+        commerce: "buy_with_rocket",
+      });
       const result = pilot
         ? await supabase.functions
             .invoke("launch-rocket-acceptance", {
@@ -192,36 +241,68 @@ export default function AppProfileBuyAction({
                 );
               return data;
             })
-        : await request<{ checkout_url: string }>(
-            "checkout",
-            appId,
-            plan.billing_type === "one_time" || plan.interval === null
+        : await request<{ checkout_url: string }>("checkout", appId, {
+            offer_id: plan.id,
+            source,
+            ...(plan.billing_type === "one_time" || plan.interval === null
               ? {
                   product_key: plan.product_key,
                   return_uri: plan.return_uri,
                   purchase_request_id: (purchaseRequestId.current ||=
                     crypto.randomUUID()),
                 }
-              : {},
-          );
+              : {}),
+          });
       window.location.assign(result.checkout_url);
     } catch (caught: unknown) {
       setError(
-        caught instanceof Error ? caught.message : "Checkout unavailable",
+        caught instanceof Error &&
+          /existing_subscription|checkout_in_progress/.test(caught.message)
+          ? "You already have a subscription or checkout for this app. Manage subscriptions in My Purchases. To resume an open checkout, select its original plan; wait for it to expire before changing plans."
+          : caught instanceof Error
+            ? caught.message
+            : "Checkout unavailable",
       );
       setBusy(false);
     }
   };
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <section
+      id="pricing"
+      aria-label="Buy with Rocket plans"
+      className="mt-6 min-w-0 space-y-4 border-t border-neutral-200 pt-5"
+    >
+      <h2 className="text-xl font-semibold">Get {appName}</h2>
+      {plans.length > 0 && (
+        <PlanPicker
+          key={appId}
+          plans={plans}
+          selectedId={plan?.id || null}
+          onSelect={(next) => {
+            setPlan(next);
+            purchaseRequestId.current = null;
+            if (next)
+              track("plan_selected", {
+                app_id: appId,
+                offer_id: next.id,
+                entitlement_key: next.entitlement_key,
+                source,
+              });
+          }}
+          onIntervalChange={(interval) =>
+            track("billing_interval_changed", {
+              app_id: appId,
+              interval,
+              source,
+            })
+          }
+        />
+      )}
       {processing && (
         <span role="status" className="text-sm text-neutral-600">
           Waiting for confirmed payment…
         </span>
       )}
-      <span className="text-sm font-medium">
-        {plan.name} · {money(plan)}/{billingPeriod(plan)}
-      </span>
       {!canBuy && entitlement && (
         <span className="text-sm text-neutral-600">
           {entitlement.status.replaceAll("_", " ")}
@@ -242,7 +323,7 @@ export default function AppProfileBuyAction({
           action="buy"
           onActivate={buy}
           loading={busy}
-          disabled={processing || (pilot && !acceptedTerms)}
+          disabled={!plan || processing || (pilot && !acceptedTerms)}
         />
       )}
       {error && (
@@ -250,6 +331,17 @@ export default function AppProfileBuyAction({
           {error}
         </span>
       )}
-    </div>
+      {!plan && canBuy && (
+        <p className="text-sm text-neutral-600">Select a plan to continue.</p>
+      )}
+      <p className="text-xs text-neutral-500">
+        Already subscribed? Manage your subscription in{" "}
+        <a className="underline" href="/library">
+          My Purchases
+        </a>
+        . Plan changes are not supported yet; cancel your current subscription
+        and wait for it to end before buying another.
+      </p>
+    </section>
   );
 }

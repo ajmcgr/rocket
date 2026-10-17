@@ -19,14 +19,14 @@ function load(path: string, stripe: any, admin: any, gate = true) {
 const product = { id:"product",client_id:"launch",developer_account_id:"merchant",developer_user_id:"owner",product_key:"real-key",name:"Launch Pro",billing_type:"one_time",amount_cents:3900,currency:"usd",platform_fee_bps:500,stripe_price_id:"price_real",stripe_product_id:"prod_real",checkout_return_uris:["https://trylaunch.ai/my-products?success=true"] };
 function query(data: any, extras: Record<string,any>={}) {
   const result={data,error:null}; const q: any={then:(resolve:any)=>resolve(result),single:async()=>result,maybeSingle:async()=>result,...extras};
-  for(const m of ["select","eq","not","limit","order","in","gt","is","update"]) q[m] ||= ()=>q;
+  for(const m of ["select","eq","not","limit","range","order","in","gt","is","update"]) q[m] ||= ()=>q;
   return q;
 }
 function checkoutHarness(kind="one_time", gate=true, existingStatus?:string) {
-  const create=vi.fn().mockResolvedValue({id:"cs_real",url:"https://checkout.stripe.com/mock"});
+  const create=vi.fn().mockResolvedValue({id:"cs_real",url:"https://checkout.stripe.com/mock",expires_at:Math.floor(Date.now()/1000)+86400});
   const p={...product,billing_type:kind,interval:kind==="subscription"?"month":null};
-  const admin={rpc:async()=>({data:true,error:null}),from:(table:string)=>query(table==="rocket_buy_configuration"?{live_checkout_enabled:gate,platform_fee_bps:500}:table==="rocket_oauth_clients"?{client_id:"launch",created_by:"owner",allowed_scopes:["entitlements:read"]}:table==="connect_developer_accounts"?{id:"merchant",stripe_account_id:"acct_launch",stripe_api_version:"v2",status:"active",charges_enabled:true,payouts_enabled:true}:table==="connect_products"?[p]:table==="connect_customers"?{stripe_customer_id:"cus_real"}:table==="connect_checkout_attempts"?(existingStatus?[{stripe_checkout_session_id:"cs_real"}]:[]):table==="connect_transactions"?[]:null,{upsert:()=>query(null)})};
-  const stripe={prices:{retrieve:async()=>({active:true,livemode:true,unit_amount:3900,currency:"usd",product:"prod_real",type:kind,recurring:kind==="subscription"?{interval:"month"}:null})},checkout:{sessions:{create,retrieve:async()=>({status:existingStatus,url:existingStatus==="open"?"https://checkout.stripe.com/mock":null})}}};
+  const admin={rpc:async(name:string)=>({data:name==="connect_reserve_subscription"?{product_id:"product",stripe_account_id:"acct_launch",origin:"ROCKET_MARKETPLACE",idempotency_key:"fixture",expires_at:new Date(Date.now()+31*60000).toISOString(),stripe_checkout_session_id:null}:true,error:null}),from:(table:string)=>query(table==="rocket_buy_configuration"?{live_checkout_enabled:gate,platform_fee_bps:500}:table==="rocket_oauth_clients"?{client_id:"launch",created_by:"owner",allowed_scopes:["entitlements:read"]}:table==="connect_developer_accounts"?{id:"merchant",stripe_account_id:"acct_launch",stripe_api_version:"v2",status:"active",charges_enabled:true,payouts_enabled:true}:table==="connect_products"?[p]:table==="connect_customers"?{stripe_customer_id:"cus_real"}:table==="connect_checkout_attempts"?(existingStatus?[{stripe_checkout_session_id:"cs_real"}]:[]):table==="connect_transactions"?[]:null,{upsert:()=>query(null),...(table==="connect_checkout_attempts"?{maybeSingle:async()=>({data:existingStatus?{stripe_checkout_session_id:"cs_real"}:null,error:null})}:{})})};
+  const stripe={prices:{retrieve:async()=>({active:true,livemode:true,unit_amount:3900,currency:"usd",product:"prod_real",type:kind,recurring:kind==="subscription"?{interval:"month"}:null})},checkout:{sessions:{create,list:async()=>({data:[]}),retrieve:async()=>({status:existingStatus,url:existingStatus==="open"?"https://checkout.stripe.com/mock":null})}}};
   return {create,handler:load("supabase/functions/rocket-buy/index.ts",stripe,admin)};
 }
 const body={action:"checkout",app_id:"b202d75a-02ae-46e6-8419-5b3410cbaac8",client_id:"launch",product_key:"real-key",purchase_request_id:"00000000-0000-4000-8000-000000000001",return_uri:"https://trylaunch.ai/my-products?success=true"};
@@ -113,7 +113,7 @@ describe("actual production checkout handler (isolated)",()=>{
   it("Library includes buyer-scoped one-time grants without exposing test clients", async()=>{
     const filters: any[]=[];
     const admin={from:(table:string)=>{
-      const q=query(table==="connect_entitlements"?[]:table==="connect_purchase_grants"?[{purchase_id:"purchase",client_id:"launch",product_id:"product",status:"granted"}]:table==="rocket_oauth_clients"?[{client_id:"launch",app_id:body.app_id,environment:"production"}]:table==="connect_products"?[product]:table==="public_apps"?[{id:body.app_id,name:"Launch",website_url:"https://trylaunch.ai"}]:[]);
+      const q=query(table==="connect_entitlements"?[]:table==="connect_purchase_grants"?[{purchase_id:"purchase",client_id:"launch",product_id:"product",status:"granted"}]:table==="rocket_oauth_clients"?[{client_id:"launch",app_id:body.app_id,environment:"production"}]:table==="connect_products"?[product]:table==="public_apps"?[{id:body.app_id,name:"Launch",website_url:"https://trylaunch.ai"}]:table==="connect_transactions"?[{id:"purchase",client_id:"launch",product_id:"product",status:"paid"}]:[]);
       q.eq=(...args:any[])=>{filters.push([table,...args]);return q;};return q;
     }};
     const handler=load("supabase/functions/rocket-buy/index.ts",{},admin);const response=await handler(request({action:"library"}));expect(response.status).toBe(200);
