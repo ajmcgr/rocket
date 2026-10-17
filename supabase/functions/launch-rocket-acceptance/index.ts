@@ -10,10 +10,10 @@ const buyer = () => Deno.env.get("LAUNCH_PRO_ACCEPTANCE_BUYER_USER_ID");
 const planId = () => Deno.env.get("LAUNCH_PRO_ACCEPTANCE_PLAN_ID");
 function reply(req: Request, value: unknown, status = 200) {
   const origin = req.headers.get("origin") || "https://tryrocket.ai";
-  return new Response(status === 204 ? null : JSON.stringify(value), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Access-Control-Allow-Origin": ["https://tryrocket.ai", "https://trylaunch.ai"].includes(origin) ? origin : "https://tryrocket.ai", "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info,x-rocket-id-token", "Access-Control-Allow-Methods": "POST,OPTIONS", Vary: "Origin" } });
+  return new Response(status === 204 ? null : JSON.stringify(value), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Access-Control-Allow-Origin": ["https://tryrocket.ai", "https://trylaunch.ai"].includes(origin) ? origin : "https://tryrocket.ai", "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info,x-rocket-id-token,x-supabase-client-platform,x-supabase-client-version,x-supabase-client-runtime,x-supabase-client-runtime-version", "Access-Control-Allow-Methods": "POST,OPTIONS", Vary: "Origin" } });
 }
-async function context() {
-  if (!stripe || !buyer() || !planId() || !liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET"))) return null;
+async function context(selectedPlanId?: string) {
+  if (!stripe || !liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET"))) return null;
   const admin = getAdmin();
   const { data: client, error: ce } = await admin.from("rocket_oauth_clients").select("client_id,app_id,created_by,environment,is_active,allowed_scopes,redirect_uris").eq("client_id", LAUNCH_CLIENT_ID).single();
   if (ce || client?.app_id !== LAUNCH_APP_ID || client.environment !== "production" || !client.is_active || !client.allowed_scopes.includes("entitlements:read") || !client.redirect_uris.includes("https://trylaunch.ai/rocket/callback")) return null;
@@ -24,9 +24,15 @@ async function context() {
   const { data: account, error: ae } = await admin.from("connect_developer_accounts").select("*").eq("client_id", LAUNCH_CLIENT_ID).eq("developer_user_id", client.created_by).eq("is_current", true).single();
   if (ae || account.status !== "active" || !account.charges_enabled || !account.payouts_enabled) return null;
   if (!(await buyMerchantReadiness(account, stripe)).ready) return null;
-  const { data: plan, error: pe } = await admin.from("connect_products").select("*").eq("id", planId()).single();
-  if (pe || !acceptancePlan(plan, planId(), account.id, client.created_by)) return null;
-  return { admin, client, account, plan, configuration };
+  const { data: settings, error: settingsError } = await admin.from("rocket_buy_acceptance_tests").select("*").eq("client_id", LAUNCH_CLIENT_ID).maybeSingle();
+  if (settingsError) throw settingsError;
+  const selected = selectedPlanId || settings?.plan_id || planId();
+  if (!selected) return null;
+  const tester = settings?.tester_user_id || buyer();
+  const enabled = !!settings || Deno.env.get("LAUNCH_PRO_ACCEPTANCE_ENABLED") === "true";
+  const { data: plan, error: pe } = await admin.from("connect_products").select("*").eq("id", selected).single();
+  if (pe || !acceptancePlan(plan, selected, account.id, client.created_by)) return null;
+  return { admin, client, account, plan, configuration, settings, tester, enabled };
 }
 
 Deno.serve(async req => {
@@ -36,15 +42,40 @@ Deno.serve(async req => {
   if (origin && !["https://tryrocket.ai", "https://trylaunch.ai"].includes(origin)) return reply(req, { error: "origin_not_allowed" }, 403);
   try {
     const body = await req.json();
-    if (!["status", "checkout", "proof"].includes(body.action)) return reply(req, { error: "invalid_action" }, 400);
-    // No account creation, no public catalog changes. Disabled unless explicitly enabled for the selected buyer and new one-time product.
-    if (Deno.env.get("LAUNCH_PRO_ACCEPTANCE_ENABLED") !== "true") return reply(req, { available: false }, body.action === "status" ? 200 : 409);
-    const ctx = await context();
+    if (!["setup", "configure", "status", "checkout", "proof"].includes(body.action)) return reply(req, { error: "invalid_action" }, 400);
+    const ownerAction = body.action === "setup" || body.action === "configure";
+    const ownerUser = ownerAction ? await getRocketUser(req) : null;
+    // Authenticate owner setup before looking up a plan or tester.
+    if (ownerAction && !ownerUser?.email_confirmed_at) return reply(req, { error: "unauthorized" }, 401);
+    if (ownerAction && (typeof body.plan_id !== "string" || !/^[0-9a-f-]{36}$/i.test(body.plan_id))) return reply(req, { error: "invalid_plan" }, 400);
+    const ctx = await context(ownerAction ? body.plan_id : undefined);
     if (!ctx) return reply(req, { error: "acceptance_not_ready" }, 409);
-    const { admin, client, account, plan, configuration } = ctx;
+    const { admin, client, account, plan, settings, tester, enabled } = ctx;
+    if (ownerAction) {
+      if (ownerUser!.id !== client.created_by) return reply(req, { error: "unauthorized" }, 403);
+      if (body.action === "configure") {
+        if (plan.is_active || plan.integration_confirmed_at) return reply(req, { error: "acceptance_closed" }, 409);
+        if (settings) return reply(req, { error: "tester_already_configured" }, 409);
+        const handle = typeof body.tester_handle === "string" ? body.tester_handle.trim().replace(/^@/, "").toLowerCase() : "";
+        if (!/^[a-z0-9_-]{1,40}$/.test(handle)) return reply(req, { error: "tester_handle_required" }, 400);
+        const { data: profile, error: profileError } = await admin.from("profiles").select("user_id").eq("handle", handle).maybeSingle();
+        if (profileError) throw profileError;
+        const candidate = profile?.user_id ? await admin.auth.admin.getUserById(profile.user_id) : null;
+        if (!candidate?.data.user?.email_confirmed_at || candidate.data.user.banned_until && new Date(candidate.data.user.banned_until).getTime() > Date.now() || profile.user_id === client.created_by) return reply(req, { error: "independent_confirmed_tester_required" }, 400);
+        const { count, error: priorError } = await admin.from("connect_transactions").select("id", { count: "exact", head: true }).eq("client_id", LAUNCH_CLIENT_ID).eq("user_id", profile.user_id);
+        if (priorError) throw priorError;
+        if (count) return reply(req, { error: "new_buyer_required" }, 409);
+        const { error } = await admin.from("rocket_buy_acceptance_tests").insert({ client_id: LAUNCH_CLIENT_ID, plan_id: plan.id, tester_user_id: profile.user_id, configured_by: ownerUser!.id });
+        if (error) throw error;
+        return reply(req, { configured: true, tester_handle: handle, test_url: "https://tryrocket.ai/apps/launch?acceptance=1" });
+      }
+      const { data: profile } = tester ? await admin.from("profiles").select("handle").eq("user_id", tester).maybeSingle() : { data: null };
+      return reply(req, { configured: enabled && !!tester && (!settings || settings.plan_id === plan.id), tester_handle: profile?.handle || null, verified: !!plan.integration_confirmed_at, test_url: "https://tryrocket.ai/apps/launch?acceptance=1" });
+    }
+    if (!enabled) return reply(req, { available: false }, body.action === "status" ? 200 : 409);
     if (body.action === "proof") {
       const token = await getConnectToken(req);
-      if (!token || token.client_id !== LAUNCH_CLIENT_ID || !token.scopes.includes('entitlements:read') || !pilotBuyer(token.user_id, client.created_by, buyer())) return reply(req, { error: 'unauthorized' }, 401);
+      if (!token || token.client_id !== LAUNCH_CLIENT_ID || !token.scopes.includes('entitlements:read') || !pilotBuyer(token.user_id, client.created_by, tester)) return reply(req, { error: 'unauthorized' }, 401);
       const { data: transaction, error: te } = await admin.from('connect_transactions').select('*').eq('user_id', token.user_id).eq('client_id', LAUNCH_CLIENT_ID).eq('product_id', plan.id).eq('stripe_account_id', account.stripe_account_id).single();
       const { data: grant, error: ge } = await admin.from('connect_purchase_grants').select('*').eq('purchase_id', transaction?.id).single();
       if (te || ge || !paidProProof(transaction, grant, token.user_id, plan, account.stripe_account_id)) return reply(req, { error: 'natural_paid_purchase_required' }, 409);
@@ -61,9 +92,9 @@ Deno.serve(async req => {
     }
     const token = await getConnectToken(req);
     const user = token?.client_id === LAUNCH_CLIENT_ID && token.scopes.includes('entitlements:read') ? { id: token.user_id } : await getRocketUser(req);
-    if (!user || !pilotBuyer(user.id, client.created_by, buyer())) return reply(req, { error: "unauthorized" }, 401);
+    if (!user || !pilotBuyer(user.id, client.created_by, tester)) return reply(req, { error: "unauthorized" }, 401);
     // A pilot cannot replace a public offer or reuse any previous Launch purchase.
-    if (configuration.live_checkout_enabled || plan.is_active || plan.integration_confirmed_at) return reply(req, { error: "acceptance_closed" }, 409);
+    if (plan.is_active || plan.integration_confirmed_at) return reply(req, { error: "acceptance_closed" }, 409);
     const [{ count: purchases, error: tError }, { count: grants, error: eError }] = await Promise.all([
       admin.from("connect_transactions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("client_id", LAUNCH_CLIENT_ID),
       admin.from("connect_entitlements").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("client_id", LAUNCH_CLIENT_ID),

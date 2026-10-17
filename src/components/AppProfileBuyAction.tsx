@@ -29,7 +29,11 @@ const billingPeriod = (plan: Plan) =>
     ? "one-time"
     : plan.interval;
 
-async function request<T>(action: string, appId: string, details: Record<string, unknown> = {}): Promise<T> {
+async function request<T>(
+  action: string,
+  appId: string,
+  details: Record<string, unknown> = {},
+): Promise<T> {
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
     body: { action, app_id: appId, ...details },
   });
@@ -116,6 +120,32 @@ export default function AppProfileBuyAction({
       if (timer) clearInterval(timer);
     };
   }, [appId, userId, processing]);
+  if (!plan && pilot)
+    return (
+      <div className="space-y-2 rounded-xl border border-neutral-200 p-4 text-sm">
+        <p className="font-semibold">Launch Pro private purchase test</p>
+        {!user ? (
+          <>
+            <p>
+              Sign into the Rocket account selected by the developer to start
+              this test.
+            </p>
+            <a
+              className="text-brand underline"
+              href={`/login?next=${encodeURIComponent("/apps/launch?acceptance=1")}`}
+            >
+              Log in to test purchase
+            </a>
+          </>
+        ) : (
+          <p role="status">
+            This test is only available to the selected tester while Launch Pro
+            is unpublished. Ask the developer to check the selected Rocket
+            username in payment setup.
+          </p>
+        )}
+      </div>
+    );
   if (!plan) return null;
   if (entitlement?.active)
     return (
@@ -162,14 +192,18 @@ export default function AppProfileBuyAction({
                 );
               return data;
             })
-        : await request<{ checkout_url: string }>("checkout", appId,
+        : await request<{ checkout_url: string }>(
+            "checkout",
+            appId,
             plan.billing_type === "one_time" || plan.interval === null
               ? {
                   product_key: plan.product_key,
                   return_uri: plan.return_uri,
-                  purchase_request_id: (purchaseRequestId.current ||= crypto.randomUUID()),
+                  purchase_request_id: (purchaseRequestId.current ||=
+                    crypto.randomUUID()),
                 }
-              : {});
+              : {},
+          );
       window.location.assign(result.checkout_url);
     } catch (caught: unknown) {
       setError(
