@@ -1,4 +1,3 @@
-import { purchaseTestOptional } from "../../supabase/functions/_shared/purchaseTestPolicy";
 import LaunchPurchaseTestSetup from "./LaunchPurchaseTestSetup";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
@@ -476,7 +475,7 @@ export default function ProductionBuySetup({
             <p className="mt-1 text-sm text-neutral-600">
               Rocket loads eligible prices from your connected Stripe account
               automatically. Choose the one you want to offer; it stays inactive
-              until the payment and entitlement integration is verified.
+              until you activate it after reviewing your integration.
             </p>
             {catalogLoading && (
               <p role="status" className="mt-3 text-sm text-neutral-600">
@@ -660,8 +659,7 @@ export default function ProductionBuySetup({
             <p className="text-sm text-neutral-600">
               Copy the integration prompt above into your coding agent. Test
               Continue with Rocket and server-side entitlement checks in your
-              app. Purchase testing is recommended for Launch Pro. Other plans
-              require a verified purchase test before activation.
+              app. A purchase test is recommended, but optional for activation.
             </p>
             {status.products.map((plan) => (
               <div key={plan.id} className="mt-4">
@@ -669,9 +667,7 @@ export default function ProductionBuySetup({
                   {plan.name}:{" "}
                   {plan.integration_confirmed_at
                     ? "Entitlement integration verified"
-                    : purchaseTestOptional(appId, plan.id)
-                      ? "Purchase test recommended (optional)"
-                      : "Entitlement verification required"}
+                    : "Purchase test recommended (optional)"}
                 </p>
                 {appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" &&
                   !plan.is_active &&
@@ -688,9 +684,7 @@ export default function ProductionBuySetup({
                     busy ||
                     plan.is_active ||
                     !status.launch_ready ||
-                    !status.merchant?.ready ||
-                    (!plan.integration_confirmed_at &&
-                      !purchaseTestOptional(appId, plan.id))
+                    !status.merchant?.ready
                   }
                   className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold disabled:opacity-50"
                 >

@@ -2,11 +2,8 @@
 import { readFileSync } from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import {
-  purchaseTestOptional,
-  OPTIONAL_TEST_APP_ID,
-  OPTIONAL_TEST_PLAN_ID,
-} from "../../supabase/functions/_shared/purchaseTestPolicy";
+const OPTIONAL_TEST_APP_ID = "b202d75a-02ae-46e6-8419-5b3410cbaac8";
+const OPTIONAL_TEST_PLAN_ID = "315fa89b-c31e-49e6-b05f-3a9f870cca19";
 const source = ts.transpileModule(
   readFileSync(
     "supabase/functions/rocket-buy-developer/index.ts",
@@ -87,7 +84,6 @@ async function activation({
     "importableStripePrice",
     "priceMatches",
     "liveWebhookConfigured",
-    "purchaseTestOptional",
     "Deno",
     source,
   )(
@@ -110,7 +106,6 @@ async function activation({
     () => true,
     () => price,
     () => true,
-    purchaseTestOptional,
     {
       env: { get: () => "sk_live_fixture" },
       serve: (fn: typeof handler) => {
@@ -130,7 +125,7 @@ async function activation({
   );
   return { status: response.status, writes, body: await response.json() };
 }
-describe("Optional Launch Pro activation", () => {
+describe("Optional purchase testing for all apps", () => {
   it("activates the exact Launch Pro offer without setting fake verification proof", async () => {
     expect(await activation()).toMatchObject({
       status: 200,
@@ -138,15 +133,15 @@ describe("Optional Launch Pro activation", () => {
       body: { activated: true },
     });
   });
-  it("retains verification gates for other apps and other Launch plans", async () => {
+  it("allows other apps and plans to activate without purchase test proof", async () => {
     for (const options of [
       { app: "11111111-1111-4111-8111-111111111111" },
       { planId: "22222222-2222-4222-8222-222222222222" },
     ])
       expect(await activation(options)).toMatchObject({
-        status: 409,
-        writes: [],
-        body: { error: "external_entitlement_test_required" },
+        status: 200,
+        writes: ["connect_products"],
+        body: { activated: true },
       });
   });
   it("still rejects missing ownership, live readiness, merchant readiness and price mismatch", async () => {
