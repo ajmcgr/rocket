@@ -1,3 +1,4 @@
+import { trackVerificationResult } from "@/lib/verificationAnalytics";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ export default function AppAnalytics() {
   const request = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     const { data, error: invocationError } = await supabase.functions.invoke("rocket-ga4", { body: { action, app_id: id, ...extra } });
     if (invocationError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(invocationError, "Google Analytics request failed"));
+    trackVerificationResult("analytics", "ga4", action, data, id);
     return data;
   }, [id]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);

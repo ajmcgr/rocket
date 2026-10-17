@@ -9,6 +9,7 @@ import {
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import OnboardingTour from "@/components/OnboardingTour";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
@@ -169,6 +170,7 @@ function RootComponent() {
         <AuthProvider>
           <NotificationsProvider>
             <Outlet />
+            <OnboardingTour />
           </NotificationsProvider>
         </AuthProvider>
       </TooltipProvider>
