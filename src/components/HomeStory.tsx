@@ -87,6 +87,8 @@ export default function HomeStory() {
           <p>
             For builders, an app profile is a clearer way to show what they have
             made, claim a listing, and choose which verified details to share.
+          </p>
+          <p>
             We want good software to find the people who need it.
           </p>
         </div>
