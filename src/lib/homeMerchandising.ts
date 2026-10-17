@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { publicCollections, type Collection } from "./collections";
 import { marketplaceRpc } from "./marketplace";
 import type { Tables } from "@/integrations/supabase/types";
 import { loadAppMedia, type PublicAppMedia } from "./appMedia";
@@ -32,6 +33,7 @@ export type HomeMerchandising = {
   traction: ShelfItem[];
   top: ShelfItem[];
   collections: EditorialShelf[];
+  publicCollections: Collection[];
   categories: Tables<"public_app_categories">[];
   media: Record<string, PublicAppMedia[]>;
 };
@@ -42,6 +44,7 @@ export const emptyMerchandising = (): HomeMerchandising => ({
   traction: [],
   top: [],
   collections: [],
+  publicCollections: [],
   categories: [],
   media: {},
 });
@@ -197,6 +200,7 @@ export function composeHome(input: {
       .filter(([, items]) => items.length >= 2)
       .slice(0, 4)
       .map(([name, items]) => ({ name, items })),
+    publicCollections: [],
     categories: input.categories.slice(0, 8),
     media: Object.fromEntries(input.media),
   };
@@ -208,44 +212,50 @@ export async function loadHomeMerchandising({
   const readRows = <T>(
     request: PromiseLike<{ data: T[] | null; error?: unknown }>,
   ) => optionalRows(request, strict);
-  const [picks, rising, fresh, rankings, evidence, categories] =
-    await Promise.all([
-      readRows(picksQuery()),
-      readRows(risingQuery()),
-      readRows(
-        supabase
-          .from("public_discoverable_apps")
-          .select("*")
-          .gte("discovered_at", new Date(now - 30 * 86400000).toISOString())
-          .lte("discovered_at", new Date(now).toISOString())
-          .order("discovered_at", { ascending: false })
-          .order("id", { ascending: true })
-          .limit(4),
-      ),
-      readRows(rankingsQuery()),
-      readRows(
-        supabase
-          .from("public_app_traction")
-          .select(
-            "app_id,metric_type,visibility,value,value_range,metric_date,provider,last_verified_at",
-          )
-          .in("provider", ["ga4", "posthog"])
-          .order("last_verified_at", { ascending: false })
-          .limit(12),
-      ),
-      readRows(
-        supabase
-          .from("public_app_categories")
-          .select("category,app_count")
-          .order("app_count", { ascending: false })
-          .limit(8),
-      ),
-    ]);
+  const [
+    picks,
+    rising,
+    fresh,
+    rankings,
+    evidence,
+    categories,
+    communityCollections,
+  ] = await Promise.all([
+    readRows(picksQuery()),
+    readRows(risingQuery()),
+    readRows(
+      supabase
+        .from("public_discoverable_apps")
+        .select("*")
+        .gte("discovered_at", new Date(now - 30 * 86400000).toISOString())
+        .lte("discovered_at", new Date(now).toISOString())
+        .order("discovered_at", { ascending: false })
+        .order("id", { ascending: true })
+        .limit(4),
+    ),
+    readRows(rankingsQuery()),
+    readRows(
+      supabase
+        .from("public_app_traction")
+        .select(
+          "app_id,metric_type,visibility,value,value_range,metric_date,provider,last_verified_at",
+        )
+        .in("provider", ["ga4", "posthog"])
+        .order("last_verified_at", { ascending: false })
+        .limit(12),
+    ),
+    readRows(
+      supabase
+        .from("public_app_categories")
+        .select("category,app_count")
+        .order("app_count", { ascending: false })
+        .limit(8),
+    ),
+    readRows(publicCollections().then((data) => ({ data }))),
+  ]);
   const ids = [
     ...new Set(
-      [...picks, ...rising, ...rankings, ...evidence].map(
-        (row) => row.app_id,
-      ),
+      [...picks, ...rising, ...rankings, ...evidence].map((row) => row.app_id),
     ),
   ];
   const [apps, media] = await Promise.all([
@@ -255,7 +265,12 @@ export async function loadHomeMerchandising({
         )
       : Promise.resolve([]),
     loadAppMedia(
-      [...new Set([...picks.map((row) => row.app_id), ...fresh.map((app) => app.id)])],
+      [
+        ...new Set([
+          ...picks.map((row) => row.app_id),
+          ...fresh.map((app) => app.id),
+        ]),
+      ],
       true,
       strict,
     ).catch((error) => {
@@ -263,16 +278,19 @@ export async function loadHomeMerchandising({
       return new Map<string, PublicAppMedia[]>();
     }),
   ]);
-  return composeHome({
-    apps: [...apps, ...fresh],
-    picks,
-    rising,
-    fresh,
-    rankedIds: rankings.map((row) => row.app_id),
-    evidence,
-    categories,
-    media,
-  });
+  return {
+    ...composeHome({
+      apps: [...apps, ...fresh],
+      picks,
+      rising,
+      fresh,
+      rankedIds: rankings.map((row) => row.app_id),
+      evidence,
+      categories,
+      media,
+    }),
+    publicCollections: communityCollections.slice(0, 6),
+  };
 }
 export async function loadCuratedApps(
   kind: "rising" | "picks",

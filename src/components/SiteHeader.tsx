@@ -87,10 +87,10 @@ const sections: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: "Discover", to: "/discover", icon: Compass },
       { label: "Rising", to: "/rising", icon: Zap },
-      { label: "Rankings", to: "/discover?view=rankings", icon: TrendingUp },
-      { label: "Collections", to: "/collections", icon: Bookmark },
       { label: "New", to: "/discover?view=new", icon: Flame },
+      { label: "Rankings", to: "/discover?view=rankings", icon: TrendingUp },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
+      { label: "Collections", to: "/collections", icon: Bookmark },
     ],
   },
   {

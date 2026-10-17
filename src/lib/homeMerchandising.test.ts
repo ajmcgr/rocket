@@ -70,6 +70,7 @@ describe("truthful homepage merchandising", () => {
         in: () => chain,
         order: () => chain,
         limit: () => chain,
+        range: () => chain,
         then: (resolve: any) =>
           Promise.resolve({
             data: [],
@@ -98,7 +99,9 @@ describe("truthful homepage merchandising", () => {
             ? [app("b")]
             : table === "public_app_categories"
               ? [{ category: "Productivity", app_count: 8 }]
-              : [];
+              : table === "public_user_collections"
+                ? [{ id: "c", name: "Public tools", slug: "public-tools", app_count: 1 }]
+                : [];
       const result = {
         data: rows,
         error:
@@ -115,6 +118,7 @@ describe("truthful homepage merchandising", () => {
         in: () => chain,
         order: () => chain,
         limit: () => chain,
+        range: () => chain,
         then: (resolve: any) => Promise.resolve(result).then(resolve),
       };
       return chain;
@@ -122,6 +126,7 @@ describe("truthful homepage merchandising", () => {
     const result = await loadHomeMerchandising();
     expect(result.top.map((row) => row.app.id)).toEqual(["b"]);
     expect(result.categories[0].category).toBe("Productivity");
+    expect(result.publicCollections.map((row) => row.slug)).toEqual(["public-tools"]);
     expect(result.picks).toEqual([]);
     expect(result.rising[0].viewCount).toBe(12);
     expect(db.rpc).toHaveBeenCalledWith("get_public_app_rankings", {
@@ -193,6 +198,7 @@ describe("truthful homepage merchandising", () => {
         in: () => chain,
         order: () => chain,
         limit: () => chain,
+        range: () => chain,
         then: (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve),
       };
       return chain;

@@ -19,6 +19,8 @@ import {
   RankedAppRow,
 } from "./MarketplaceCards";
 import AppLogo from "./AppLogo";
+import CollectionCard from "./CollectionCard";
+import type { Collection } from "@/lib/collections";
 import { categoryGradients } from "@/lib/categoryCardStyles";
 import FeaturedAdRows from "./FeaturedAdRows";
 
@@ -228,7 +230,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
         <section className="mt-12 sm:mt-16" aria-labelledby="home-collections">
           <Heading
             id="home-collections"
-            title="Collections"
+            title="Curated collections"
             description="Explore shelves curated by Rocket’s editors."
           />
           <div className="grid gap-4 sm:grid-cols-2">
@@ -245,7 +247,11 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                       aria-label={`View ${app.name}`}
                       className="rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
                     >
-                      <AppLogo name={app.name} src={app.logo_url} className="h-12 w-12" />
+                      <AppLogo
+                        name={app.name}
+                        src={app.logo_url}
+                        className="h-12 w-12"
+                      />
                     </Link>
                   ))}
                 </div>
@@ -253,7 +259,9 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
                   to={`/picks?collection=${encodeURIComponent(shelf.name)}`}
                   className="block rounded-lg focus-visible:outline-2 focus-visible:outline-sky-500"
                 >
-                  <h3 className="break-words text-xl font-semibold">{shelf.name}</h3>
+                  <h3 className="break-words text-xl font-semibold">
+                    {shelf.name}
+                  </h3>
                   <p className="mt-2 text-sm text-neutral-500">
                     Rocket editorial · {shelf.items.length} apps in this preview
                   </p>
@@ -280,15 +288,50 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
           </div>
         </section>
       )}
-      <PersonalHomeShelves />
+      <PersonalHomeShelves collections={data.publicCollections} />
     </>
   );
 }
-function PersonalHomeShelves() {
-  const { user } = useAuth();
-  return user ? <PersonalShelves key={user.id} userId={user.id} /> : null;
+function PublicCollectionShelf({ collections }: { collections: Collection[] }) {
+  if (!collections.length) return null;
+  return (
+    <section
+      className="mt-12 sm:mt-16"
+      aria-labelledby="home-public-collections"
+    >
+      <Heading
+        id="home-public-collections"
+        title="Collections"
+        description="Discover apps through community collections."
+        href="/collections"
+        action="All collections"
+      />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {collections.map((collection) => (
+          <CollectionCard
+            key={collection.id || collection.slug}
+            collection={collection}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
-function PersonalShelves({ userId }: { userId: string }) {
+function PersonalHomeShelves({ collections }: { collections: Collection[] }) {
+  const { user } = useAuth();
+  return user ? (
+    <PersonalShelves key={user.id} userId={user.id} collections={collections} />
+  ) : (
+    <PublicCollectionShelf collections={collections} />
+  );
+}
+function PersonalShelves({
+  userId,
+  collections,
+}: {
+  userId: string;
+  collections: Collection[];
+}) {
   const [saved, setSaved] = useState<HomeApp[]>([]);
   const [following, setFollowing] = useState<HomeApp[]>([]);
   const save = useSavedAppControls(
@@ -386,6 +429,7 @@ function PersonalShelves({ userId }: { userId: string }) {
           </div>
         </section>
       )}
+      <PublicCollectionShelf collections={collections} />
       {saved.length > 0 && (
         <section className="mt-12 sm:mt-16" aria-labelledby="home-saved">
           <Heading

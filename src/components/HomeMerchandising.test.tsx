@@ -33,6 +33,10 @@ const app = {
   categories: [],
   logo_url: null,
 } as any;
+const publicCollection = {
+  id: "public-tools", name: "Community tools", slug: "community-tools",
+  app_count: 2, username: "builder", updated_at: null, logos: [],
+};
 async function render(data: any) {
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -92,9 +96,11 @@ describe("homepage section gates", () => {
       };
       return chain;
     });
-    const view = await render(emptyMerchandising());
+    const view = await render({ ...emptyMerchandising(), publicCollections: [publicCollection] });
     try {
       expect(view.container.textContent).toContain("Continue exploring");
+      const publicShelf = view.container.querySelector('[aria-labelledby="home-public-collections"]')!;
+      expect(publicShelf.nextElementSibling?.getAttribute("aria-labelledby")).toBe("home-saved");
       mocks.user = { id: "controlled-b" };
       await view.refresh();
       expect(view.container.textContent).not.toContain("Continue exploring");
@@ -103,6 +109,7 @@ describe("homepage section gates", () => {
       await view.refresh();
       expect(view.container.textContent).not.toContain("Real app");
       expect(mocks.from).not.toHaveBeenCalled();
+      expect(view.container.textContent).toContain("Community tools");
     } finally {
       await view.close();
     }
@@ -112,6 +119,20 @@ describe("homepage section gates", () => {
     try {
       expect(view.container.querySelectorAll('section[aria-label^="Sponsored apps, row"]')).toHaveLength(3);
       expect(view.container.textContent).not.toContain("Continue exploring");
+      expect(mocks.from).not.toHaveBeenCalled();
+    } finally {
+      await view.close();
+    }
+  });
+  it("shows public collection cards and their existing routes to signed-out visitors", async () => {
+    const view = await render({ ...emptyMerchandising(), publicCollections: [publicCollection] });
+    try {
+      const shelf = view.container.querySelector('[aria-labelledby="home-public-collections"]')!;
+      expect(shelf.querySelector("h2")?.textContent).toBe("Collections");
+      expect(shelf.querySelector('a[href="/collections/community-tools"]')).not.toBeNull();
+      expect(shelf.querySelector('a[href="/collections"]')?.textContent).toContain("All collections");
+      expect(shelf.textContent).toContain("2 apps · @builder");
+      expect(shelf.querySelector("button")).toBeNull();
       expect(mocks.from).not.toHaveBeenCalled();
     } finally {
       await view.close();
