@@ -170,18 +170,7 @@ export default function AppProfileBuyAction({
         )}
       </div>
     );
-  if (!plan && !plans.length && !entitlement?.active)
-    return typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("buy") === "1" ? (
-      <section
-        id="pricing"
-        className="mt-6 border-t border-neutral-200 pt-4"
-        role="status"
-      >
-        This app has no published Buy with Rocket plans available. Visit its
-        website for available options.
-      </section>
-    ) : null;
+  if (!plan && !plans.length && !entitlement?.active) return null;
   if (
     userId &&
     entitlement?.active &&
@@ -270,7 +259,7 @@ export default function AppProfileBuyAction({
     <section
       id="pricing"
       aria-label="Buy with Rocket plans"
-      className="mt-6 min-w-0 space-y-4 border-t border-neutral-200 pt-5"
+      className="mt-6 min-w-0 space-y-4"
     >
       <h2 className="text-xl font-semibold">Get {appName}</h2>
       {plans.length > 0 && (
