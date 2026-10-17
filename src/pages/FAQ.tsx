@@ -11,6 +11,7 @@ const FAQ = () => {
         <header className="text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Frequently asked questions</h1>
           <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Clear answers about what Rocket does today.</p>
+          <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-300">Looking for setup instructions? <Link to="/docs" className="font-medium text-brand underline underline-offset-4">Explore Rocket Docs</Link> for detailed guides and troubleshooting.</p>
         </header>
 
         {faqSections.map((section) => (

@@ -19,6 +19,7 @@ Rocket is an open app platform for independent software. Visitors can view app p
 
 ## For developers
 
+- [Docs](https://tryrocket.ai/docs): Detailed product guides for submission, ownership, integrations, payments, sharing and troubleshooting.
 - [Submit an app](https://tryrocket.ai/submit): Free app submission.
 - [Your Apps](https://tryrocket.ai/your-apps): Manage or claim an app listing after applicable ownership checks.
 - [Pricing](https://tryrocket.ai/pricing): Current pricing for Your Apps, Create, Monetize, Grow and Community.

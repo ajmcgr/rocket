@@ -41,6 +41,11 @@ const SiteFooter = () => {
               </Link>
             </li>
             <li>
+              <Link to="/docs" className="hover:text-neutral-900">
+                Docs
+              </Link>
+            </li>
+            <li>
               <Link to="/faq" className="hover:text-neutral-900">
                 FAQ
               </Link>

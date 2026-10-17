@@ -89,7 +89,7 @@ export const faqSections = [
       },
       {
         q: "What are Rocket 100 and Rocket Recap?",
-        a: "Rocket 100 is an automated leaderboard for up to 100 eligible builders; its changing rank reflects qualifying app activity, not a paid placement. Rocket Recap gives signed-in owners a private view of eligible activity from completed months. You can choose which recorded visits or website clicks to include in a shareable recap and revoke its public link later.",
+        a: "Rocket 100 is an automated leaderboard for up to 100 eligible builders, ranked by public verified MRR. Its MRR and 30-day growth use eligible live subscription revenue that owners have chosen to show exactly; a dash means public or comparable data is unavailable. It is not a paid placement. Rocket Recap gives signed-in owners a private view of eligible activity from completed months. You can choose which recorded visits or website clicks to include in a shareable recap and revoke its public link later.",
       },
       {
         q: "Can I connect Rocket Login or payments?",

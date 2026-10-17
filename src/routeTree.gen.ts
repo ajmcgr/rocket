@@ -75,6 +75,8 @@ import { Route as CompareIndexRouteImport } from './routes/compare.index'
 import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as ConnectAuthorizeRouteImport } from './routes/connect.authorize'
 import { Route as CreateBrandingRouteImport } from './routes/create_.branding'
+import { Route as DocsIndexRouteImport } from './routes/docs.index'
+import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OutreachUnsubscribeRouteImport } from './routes/outreach.unsubscribe'
 import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
@@ -468,6 +470,16 @@ const CreateBrandingRoute = CreateBrandingRouteImport.update({
   path: '/create/branding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsSlugRoute = DocsSlugRouteImport.update({
+  id: '/docs/$slug',
+  path: '/docs/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -844,6 +856,7 @@ export interface FileRoutesByFullPath {
   '/compare/$slug': typeof CompareSlugRoute
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -853,6 +866,7 @@ export interface FileRoutesByFullPath {
   '/brand-templates/': typeof BrandTemplatesIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compare/': typeof CompareIndexRoute
+  '/docs/': typeof DocsIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/admin/$section': typeof AppAdminSectionRoute
@@ -972,6 +986,7 @@ export interface FileRoutesByTo {
   '/compare/$slug': typeof CompareSlugRoute
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -981,6 +996,7 @@ export interface FileRoutesByTo {
   '/brand-templates': typeof BrandTemplatesIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/compare': typeof CompareIndexRoute
+  '/docs': typeof DocsIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/admin/$section': typeof AppAdminSectionRoute
@@ -1102,6 +1118,7 @@ export interface FileRoutesById {
   '/compare/$slug': typeof CompareSlugRoute
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create_/branding': typeof CreateBrandingRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -1111,6 +1128,7 @@ export interface FileRoutesById {
   '/brand-templates/': typeof BrandTemplatesIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compare/': typeof CompareIndexRoute
+  '/docs/': typeof DocsIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/_app/admin/$section': typeof AppAdminSectionRoute
@@ -1233,6 +1251,7 @@ export interface FileRouteTypes {
     | '/compare/$slug'
     | '/connect/authorize'
     | '/create/branding'
+    | '/docs/$slug'
     | '/invite/$token'
     | '/outreach/unsubscribe'
     | '/resources/$slug'
@@ -1242,6 +1261,7 @@ export interface FileRouteTypes {
     | '/brand-templates/'
     | '/collections/'
     | '/compare/'
+    | '/docs/'
     | '/resources/'
     | '/tools/'
     | '/admin/$section'
@@ -1361,6 +1381,7 @@ export interface FileRouteTypes {
     | '/compare/$slug'
     | '/connect/authorize'
     | '/create/branding'
+    | '/docs/$slug'
     | '/invite/$token'
     | '/outreach/unsubscribe'
     | '/resources/$slug'
@@ -1370,6 +1391,7 @@ export interface FileRouteTypes {
     | '/brand-templates'
     | '/collections'
     | '/compare'
+    | '/docs'
     | '/resources'
     | '/tools'
     | '/admin/$section'
@@ -1490,6 +1512,7 @@ export interface FileRouteTypes {
     | '/compare/$slug'
     | '/connect/authorize'
     | '/create_/branding'
+    | '/docs/$slug'
     | '/invite/$token'
     | '/outreach/unsubscribe'
     | '/resources/$slug'
@@ -1499,6 +1522,7 @@ export interface FileRouteTypes {
     | '/brand-templates/'
     | '/collections/'
     | '/compare/'
+    | '/docs/'
     | '/resources/'
     | '/tools/'
     | '/_app/admin/$section'
@@ -1601,6 +1625,7 @@ export interface RootRouteChildren {
   CompareSlugRoute: typeof CompareSlugRoute
   ConnectAuthorizeRoute: typeof ConnectAuthorizeRoute
   CreateBrandingRoute: typeof CreateBrandingRoute
+  DocsSlugRoute: typeof DocsSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   OutreachUnsubscribeRoute: typeof OutreachUnsubscribeRoute
   ResourcesSlugRoute: typeof ResourcesSlugRoute
@@ -1610,6 +1635,7 @@ export interface RootRouteChildren {
   BrandTemplatesIndexRoute: typeof BrandTemplatesIndexRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   CompareIndexRoute: typeof CompareIndexRoute
+  DocsIndexRoute: typeof DocsIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   BlogAuthorIdRoute: typeof BlogAuthorIdRoute
@@ -2080,6 +2106,20 @@ declare module '@tanstack/react-router' {
       path: '/create/branding'
       fullPath: '/create/branding'
       preLoaderRoute: typeof CreateBrandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs/': {
+      id: '/docs/'
+      path: '/docs'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs/$slug': {
+      id: '/docs/$slug'
+      path: '/docs/$slug'
+      fullPath: '/docs/$slug'
+      preLoaderRoute: typeof DocsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$token': {
@@ -2742,6 +2782,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompareSlugRoute: CompareSlugRoute,
   ConnectAuthorizeRoute: ConnectAuthorizeRoute,
   CreateBrandingRoute: CreateBrandingRoute,
+  DocsSlugRoute: DocsSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   OutreachUnsubscribeRoute: OutreachUnsubscribeRoute,
   ResourcesSlugRoute: ResourcesSlugRoute,
@@ -2751,6 +2792,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrandTemplatesIndexRoute: BrandTemplatesIndexRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   CompareIndexRoute: CompareIndexRoute,
+  DocsIndexRoute: DocsIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   BlogAuthorIdRoute: BlogAuthorIdRoute,
