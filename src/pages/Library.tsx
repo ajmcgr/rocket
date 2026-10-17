@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Purchase = {
   purchase_id?: string;
+  offer_id?: string;
+  entitlement_key?: string;
+  renewal_date?: string | null;
   app_id: string;
   app_name: string;
   website_url: string | null;
@@ -33,9 +36,9 @@ type SandboxPurchase = {
 };
 type LibraryResult = { purchases: Purchase[]; sandbox_purchases?: SandboxPurchase[] };
 
-async function request<T>(action: string, appId?: string): Promise<T> {
+async function request<T>(action: string, appId?: string, offerId?: string): Promise<T> {
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
-    body: { action, app_id: appId },
+    body: { action, app_id: appId, ...(offerId ? { offer_id: offerId } : {}) },
   });
   if (error || data?.error)
     throw new Error(data?.error || error?.message || "Library unavailable");
@@ -93,6 +96,7 @@ export default function Library() {
       await request<{ cancellation_requested: boolean }>(
         "cancel",
         purchase.app_id,
+        purchase.offer_id,
       );
       if (currentUser.current!==userId) return;
       const result = await request<LibraryResult>("library");
@@ -173,6 +177,7 @@ export default function Library() {
                   </p>
                   {purchase.active && <p className="mt-2 text-sm font-semibold">{purchase.listing_available === false ? 'Payment confirmed · listing unavailable' : 'Payment-verified access'}</p>}
                   {purchase.listing_available === false && <p className="mt-2 text-sm">This listing is unavailable. Your purchase record is retained; opening it is disabled.</p>}
+                  {purchase.renewal_date && <p className="mt-1 text-sm text-neutral-600">Renews on {new Date(purchase.renewal_date).toLocaleDateString()}</p>}
                   <details className="mt-3 text-sm">
                     <summary className="min-h-11 cursor-pointer font-semibold">Order details and support</summary>
                     {purchase.order ? <dl className="space-y-1"><dt>Order</dt><dd className="break-all">{purchase.order.id}</dd><dt>Date</dt><dd>{new Date(purchase.order.date).toLocaleDateString()}</dd><dt>Payment status</dt><dd>{purchase.order.status}</dd></dl> : <p>No order details are available.</p>}

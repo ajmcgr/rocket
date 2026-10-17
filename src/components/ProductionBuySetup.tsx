@@ -1,3 +1,4 @@
+import OfferEditor from "./OfferEditor";
 import LaunchPurchaseTestSetup from "./LaunchPurchaseTestSetup";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
@@ -10,6 +11,9 @@ import {
 type Plan = {
   id: string;
   name: string;
+  stripe_price_id?: string;
+  description?: string;
+  entitlement_key?: string;
   amount_cents: number;
   interval: "month" | "year" | null;
   billing_type?: "subscription" | "one_time";
@@ -577,14 +581,45 @@ export default function ProductionBuySetup({
                 )}
               </form>
             )}
+            <p className="mt-4 text-sm">
+              Give monthly and annual prices the same entitlement key to group
+              them as one plan. Configure the key before the first checkout; it
+              cannot change once used.
+            </p>
+            <a
+              className="mt-2 inline-block min-h-11 text-sm text-brand underline"
+              href={`/apps/${appId}?buy=1&source=developer_website#pricing`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View hosted plan picker →
+            </a>
             {status.products.map((plan) => (
-              <p key={plan.id} className="mt-3 text-sm">
-                {plan.name} · ${(plan.amount_cents / 100).toFixed(2)}
-                {plan.billing_type === "one_time"
-                  ? " one-time"
-                  : `/${plan.interval === "year" ? "year" : "month"}`}{" "}
-                · {plan.is_active ? "Active" : "Not active"}
-              </p>
+              <OfferEditor
+                key={plan.id}
+                plan={plan}
+                appId={appId}
+                busy={busy}
+                onSave={async (changes) => {
+                  setBusy(true);
+                  setError("");
+                  try {
+                    await request("edit_plan", appId, {
+                      plan_id: plan.id,
+                      ...changes,
+                    });
+                    await refresh();
+                  } catch (caught) {
+                    setError(
+                      caught instanceof Error
+                        ? caught.message
+                        : "Could not save plan",
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              />
             ))}
             <details className="mt-5">
               <summary className="cursor-pointer text-sm font-medium">
@@ -680,16 +715,36 @@ export default function ProductionBuySetup({
                   )}
                 <button
                   type="button"
-                  onClick={() => activatePlan(plan.id)}
+                  onClick={() =>
+                    plan.is_active
+                      ? void (async () => {
+                          setBusy(true);
+                          setError("");
+                          try {
+                            await request("deactivate_plan", appId, {
+                              plan_id: plan.id,
+                            });
+                            await refresh();
+                          } catch (caught) {
+                            setError(
+                              caught instanceof Error
+                                ? caught.message
+                                : "Could not unpublish plan",
+                            );
+                          } finally {
+                            setBusy(false);
+                          }
+                        })()
+                      : activatePlan(plan.id)
+                  }
                   disabled={
-                    busy ||
-                    plan.is_active ||
-                    !status.launch_ready ||
-                    !status.merchant?.ready
+                    busy || !status.launch_ready || !status.merchant?.ready
                   }
                   className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold disabled:opacity-50"
                 >
-                  {plan.is_active ? "Live" : "Activate Buy with Rocket"}
+                  {plan.is_active
+                    ? "Unpublish plan"
+                    : "Activate Buy with Rocket"}
                 </button>
               </div>
             ))}

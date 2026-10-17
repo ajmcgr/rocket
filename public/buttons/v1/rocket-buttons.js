@@ -26,13 +26,26 @@ button:disabled{background:#e6eaf0;color:#526171;border-color:#a5afbb;cursor:not
         if (this.control.disabled) {
           event.preventDefault();
           event.stopImmediatePropagation();
-        } else
-          this.dispatchEvent(
+        } else {
+          const proceed = this.dispatchEvent(
             new CustomEvent("rocket-activate", {
               bubbles: true,
               composed: true,
+              cancelable: true,
             }),
           );
+          const app = this.getAttribute("app-id");
+          const offer = this.getAttribute("offer-id");
+          const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+          if (proceed && this.getAttribute("action") === "buy" && uuid.test(app || "") && (!offer || uuid.test(offer))) {
+            const url = new URL(`/apps/${app}`, "https://tryrocket.ai");
+            url.searchParams.set("buy", "1");
+            url.searchParams.set("source", "developer_website");
+            if (offer) url.searchParams.set("offer", offer);
+            url.hash = "pricing";
+            window.location.assign(url.toString());
+          }
+        }
       });
     }
     connectedCallback() {

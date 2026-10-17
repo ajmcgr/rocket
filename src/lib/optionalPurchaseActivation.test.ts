@@ -22,6 +22,7 @@ async function activation({
   const writes: string[] = [];
   const plan = {
     id: planId,
+    platform_fee_bps: 500,
     integration_confirmed_at: null,
     stripe_price_id: "price",
     developer_account_id: "merchant",
