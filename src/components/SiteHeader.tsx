@@ -115,13 +115,6 @@ const sections: { heading: string; items: NavItem[] }[] = [
     heading: "Create",
     items: createNavigationItems,
   },
-  {
-    heading: "Resources",
-    items: [
-      { label: "Docs", to: "/docs", icon: BookOpen },
-      { label: "FAQ", to: "/faq", icon: CircleHelp },
-    ],
-  },
 ];
 type SiteHeaderProps = {
   headerLeft?: ReactNode;
@@ -313,6 +306,24 @@ export default function SiteHeader({
                 />
                 {!sidebarCompact && <span>Launch</span>}
               </a>
+            </div>
+            <div>
+              {sidebarCompact ? (
+                <div
+                  className="mx-2 mb-2 border-t border-neutral-200"
+                  aria-hidden="true"
+                />
+              ) : (
+                <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
+                  Resources
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {[
+                  { label: "Docs", to: "/docs", icon: BookOpen },
+                  { label: "FAQ", to: "/faq", icon: CircleHelp },
+                ].map(navItem)}
+              </div>
             </div>
             <div>
               {sidebarCompact ? (
