@@ -8,7 +8,7 @@ const About = () => {
       <article className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white px-6 py-10 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:px-12 sm:py-14">
         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl">About Rocket</h1>
 
-        <div className="mt-10 space-y-7 text-lg leading-8 text-neutral-700 dark:text-neutral-300 sm:text-xl sm:leading-9">
+        <div className="mt-10 space-y-7 text-base leading-7 text-neutral-700 dark:text-neutral-300 sm:text-lg sm:leading-8">
           <p>Rocket is an open app platform for discovering software and helping its builders be found.</p>
           <p className="font-semibold text-neutral-950 dark:text-white">Hello there!</p>
           <p>
