@@ -82,10 +82,11 @@ export default function LaunchPurchaseTestSetup({
   };
   return (
     <div className="mt-3 space-y-3 rounded-xl border border-neutral-200 p-4">
-      <h4 className="font-semibold">Test Launch Pro before going live</h4>
+      <h4 className="font-semibold">Recommended: test Launch Pro</h4>
       <p className="text-sm">
-        This is a real $39 USD one-time purchase, not Stripe test mode. The plan
-        stays unpublished and only your selected tester can check out.
+        This optional test is a real $39 USD one-time purchase, not Stripe test
+        mode. The plan stays unpublished and only your selected tester can check
+        out.
       </p>
       <ol className="list-decimal space-y-1 pl-5 text-sm">
         <li>Select an independent tester with a confirmed Rocket account.</li>

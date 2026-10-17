@@ -1,3 +1,4 @@
+import { purchaseTestOptional } from "../_shared/purchaseTestPolicy.ts";
 import Stripe from "npm:stripe@16.12.0";
 import { APP_URL, base64url, getAdmin, getRocketUser, json } from "../_shared/rocketConnect.ts";
 import { createStripeConnectV2Merchant, createStripeHostedOnboardingLink, StripeConnectV2Error } from "../_shared/stripeConnectV2.ts";
@@ -190,7 +191,7 @@ Deno.serve(async (req) => {
         .eq("id", planId).eq("client_id", client.client_id).eq("developer_account_id", account.id).eq("developer_user_id", user.id).maybeSingle();
       if (planError) throw planError;
       if (!plan) return json({ error: "plan_not_found" }, 404);
-      if (!plan.integration_confirmed_at) return json({ error: "external_entitlement_test_required" }, 409);
+      if (!plan.integration_confirmed_at && !purchaseTestOptional(appId, plan.id)) return json({ error: "external_entitlement_test_required" }, 409);
       const price = await stripe.prices.retrieve(plan.stripe_price_id, { stripeAccount: account.stripe_account_id });
       if (!priceMatches(plan, price, true)) return json({ error: "stripe_plan_mismatch" }, 409);
       const { data: active } = await admin.from("connect_products").select("id").eq("client_id", client.client_id).eq("is_active", true).neq("id", plan.id).limit(1);

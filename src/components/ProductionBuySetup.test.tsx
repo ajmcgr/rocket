@@ -27,6 +27,7 @@ async function render(
     interval: "month" | "year" | null;
     registered: boolean;
   }>,
+  optional = false,
 ) {
   invoke.mockClear();
   const status = {
@@ -40,7 +41,7 @@ async function render(
       launch_ready: launchReady,
       products: [
         {
-          id: "plan-id",
+          id: optional ? "315fa89b-c31e-49e6-b05f-3a9f870cca19" : "plan-id",
           name: "App access",
           amount_cents: 1900,
           interval: "month",
@@ -77,7 +78,14 @@ async function render(
     root.render(
       <MemoryRouter>
         <ProductionBuySetup
-          ownedApps={[{ app_id: "owned-app", name: "Care Pods" }]}
+          ownedApps={[
+            {
+              app_id: optional
+                ? "b202d75a-02ae-46e6-8419-5b3410cbaac8"
+                : "owned-app",
+              name: "Care Pods",
+            },
+          ]}
         />
       </MemoryRouter>,
     ),
@@ -91,6 +99,28 @@ async function render(
   };
 }
 describe("Buy with Rocket activation UI", () => {
+  it("allows Launch Pro activation without test proof, but still requires live readiness", async () => {
+    for (const ready of [false, true]) {
+      const { container, cleanup } = await render(
+        ready,
+        false,
+        null,
+        undefined,
+        true,
+      );
+      try {
+        const button = [...container.querySelectorAll("button")].find(
+          (b) => b.textContent === "Activate Buy with Rocket",
+        )!;
+        expect(button.disabled).toBe(!ready);
+        expect(container.textContent).toContain(
+          "Purchase test recommended (optional)",
+        );
+      } finally {
+        await cleanup();
+      }
+    }
+  });
   it("loads connected merchant prices automatically without importing or activating them", async () => {
     const { container, cleanup } = await render(false, false, null, [
       {
