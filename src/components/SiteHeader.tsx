@@ -28,7 +28,6 @@ import {
   UserRound,
   Share2,
   BookOpen,
-  CircleHelp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -321,7 +320,6 @@ export default function SiteHeader({
               <div className="space-y-0.5">
                 {[
                   { label: "Docs", to: "/docs", icon: BookOpen },
-                  { label: "FAQ", to: "/faq", icon: CircleHelp },
                 ].map(navItem)}
               </div>
             </div>
