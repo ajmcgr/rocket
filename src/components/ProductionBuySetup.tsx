@@ -1,3 +1,4 @@
+import LaunchPurchaseTestSetup from "./LaunchPurchaseTestSetup";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -669,6 +670,14 @@ export default function ProductionBuySetup({
                     ? "Entitlement integration verified"
                     : "Entitlement verification required"}
                 </p>
+                {appId === "b202d75a-02ae-46e6-8419-5b3410cbaac8" &&
+                  !plan.is_active &&
+                  !plan.integration_confirmed_at && (
+                    <LaunchPurchaseTestSetup
+                      planId={plan.id}
+                      onVerified={refresh}
+                    />
+                  )}
                 <button
                   type="button"
                   onClick={() => activatePlan(plan.id)}

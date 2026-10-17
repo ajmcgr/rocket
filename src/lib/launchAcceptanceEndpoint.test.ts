@@ -19,6 +19,10 @@ const compiled = ts.transpileModule(source, {
 function harness(
   options: {
     enabled?: boolean;
+    configured?: boolean;
+    globalEnabled?: boolean;
+    active?: boolean;
+    unconfirmed?: boolean;
     user?: string;
     prior?: boolean;
     paid?: boolean;
@@ -47,7 +51,7 @@ function harness(
     name: "Launch Pro",
     stripe_product_id: rules.LAUNCH_PRO_STRIPE_PRODUCT_ID,
     stripe_price_id: rules.LAUNCH_PRO_STRIPE_PRICE_ID,
-    is_active: false,
+    is_active: options.active ?? false,
     integration_confirmed_at: null,
   };
   const data: Record<string, unknown> = {
@@ -62,7 +66,7 @@ function harness(
     },
     rocket_buy_configuration: {
       platform_fee_bps: 500,
-      live_checkout_enabled: false,
+      live_checkout_enabled: options.globalEnabled ?? false,
     },
     connect_developer_accounts: {
       id: "account",
@@ -74,6 +78,14 @@ function harness(
       payouts_enabled: true,
     },
     connect_products: plan,
+    profiles: { user_id: buyer, handle: "tester" },
+    rocket_buy_acceptance_tests: options.configured
+      ? {
+          client_id: rules.LAUNCH_CLIENT_ID,
+          plan_id: planId,
+          tester_user_id: buyer,
+        }
+      : null,
     connect_transactions: {
       id: "txn",
       user_id: buyer,
@@ -101,6 +113,13 @@ function harness(
     },
   };
   const admin = {
+    auth: {
+      admin: {
+        getUserById: async () => ({
+          data: { user: { id: buyer, email_confirmed_at: "2026-10-17" } },
+        }),
+      },
+    },
     rpc: async () => ({ data: true }),
     from: (table: string) => {
       let head = false;
@@ -111,6 +130,7 @@ function harness(
         },
         eq: () => query,
         is: () => query,
+        maybeSingle: async () => ({ data: data[table], error: null }),
         single: async () => ({ data: data[table], error: null }),
         insert: () => {
           writes.push(table);
@@ -136,7 +156,11 @@ function harness(
   };
   class Stripe {
     products = {
-      retrieve: async () => ({ livemode: true, active: true, name: options.productName ?? "Launch Pro" }),
+      retrieve: async () => ({
+        livemode: true,
+        active: true,
+        name: options.productName ?? "Launch Pro",
+      }),
     };
     prices = {
       retrieve: async () => ({
@@ -215,7 +239,10 @@ function harness(
             user_id: options.user || buyer,
             scopes: ["entitlements:read"],
           },
-    async () => ({ id: options.user || buyer }),
+    async () => ({
+      id: options.user || buyer,
+      email_confirmed_at: options.unconfirmed ? null : "2026-10-17",
+    }),
     async () => ({ ready: options.merchantReady !== false }),
     () => true,
     ...Object.values(rules),
@@ -228,12 +255,23 @@ function harness(
     async (_url: string, init: RequestInit) =>
       new Response(
         JSON.stringify(
-          options.external === false || new Headers(init.headers).get('Authorization') !== 'Bearer launch-session'
+          options.external === false ||
+            new Headers(init.headers).get("Authorization") !==
+              "Bearer launch-session"
             ? { identity_verified: false, fulfilments: [] }
             : {
                 identity_verified: true,
                 rocket_subject: options.wrongSubject ? owner : buyer,
-                fulfilments: [{ purchase_id: "txn", order_id: 'order', launch_product_id: 'draft', rocket_subject: buyer, rocket_client_id: rules.LAUNCH_CLIENT_ID, rocket_product_id: planId }],
+                fulfilments: [
+                  {
+                    purchase_id: "txn",
+                    order_id: "order",
+                    launch_product_id: "draft",
+                    rocket_subject: buyer,
+                    rocket_client_id: rules.LAUNCH_CLIENT_ID,
+                    rocket_product_id: planId,
+                  },
+                ],
               },
         ),
         { status: 200, headers: { "Content-Type": "application/json" } },
@@ -248,11 +286,15 @@ function harness(
           method: "POST",
           headers: {
             Authorization: "Bearer mock",
-            ...(options.launchToken === false ? {} : { "X-Launch-Authorization": "Bearer launch-session" }),
+            ...(options.launchToken === false
+              ? {}
+              : { "X-Launch-Authorization": "Bearer launch-session" }),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             action,
+            plan_id: planId,
+            tester_handle: "tester",
             ...(terms
               ? {
                   confirm_purchase_terms: "39 USD one-time for one Launch Pro",
@@ -265,6 +307,46 @@ function harness(
   };
 }
 describe("Launch pilot endpoint", () => {
+  it("allows the selected tester while global checkout is live but the plan remains unpublished", async () => {
+    const h = harness({ configured: true, globalEnabled: true });
+    expect((await h.request("checkout")).status).toBe(200);
+    expect(h.calls).toEqual(["customer", "checkout"]);
+    const active = harness({
+      configured: true,
+      globalEnabled: true,
+      active: true,
+    });
+    expect((await active.request("checkout")).status).toBe(409);
+    expect(active.calls).toEqual([]);
+  });
+  it("only the confirmed owner can select a tester, without creating any checkout", async () => {
+    for (const options of [
+      { user: buyer },
+      { user: owner, unconfirmed: true },
+    ]) {
+      const h = harness(options);
+      expect((await h.request("configure")).status).toBeGreaterThanOrEqual(400);
+      expect(h.writes).toEqual([]);
+    }
+    const h = harness({ user: owner });
+    expect((await h.request("configure")).status).toBe(200);
+    expect(h.writes).toEqual(["rocket_buy_acceptance_tests"]);
+    expect(h.calls).toEqual([]);
+    const existing = harness({ user: owner, configured: true });
+    expect((await existing.request("configure")).status).toBe(409);
+    expect(existing.writes).toEqual([]);
+  });
+  it("owner can inspect setup even before a tester has been configured", async () => {
+    const h = harness({ user: owner });
+    const response = await h.request("setup");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      configured: false,
+      verified: false,
+      test_url: "https://tryrocket.ai/apps/launch?acceptance=1",
+    });
+    expect(h.writes).toEqual([]);
+  });
   it("disabled pilot cannot create a customer, checkout or write records", async () => {
     const h = harness();
     expect((await h.request("status")).status).toBe(200);
@@ -288,7 +370,7 @@ describe("Launch pilot endpoint", () => {
   });
   it("fails closed when the current OAuth merchant is not payment-ready", async () => {
     const h = harness({ enabled: true, merchantReady: false });
-    expect((await h.request('status')).status).toBe(409);
+    expect((await h.request("status")).status).toBe(409);
     expect(h.calls).toEqual([]);
     expect(h.writes).toEqual([]);
   });
