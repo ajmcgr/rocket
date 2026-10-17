@@ -238,6 +238,8 @@ export default function LaunchPreview() {
         setNotice(
           "We found your app. Review the details, add media, then publish.",
         );
+      } else {
+        setEditing(false);
       }
       track("launch_url_submitted", { source: "website", signed_out: !user });
     } catch (cause) {
@@ -265,6 +267,11 @@ export default function LaunchPreview() {
         );
       sessionStorage.removeItem(STORAGE_KEY);
       sessionStorage.removeItem(DRAFT_KEY);
+      if (result.existing || result.result?.outcome === "existing") {
+        track("launch_existing_app_resolved", { app_id: result.app_id });
+        navigate(`/apps/add?app=${encodeURIComponent(result.app_id)}`);
+        return;
+      }
       sessionStorage.setItem("rocket:just-published", result.app_id);
       track("launch_new_app_created", { app_id: result.app_id });
       navigate(`/apps/${encodeURIComponent(result.slug || result.app_id)}`);
@@ -475,6 +482,26 @@ export default function LaunchPreview() {
           </p>
         </header>
         <section
+          aria-labelledby="find-claim-title"
+          className="mt-6 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+        >
+          <div>
+            <h2 id="find-claim-title" className="text-sm font-semibold">
+              Already listed on Rocket?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Search for your app and claim ownership to manage your listing,
+              build your developer reputation and unlock more features.
+            </p>
+          </div>
+          <Link
+            to="/discover?view=all"
+            className="inline-flex min-h-11 shrink-0 items-center text-sm font-medium text-[#167ac6] hover:underline"
+          >
+            Find &amp; Claim Your App →
+          </Link>
+        </section>
+        <section
           className="mt-8 rounded-2xl border border-border bg-card p-5 sm:p-6"
           aria-label="AI-assisted app submission"
         >
@@ -570,12 +597,14 @@ export default function LaunchPreview() {
             </p>
             {preview.outcome === "existing" && (
               <Link
-                to={preview.app.id
-                  ? `/apps/add?app=${encodeURIComponent(preview.app.id)}`
-                  : `/apps/add?url=${encodeURIComponent(preview.app.website_url)}`}
+                to={
+                  preview.app.id
+                    ? `/apps/add?app=${encodeURIComponent(preview.app.id)}`
+                    : `/apps/add?url=${encodeURIComponent(preview.app.website_url)}`
+                }
                 className={`${primary} mt-5`}
               >
-                Claim existing app
+                Claim This App
               </Link>
             )}
           </section>

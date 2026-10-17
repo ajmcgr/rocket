@@ -38,6 +38,8 @@ export type AnalyticsEvent =
   | "launch_existing_app_resolved"
   | "launch_new_app_created"
   | "app_claim_started"
+  | "claim_started"
+  | "claim_verified"
   | "app_claim_completed"
   | "app_verification_started"
   | "app_verification_completed"
@@ -73,7 +75,8 @@ const MAX_QUEUE = 200;
 export function track(event: AnalyticsEvent, props: Record<string, any> = {}) {
   try {
     const w = window as any;
-    if (typeof w.posthog?.capture === "function") w.posthog.capture(event, props);
+    if (typeof w.posthog?.capture === "function")
+      w.posthog.capture(event, props);
     if (typeof w.plausible === "function") w.plausible(event, { props });
     // Google Analytics' bootstrap can leave a dataLayer available before it
     // exposes window.gtag. Queue the event in the same shape as gtag so the

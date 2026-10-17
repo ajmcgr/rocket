@@ -101,6 +101,9 @@ export default function AddApp() {
       const result = await call("claim", { app_id: app.id, method, evidence: method === "manual_review" ? claimEvidence : undefined });
       setChallenge(result);
       track("app_claim_started", { app_id: app.id, method });
+      if (result.status === "pending" || result.status === "review") {
+        track("claim_started", { app_id: app.id, method });
+      }
       if (result.challenge_id) track("app_verification_started", { app_id: app.id, method });
     }
     catch (cause) { setError(friendlyError((cause as Error).message)); }
@@ -114,6 +117,7 @@ export default function AddApp() {
       if (result.outcome === "verified") {
         track("app_verification_completed", { app_id: app?.id, method: challenge.method });
         track("app_claim_completed", { app_id: app?.id, method: challenge.method });
+        track("claim_verified", { app_id: app?.id, method: challenge.method });
         setSuccess("Domain verified. This app is now in My Apps."); setChallenge(null);
       }
       else setError("Ownership needs manual review.");
