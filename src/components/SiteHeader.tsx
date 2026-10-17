@@ -206,7 +206,11 @@ export default function SiteHeader({
         aria-current={active ? "page" : undefined}
         className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium transition-colors ${sidebarCompact ? "justify-center px-0" : "px-3"} ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
       >
-        <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+        <Icon
+          className="h-[18px] w-[18px] shrink-0"
+          fill={label === "Saved" ? "currentColor" : "none"}
+          aria-hidden="true"
+        />
         {!sidebarCompact && <span>{label}</span>}
       </Link>
     );
