@@ -1,334 +1,511 @@
-import { X as ControlX } from "lucide-react";
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
-import { useNavigate } from "@/lib/router-compat";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
-import { X, ArrowRight, Sparkles } from "@/components/EmojiIcons";
+import { loadMyApps } from "@/lib/myApps";
+import type { MyApp } from "./AppJourney";
+import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
+import {
+  ONBOARDING_STORAGE_KEY,
+  canShowOnboarding,
+  eligibleOnboardingApps,
+  onboardingDestination,
+  onboardingSteps,
+  type OnboardingIntent,
+} from "@/lib/onboarding";
 
-type Step = {
-  selector?: string;
-  title: string;
-  body: string;
-  image: string;
-  imageAlt: string;
-  cta?: string;
-  placement?: "bottom" | "right" | "left" | "center";
-};
+const primary =
+  "inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1268aa] disabled:opacity-50";
+const secondary =
+  "inline-flex min-h-11 items-center justify-center rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800";
 
-const STORAGE_KEY = "rocket.onboarding.v2";
-
-const STEPS: Step[] = [
-  {
-    title: "The open app platform.",
-    body: "Discover apps. Grow your own.",
-    image: "/tour/rocket-home.png",
-    imageAlt: "Rocket homepage showing sponsored and Rising apps",
-    placement: "center",
-    cta: "Start tour",
-  },
-  {
-    title: "Build your developer profile",
-    body: "Your public profile connects you with the apps you own. Submit or claim an app, then add accurate details and supported evidence.",
-    image: "/tour/rocket-profile.png",
-    imageAlt: "Example Rocket developer profile with a handle and public bio",
-    placement: "center",
-  },
-  {
-    title: "Get discovered",
-    body: "People can find your app through search, categories, New, Rising, and Top Ranked. Your basic listing is free.",
-    image: "/tour/rocket-discover.png",
-    imageAlt: "Rocket Discover page with search, categories, and ranked apps",
-    placement: "center",
-  },
-  {
-    title: "Prove and grow",
-    body: "Connect supported traffic or revenue evidence when available. Rocket Developer is $99/year; Rocket ID, Buy with Rocket, and rollout tools need app-specific setup.",
-    image: "/tour/rocket-app-profile.png",
-    imageAlt: "Example public Rocket app profile showing verified traffic",
-    placement: "center",
-  },
-  {
-    title: "You're ready",
-    body: "Start with your app. You can explore the catalogue any time and replay this tour from Settings.",
-    image: "/tour/rocket-submit.png",
-    imageAlt: "Rocket app submission page where builders can add their app",
-    placement: "center",
-    cta: "Submit or claim my app",
-  },
-];
-
-const PAD = 8;
-
-const OnboardingTour = () => {
-  const { user } = useAuth();
+// This is the existing tour, still using its original per-account completion key
+// and launch event. Intent is temporary React state, never profile metadata.
+export default function OnboardingTour() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
+  const [intent, setIntent] = useState<OnboardingIntent | null>(null);
+  const [owner, setOwner] = useState<string | null>(null);
+  const [apps, setApps] = useState<MyApp[]>([]);
+  const [appsLoading, setAppsLoading] = useState(false);
+  const [appsError, setAppsError] = useState(false);
+  const [providers, setProviders] = useState<string[]>([]);
+  const [selectedApp, setSelectedApp] = useState("");
+  const started = useRef(false);
+  const viewed = useRef(-1);
+  const userId = user?.id;
+  const safe = canShowOnboarding(
+    location.pathname,
+    location.search,
+    location.hash,
+  );
+  const currentApps = owner === userId ? apps : [];
+  const eligible = eligibleOnboardingApps(currentApps);
+  const eligibleId =
+    eligible.find((item) => item.app_id === selectedApp)?.app_id ||
+    eligible[0]?.app_id;
+  const step = onboardingSteps[idx];
 
-  // Auto-open once per user — but only for genuinely NEW accounts.
-  // Existing users (signed up > 7 days ago) get the flag set silently so
-  // they never see the tour unless they replay it from Settings.
   useEffect(() => {
-    if (!user) return;
-    const key = `${STORAGE_KEY}.${user.id}`;
-    if (localStorage.getItem(key)) return;
-    const createdAt = new Date(user.created_at || 0).getTime();
-    const isNew =
-      createdAt > 0 && Date.now() - createdAt < 7 * 24 * 60 * 60 * 1000;
-    if (!isNew) {
-      // Mark older accounts as seen so the tour doesn't pop up retroactively.
-      localStorage.setItem(key, "1");
+    setOpen(false);
+    setIdx(0);
+    setIntent(null);
+    setApps([]);
+    setOwner(null);
+    setProviders([]);
+    setSelectedApp("");
+    started.current = false;
+    viewed.current = -1;
+  }, [userId]);
+  useEffect(() => {
+    if (!userId || loading || !safe) {
+      setOpen(false);
       return;
     }
-    const t = setTimeout(() => setOpen(true), 600);
-    return () => clearTimeout(t);
-  }, [user]);
-
-  // Allow programmatic re-launch
+    try {
+      if (sessionStorage.getItem("rocket:founder-claim-invitation")) return;
+      if (localStorage.getItem(`${ONBOARDING_STORAGE_KEY}.${userId}`)) return;
+      const created = Date.parse(user?.created_at || "");
+      if (
+        !Number.isFinite(created) ||
+        created > Date.now() ||
+        Date.now() - created >= 7 * 86400000
+      ) {
+        localStorage.setItem(`${ONBOARDING_STORAGE_KEY}.${userId}`, "1");
+        return;
+      }
+    } catch {
+      return;
+    } // Unavailable storage must not cause an unavoidable replay.
+    const timer = setTimeout(() => setOpen(true), 600);
+    return () => clearTimeout(timer);
+  }, [userId, user?.created_at, loading, safe]);
   useEffect(() => {
-    const h = () => {
+    const launch = () => {
+      if (!userId || loading || !safe) return;
       setIdx(0);
+      setIntent(null);
+      setSelectedApp("");
+      started.current = false;
+      viewed.current = -1;
       setOpen(true);
     };
-    window.addEventListener("rocket:start-tour", h);
-    return () => window.removeEventListener("rocket:start-tour", h);
-  }, []);
-
-  const step = STEPS[idx];
-
-  const tipRef = useRef<HTMLDivElement | null>(null);
-  const [tipSize, setTipSize] = useState({ width: 480, height: 440 });
-
-  useLayoutEffect(() => {
-    const el = tipRef.current;
-    if (!el) return;
-    const update = () => {
-      const box = el.getBoundingClientRect();
-      setTipSize((prev) =>
-        Math.abs(prev.height - box.height) < 1 &&
-        Math.abs(prev.width - box.width) < 1
-          ? prev
-          : { width: box.width, height: box.height },
-      );
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [open, idx]);
-
-  const measure = useCallback(() => {
-    if (!step?.selector) {
-      setRect(null);
+    window.addEventListener("rocket:start-tour", launch);
+    return () => window.removeEventListener("rocket:start-tour", launch);
+  }, [userId, loading, safe]);
+  useEffect(() => {
+    if (
+      !userId ||
+      loading ||
+      !safe ||
+      location.hash.replace(/^#/, "") !== "onboarding"
+    )
       return;
+    setIdx(0);
+    setIntent(null);
+    started.current = false;
+    viewed.current = -1;
+    setOpen(true);
+    nav("/settings/profile", { replace: true });
+  }, [userId, loading, safe, location.hash, nav]);
+  useEffect(() => {
+    if (!open || !safe || !userId) return;
+    if (!started.current) {
+      track("onboarding_started");
+      started.current = true;
     }
-    const el = document.querySelector(step.selector) as HTMLElement | null;
-    if (el) setRect(el.getBoundingClientRect());
-    else setRect(null);
-  }, [step]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(document.body);
-    window.addEventListener("scroll", measure, true);
-    window.addEventListener("resize", measure);
+    if (viewed.current !== idx) {
+      track("onboarding_step_viewed", { step });
+      viewed.current = idx;
+    }
+  }, [open, safe, userId, idx, step]);
+  useEffect(() => {
+    if (!open || !userId) return;
+    let alive = true;
+    setAppsLoading(true);
+    setAppsError(false);
+    loadMyApps()
+      .then((items) => {
+        if (alive) {
+          setOwner(userId);
+          setApps(items);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setOwner(userId);
+          setApps([]);
+          setAppsError(true);
+        }
+      })
+      .finally(() => {
+        if (alive) setAppsLoading(false);
+      });
     return () => {
-      ro.disconnect();
-      window.removeEventListener("scroll", measure, true);
-      window.removeEventListener("resize", measure);
+      alive = false;
     };
-  }, [open, measure]);
+  }, [open, userId]);
+  useEffect(() => {
+    setProviders([]);
+    if (!open || idx !== 4 || !eligibleId || intent === "exploring") return;
+    let alive = true;
+    void Promise.all(
+      [
+        ["RevenueCat", "rocket-revenuecat", {}],
+        ["Polar", "rocket-alternative-revenue", { provider: "polar" }],
+        ["Dodo Payments", "rocket-alternative-revenue", { provider: "dodo" }],
+      ].map(async ([name, endpoint, extra]) => {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            String(endpoint),
+            {
+              body: {
+                action: "status",
+                app_id: eligibleId,
+                ...(extra as object),
+              },
+            },
+          );
+          return !error && !data?.error && data?.connect_available === true
+            ? String(name)
+            : null;
+        } catch {
+          return null;
+        }
+      }),
+    ).then((names) => {
+      if (alive)
+        setProviders(names.filter((name): name is string => Boolean(name)));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [open, idx, eligibleId, intent]);
 
-  const finish = () => {
-    if (user) localStorage.setItem(`${STORAGE_KEY}.${user.id}`, "1");
+  const finish = (completed: boolean, reason = "skip") => {
+    try {
+      if (userId)
+        localStorage.setItem(`${ONBOARDING_STORAGE_KEY}.${userId}`, "1");
+    } catch {
+      /* keep usable */
+    }
+    track(completed ? "onboarding_completed" : "onboarding_skipped", {
+      step,
+      reason,
+      intent: intent || "undecided",
+    });
     setOpen(false);
   };
-
-  if (!open || !step) return null;
-
-  const last = idx === STEPS.length - 1;
-  const tipStyle: React.CSSProperties = (() => {
-    if (!rect || step.placement === "center") {
-      return {
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        maxHeight: "calc(100dvh - 2rem)",
-        overflowY: "auto",
-      };
-    }
-    const margin = 16;
-    const width = Math.min(480, window.innerWidth - margin * 2);
-    const height = tipSize.height || 220;
-    // Prefer below the target, flip above when it would overflow, then clamp.
-    let top = rect.bottom + PAD;
-    if (top + height + margin > window.innerHeight) {
-      const above = rect.top - PAD - height;
-      top =
-        above >= margin
-          ? above
-          : Math.max(margin, window.innerHeight - height - margin);
-    }
-    const left = Math.min(
-      window.innerWidth - width - margin,
-      Math.max(margin, rect.left + rect.width / 2 - width / 2),
-    );
-    return {
-      top,
-      left,
-      maxHeight: window.innerHeight - margin * 2,
-      overflowY: "auto",
-    };
-  })();
-
-  const next = () => {
-    if (last) {
-      finish();
-      nav("/submit");
-    } else setIdx((i) => i + 1);
+  const go = (to: string, action: string) => {
+    track("onboarding_primary_cta_clicked", {
+      step,
+      action,
+      intent: intent || "undecided",
+    });
+    finish(idx === 6, "primary_cta");
+    nav(to);
   };
-
+  const next = () => {
+    track("onboarding_primary_cta_clicked", { step, action: "continue" });
+    setIdx((value) => Math.min(6, value + 1));
+  };
+  const titles = [
+    "Welcome to Rocket.",
+    "What brings you to Rocket?",
+    intent === "exploring" ? "Find your next app." : "Choose your app journey.",
+    "Your developer profile.",
+    "Showcase real traction behind your apps.",
+    "Grow and monetize.",
+    "You’re ready.",
+  ];
+  const descriptions = [
+    "Discover apps. Grow and monetize yours.",
+    "Choose what fits today. You can change direction any time.",
+    intent === "exploring"
+      ? "Search, browse categories and save software you want to try."
+      : "Add something new, claim an existing listing, or manage an app you already own. Claiming is free; ownership still needs verification.",
+    "Your profile gives people a way to discover you and the software you build.",
+    "Verification is optional. Connect a supported provider when your app is ready.",
+    "Tools to help the right people find and use what you build. There’s no need to upgrade now.",
+    intent === "exploring"
+      ? "Explore the catalogue and save your discoveries."
+      : "Build at your own pace. You don’t need to publish or own an app to use Rocket.",
+  ];
+  const destination = onboardingDestination(intent, currentApps);
+  if (!userId || loading || !safe) return null;
   return (
-    <div
-      className="fixed inset-0 z-[1000002]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Onboarding tour"
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value && open) finish(false, "dismissed");
+      }}
     >
-      {/* Overlay with cut-out using SVG mask */}
-      <svg
-        className="absolute inset-0 h-full w-full pointer-events-auto"
-        onClick={finish}
+      <DialogContent
+        motion="gentle"
+        showCloseButton={false}
+        className="z-[1000002] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-xl overflow-y-auto rounded-2xl border-neutral-200 bg-white p-5 text-neutral-900 sm:p-7 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+        aria-label="Onboarding tour"
       >
-        <defs>
-          <mask id="tour-mask">
-            <rect width="100%" height="100%" fill="white" />
-            {rect && step.placement !== "center" && (
-              <rect
-                x={rect.left - PAD}
-                y={rect.top - PAD}
-                width={rect.width + PAD * 2}
-                height={rect.height + PAD * 2}
-                rx={12}
-                fill="black"
-              />
-            )}
-          </mask>
-        </defs>
-        <rect
-          width="100%"
-          height="100%"
-          fill="rgba(15,23,42,0.55)"
-          mask="url(#tour-mask)"
-        />
-      </svg>
-
-      {/* Highlight ring */}
-      {rect && step.placement !== "center" && (
-        <div
-          className="pointer-events-none absolute rounded-xl ring-2 ring-white/90 ring-offset-2 ring-offset-transparent shadow-[0_0_0_4px_rgba(255,255,255,0.15)] transition-all"
-          style={{
-            top: rect.top - PAD,
-            left: rect.left - PAD,
-            width: rect.width + PAD * 2,
-            height: rect.height + PAD * 2,
-          }}
-        />
-      )}
-
-      {/* Tooltip */}
-      <div
-        ref={tipRef}
-        className="absolute w-[calc(100vw-2rem)] max-w-[480px] rounded-2xl border border-neutral-200 bg-white p-5 shadow-2xl"
-        style={tipStyle}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand/10 text-brand">
-              <Sparkles className="h-3.5 w-3.5" />
-            </div>
-            <div className="text-[11px] font-medium normal-case tracking-wider text-neutral-500">
-              Step {idx + 1} of {STEPS.length}
-            </div>
-          </div>
+        <div className="flex items-center justify-between gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+          <span>Step {idx + 1} of 7</span>
           <button
-            onClick={finish}
-            aria-label="Skip tour"
-            className="rounded-md p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
+            onClick={() => finish(false)}
+            className="min-h-11 px-2 text-sm"
           >
-            <ControlX className="h-4 w-4" />
+            Skip onboarding
           </button>
         </div>
-        <h3 className="mt-3 text-base font-semibold tracking-tight text-neutral-900">
-          {step.title}
-        </h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-          {step.body}
-        </p>
-
-        <img
-          src={step.image}
-          alt={step.imageAlt}
-          width={960}
-          height={570}
-          className="mt-4 aspect-[16/9] w-full rounded-xl border border-neutral-200 object-cover object-top"
-          decoding="async"
-        />
-
-        <div className="mt-4 flex items-center gap-1.5">
-          {STEPS.map((_, i) => (
-            <span
-              key={i}
-              className={`h-1 rounded-full transition-all ${i === idx ? "w-5 bg-neutral-900" : i < idx ? "w-1.5 bg-neutral-400" : "w-1.5 bg-neutral-200"}`}
+        <DialogTitle className="text-2xl font-bold leading-tight">
+          {titles[idx]}
+        </DialogTitle>
+        <DialogDescription className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">
+          {descriptions[idx]}
+        </DialogDescription>
+        {idx === 0 && (
+          <>
+            <p className="text-sm leading-6">
+              Find useful software, meet its makers and save apps to try. If
+              you’re building, give your app a home, show your work and reach
+              new users.
+            </p>
+            <img
+              src="/tour/rocket-home.png"
+              alt="Rocket app discovery"
+              width={960}
+              height={570}
+              className="aspect-video w-full rounded-xl border border-neutral-200 object-cover object-top"
             />
-          ))}
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <button
-            onClick={finish}
-            className="text-xs font-medium text-neutral-500 hover:text-neutral-800"
-          >
-            Skip
-          </button>
-          <div className="flex items-center gap-2">
-            {last && (
+          </>
+        )}
+        {idx === 1 && (
+          <div role="group" aria-label="Your intent" className="grid gap-3">
+            {(
+              [
+                ["building", "I'm building an app"],
+                ["built", "I've already built an app"],
+                ["exploring", "I'm exploring apps"],
+              ] as const
+            ).map(([value, label]) => (
               <button
-                onClick={() => { finish(); nav("/discover"); }}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                key={value}
+                aria-pressed={intent === value}
+                onClick={() => {
+                  setIntent(value);
+                  track("onboarding_intent_selected", { intent: value });
+                }}
+                className={`${secondary} justify-start text-left ${intent === value ? "border-[#167ac6] bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100" : ""}`}
               >
-                Explore apps
+                {label}
               </button>
-            )}
-            {idx > 0 && !last && (
-              <button
-                onClick={() => setIdx((i) => Math.max(0, i - 1))}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
-              >
-                Back
-              </button>
-            )}
+            ))}
+          </div>
+        )}
+        {idx === 2 &&
+          (intent === "exploring" ? (
             <button
-              onClick={next}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3.5 py-1.5 text-sm font-medium text-white transition hover:bg-neutral-800"
+              className={secondary}
+              onClick={() => go("/discover", "explore")}
             >
-              {step.cta || (last ? "Finish" : "Next")}
-              <ArrowRight className="h-3.5 w-3.5" />
+              Explore Discover →
+            </button>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                className={secondary}
+                onClick={() => go("/submit", "add_app")}
+              >
+                Add a new app
+              </button>
+              <button
+                className={secondary}
+                onClick={() => go("/discover", "find_claim_app")}
+              >
+                Claim an existing app
+              </button>
+              <button
+                className={secondary}
+                onClick={() => go("/your-apps", "manage_apps")}
+              >
+                Manage my apps
+              </button>
+              <button className={secondary} onClick={() => setIdx(3)}>
+                Skip for now
+              </button>
+            </div>
+          ))}
+        {idx === 3 && (
+          <div className="space-y-3">
+            <p className="text-sm leading-6">
+              Add your name, a bio and links when you’re ready. A public profile
+              is useful even before you publish an app.
+            </p>
+            <button
+              className={secondary}
+              onClick={() => go("/settings/profile", "complete_profile")}
+            >
+              Complete profile
+            </button>
+            <button
+              className="ml-3 min-h-11 text-sm underline"
+              onClick={() => setIdx(4)}
+            >
+              Skip for now
             </button>
           </div>
+        )}
+        {idx === 4 && (
+          <div className="space-y-4 text-sm leading-6">
+            <p>
+              <strong>Analytics:</strong> Google Analytics or PostHog.
+            </p>
+            <p>
+              <strong>Revenue:</strong>{" "}
+              {providers.length
+                ? providers.join(", ")
+                : "Supported revenue verification is available in eligible app settings. Availability depends on the provider."}
+            </p>
+            <p>
+              Stripe Revenue Verification · <strong>Coming Soon</strong>
+            </p>
+            <ul className="list-disc space-y-1 pl-5">
+              <li>
+                Connections require eligible, domain-verified app ownership.
+              </li>
+              <li>
+                Metrics are private by default. You choose supported public
+                visibility: private, verified only, a range or an exact value,
+                where supported.
+              </li>
+              <li>
+                Select only one analytics provider and one revenue provider per
+                app.
+              </li>
+            </ul>
+            {intent !== "exploring" && eligibleId ? (
+              <div className="space-y-3">
+                {eligible.length > 1 && (
+                  <label className="block">
+                    Your app
+                    <select
+                      aria-label="App for verification"
+                      value={eligibleId}
+                      onChange={(event) => setSelectedApp(event.target.value)}
+                      className="mt-1 w-full rounded-xl border border-neutral-200 bg-white p-3 dark:bg-neutral-900 dark:border-neutral-700"
+                    >
+                      {eligible.map((item) => (
+                        <option key={item.app_id} value={item.app_id}>
+                          {item.app?.name || "My app"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className={secondary}
+                    onClick={() =>
+                      go(
+                        `/my-apps/${encodeURIComponent(eligibleId)}/analytics`,
+                        "analytics_settings",
+                      )
+                    }
+                  >
+                    Traffic verification settings
+                  </button>
+                  <button
+                    className={secondary}
+                    onClick={() =>
+                      go(
+                        `/my-apps/${encodeURIComponent(eligibleId)}/revenue`,
+                        "revenue_settings",
+                      )
+                    }
+                  >
+                    Revenue verification settings
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p>
+                {appsLoading
+                  ? "Checking your apps…"
+                  : appsError
+                    ? "We couldn’t check your eligible apps right now. You can continue and check My Apps later."
+                    : "Once you own and verify an eligible app’s domain, its verification settings become available in My Apps. You can keep exploring in the meantime."}
+              </p>
+            )}
+          </div>
+        )}
+        {idx === 5 && (
+          <ul className="space-y-3 text-sm leading-6">
+            <li>
+              <strong>Rocket Developer:</strong> optional membership for
+              eligible developer tools. Basic app submission, claiming and
+              management stay free.
+            </li>
+            <li>
+              <strong>Buy with Rocket:</strong> let customers choose a published
+              plan and purchase through supported checkout. It requires separate
+              verified ownership, merchant and integration setup; Developer
+              membership alone does not activate checkout.
+            </li>
+            <li>
+              <strong>Featured App advertising:</strong> paid placements that
+              put your listing in front of people discovering apps.
+            </li>
+            <li>
+              <strong>Category sponsorship:</strong> reach visitors browsing a
+              relevant category. Availability and terms are shown before
+              purchase.
+            </li>
+          </ul>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+          {idx > 0 ? (
+            <button
+              className={secondary}
+              onClick={() => setIdx((value) => value - 1)}
+            >
+              Back
+            </button>
+          ) : (
+            <span />
+          )}
+          {idx === 6 ? (
+            <div className="flex flex-wrap gap-2">
+              <button
+                className={secondary}
+                onClick={() => go("/dashboard", "dashboard")}
+              >
+                Go to dashboard
+              </button>
+              <button
+                className={primary}
+                onClick={() => go(destination.to, destination.action)}
+              >
+                {destination.label} →
+              </button>
+            </div>
+          ) : (
+            <button
+              disabled={idx === 1 && !intent}
+              className={primary}
+              onClick={next}
+            >
+              {idx === 0 ? "Get started" : "Continue"} →
+            </button>
+          )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-};
-
-export default OnboardingTour;
+}

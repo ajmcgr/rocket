@@ -1,3 +1,4 @@
+import { trackVerificationResult } from "@/lib/verificationAnalytics";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
@@ -35,6 +36,7 @@ export function AlternativeRevenueConnection({ appId, provider }: { appId: strin
       body: { action, app_id: appId, provider, ...extra },
     });
     if (invokeError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(invokeError, `${name} request failed`));
+    trackVerificationResult("revenue", provider, action, data, appId);
     return data;
   }, [appId, provider, name]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);

@@ -38,6 +38,7 @@ export const SettingsLayout = () => {
           </NavLink>
         ))}
       </div>
+      <div className="mt-5 text-sm"><NavLink to="/settings/profile#onboarding" className="inline-flex min-h-11 items-center text-brand hover:underline">Onboarding guide</NavLink></div>
       <div className="mt-8">
         <Outlet />
       </div>

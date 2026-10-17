@@ -1,3 +1,4 @@
+import { trackVerificationResult } from "@/lib/verificationAnalytics";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
@@ -42,6 +43,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
       body: { action, app_id: appId, ...extra },
     });
     if (requestError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(requestError, "RevenueCat request failed"));
+    trackVerificationResult("revenue", "revenuecat", action, data, appId);
     return data;
   }, [appId]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);

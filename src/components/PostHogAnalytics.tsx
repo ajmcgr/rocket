@@ -1,3 +1,4 @@
+import { trackVerificationResult } from "@/lib/verificationAnalytics";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
     });
     if (invokeError || data?.error) throw new Error(data?.error
       || await edgeFunctionErrorMessage(invokeError, "PostHog request failed"));
+    trackVerificationResult("analytics", "posthog", action, data, appId);
     return data;
   }, [appId]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);

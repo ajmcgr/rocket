@@ -7,7 +7,6 @@ import {
 } from "react";
 import { Outlet } from "@/lib/router-compat";
 import SiteHeader from "./SiteHeader";
-import OnboardingTour from "./OnboardingTour";
 import CommandPalette from "./CommandPalette";
 
 export type AppShellOutletContext = {
@@ -42,7 +41,6 @@ export default function AppShell() {
           headerCenter={headerCenter}
           headerActions={headerActions}
         />
-        <OnboardingTour />
         <CommandPalette />
         <main className="transition-[margin-left] duration-200">
           <Outlet />

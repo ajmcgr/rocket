@@ -4,6 +4,16 @@
 // Zero cost when no provider is loaded.
 
 export type AnalyticsEvent =
+  | "onboarding_started"
+  | "onboarding_intent_selected"
+  | "onboarding_step_viewed"
+  | "onboarding_skipped"
+  | "onboarding_completed"
+  | "onboarding_primary_cta_clicked"
+  | "analytics_connected"
+  | "analytics_sync_succeeded"
+  | "revenue_connected"
+  | "revenue_sync_succeeded"
   | "plan_picker_viewed"
   | "plan_selected"
   | "billing_interval_changed"
