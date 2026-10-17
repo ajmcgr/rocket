@@ -22,7 +22,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Send,
-  Search,
   MessageCircle,
   CreditCard,
   UserRound,
@@ -394,13 +393,6 @@ export default function SiteHeader({
             </form>
           )}
           <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap xl:col-start-3 xl:ml-0 xl:justify-self-end">
-            <Link
-              to="/discover"
-              aria-label="Search apps"
-              className="rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 sm:hidden"
-            >
-              <Search className="h-5 w-5" aria-hidden="true" />
-            </Link>
             {headerActions}
             <LanguageSelector />
             <ThemeToggle />
