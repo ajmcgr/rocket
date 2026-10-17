@@ -1,4 +1,3 @@
-import { purchaseTestOptional } from "../../supabase/functions/_shared/purchaseTestPolicy";
 export const ROCKET_FUNCTIONS =
   "https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1";
 export type DeveloperClient = {
@@ -39,11 +38,7 @@ export function buyStatus(status?: DeveloperBuyStatus | null, failed = false) {
   if (!status.merchant?.ready) return "Stripe setup";
   if (!status.products.length) return "Plan required";
   const ready = status.products.some(
-    (plan) =>
-      plan.is_active &&
-      plan.activated_at &&
-      (plan.integration_confirmed_at ||
-        purchaseTestOptional(status.app_id, plan.id)),
+    (plan) => plan.is_active && plan.activated_at,
   );
   return ready && status.launch_ready ? "Live" : "Testing";
 }
@@ -63,8 +58,6 @@ export function developerMessage(code: string) {
       "Stripe setup is not available yet. Please return when live payments are ready.",
     live_connect_not_configured:
       "Live Stripe onboarding is not available yet. Your existing setup is unchanged.",
-    external_entitlement_test_required:
-      "An independent entitlement test must be verified before activating this plan.",
     merchant_onboarding_incomplete:
       "Complete Stripe business verification before creating or activating a plan.",
     one_active_plan_per_app:

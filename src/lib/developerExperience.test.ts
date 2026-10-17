@@ -16,7 +16,7 @@ const client: DeveloperClient = {
   redirect_uris: ["https://example.com/auth/rocket"],
 };
 describe("Developer readiness", () => {
-  it("shows activated Launch Pro as live without a purchase test, but not another offer", () => {
+  it("shows activated plans as live without a purchase test for every app", () => {
     const status = {
       app_id: "b202d75a-02ae-46e6-8419-5b3410cbaac8",
       merchant: { ready: true, status: "active" },
@@ -32,13 +32,13 @@ describe("Developer readiness", () => {
       ],
     };
     expect(buyStatus(status)).toBe("Live");
-    expect(buyStatus({ ...status, app_id: "another-app" })).toBe("Testing");
+    expect(buyStatus({ ...status, app_id: "another-app" })).toBe("Live");
     expect(
       buyStatus({
         ...status,
         products: [{ ...status.products[0], id: "another-plan" }],
       }),
-    ).toBe("Testing");
+    ).toBe("Live");
   });
   it("uses actual ID environment and enabled state", () => {
     expect(idStatus()).toBe("Not set up");

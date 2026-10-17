@@ -539,7 +539,7 @@ Use the intended merchant account. A read-only Stripe revenue-verification conne
         "Map a price to app access",
         `When an eligible fixed price already exists on the connected merchant account, map it instead of creating a duplicate Stripe product. Associate the exact price with the app access key your integration understands. Register the exact checkout return URL.
 
-An offer remains inactive until payment and entitlement handling are verified. Check amount, currency, interval and access mapping in the portal. Live checkout being enabled for the platform does not mean every app or offer is ready.
+Offers are saved inactive until the developer activates them. A purchase test is recommended, but is not mandatory for activation. Check amount, currency, interval and access mapping in the portal. Stripe readiness and live payment validation still apply; your app must grant access only from verified payment or entitlement state.
 
 Use the official Buy with Rocket button and attach your purchase handler. The button itself makes no payment requests and grants no access.`,
       ),

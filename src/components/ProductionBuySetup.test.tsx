@@ -229,10 +229,10 @@ describe("Buy with Rocket activation UI", () => {
       await cleanup();
     }
   });
-  it("keeps activation disabled until both live readiness and entitlement verification are server-confirmed", async () => {
+  it("keeps activation disabled until live readiness is server-confirmed", async () => {
     for (const [ready, confirmed] of [
       [false, true],
-      [true, false],
+      [false, false],
     ]) {
       const { container, cleanup } = await render(ready, confirmed);
       try {
@@ -250,7 +250,7 @@ describe("Buy with Rocket activation UI", () => {
     }
   });
   it("uses the existing owner-authorized activation action and exact selected plan", async () => {
-    const { container, cleanup } = await render(true, true);
+    const { container, cleanup } = await render(true, false);
     try {
       const button = [...container.querySelectorAll("button")].find(
         (b) => b.textContent === "Activate Buy with Rocket",
