@@ -5,10 +5,11 @@ import {
   waitFor,
   cleanup,
 } from "@testing-library/react";
-import { MemoryRouter } from "@/test/MemoryRouter";
+import { MemoryRouter, Route, Routes } from "@/test/MemoryRouter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import LaunchPreview from "./LaunchPreview";
 import { emptySubmission } from "../../supabase/functions/_shared/appSubmission";
+import { track } from "@/lib/analytics";
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   user: null as null | { id: string },
@@ -50,7 +51,25 @@ describe("Rocket app submission", () => {
     vi.stubGlobal("scrollTo", vi.fn());
     mocks.invoke.mockReset();
     mocks.user = null;
+    vi.mocked(track).mockClear();
     sessionStorage.clear();
+  });
+  it("offers public discovery before the submission form", async () => {
+    await mount();
+    const notice = screen.getByRole("region", {
+      name: "Already listed on Rocket?",
+    });
+    expect(
+      screen
+        .getByRole("link", { name: "Find & Claim Your App →" })
+        .getAttribute("href"),
+    ).toBe("/discover?view=all");
+    expect(
+      notice.compareDocumentPosition(
+        screen.getByRole("region", { name: "AI-assisted app submission" }),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
   afterEach(() => {
     cleanup();
@@ -101,11 +120,51 @@ describe("Rocket app submission", () => {
       expect(screen.getByText("Already on Rocket")).toBeTruthy(),
     );
     expect(
-      screen
-        .getByRole("link", { name: "Claim existing app" })
-        .getAttribute("href"),
+      screen.getByRole("link", { name: "Claim This App" }).getAttribute("href"),
     ).toBe("/apps/add?app=existing-app-id");
     expect(screen.queryByRole("button", { name: "Publish app" })).toBeNull();
+  });
+  it("closes an editable draft when its URL resolves to an existing listing", async () => {
+    mocks.invoke.mockResolvedValue({ data: preview("existing"), error: null });
+    await mount();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Add details manually" }),
+    );
+    fireEvent.change(screen.getByPlaceholderText("https://yourapp.com"), {
+      target: { value: "example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add with AI" }));
+    await screen.findByText("Already on Rocket");
+    expect(screen.queryByLabelText("App name *")).toBeNull();
+    expect(mocks.invoke).toHaveBeenCalledOnce();
+  });
+  it("sends a match discovered at publish time to the existing claim flow", async () => {
+    mocks.user = { id: "owner" };
+    sessionStorage.setItem(
+      "rocket:launch-preview-v1",
+      JSON.stringify({ ...preview(), publishAfterAuth: true }),
+    );
+    mocks.invoke.mockResolvedValue({
+      data: { app_id: "existing-app-id", published: true, existing: true },
+      error: null,
+    });
+    render(
+      <MemoryRouter initialEntries={["/submit"]}>
+        <Routes>
+          <Route path="/submit" element={<LaunchPreview />} />
+          <Route path="/apps/add" element={<h1>Existing claim flow</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByText("Existing claim flow");
+    expect(track).toHaveBeenCalledWith("launch_existing_app_resolved", {
+      app_id: "existing-app-id",
+    });
+    expect(track).not.toHaveBeenCalledWith(
+      "launch_new_app_created",
+      expect.anything(),
+    );
+    expect(sessionStorage.getItem("rocket:just-published")).toBeNull();
   });
   it("requires media and uses four steps with no scheduling or plan picker", async () => {
     await mount();
