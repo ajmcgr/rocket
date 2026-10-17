@@ -70,7 +70,7 @@ Deno.serve(async req => {
         return reply(req, { configured: true, tester_handle: handle, test_url: "https://tryrocket.ai/apps/launch?acceptance=1" });
       }
       const { data: profile } = tester ? await admin.from("profiles").select("handle").eq("user_id", tester).maybeSingle() : { data: null };
-      return reply(req, { configured: enabled && !!tester && (!settings || settings.plan_id === plan.id), tester_handle: profile?.handle || null, verified: !!plan.integration_confirmed_at, test_url: "https://tryrocket.ai/apps/launch?acceptance=1" });
+      return reply(req, { configured: !!settings && settings.plan_id === plan.id, tester_handle: profile?.handle || null, verified: !!plan.integration_confirmed_at, test_url: "https://tryrocket.ai/apps/launch?acceptance=1" });
     }
     if (!enabled) return reply(req, { available: false }, body.action === "status" ? 200 : 409);
     if (body.action === "proof") {

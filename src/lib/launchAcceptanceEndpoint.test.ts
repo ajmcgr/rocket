@@ -337,7 +337,7 @@ describe("Launch pilot endpoint", () => {
     expect(existing.writes).toEqual([]);
   });
   it("owner can inspect setup even before a tester has been configured", async () => {
-    const h = harness({ user: owner });
+    const h = harness({ user: owner, enabled: true });
     const response = await h.request("setup");
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
