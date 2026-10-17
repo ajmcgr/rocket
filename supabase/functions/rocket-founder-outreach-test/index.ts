@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { claimInvitationEmail } from "./template.ts";
 
 const PROJECT_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -16,9 +17,7 @@ const cors = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
-const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-})[char] ?? char);
+
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
@@ -52,7 +51,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Internal test gate closed" }, 403);
   }
   const { data: queue } = await admin.from("rocket_outreach_queue")
-    .select("id,app_id,recipient_email,status")
+    .select("id,app_id,recipient_email,status,founder_first_name")
     .eq("id", queueId).maybeSingle();
   if (!queue || (!production && queue.recipient_email?.toLowerCase() !== TEST_EMAIL)) {
     return json({ error: "Recipient is not authorized for this mode" }, 403);
@@ -79,9 +78,10 @@ Deno.serve(async (req: Request) => {
   const claimUrl = `${ORIGIN}/claim-invitation?token=${encodeURIComponent(invitation.claim_token)}&app=${encodeURIComponent(queue.app_id)}`;
   const listingUrl = `${ORIGIN}/apps/${encodeURIComponent(String(app.slug))}`;
   const unsubscribeUrl = `${ORIGIN}/outreach/unsubscribe?token=${encodeURIComponent(invitation.unsubscribe_token)}`;
-  const subject = `${appName} is now on Rocket`;
-  const text = `Hi,\n\nYour app, ${appName}, is now listed on Rocket.\n\nRocket is the open app platform, where people discover software and developers build their reputation around what they create.\n\nYou can claim your app for free, manage its listing, build your developer profile and see how people discover your work.\n\nClaim your app: ${claimUrl}\n\nView your listing: ${listingUrl}\n\nAlex\nFounder, Rocket\n\n${POSTAL_ADDRESS}\n\nUnsubscribe from Rocket founder invitations: ${unsubscribeUrl}`;
-  const html = `<div style="font-family:Arial,sans-serif;line-height:1.6;max-width:600px;margin:auto;color:#20252b"><p>Hi,</p><p>Your app, ${escapeHtml(appName)}, is now listed on Rocket.</p><p>Rocket is the open app platform, where people discover software and developers build their reputation around what they create.</p><p>You can claim your app for free, manage its listing, build your developer profile and see how people discover your work.</p><p><a href="${escapeHtml(claimUrl)}" style="color:#00598a;">Claim your app</a></p><p><a href="${escapeHtml(listingUrl)}" style="color:#00598a;">View your listing</a></p><p>Alex<br>Founder, Rocket</p><hr><p style="font-size:12px">${escapeHtml(POSTAL_ADDRESS)}<br><a href="${escapeHtml(unsubscribeUrl)}" style="color:#00598a;">Unsubscribe from Rocket founder invitations</a></p></div>`;
+  const { subject, text, html } = claimInvitationEmail({
+    appName, developerName: queue.founder_first_name,
+    claimUrl, listingUrl, unsubscribeUrl, postalAddress: POSTAL_ADDRESS,
+  });
   let providerId: string | null = null;
   let providerError: string | null = null;
   const payload = JSON.stringify({ from: FROM, to: [recipient], subject, text, html,
