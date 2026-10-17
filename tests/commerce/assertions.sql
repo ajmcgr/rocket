@@ -28,7 +28,7 @@ begin
     perform connect_reserve_subscription('11111111-1111-4111-8111-111111111111','app','33333333-3333-4333-8333-333333333333','acct_other','ROCKET_MARKETPLACE');
     raise exception 'cross merchant reservation';
   exception when raise_exception then if sqlerrm<>'offer_not_published' then raise;end if;end;
-  insert into connect_checkout_attempts values('33333333-3333-4333-8333-333333333333');
+  insert into connect_checkout_attempts(product_id) values('33333333-3333-4333-8333-333333333333');
   begin
     update connect_products set entitlement_key='new-access' where product_key='pro-month';
     raise exception 'sold key was mutable';

@@ -13,6 +13,17 @@ describe("real multi-plan checkout handler with isolated Stripe fixture", () => 
     );
     expect(h.calls).toHaveLength(0);
   });
+  it("does not contact Stripe checkout when the selected entitlement changed before intent registration", async () => {
+    const h=harness({freeze:false});
+    expect((await h.request({action:"checkout",offer_id:ids.month})).body.error).toBe("checkout_offer_changed");
+    expect(h.calls).toHaveLength(0);
+  });
+  it("never recycles an uncertain one-time intent after Stripe idempotency expiry", async () => {
+    const h=harness();
+    h.tables.connect_checkout_attempts.push({user_id:ids.buyer,client_id:"client",product_id:ids.once,stripe_account_id:"acct_merchant",idempotency_key:`rocket-buy-production-${ids.buyer}-client-${ids.once}-${ids.buyer}`,expires_at:new Date(0).toISOString(),stripe_checkout_session_id:null});
+    expect((await h.request({action:"checkout",offer_id:ids.once,product_key:"once",purchase_request_id:ids.buyer,return_uri:"https://merchant.example/paid"})).body.error).toBe("checkout_pending_reconciliation");
+    expect(h.calls).toHaveLength(0);
+  });
   it("uses the exact annual price, merchant, fee and entitlement, ignoring forged amounts", async () => {
     const h = harness();
     expect(

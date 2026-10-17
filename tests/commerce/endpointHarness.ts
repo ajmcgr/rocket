@@ -21,7 +21,8 @@ export const ids = {
 export function harness(
   options: {
     user?: string | null;
-    endpoint?: "rocket-buy" | "rocket-buy-developer";
+    freeze?: boolean;
+  endpoint?: "rocket-buy" | "rocket-buy-developer";
     token?: { user_id: string; client_id: string; scopes: string[] };
     owner?: boolean;
     ready?: boolean;
@@ -115,6 +116,13 @@ export function harness(
     async rpc(name: string, args: any) {
       if (name === "can_monetize_rocket_app")
         return { data: options.owner !== false, error: null };
+      if (name === "connect_freeze_checkout") {
+        const product = products.find((p) => p.id === args.p_product_id);
+        if (options.freeze === false || product?.entitlement_key !== args.p_entitlement_key) return {data:false,error:null};
+        const existing = tables.connect_checkout_attempts.find((p) => p.idempotency_key === args.p_key);
+        if (!existing) tables.connect_checkout_attempts.push({user_id:args.p_user_id,client_id:args.p_client_id,product_id:args.p_product_id,stripe_account_id:args.p_account,idempotency_key:args.p_key,origin:args.p_origin,expires_at:args.p_expires_at,stripe_checkout_session_id:null});
+        return {data:true,error:null};
+      }
       if (name !== "connect_reserve_subscription") throw new Error(name);
       let r = tables.connect_subscription_checkouts.find(
         (r) => r.user_id === args.p_user_id && r.client_id === args.p_client_id,
