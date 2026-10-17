@@ -8,14 +8,20 @@ const TEST_EMAIL = (Deno.env.get("ROCKET_OUTREACH_TEST_EMAIL") ?? "").trim().toL
 const POSTAL_ADDRESS = (Deno.env.get("ROCKET_OUTREACH_POSTAL_ADDRESS") ?? "").trim();
 const FROM = "Alex from Rocket <alex@tryrocket.ai>";
 const ORIGIN = "https://tryrocket.ai";
+const cors = {
+  "Access-Control-Allow-Origin": ORIGIN,
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
-  status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[char] ?? char);
 
 Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   if (!RESEND_KEY || !PROJECT_URL || !ANON_KEY || !SERVICE_KEY || !POSTAL_ADDRESS) {
     return json({ error: "Founder delivery is not configured" }, 503);
