@@ -463,7 +463,7 @@ export default function PublicAppProfile({
                 </p>
               )}
               {(trafficPoint || revenuePoint) && (
-                <div className="mt-6 grid gap-4 border-t border-neutral-200 pt-6 sm:grid-cols-2">
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {trafficPoint && (
                     <section aria-label="Traffic">
                       <PublicMetricCard
