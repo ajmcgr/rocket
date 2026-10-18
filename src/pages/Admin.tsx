@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
 import { toast } from "@/components/ui/sonner";
+import { downloadAdminOverviewCsv } from "@/lib/adminOverviewCsv";
 import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
 import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketplaceOps";
 import AdminSponsorships from "@/components/AdminSponsorships";
@@ -66,6 +67,7 @@ export default function Admin() {
   const section = (sections.some((item) => item.id === params.section) ? params.section : "home") as Section;
   const [period, setPeriod] = useState<Period>("30d");
   const [data, setData] = useState<Row | null>(null);
+  const [snapshotLoadedAt, setSnapshotLoadedAt] = useState("");
   const [investor, setInvestor] = useState<Row | null>(null);
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
@@ -90,6 +92,7 @@ export default function Admin() {
     setToday(rows(batch?.data));
     setInternalTests(rows(tests?.data));
     setData({ ...obj(result.data), ...(claims ? { claims: claims.data } : {}) });
+    setSnapshotLoadedAt(new Date().toISOString());
     setInvestor(investorResult ? obj(investorResult.data) : null);
   }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
@@ -165,7 +168,9 @@ export default function Admin() {
 
   return <main className="rocket-admin">
     <header className="rocket-admin-heading"><div><p className="rocket-admin-eyebrow">Rocket operating system</p><h1>{section === "home" ? "Admin overview" : label(section)}</h1><p>Production data, explicit decisions, and auditable changes.</p></div>
-      {(section === "home" || section === "metrics") && <label>Period <select value={period} onChange={(event) => setPeriod(event.target.value as Period)}><option value="today">Today</option><option value="7d">7 days</option><option value="30d">30 days</option><option value="all">All time</option></select></label>}
+      {(section === "home" || section === "metrics") && <div className="rocket-admin-heading-actions"><label>Period <select value={period} onChange={(event) => setPeriod(event.target.value as Period)}><option value="today">Today</option><option value="7d">7 days</option><option value="30d">30 days</option><option value="all">All time</option></select></label>
+        {section === "home" && <button type="button" disabled={!data || !!error || data.period !== period || !snapshotLoadedAt} onClick={() => data && downloadAdminOverviewCsv(data, period, snapshotLoadedAt)}>Export CSV</button>}
+      </div>}
     </header>
     <nav className="rocket-admin-tabs" aria-label="Admin sections">{sections.map((item) => <Link key={item.id} to={item.id === "home" ? "/admin" : `/admin/${item.id}`} className={section === item.id ? "active" : ""}>{item.label}</Link>)}</nav>
     {data && section === "developer-testing" && <AdminDeveloperTesting />}

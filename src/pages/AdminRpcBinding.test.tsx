@@ -14,10 +14,13 @@ const mocks = vi.hoisted(() => ({
   section: "home",
   denied: false,
   actionError: "",
+  exportCsv: vi.fn(),
   requests: [] as { name: string; args: Record<string, unknown> }[],
   snapshot: {} as Record<string, unknown>,
   claims: [] as Record<string, unknown>[],
 }));
+vi.mock("@/lib/adminOverviewCsv", () => ({ downloadAdminOverviewCsv: mocks.exportCsv }));
+
 // Real SDK with an isolated in-memory HTTP transport: an unbound rpc method
 // throws before this fetch runs, reproducing the production 'reading rest' error.
 vi.mock("@/integrations/supabase/client", async () => {
@@ -105,6 +108,7 @@ beforeEach(() => {
   mocks.section = "home";
   mocks.denied = false;
   mocks.actionError = "";
+  mocks.exportCsv.mockClear();
   mocks.requests.length = 0;
   mocks.snapshot = { catalogue: { public_apps: 12 } };
   mocks.claims = [];
@@ -264,6 +268,27 @@ describe("admin Supabase client binding", () => {
       alert.closest("article")?.id === "claim-fixture-claim" && alert.textContent === mocks.actionError,
     )).toBe(true));
     expect(screen.queryByText("Claim approved.")).toBeNull();
+  });
+
+  it("exports only the loaded overview snapshot for the selected period", async () => {
+    mocks.snapshot = { period: "30d", catalogue: { indexed: 6500 } };
+    render(<Admin />);
+    const button = await screen.findByRole("button", { name: "Export CSV" });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(button);
+    expect(mocks.exportCsv).toHaveBeenLastCalledWith(mocks.snapshot, "30d", expect.any(String));
+    mocks.snapshot = { period: "7d", discovery: { saves: 4 } };
+    fireEvent.change(screen.getByRole("combobox", { name: "Period" }), { target: { value: "7d" } });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(button);
+    expect(mocks.exportCsv).toHaveBeenLastCalledWith(mocks.snapshot, "7d", expect.any(String));
+  });
+  it("does not allow export when admin access is denied", async () => {
+    mocks.denied = true;
+    render(<Admin />);
+    await screen.findByRole("alert");
+    expect((screen.getByRole("button", { name: "Export CSV" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(mocks.exportCsv).not.toHaveBeenCalled();
   });
 
 });
