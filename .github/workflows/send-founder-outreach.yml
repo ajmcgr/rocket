@@ -1,0 +1,41 @@
+name: Send Rocket developer invitations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/send-founder-outreach.yml
+      - scripts/send-founder-outreach.mjs
+      - scripts/send-founder-outreach.test.mjs
+  schedule:
+    - cron: "37 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Check eligibility and limits without sending
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rocket-founder-outreach
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test scheduler safeguards
+        run: node --test scripts/send-founder-outreach.test.mjs
+      - name: Send eligible invitations
+        env:
+          ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
+          OUTREACH_DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || github.event_name == 'workflow_dispatch' && !inputs.dry_run && 'false' || 'true' }}
+        run: node scripts/send-founder-outreach.mjs

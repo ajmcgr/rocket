@@ -27,13 +27,16 @@ Deno.serve(async (req: Request) => {
   }
   const jwt = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!jwt) return json({ error: "Unauthorized" }, 401);
-  const userClient = createClient(PROJECT_URL, ANON_KEY, {
+  const scheduled = jwt === SERVICE_KEY;
+  const userClient = scheduled ? createClient(PROJECT_URL, SERVICE_KEY) : createClient(PROJECT_URL, ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
   });
-  const { data: identity, error: authError } = await userClient.auth.getUser(jwt);
-  if (authError || !identity.user) return json({ error: "Unauthorized" }, 401);
-  const { data: isAdmin, error: adminError } = await userClient.rpc("is_rocket_admin");
-  if (adminError || isAdmin !== true) return json({ error: "Forbidden" }, 403);
+  if (!scheduled) {
+    const { data: identity, error: authError } = await userClient.auth.getUser(jwt);
+    if (authError || !identity.user) return json({ error: "Unauthorized" }, 401);
+    const { data: isAdmin, error: adminError } = await userClient.rpc("is_rocket_admin");
+    if (adminError || isAdmin !== true) return json({ error: "Forbidden" }, 403);
+  }
   let queueId: string;
   try { queueId = (await req.json()).queue_id; } catch { return json({ error: "Invalid request" }, 400); }
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(queueId ?? "")) {
@@ -44,6 +47,7 @@ Deno.serve(async (req: Request) => {
     .select("paused,send_mode,production_authorized").eq("id", true).maybeSingle();
   if (controlError || !control) return json({ error: "Campaign control unavailable" }, 503);
   const production = control.send_mode === "production";
+  if (scheduled && !production) return json({ error: "Scheduled sending requires production mode" }, 403);
   if (production && (control.paused || !control.production_authorized)) {
     return json({ error: "Production campaign is paused or unauthorized" }, 403);
   }
