@@ -13,6 +13,7 @@ import OutreachUnsubscribe from "./OutreachUnsubscribe";
 const mocks = vi.hoisted(() => ({
   section: "home",
   denied: false,
+  actionError: "",
   requests: [] as { name: string; args: Record<string, unknown> }[],
   snapshot: {} as Record<string, unknown>,
   claims: [] as Record<string, unknown>[],
@@ -53,6 +54,11 @@ vi.mock("@/integrations/supabase/client", async () => {
                   headers: { "Content-Type": "application/json" },
                 },
               );
+            }
+            if (name === "rocket_admin_action" && mocks.actionError) {
+              return new Response(JSON.stringify({ message: mocks.actionError }), {
+                status: 400, headers: { "Content-Type": "application/json" },
+              });
             }
             const result =
               name === "rocket_admin_snapshot"
@@ -98,6 +104,7 @@ vi.mock("@/components/AdminMarketplaceOps", () => ({
 beforeEach(() => {
   mocks.section = "home";
   mocks.denied = false;
+  mocks.actionError = "";
   mocks.requests.length = 0;
   mocks.snapshot = { catalogue: { public_apps: 12 } };
   mocks.claims = [];
@@ -222,6 +229,7 @@ describe("admin Supabase client binding", () => {
       },
     }));
     expect(prompt).not.toHaveBeenCalled();
+    expect(await screen.findByRole("status")).toHaveProperty("textContent", "Claim approved.");
   });
   it("rejects a claim directly without a note prompt", async () => {
     mocks.section = "ops";
@@ -244,6 +252,18 @@ describe("admin Supabase client binding", () => {
     render(<Admin />);
     const approve = await screen.findByRole("button", { name: "Approve as claimed" });
     expect((approve as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("shows approval failures beside the affected claim", async () => {
+    mocks.section = "ops";
+    mocks.claims = [{ id: "fixture-claim", app_name: "OutageScope", status: "review", method: "manual_review", owner_conflict: false }];
+    mocks.actionError = "Another account already owns this app; ownership was not changed";
+    render(<Admin />);
+    fireEvent.click(await screen.findByRole("button", { name: "Approve as claimed" }));
+    await waitFor(() => expect(screen.getAllByRole("alert").some((alert) =>
+      alert.closest("article")?.id === "claim-fixture-claim" && alert.textContent === mocks.actionError,
+    )).toBe(true));
+    expect(screen.queryByText("Claim approved.")).toBeNull();
   });
 
 });

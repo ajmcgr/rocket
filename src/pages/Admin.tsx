@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import "./Admin.css";
+import { toast } from "@/components/ui/sonner";
 import AdminDeveloperTesting from "@/components/AdminDeveloperTesting";
 import AdminMarketplaceOps, { PickCollection } from "@/components/AdminMarketplaceOps";
 import AdminSponsorships from "@/components/AdminSponsorships";
@@ -71,6 +72,7 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [batchResult, setBatchResult] = useState("");
   const [busy, setBusy] = useState(false);
+  const [claimFeedback, setClaimFeedback] = useState<{ target: string; message: string; error: boolean } | null>(null);
   const refresh = useCallback(async () => {
     setError(""); setData(null); setInvestor(null); setToday([]); setInternalTests([]);
     const [result, batch, claims, tests, investorResult] = await Promise.all([
@@ -96,11 +98,25 @@ export default function Admin() {
   }, [data, claimId]);
   const act = async (action: string, target: string | null, reason: string | null = null, payload: Row = {}) => {
     setBusy(true); setError("");
+    const claimAction = ["approve_claim", "reject_claim", "request_claim_correction"].includes(action);
+    if (claimAction) setClaimFeedback(null);
     try {
       const result = await adminRpc("rocket_admin_action", { p_action: action, p_target: target, p_reason: reason, p_payload: payload });
       if (result.error) throw new Error(result.error.message);
       await refresh();
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
+      if (claimAction && target) {
+        const message = action === "approve_claim" ? "Claim approved." : action === "reject_claim" ? "Claim rejected." : "Correction requested.";
+        setClaimFeedback({ target, message, error: false });
+        toast.success(message);
+      }
+    } catch (cause) {
+      const message = (cause as Error).message;
+      setError(message);
+      if (claimAction && target) {
+        setClaimFeedback({ target, message, error: true });
+        toast.error(message);
+      }
+    } finally { setBusy(false); }
   };
   const sendInternalTest = async (queueId: string) => {
     setBusy(true); setError("");
@@ -169,6 +185,7 @@ export default function Admin() {
       <AdminMarketplaceOps />
       <Panel title={`Claims awaiting action · ${rows(data.claims).filter(row => row.status === "review").length} need review`}>
         <p className="rocket-admin-note">Approve or reject each request below. Approval marks an app as claimed, not domain verified, and never replaces an active owner.</p>
+        {claimFeedback && !claimFeedback.error && <p role="status" className="rocket-admin-note">{claimFeedback.message}</p>}
         {rows(data.claims).length ? <div className="rocket-admin-list">{rows(data.claims).map(row => <article key={String(row.id)} id={`claim-${row.id}`} className={row.id === claimId ? "rocket-admin-claim-selected" : undefined}>
           <strong>{String(row.app_name)} · {String(row.status)}</strong>
           <p><a href={/^https?:\/\//i.test(String(row.app_url)) ? String(row.app_url) : undefined} target="_blank" rel="noopener noreferrer">{String(row.app_url)}</a></p>
@@ -179,6 +196,7 @@ export default function Admin() {
           <p>Review note: {String(row.review_reason || "None")}</p>
           {rows(row.decisions).map((decision, index) => <p key={index}>Audit: {String(decision.action)} · {String(decision.admin_user_id)} · {when(decision.created_at)} · {String(decision.reason)}</p>)}
           {rows(row.emails).map((email,index) => <p key={index}>Email {String(email.kind)}: {email.sent_at ? `accepted by Resend ${when(email.sent_at)}` : email.last_error ? String(email.last_error) : "queued"} · attempts {String(email.attempts)}</p>)}
+          {claimFeedback && claimFeedback.target === row.id && claimFeedback.error && <p role="alert" className="rocket-admin-error">{claimFeedback.message}</p>}
           {["pending","review"].includes(String(row.status)) && <div className="rocket-admin-actions">
             <button disabled={busy || !!row.owner_conflict || !["manual_review","existing_relationship"].includes(String(row.method))} onClick={() => void act("approve_claim", String(row.id))}>Approve as claimed</button>
             <button disabled={busy} onClick={() => reasonAction("request_claim_correction",String(row.id),"What correction is required? (At least 10 characters.)")}>Request correction</button>
