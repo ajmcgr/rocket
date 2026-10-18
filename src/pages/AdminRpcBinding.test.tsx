@@ -203,29 +203,49 @@ describe("admin Supabase client binding", () => {
       ).toHaveLength(2),
     );
   });
-  it("approves a reviewed claim from inline evidence without opening a prompt", async () => {
+  it("approves a reviewed claim directly without requiring evidence or opening a prompt", async () => {
     mocks.section = "ops";
     mocks.claims = [{ id: "fixture-claim", app_name: "OutageScope", app_url: "https://outagescope.com", status: "review", method: "manual_review", owner_conflict: false }];
     const prompt = vi.spyOn(window, "prompt");
     render(<Admin />);
     const approve = await screen.findByRole("button", { name: "Approve as claimed" });
-    expect((approve as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: "Independent ownership evidence for OutageScope" }), {
-      target: { value: "Checked domain control and company relationship independently." },
-    });
     expect((approve as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.queryByRole("textbox", { name: /Independent ownership evidence/ })).toBeNull();
     fireEvent.click(approve);
     await waitFor(() => expect(mocks.requests).toContainEqual({
       name: "rocket_admin_action",
       args: {
         p_action: "approve_claim",
         p_target: "fixture-claim",
-        p_reason: "Checked domain control and company relationship independently.",
+        p_reason: null,
         p_payload: {},
       },
     }));
     expect(prompt).not.toHaveBeenCalled();
   });
+  it("rejects a claim directly without a note prompt", async () => {
+    mocks.section = "ops";
+    mocks.claims = [{ id: "fixture-claim", app_name: "OutageScope", status: "review", method: "manual_review", owner_conflict: false }];
+    const prompt = vi.spyOn(window, "prompt");
+    render(<Admin />);
+    fireEvent.click(await screen.findByRole("button", { name: "Reject" }));
+    await waitFor(() => expect(mocks.requests).toContainEqual({
+      name: "rocket_admin_action",
+      args: { p_action: "reject_claim", p_target: "fixture-claim", p_reason: null, p_payload: {} },
+    }));
+    expect(prompt).not.toHaveBeenCalled();
+  });
+  it.each([
+    { method: "manual_review", owner_conflict: true },
+    { method: "dns", owner_conflict: false },
+  ])("keeps approval blocked for conflicts or automatic verification methods: %o", async (claim) => {
+    mocks.section = "ops";
+    mocks.claims = [{ id: "fixture-claim", app_name: "OutageScope", status: "review", ...claim }];
+    render(<Admin />);
+    const approve = await screen.findByRole("button", { name: "Approve as claimed" });
+    expect((approve as HTMLButtonElement).disabled).toBe(true);
+  });
+
 });
 
 it("redeems a claim invitation using the bound client", async () => {
