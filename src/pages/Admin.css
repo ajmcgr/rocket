@@ -1,3 +1,22 @@
+/* Scope the admin palette so its custom components follow the selected theme. */
+.rocket-admin {
+  --text-primary: #171717;
+  --text-secondary: #666;
+  --surface: #fff;
+  --border-color: #ddd;
+  --muted-bg: #f5f5f5;
+  --rocket-blue: #167ac6;
+  color-scheme: light;
+}
+html.dark .rocket-admin {
+  --text-primary: #f5f5f5;
+  --text-secondary: #b8c0cc;
+  --surface: #171b21;
+  --border-color: #343c47;
+  --muted-bg: #232b35;
+  --rocket-blue: #7dcfff;
+  color-scheme: dark;
+}
 .rocket-admin{max-width:1400px;margin:auto;padding:40px 28px 90px;color:var(--text-primary,#171717)}
 .rocket-admin-heading{display:flex;justify-content:space-between;gap:24px;align-items:end}
 .rocket-admin-heading h1{font-size:clamp(2.3rem,4vw,3.5rem);font-weight:750;line-height:1.05;margin:5px 0 12px}
@@ -71,3 +90,15 @@
 .rocket-investor-details span{display:flex;justify-content:space-between;gap:12px}
 .rocket-investor-card .rocket-admin-muted{margin:16px 0 0}
 @media(max-width:700px){.rocket-investor-grid{grid-template-columns:1fr}}
+
+.rocket-admin-tabs a:hover { background: var(--muted-bg); }
+.rocket-admin :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--rocket-blue);
+  outline-offset: 3px;
+}
+html.dark .rocket-admin-error { color: #fecaca; background: #3b171c; }
+html.dark .rocket-admin-warning { color: #fca5a5 !important; }
+html.dark .rocket-admin-sponsored { color: #bae6fd; background: #18364c; }
+html.dark .rocket-investor-quality.quality-verified { color: #bbf7d0; background: #153525; }
+html.dark .rocket-investor-quality.quality-partial { color: #fde68a; background: #3a2c12; }
+html.dark .rocket-investor-quality.quality-unverified { color: #fecaca; background: #3b171c; }
