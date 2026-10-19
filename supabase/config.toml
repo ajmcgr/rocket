@@ -19,7 +19,7 @@ verify_jwt = false # User templates call Auth.getUser; queue dispatches use one-
 verify_jwt = false # Public image reads are restricted to existing public projections.
 
 [functions.rocket-founder-outreach-test]
-verify_jwt = true
+verify_jwt = false # Handler authenticates the exact server key or Auth.getUser plus is_rocket_admin.
 
 [functions.rocket-founder-resend-webhook]
 verify_jwt = false # Resend signature verification is performed on the raw body.

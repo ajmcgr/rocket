@@ -25,6 +25,16 @@ export async function sendFounderOutreach({ key, dryRun = true, request = fetch,
   const budget = Math.max(0, Math.min(10, control.daily_limit - attempts.length, control.hourly_limit - hourly));
   if (!Number.isFinite(budget)) throw new Error("Invalid campaign limits");
   if (!budget) return { accepted: 0, reason: "Rolling send limit reached", dryRun };
+  // Exercise the sender's authentication even in dry-run; an invalid queue ID
+  // returns before invitation creation, reservation or provider calls.
+  const probe = await request(origin + "/functions/v1/rocket-founder-outreach-test", {
+    method: "POST", headers, body: JSON.stringify({ queue_id: "auth-preflight" }),
+    signal: AbortSignal.timeout(60000),
+  });
+  const probeBody = await probe.json().catch(() => ({}));
+  if (probe.status !== 400 || probeBody.error !== "Invalid queue item") {
+    throw new Error(`Sender authentication preflight failed (${probe.status}); no invitations attempted`);
+  }
   const candidates = await api("/rest/v1/rpc/rocket_admin_outreach_first_batch", {});
   if (!Array.isArray(candidates)) throw new Error("Invalid outreach batch");
   const batch = candidates.slice(0, budget);
@@ -36,8 +46,9 @@ export async function sendFounderOutreach({ key, dryRun = true, request = fetch,
       const result = await api("/functions/v1/rocket-founder-outreach-test", { queue_id: candidate.id });
       if (result.ok !== true || result.test_only !== false) throw new Error("Unconfirmed production delivery");
       accepted++;
-    } catch {
-      throw new Error(`Outreach stopped after ${accepted} accepted invitation(s); check delivery records before retrying`);
+    } catch (error) {
+      const status = /request failed \(\d{3}\)/.exec(error.message)?.[0] || "delivery unconfirmed";
+      throw new Error(`Outreach stopped after ${accepted} accepted invitation(s): ${status}; check delivery records before retrying`);
     }
   }
   return { accepted, dryRun: false };

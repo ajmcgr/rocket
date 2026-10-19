@@ -15,7 +15,9 @@ function fixture({ campaign = control, attempts = [], failAt = 0 } = {}) {
     if (url.includes("rocket_outreach_control")) result = [campaign];
     else if (url.includes("send_attempts")) result = attempts;
     else if (url.includes("first_batch")) result = candidates;
-    else {
+    else if (JSON.parse(options.body).queue_id === "auth-preflight") {
+      return new Response(JSON.stringify({ error: "Invalid queue item" }), { status: 400 });
+    } else {
       sends.push(JSON.parse(options.body));
       if (sends.length === failAt) return new Response("failure", { status: 502 });
       result = { ok: true, test_only: false };
@@ -62,4 +64,20 @@ test("stops after an uncertain failure and never retries the recipient", async (
   const f = fixture({ failAt: 2 });
   await assert.rejects(sendFounderOutreach({ key, now, dryRun: false, request: f.request }), /stopped after 1 accepted/);
   assert.equal(f.sends.length, 2);
+});
+
+test("dry-run checks real sender authentication without sending", async () => {
+  const f = fixture();
+  await sendFounderOutreach({ key, now, request: f.request });
+  assert.equal(f.calls.filter((url) => url.includes("/functions/")).length, 1);
+  assert.equal(f.sends.length, 0);
+});
+test("authentication failure stops before selecting or sending recipients", async () => {
+  const f = fixture();
+  const request = (url, options) => url.includes("/functions/")
+    ? Promise.resolve(new Response(JSON.stringify({ message: "Invalid JWT" }), { status: 401 }))
+    : f.request(url, options);
+  await assert.rejects(sendFounderOutreach({ key, now, dryRun: false, request }), /authentication preflight failed \(401\)/);
+  assert.equal(f.sends.length, 0);
+  assert.equal(f.calls.some((url) => url.includes("first_batch")), false);
 });
