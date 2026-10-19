@@ -27,10 +27,14 @@ Deno.serve(async (req: Request) => {
   }
   const jwt = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!jwt) return json({ error: "Unauthorized" }, 401);
-  const scheduled = jwt === SERVICE_KEY;
-  const userClient = scheduled ? createClient(PROJECT_URL, SERVICE_KEY) : createClient(PROJECT_URL, ANON_KEY, {
+  const userClient = createClient(PROJECT_URL, ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
   });
+  // The scheduler may hold a valid server credential that differs from this
+  // runtime's key. Let PostgREST verify it and its service-only RPC permission;
+  // never trust decoded JWT claims or require byte equality with an env value.
+  const { data: isScheduler, error: schedulerError } = await userClient.rpc("rocket_outreach_is_scheduler");
+  const scheduled = !schedulerError && isScheduler === true;
   if (!scheduled) {
     const { data: identity, error: authError } = await userClient.auth.getUser(jwt);
     if (authError || !identity.user) return json({ error: "Unauthorized" }, 401);
