@@ -16,9 +16,13 @@ function harness({ metricsError = false } = {}) {
     if (name === "rocket_sponsorship_metrics_for_owner")
       return { data: args.p_user_id === buyerId ? [{ sponsorship_id: bookingId, views: 12, clicks: 3 }] : [],
         error: metricsError ? { message: "Metrics unavailable" } : null };
-    if (name === "active_rocket_sponsorships")
-      return { data: [{ sponsorship_id: bookingId, sponsorship_type: "featured_app",
-        app_id: appId, category: null }], error: null };
+    if (name === "rocket_rotating_ad_placements")
+      return { data: { occupied_homepage_slots: ["homepage_featured_1"], placements: [{
+        sponsorship_id: bookingId, sponsorship_type: "featured_app", app_id: appId,
+        homepage_slot_id: "homepage_featured_1", category: null,
+        destination_url: "https://launch.example/pricing",
+        app: { id: appId, name: "Launch", slug: "launch", tagline: "Discover apps", logo_url: null },
+      }] }, error: null };
     return { data: null, error: { message: "Unexpected RPC" } };
   });
   const from = (table: string) => {
@@ -68,8 +72,9 @@ function harness({ metricsError = false } = {}) {
 
 describe("paid placement analytics", () => {
   it("returns only the active sponsored app and its selected click-through destination", async () => {
-    const { request } = harness();
+    const { request, rpc } = harness();
     const response = await request({ action: "active" });
+    expect(rpc).toHaveBeenCalledWith("rocket_rotating_ad_placements", { p_category: null });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.occupied_homepage_slots).toEqual(["homepage_featured_1"]);

@@ -598,9 +598,9 @@ Create subscriptions and credits are separate from Developer membership. Adverti
       section(
         "placements",
         "Choose a placement",
-        `Open [Advertise](/advertise) for current inventory and eligibility. Featured App costs $49 for 7 days. Category Sponsor costs $299 for 30 days. Both are one-time purchases, subject to available placements.
+        `Open [Advertise](/advertise) for current inventory and eligibility. Featured App costs $49 for 7 days. Category Sponsor costs $299 for 30 days. Both are one-time purchases. New bookings use shared rotation with no cap on the number of advertisers.
 
-Sponsored placements are labelled. They do not buy Rocket Picks, positive reviews, a verified metric or a position in organic rankings. Availability can change while another advertiser completes a booking.`,
+Sponsored placements are labelled. They do not buy Rocket Picks, positive reviews, a verified metric or a position in organic rankings. Featured ads rotate through up to eight homepage positions and eligible public-page placements. Category sponsors rotate within their selected category. Each active shared campaign has an equal chance of selection; exposure depends on traffic and the number of advertisers. There is no guaranteed number of impressions, clicks or sales. Existing reserved bookings retain their original terms until they end.`,
       ),
       section(
         "booking",

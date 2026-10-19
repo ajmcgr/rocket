@@ -240,29 +240,9 @@ Deno.serve(async (req) => {
       });
     }
     if (body.action === "inventory") {
-      // Expired Checkout sessions are reconciled before reporting availability.
-      const expired = await admin
-        .from("rocket_sponsorships")
-        .select("id")
-        .eq("sponsorship_type", "featured_app")
-        .eq("stripe_livemode", true)
-        .eq("status", "pending")
-        .lte("hold_expires_at", new Date().toISOString())
-        .limit(1);
-      if (expired.error) throw expired.error;
-      if (expired.data?.length)
-        await releaseExpiredHolds(
-          await platformStripe(false),
-          "featured_app",
-          true,
-          null,
-        );
-      const { data, error } = await admin.rpc(
-        "rocket_featured_available_slots",
-        { p_livemode: true },
-      );
-      if (error) throw error;
-      return reply(req, { featured_available: data, featured_capacity: 8 });
+      // Unlimited buyers share eight display positions. Keep numeric fields for
+      // older clients during rollout; these describe display positions, not a sales cap.
+      return reply(req, { unlimited: true, featured_available: 8, featured_capacity: 8 });
     }
     if (body.action === "active") {
       if (
@@ -276,85 +256,9 @@ Deno.serve(async (req) => {
         typeof body.category === "string" && body.category.length <= 120
           ? body.category
           : null;
-      const { data: slots, error } = await admin.rpc(
-        "active_rocket_sponsorships",
-        { p_category: category },
-      );
+      const { data, error } = await admin.rpc("rocket_rotating_ad_placements", { p_category: category });
       if (error) throw error;
-      const occupied =
-        category === null
-          ? await admin
-              .from("rocket_sponsorships")
-              .select("homepage_slot_id")
-              .eq("sponsorship_type", "featured_app")
-              .eq("stripe_livemode", true)
-              .in("status", ["pending", "scheduled", "active"])
-              .lt(
-                "scheduled_start_at",
-                new Date(Date.now() + 7 * 86400_000).toISOString(),
-              )
-              .gt("scheduled_end_at", new Date().toISOString())
-          : { data: [], error: null };
-      if (occupied.error) throw occupied.error;
-      const appIds = [
-        ...new Set((slots || []).map((row: { app_id: string }) => row.app_id)),
-      ];
-      const sponsorshipIds = (slots || []).map(
-        (row: { sponsorship_id: string }) => row.sponsorship_id,
-      );
-      const destinations = sponsorshipIds.length
-        ? await admin
-            .from("rocket_sponsorships")
-            .select("id,destination_url,homepage_slot_id")
-            .in("id", sponsorshipIds)
-        : { data: [], error: null };
-      if (destinations.error) throw destinations.error;
-      const apps = appIds.length
-        ? await admin
-            .from("public_discoverable_apps")
-            .select("id,name,slug,tagline,logo_url,categories")
-            .in("id", appIds)
-        : { data: [], error: null };
-      if (apps.error) throw apps.error;
-      const byId = new Map((apps.data || []).map((app) => [app.id, app]));
-      const destinationById = new Map(
-        (destinations.data || []).map((row) => [row.id, row]),
-      );
-      return reply(req, {
-        occupied_homepage_slots: [
-          ...new Set(
-            (occupied.data || [])
-              .map((row) => row.homepage_slot_id)
-              .filter(
-                (slot): slot is string =>
-                  typeof slot === "string" &&
-                  /^homepage_featured_[1-8]$/.test(slot),
-              ),
-          ),
-        ],
-        placements: (slots || []).flatMap(
-          (slot: {
-            sponsorship_id: string;
-            sponsorship_type: string;
-            app_id: string;
-            category: string | null;
-          }) =>
-            byId.has(slot.app_id)
-              ? [
-                  {
-                    ...slot,
-                    destination_url:
-                      destinationById.get(slot.sponsorship_id)
-                        ?.destination_url || null,
-                    homepage_slot_id:
-                      destinationById.get(slot.sponsorship_id)
-                        ?.homepage_slot_id || null,
-                    app: byId.get(slot.app_id),
-                  },
-                ]
-              : [],
-        ),
-      });
+      return reply(req, data);
     }
     if (body.action === "metric") {
       // Public placement metrics are not buyer management actions. Keep their
