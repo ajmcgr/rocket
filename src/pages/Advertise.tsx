@@ -20,13 +20,13 @@ type ReservedCheckout = { url: string; sponsorship_id: string; homepage_slot_id:
 const offers = {
   featured_app: {
     title: "Featured App", price: "$49", duration: "7 days", button: "Feature an app",
-    description: "One of eight homepage Featured App positions, plus placements across eligible public Rocket pages for 7 days.",
-    details: "Slots are assigned automatically. Sponsorships are clearly labelled and do not affect organic rankings or Rocket Picks. Traffic and sales are not guaranteed.",
+    description: "Rotate your app across homepage Featured App positions and eligible public Rocket pages for 7 days.",
+    details: "Placement is shared with other advertisers, with an equal chance of selection on each rotation. Sponsorships are clearly labelled and do not affect organic rankings or Rocket Picks. Traffic and sales are not guaranteed.",
   },
   category_sponsor: {
     title: "Category Sponsor", price: "$299", duration: "30 days", button: "Sponsor a category",
     description: "Sponsor a Rocket category for 30 days and reach people actively exploring apps in your space.",
-    details: "Clearly labelled sponsorship in one category. Does not affect category rankings. Traffic and sales are not guaranteed.",
+    details: "Shared rotation with other sponsors in your chosen category, with an equal chance of selection. Does not affect category rankings. Traffic and sales are not guaranteed.",
   },
 } as const;
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, {
@@ -49,8 +49,6 @@ export default function Advertise() {
   const [apps, setApps] = useState<OwnedApp[]>([]);
   const [history, setHistory] = useState<Sponsorship[]>([]);
   const [ready, setReady] = useState<Record<AdType, boolean>>({ featured_app: false, category_sponsor: false });
-  const [availableSlots, setAvailableSlots] = useState<number | null>(null);
-  const [inventoryFailed, setInventoryFailed] = useState(false);
   const [type, setType] = useState<AdType | null>(null);
   const [appId, setAppId] = useState("");
   const [category, setCategory] = useState("");
@@ -75,11 +73,7 @@ export default function Advertise() {
             [product.type, product.ready])) as Record<AdType, boolean>);
         }
       });
-    void supabase.functions.invoke("rocket-advertising", { body: { action: "inventory" } })
-      .then(({ data, error }) => {
-        if (!error && Number.isInteger(data?.featured_available)) setAvailableSlots(data.featured_available);
-        else setInventoryFailed(true);
-      }).catch(() => setInventoryFailed(true));
+
   }, []);
   useEffect(() => {
     if (!user) { setApps([]); setHistory([]); return; }
@@ -144,14 +138,9 @@ export default function Advertise() {
           <p className="mt-2 text-4xl font-bold">{offers[key].price}<span className="ml-2 text-base font-medium text-neutral-500">USD</span></p>
           <p className="mt-5 text-neutral-700">{offers[key].description}</p>
           <p className="mt-3 text-sm leading-relaxed text-neutral-500">{offers[key].details}</p>
-          {key === "featured_app" && <p className="mt-3 text-sm font-semibold text-neutral-700">
-            {inventoryFailed ? "Live availability is temporarily unavailable"
-              : availableSlots === null ? "Checking live availability…" : `${availableSlots} of 8 homepage slots available`}
-          </p>}
           {user ? <button className="mt-7 min-h-11 rounded-xl bg-[#167ac6] px-5 font-semibold text-white hover:bg-[#1268aa] disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => selectOffer(key)} disabled={!ready[key] || (key === "featured_app" && availableSlots === null || availableSlots === 0)}>
-              {key === "featured_app" && availableSlots === 0 ? "Featured App is currently sold out"
-                : ready[key] ? offers[key].button : "Booking unavailable"}</button>
+            onClick={() => selectOffer(key)} disabled={!ready[key]}>
+              {ready[key] ? offers[key].button : "Booking unavailable"}</button>
             : <Link to="/login" className="mt-7 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 font-semibold text-white hover:bg-[#1268aa]">Sign in to {key === "featured_app" ? "feature an app" : "sponsor a category"}</Link>}
         </article>)}
       </div>
@@ -187,7 +176,7 @@ export default function Advertise() {
         </fieldset>}
         {quote && !quote.available && <p className="mt-5 text-amber-800">{quote.reason || "This slot is temporarily unavailable."}</p>}
         {quote?.available && quote.start && quote.end && <div className="mt-6 rounded-xl bg-sky-50 p-5 text-sm text-neutral-800">
-          <p><strong>Placement:</strong> {type === "featured_app" ? "One of eight homepage positions and eligible public pages" : `Sponsored app in ${category}`}</p>
+          <p><strong>Placement:</strong> {type === "featured_app" ? "Shared rotation on the homepage and eligible public pages" : `Shared sponsor rotation in ${category}`}</p>
           <p className="mt-1"><strong>App:</strong> {selectedApp?.name}</p>
           <p className="mt-1"><strong>Ad destination:</strong> {destinationMode === "website" ? websiteUrl || "Enter a website URL" : "Rocket app page"}</p>
           <p className="mt-1"><strong>Starts:</strong> {formatDate(quote.start)}</p>
@@ -198,7 +187,7 @@ export default function Advertise() {
         </div>}
         {reservedCheckout && <div className="mt-5 rounded-xl border border-sky-200 bg-white p-5 text-sm">
           <p className="font-semibold">Final booking review</p>
-          <p className="mt-2">{selectedApp?.name} · {type === "featured_app" ? "Homepage Featured App and eligible public pages" : `Sponsored app in ${category}`}</p>
+          <p className="mt-2">{selectedApp?.name} · {type === "featured_app" ? "Shared homepage Featured App rotation and eligible public pages" : `Shared sponsor rotation in ${category}`}</p>
           <p className="mt-1">Ad destination: {reservedCheckout.destination}</p>
           <p className="mt-1">{formatDate(reservedCheckout.start)} – {formatDate(reservedCheckout.end)}</p>
           <p className="mt-1">{offers[type].price} USD, one-time. Stripe checkout expires {formatDate(reservedCheckout.checkout_expires_at)}.</p>
