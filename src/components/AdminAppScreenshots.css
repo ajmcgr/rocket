@@ -89,7 +89,7 @@
 }
 .rocket-admin-screenshot-export a {
   width: fit-content;
-  color: #075985;
+  color: var(--rocket-blue, #075985);
   font-weight: 700;
   text-decoration: underline;
 }
