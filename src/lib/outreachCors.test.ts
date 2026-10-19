@@ -52,15 +52,15 @@ describe("outreach browser delivery connection", () => {
 });
 
 
-describe("outreach handler authentication without the legacy gateway check", () => {
+describe("outreach handler scheduler and admin authentication", () => {
   const probe = (token?: string) => new Request("https://example.com", {
     method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: JSON.stringify({ queue_id: "auth-preflight" }),
   });
-  it("accepts only the exact configured server credential before the no-send probe", async () => {
+  it("accepts a server credential validated by the service-only database probe", async () => {
     const h = load();
-    h.createClient.mockReturnValue({});
-    const response = await h.handler(probe("mock-only"));
+    h.createClient.mockReturnValue({ rpc: vi.fn().mockResolvedValue({ data: true, error: null }) });
+    const response = await h.handler(probe("valid-rotated-server-key"));
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Invalid queue item" });
     expect(h.fetch).not.toHaveBeenCalled();
@@ -69,7 +69,7 @@ describe("outreach handler authentication without the legacy gateway check", () 
     for (const token of ["invalid", "eyJhbGciOiJub25lIn0.eyJyb2xlIjoic2VydmljZV9yb2xlIn0."]) {
       const h = load();
       const getUser = vi.fn().mockResolvedValue({ data: { user: null }, error: new Error("Invalid JWT") });
-      h.createClient.mockReturnValue({ auth: { getUser } });
+      h.createClient.mockReturnValue({ rpc: vi.fn().mockResolvedValue({ data: null, error: new Error("Permission denied") }), auth: { getUser } });
       expect((await h.handler(probe(token))).status).toBe(401);
       expect(getUser).toHaveBeenCalledWith(token);
       expect(h.fetch).not.toHaveBeenCalled();
@@ -78,10 +78,12 @@ describe("outreach handler authentication without the legacy gateway check", () 
   it("requires both an authenticated user and admin authorization for browser sends", async () => {
     for (const isAdmin of [false, true]) {
       const h = load();
-      const rpc = vi.fn().mockResolvedValue({ data: isAdmin, error: null });
+      const rpc = vi.fn().mockImplementation(async (name) => name === "rocket_outreach_is_scheduler"
+        ? { data: null, error: new Error("Permission denied") }
+        : { data: isAdmin, error: null });
       h.createClient.mockReturnValue({ auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "user" } }, error: null }) }, rpc });
       expect((await h.handler(probe("user-jwt"))).status).toBe(isAdmin ? 400 : 403);
-      expect(rpc).toHaveBeenCalledExactlyOnceWith("is_rocket_admin");
+      expect(rpc).toHaveBeenCalledWith("is_rocket_admin");
       expect(h.fetch).not.toHaveBeenCalled();
     }
   });
