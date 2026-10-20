@@ -69,7 +69,9 @@ describe("Sidebar destinations", () => {
         );
         const appsHeading = await screen.findByText("Apps");
         const sidebar = within(appsHeading.closest("aside")!);
-        expect(sidebar.getByRole("link", { name: "Docs" }).getAttribute("href")).toBe("/docs");
+        expect(sidebar.queryByRole("link", { name: "Docs" })).toBeNull();
+        expect(sidebar.queryByText("Resources")).toBeNull();
+        expect(sidebar.queryByRole("link", { name: "My Profile" })).toBeNull();
         expect(sidebar.getByText("Grow")).toBeTruthy();
         const discoveryLinks = sidebar.getAllByRole("link").slice(0, 6).map((link) => link.textContent);
         expect(discoveryLinks).toEqual(["Discover", "Rising", "New", "Rankings", "Categories", "Collections"]);
