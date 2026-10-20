@@ -426,6 +426,22 @@ const Pricing = () => {
         </div>
       </section>
 
+      {/* Community */}
+      <section className="border-t border-neutral-200/60">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="text-center">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Community</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Meet other vibe coders and share what you're building.</p>
+          </div>
+          <div className="mx-auto mt-10 flex max-w-xl flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
+            <h3 className="text-2xl font-semibold tracking-tight">Discord</h3>
+            <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
+            <p className="mt-4 flex-1 text-neutral-600">Join the Rocket community, ask questions, and connect with other builders.</p>
+            <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noopener noreferrer" className={`${pricingCtaClass} mt-7`}>Join Discord ↗</a>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="border-t border-neutral-200/60 bg-neutral-50/60">
         <div className="mx-auto max-w-3xl px-6 py-20">
@@ -459,20 +475,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      <section className="border-t border-neutral-200/60">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Community</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-neutral-600">Meet other vibe coders and share what you're building.</p>
-          </div>
-          <div className="mx-auto mt-10 flex max-w-xl flex-col rounded-2xl border border-neutral-200 bg-white p-7 sm:p-8">
-            <h3 className="text-2xl font-semibold tracking-tight">Discord</h3>
-            <p className="mt-4 text-5xl font-semibold tracking-tight">Free</p>
-            <p className="mt-4 flex-1 text-neutral-600">Join the Rocket community, ask questions, and connect with other builders.</p>
-            <a href="https://discord.gg/aSkXPHhTjJ" target="_blank" rel="noopener noreferrer" className={`${pricingCtaClass} mt-7`}>Join Discord ↗</a>
-          </div>
-        </div>
-      </section>
+
 
       </main>
 
