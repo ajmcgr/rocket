@@ -16,7 +16,7 @@ export default function CollectionCard({
     <article className="relative min-w-0">
       <Link
         to={collectionPath(collection, personal)}
-        className={`${personal ? "pr-20" : ""} block min-w-0 rounded-3xl border border-neutral-200 bg-white p-6 transition hover:border-[#469DDA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#469DDA] dark:border-neutral-700 dark:bg-neutral-900`}
+        className={`${personal ? "pr-20" : ""} block min-w-0 rounded-3xl border border-neutral-200 bg-white p-6 transition hover:border-[#469DDA] hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#469DDA] dark:border-neutral-700 dark:bg-neutral-900`}
       >
         <div className="mb-5 flex min-h-12 flex-wrap gap-2" aria-hidden="true">
           {collection.logos?.map((logo, index) => (
