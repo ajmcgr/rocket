@@ -176,7 +176,7 @@ export function EditorialAppCard({
   priority = true,
 }: BaseProps & SaveProps & { priority?: boolean }) {
   return (
-    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-sky-300 hover:shadow-sm">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-sky-300 hover:bg-neutral-50 hover:shadow-sm">
       <Link
         to={`/apps/${app.slug || app.id}`}
         aria-label={`View ${app.name}`}
@@ -357,7 +357,7 @@ export function RisingAppCard({
   onSave,
 }: BaseProps & SaveProps & { rank: number }) {
   return (
-    <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-sm">
+    <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-neutral-50 hover:shadow-sm">
       <Link
         to={`/apps/${app.slug || app.id}`}
         className="focus-visible:outline-2 focus-visible:outline-[#167ac6]"
@@ -394,7 +394,7 @@ export function MarketplaceListRow({
   metadata,
 }: BaseProps & SaveProps) {
   return (
-    <article className="flex min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3">
+    <article className="flex min-w-0 items-center gap-3 border-b border-neutral-200/80 py-3 transition hover:bg-neutral-50">
       <div className="min-w-0 flex-1">
         <Link
           to={`/apps/${app.slug || app.id}`}
