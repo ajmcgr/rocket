@@ -641,14 +641,11 @@ html.dark a.text-sky-800,
 html.dark a.text-sky-700 {
   color: #dcefff !important;
 }
-/* Keep sponsored controls and ranked rows legible on dark surfaces when hovered. */
+/* Keep sponsored controls legible on dark surfaces when hovered. */
 html.dark .rocket-sponsored-label,
 html.dark .rocket-sponsored-action:hover {
   background-color: #18364c !important;
   color: #dcefff !important;
-}
-html.dark .rocket-ranked-app-row:hover {
-  background-color: #1b222b !important;
 }
 html.dark footer a:not([class*="bg-"]) {
   color: #e5e9ed !important;
