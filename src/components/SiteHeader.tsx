@@ -24,9 +24,7 @@ import {
   Send,
   MessageCircle,
   CreditCard,
-  UserRound,
   Share2,
-  BookOpen,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "./Logo";
@@ -144,14 +142,7 @@ export default function SiteHeader({
           ...section,
           items: section.items.filter((item) => item.label === "Submit my app"),
         };
-      return {
-        ...section,
-        items: section.items.flatMap((item) =>
-          item.label === "Saved"
-            ? [item, { label: "My Profile", to: profileHref, icon: UserRound }]
-            : [item],
-        ),
-      };
+      return section;
     });
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
@@ -308,23 +299,6 @@ export default function SiteHeader({
                 />
                 {!sidebarCompact && <span>Launch</span>}
               </a>
-            </div>
-            <div>
-              {sidebarCompact ? (
-                <div
-                  className="mx-2 mb-2 border-t border-neutral-200"
-                  aria-hidden="true"
-                />
-              ) : (
-                <p className="mb-1 px-3 text-[11px] font-semibold text-neutral-500">
-                  Resources
-                </p>
-              )}
-              <div className="space-y-0.5">
-                {[
-                  { label: "Docs", to: "/docs", icon: BookOpen },
-                ].map(navItem)}
-              </div>
             </div>
             <div>
               {sidebarCompact ? (
