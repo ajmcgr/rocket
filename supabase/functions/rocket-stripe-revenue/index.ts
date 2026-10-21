@@ -2,7 +2,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 import { calculateSubscriptionMrr, MRR_CALCULATION_VERSION, type MappedPrice,
   type RevenueSubscription, type RevenueItem } from "../_shared/stripeRevenueMrr.ts";
 import { revenueMode, revenueOAuthConfig, validateRevenueTokens, revenueInstallationMode,
-  createRevenueOAuthState, revenueStateMode, revenueAuthorizationUrl } from "../_shared/stripeRevenueOAuth.ts";
+  createRevenueOAuthState, revenueStateMode, revenueAuthorizationUrl, revenueReviewAuthorized,
+  verifyRevenuePublisher, validateRevenueSourceAccount, type RevenueAccess } from "../_shared/stripeRevenueOAuth.ts";
 
 // This function never uses Rocket billing or Rocket Developer payment credentials.
 // A separate Stripe App developer account must own the OAuth installation.
@@ -16,7 +17,10 @@ const revenueEnv = (name: string) => Deno.env.get(name);
 const pilotAppIds = new Set((Deno.env.get("STRIPE_REVENUE_PILOT_APP_IDS") || "")
   .split(",").map((id) => id.trim())
   .filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
-const pilotEnabled = (appId: string) => pilotAppIds.has(appId);
+const pilotEnabled = (appId: string, userId: string) => pilotAppIds.has(appId)
+  || revenueReviewAuthorized(revenueEnv, { appId, userId });
+const reviewPrivateOnly = (access: RevenueAccess) => revenueEnv("STRIPE_REVENUE_LIVE_ENABLED") !== "true"
+  && revenueReviewAuthorized(revenueEnv, access);
 const redirectUri = `${supabaseUrl}/functions/v1/rocket-stripe-revenue`;
 const cors = { "Access-Control-Allow-Origin": frontend,
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
@@ -30,11 +34,18 @@ const b64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/
 const unb64 = (value: string) => Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")),
   (char) => char.charCodeAt(0));
 async function sha256(value: string) { return b64(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)))); }
-function configuredOAuthUrl(mode: "test" | "live" = "live") {
-  return revenueOAuthConfig(revenueEnv, mode).url;
+let publisherVerifiedUntil = 0;
+async function configuredOAuthUrl(mode: "test" | "live", access: RevenueAccess) {
+  const config = revenueOAuthConfig(revenueEnv, mode, access);
+  if (mode === "live" && publisherVerifiedUntil < Date.now()) {
+    await verifyRevenuePublisher(config.apiKey);
+    publisherVerifiedUntil = Date.now() + 5 * 60_000;
+  }
+  return config.url;
 }
-async function connectAvailable(mode: "test" | "live") {
-  try { configuredOAuthUrl(mode); await encryptionKey(); return true; }
+async function connectAvailable(mode: "test" | "live", access: RevenueAccess) {
+  if (mode === "test" && !pilotAppIds.has(access.appId)) return false;
+  try { await configuredOAuthUrl(mode, access); await encryptionKey(); return true; }
   catch { return false; }
 }
 async function encryptionKey() {
@@ -89,25 +100,27 @@ async function boundConnection(appId: string, userId: string) {
     throw new Error("Stripe revenue connection unavailable");
   return { linked, row };
 }
-async function tokenExchange(body: URLSearchParams, livemode: boolean) {
-  const { apiKey } = revenueOAuthConfig(revenueEnv, livemode ? "live" : "test");
+async function tokenExchange(body: URLSearchParams, livemode: boolean, access: RevenueAccess) {
+  await configuredOAuthUrl(livemode ? "live" : "test", access);
+  const { apiKey } = revenueOAuthConfig(revenueEnv, livemode ? "live" : "test", access);
   const response = await fetch("https://api.stripe.com/v1/oauth/token", { method: "POST",
     headers: { Authorization: `Basic ${btoa(`${apiKey}:`)}`, "Content-Type": "application/x-www-form-urlencoded" },
     body, signal: AbortSignal.timeout(15_000) });
   if (!response.ok) throw new Error("Stripe authorization failed");
   return await response.json() as Record<string, unknown>;
 }
-async function accessToken(row: Record<string, unknown>) {
+async function accessToken(row: Record<string, unknown>, caller: RevenueAccess) {
   if (typeof row.livemode !== "boolean") throw new Error("Stripe account mode is invalid");
   // Enforce the live gate even when a cached access token has not expired.
-  revenueOAuthConfig(revenueEnv, row.livemode ? "live" : "test");
+  await configuredOAuthUrl(row.livemode ? "live" : "test", caller);
+  validateRevenueSourceAccount(row.external_account_id);
   if (typeof row.access_token_expires_at === "string"
     && Date.parse(row.access_token_expires_at) > Date.now() + 120_000) {
     return await decrypt(row.access_token_ciphertext, row.access_token_iv);
   }
   const refresh = await decrypt(row.refresh_token_ciphertext, row.refresh_token_iv);
   let tokens: Record<string, unknown>;
-  try { tokens = await tokenExchange(new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }), row.livemode); }
+  try { tokens = await tokenExchange(new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }), row.livemode, caller); }
   catch (error) {
     // Another invocation may already have rotated the refresh token.
     const fresh = await connection(String(row.id));
@@ -198,7 +211,7 @@ async function sync(appId: string, userId: string) {
   const now = new Date().toISOString();
   await service.from("app_revenue_connections").update({ last_attempted_sync: now }).eq("id", row.id);
   try {
-    const token = await accessToken(row);
+    const token = await accessToken(row, { appId, userId });
     const mappings = mapped.data.map((item) => ({ price_id: item.stripe_price_id,
       product_id: item.stripe_product_id, currency: item.currency }));
     const subscriptions = await mappedSubscriptions(mappings, token, row.livemode);
@@ -239,12 +252,15 @@ async function callback(request: Request) {
   const claimed = await service.rpc("consume_app_revenue_oauth_state", { p_state_hash: await sha256(state) });
   const row = claimed.data?.[0];
   if (claimed.error || !row) return new Response("Connection request expired or already used", { status: 400 });
-  if (!pilotEnabled(row.app_id)) return new Response("Stripe revenue pilot is unavailable", { status: 503 });
+  if (!pilotEnabled(row.app_id, row.user_id)) return new Response("Stripe revenue pilot is unavailable", { status: 503 });
   try {
     await ownedApp(row.app_id, row.user_id);
     const mode = revenueStateMode(state, revenueMode(revenueEnv));
-    const tokens = await tokenExchange(new URLSearchParams({ code, grant_type: "authorization_code" }), mode === "live");
+    if (mode === "test" && !pilotAppIds.has(row.app_id)) throw new Error("Stripe test pilot is unavailable");
+    const tokens = await tokenExchange(new URLSearchParams({ code, grant_type: "authorization_code" }), mode === "live",
+      { appId: row.app_id, userId: row.user_id });
     validateRevenueTokens(tokens, mode);
+    validateRevenueSourceAccount(tokens.stripe_user_id);
     const refresh = await encrypt(tokens.refresh_token as string);
     const access = await encrypt(tokens.access_token as string);
     const stored = await service.from("app_revenue_connections").upsert({
@@ -271,10 +287,24 @@ async function handle(request: Request) {
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return fail("Invalid request"); }
   const userId = await currentUser(request);
+  if (body.action === "installation_apps") {
+    const owners = await service.from("app_owners").select("app_id")
+      .eq("user_id", userId).eq("verification_level", "domain_verified").is("revoked_at", null);
+    if (owners.error) throw owners.error;
+    const ids = (owners.data || []).map((owner) => owner.app_id).filter((appId) =>
+      pilotEnabled(appId, userId) && (revenueEnv("STRIPE_REVENUE_LIVE_ENABLED") === "true"
+        || revenueReviewAuthorized(revenueEnv, { appId, userId })));
+    if (!ids.length) return json({ apps: [] });
+    const apps = await service.from("public_apps").select("id,name,logo_url").in("id", ids);
+    if (apps.error) throw apps.error;
+    return json({ apps: (apps.data || []).map((app) => ({ app_id: app.id, owned: true,
+      owner_verification_level: "domain_verified", app: { name: app.name, logo_url: app.logo_url } })) });
+  }
   if (!uuid(body.app_id)) return fail("Invalid app");
   const app = await ownedApp(body.app_id, userId);
+  const access = { appId: app.id, userId };
   if (body.action === "status") {
-    if (!pilotEnabled(app.id)) return json({ connect_available: false, connection: null,
+    if (!pilotEnabled(app.id, userId)) return json({ connect_available: false, connection: null,
       mapping_version: 0, visibility: "private", mappings: [], latest: [] });
     const linked = await binding(app.id);
     const row = linked ? await connection(linked.connection_id) : null;
@@ -288,20 +318,22 @@ async function handle(request: Request) {
     });
     if (points.error) throw points.error;
     const latest = points.data || [];
-    return json({ connect_available: await connectAvailable(revenueInstallationMode(body.installation)),
+    return json({ connect_available: await connectAvailable(revenueInstallationMode(body.installation), access),
+      private_only: reviewPrivateOnly(access),
       connection: row ? { status: row.status, external_account_id: row.external_account_id,
       livemode: row.livemode, last_attempted_sync: row.last_attempted_sync,
       last_successful_sync: row.last_successful_sync, last_error: row.last_error } : null,
     mapping_version: linked?.mapping_version ?? 0, visibility: linked?.visibility ?? "private",
     mappings: mappings.data || [], latest });
   }
-  if (!pilotEnabled(app.id)) return fail("Stripe revenue verification is coming soon", 503);
+  if (!pilotEnabled(app.id, userId)) return fail("Stripe revenue verification is coming soon", 503);
   if (body.action === "start") {
     const mode = revenueInstallationMode(body.installation);
-    configuredOAuthUrl(mode);
+    if (mode === "test" && !pilotAppIds.has(app.id)) return fail("Stripe test pilot is unavailable", 503);
+    await configuredOAuthUrl(mode, access);
     await encryptionKey();
     const state = createRevenueOAuthState(mode);
-    const url = revenueAuthorizationUrl(revenueEnv, mode, state, redirectUri);
+    const url = revenueAuthorizationUrl(revenueEnv, mode, state, redirectUri, access);
     const saved = await service.from("app_revenue_oauth_states").insert({
       state_hash: await sha256(state), app_id: app.id, user_id: userId,
       expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
@@ -311,7 +343,7 @@ async function handle(request: Request) {
   }
   const { linked, row } = await boundConnection(app.id, userId);
   if (body.action === "catalog") {
-    const token = await accessToken(row);
+    const token = await accessToken(row, access);
     const prices = await stripeList("/v1/prices?type=recurring&expand[]=data.product", token, 2000);
     return json({ prices: prices.filter((price) => price.active && price.recurring
       && price.billing_scheme === "per_unit" && price.transform_quantity == null
@@ -332,7 +364,7 @@ async function handle(request: Request) {
     if (!Array.isArray(body.price_ids) || body.price_ids.length > 100
       || !body.price_ids.every((id) => typeof id === "string" && /^price_[A-Za-z0-9]+$/.test(id))
       || new Set(body.price_ids).size !== body.price_ids.length) return fail("Invalid Stripe prices");
-    const token = await accessToken(row);
+    const token = await accessToken(row, access);
     const selected: Array<{ price_id: string; product_id: string; currency: string }> = [];
     for (const id of body.price_ids as string[]) {
       const price = await stripeGet(`/v1/prices/${encodeURIComponent(id)}`, token);
@@ -359,6 +391,8 @@ async function handle(request: Request) {
   }
   if (body.action === "sync") return json({ sync: await sync(app.id, userId) });
   if (body.action === "set_visibility") {
+    if (reviewPrivateOnly(access) && body.visibility !== "private")
+      return fail("This connection must remain private during review", 403);
     if (!["private", "verified_only", "range", "exact"].includes(String(body.visibility)))
       return fail("Invalid visibility");
     const updated = await service.from("app_revenue_bindings").update({ visibility: body.visibility,
@@ -385,7 +419,8 @@ Deno.serve(async (request) => {
     if (message === "Stripe revenue verification is awaiting Stripe App setup") return fail(message, 503);
     if (["Stripe live revenue verification is not enabled", "Stripe revenue mode is invalid",
       "Stripe revenue OAuth configuration is invalid", "Stripe revenue developer key does not match the selected mode",
-      "Stripe revenue encryption is not configured", "Stripe revenue encryption key must contain 32 bytes"].includes(message))
+      "Stripe revenue encryption is not configured", "Stripe revenue encryption key must contain 32 bytes",
+      "Stripe revenue publisher credential is invalid"].includes(message))
       return fail(message, 503);
     if (["Connect Stripe first", "Select at least one Stripe price first", "Reconnect Stripe before syncing",
       "Price mapping changed during sync; retry", "Stripe account exceeds the safe sync limit"].includes(message))

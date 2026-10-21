@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
-import { loadMyApps } from "@/lib/myApps";
+import { supabase } from "@/integrations/supabase/client";
 import type { MyApp } from "@/components/AppJourney";
 import AppLogo from "@/components/AppLogo";
 
@@ -16,9 +16,10 @@ export default function StripeRevenueInstall() {
   useEffect(() => {
     if (!user) return;
     let active = true;
-    loadMyApps()
-      .then((apps) => {
-        if (active) setResult({ userId: user.id, apps });
+    supabase.functions.invoke("rocket-stripe-revenue", { body: { action: "installation_apps" } })
+      .then(({ data, error }) => {
+        if (error || !Array.isArray(data?.apps)) throw new Error("Installation unavailable");
+        if (active) setResult({ userId: user.id, apps: data.apps });
       })
       .catch(() => {
         if (active)

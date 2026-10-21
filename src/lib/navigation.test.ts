@@ -2,6 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import { safeReturnPath } from "./navigation";
 
 describe("safe authentication return path", () => {
+  it.each(["https://attacker.example", "//attacker.example", "/\\attacker.example", "javascript:alert(1)"])("rejects an external destination: %s", (path) => {
+    expect(safeReturnPath(path)).toBe("/discover");
+  });
+  it("keeps Marketplace installation query parameters through verification", () => {
+    const next = "/stripe-revenue/install?source=marketplace";
+    const verification = new URL(`/verify-email?next=${encodeURIComponent(safeReturnPath(next))}`, "https://tryrocket.ai");
+    expect(safeReturnPath(verification.searchParams.get("next"))).toBe(next);
+  });
   it("preserves an app claim destination during server rendering", () => {
     const browserWindow = globalThis.window;
     vi.stubGlobal("window", undefined);
