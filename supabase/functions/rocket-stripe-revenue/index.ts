@@ -1,7 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 import { calculateSubscriptionMrr, MRR_CALCULATION_VERSION, type MappedPrice,
   type RevenueSubscription, type RevenueItem } from "../_shared/stripeRevenueMrr.ts";
-import { revenueMode, revenueOAuthConfig, validateRevenueTokens } from "../_shared/stripeRevenueOAuth.ts";
+import { revenueMode, revenueOAuthConfig, validateRevenueTokens, revenueInstallationMode,
+  createRevenueOAuthState, revenueStateMode, revenueAuthorizationUrl } from "../_shared/stripeRevenueOAuth.ts";
 
 // This function never uses Rocket billing or Rocket Developer payment credentials.
 // A separate Stripe App developer account must own the OAuth installation.
@@ -28,13 +29,12 @@ const uuid = (value: unknown): value is string => typeof value === "string"
 const b64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 const unb64 = (value: string) => Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")),
   (char) => char.charCodeAt(0));
-const random = () => b64(crypto.getRandomValues(new Uint8Array(32)));
 async function sha256(value: string) { return b64(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)))); }
-function configuredOAuthUrl() {
-  return revenueOAuthConfig(revenueEnv).url;
+function configuredOAuthUrl(mode: "test" | "live" = "live") {
+  return revenueOAuthConfig(revenueEnv, mode).url;
 }
-async function connectAvailable() {
-  try { configuredOAuthUrl(); await encryptionKey(); return true; }
+async function connectAvailable(mode: "test" | "live") {
+  try { configuredOAuthUrl(mode); await encryptionKey(); return true; }
   catch { return false; }
 }
 async function encryptionKey() {
@@ -242,7 +242,7 @@ async function callback(request: Request) {
   if (!pilotEnabled(row.app_id)) return new Response("Stripe revenue pilot is unavailable", { status: 503 });
   try {
     await ownedApp(row.app_id, row.user_id);
-    const mode = revenueMode(revenueEnv);
+    const mode = revenueStateMode(state, revenueMode(revenueEnv));
     const tokens = await tokenExchange(new URLSearchParams({ code, grant_type: "authorization_code" }), mode === "live");
     validateRevenueTokens(tokens, mode);
     const refresh = await encrypt(tokens.refresh_token as string);
@@ -288,7 +288,7 @@ async function handle(request: Request) {
     });
     if (points.error) throw points.error;
     const latest = points.data || [];
-    return json({ connect_available: await connectAvailable(),
+    return json({ connect_available: await connectAvailable(revenueInstallationMode(body.installation)),
       connection: row ? { status: row.status, external_account_id: row.external_account_id,
       livemode: row.livemode, last_attempted_sync: row.last_attempted_sync,
       last_successful_sync: row.last_successful_sync, last_error: row.last_error } : null,
@@ -297,16 +297,16 @@ async function handle(request: Request) {
   }
   if (!pilotEnabled(app.id)) return fail("Stripe revenue verification is coming soon", 503);
   if (body.action === "start") {
-    const url = configuredOAuthUrl();
+    const mode = revenueInstallationMode(body.installation);
+    configuredOAuthUrl(mode);
     await encryptionKey();
-    const state = random();
+    const state = createRevenueOAuthState(mode);
+    const url = revenueAuthorizationUrl(revenueEnv, mode, state, redirectUri);
     const saved = await service.from("app_revenue_oauth_states").insert({
       state_hash: await sha256(state), app_id: app.id, user_id: userId,
       expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
     });
     if (saved.error) throw saved.error;
-    url.searchParams.set("redirect_uri", redirectUri);
-    url.searchParams.set("state", state);
     return json({ authorization_url: url.toString() });
   }
   const { linked, row } = await boundConnection(app.id, userId);

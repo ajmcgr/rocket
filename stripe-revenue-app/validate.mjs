@@ -3,11 +3,18 @@ import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
 
 export function validateManifest(manifest) {
-  const allowed = new Set(["id", "version", "name", "distribution_type", "sandbox_install_compatible",
-    "stripe_api_access_type", "allowed_redirect_uris", "permissions"]);
+  const allowed = new Set(["$schema", "id", "version", "name", "icon", "distribution_type",
+    "sandbox_install_compatible", "stripe_api_access_type", "allowed_redirect_uris", "permissions"]);
   for (const field of Object.keys(manifest)) assert.ok(allowed.has(field), `Unreviewed manifest field: ${field}`);
+  assert.equal(manifest.$schema, "https://stripe.com/stripe-app.schema.json");
   assert.equal(manifest.id, "com.worksapp.rocket-revenue-verification");
   assert.equal(manifest.name, "Rocket Revenue Verification");
+  assert.equal(manifest.icon, "./rocket-icon.png");
+  assert.ok(!("extensions" in manifest), "The v1 JSON manifest must not use the v2 extensions field");
+  const icon = readFileSync(new URL(manifest.icon, import.meta.url));
+  assert.equal(icon.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", "Icon must be a PNG");
+  assert.equal(icon.readUInt32BE(16), 300, "Icon must be 300px wide");
+  assert.equal(icon.readUInt32BE(20), 300, "Icon must be 300px high");
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.equal(manifest.distribution_type, "public");
   assert.equal(manifest.stripe_api_access_type, "oauth");
