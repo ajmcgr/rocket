@@ -95,7 +95,7 @@ export default function HomeMerchandising({ data }: { data: HomeData }) {
   return (
     <>
       {data.rising.length > 0 && (
-        <section className="mt-12 sm:mt-16" aria-labelledby="home-rising">
+        <section className="mt-6 sm:mt-8" aria-labelledby="home-rising">
           <Heading
             id="home-rising"
             title="Rising"
