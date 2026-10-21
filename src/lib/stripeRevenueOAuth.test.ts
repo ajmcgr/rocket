@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { revenueMode, revenueOAuthConfig, validateRevenueTokens } from "../../supabase/functions/_shared/stripeRevenueOAuth";
+import { revenueMode, revenueOAuthConfig, validateRevenueTokens, revenueInstallationMode,
+  createRevenueOAuthState, revenueStateMode, revenueAuthorizationUrl, REVENUE_REDIRECT_URI } from "../../supabase/functions/_shared/stripeRevenueOAuth";
 import { calculateSubscriptionMrr, type RevenueSubscription } from "../../supabase/functions/_shared/stripeRevenueMrr";
 
 const config = {
@@ -7,12 +8,52 @@ const config = {
   STRIPE_REVENUE_APP_TEST_API_KEY: "sk_test_fixture_not_a_credential",
   STRIPE_REVENUE_LIVE_OAUTH_URL: "https://marketplace.stripe.com/oauth/v2/authorize?client_id=ca_live_fixture",
   STRIPE_REVENUE_APP_LIVE_API_KEY: "sk_live_fixture_not_a_credential",
+  STRIPE_REVENUE_PUBLIC_CLIENT_ID: "ca_publicfixture",
 };
 const env = (extra: Record<string, string> = {}) => (name: string) => ({ ...config, ...extra } as Record<string, string>)[name];
 const tokens = { livemode: false, scope: "stripe_apps", stripe_user_id: "acct_fixture",
   access_token: "fixture", refresh_token: "fixture" };
 
 describe("Stripe revenue OAuth isolation", () => {
+  it("defaults production connections to Marketplace and requires explicit external testing", () => {
+    expect(revenueInstallationMode(undefined)).toBe("live");
+    expect(revenueInstallationMode("marketplace")).toBe("live");
+    expect(revenueInstallationMode("external_test")).toBe("test");
+    expect(() => revenueInstallationMode("live_test")).toThrow("invalid");
+  });
+  it("constructs the public URL independently of external-test and legacy live links", () => {
+    const state = createRevenueOAuthState("live");
+    const url = revenueAuthorizationUrl(env({ STRIPE_REVENUE_LIVE_ENABLED: "true",
+      STRIPE_REVENUE_LIVE_OAUTH_URL: "https://marketplace.stripe.com/oauth/v2/chnlink_wrong/authorize?client_id=wrong" }),
+      "live", state, REVENUE_REDIRECT_URI);
+    expect(url.origin + url.pathname).toBe("https://marketplace.stripe.com/oauth/v2/authorize");
+    expect([...url.searchParams.keys()].sort()).toEqual(["client_id", "redirect_uri", "state"]);
+    expect(url.searchParams.get("client_id")).toBe(config.STRIPE_REVENUE_PUBLIC_CLIENT_ID);
+    expect(url.searchParams.get("redirect_uri")).toBe(REVENUE_REDIRECT_URI);
+    expect(url.searchParams.get("state")).toBe(state);
+    expect(() => revenueAuthorizationUrl(env(), "test", createRevenueOAuthState("test"), "https://evil.invalid"))
+      .toThrow("callback");
+  });
+  it("preserves the deployed external-test channel path only in test configuration", () => {
+    const raw = "https://marketplace.stripe.com/oauth/v2/chnlink_fixture/authorize?client_id=ca_fixture";
+    expect(revenueOAuthConfig(env({ STRIPE_REVENUE_TEST_OAUTH_URL: raw }), "test").url.pathname)
+      .toBe("/oauth/v2/chnlink_fixture/authorize");
+    expect(() => revenueOAuthConfig(env({ STRIPE_REVENUE_LIVE_ENABLED: "true", STRIPE_REVENUE_PUBLIC_CLIENT_ID: "" }), "live"))
+      .toThrow("public client ID");
+  });
+  it("generates unpredictable state with a mode bound into its complete hashed value", async () => {
+    const first = createRevenueOAuthState("test"), second = createRevenueOAuthState("test");
+    expect(first).toMatch(/^test\.[A-Za-z0-9_-]{43}$/);
+    expect(second).not.toBe(first);
+    expect(revenueStateMode(first, "live")).toBe("test");
+    expect(revenueStateMode(createRevenueOAuthState("live"), "test")).toBe("live");
+    const hash = (state: string) => crypto.subtle.digest("SHA-256", new TextEncoder().encode(state));
+    expect(new Uint8Array(await hash(first))).not.toEqual(new Uint8Array(await hash(first.replace("test.", "live."))));
+    expect(() => revenueAuthorizationUrl(env(), "test", createRevenueOAuthState("live"), REVENUE_REDIRECT_URI))
+      .toThrow("mode mismatch");
+    expect(() => revenueStateMode("test.bad", "test")).toThrow("invalid");
+    expect(revenueStateMode("a".repeat(43), "test")).toBe("test");
+  });
   it("defaults to test and requires an explicit live gate", () => {
     expect(revenueMode(env())).toBe("test");
     expect(() => revenueOAuthConfig(env(), "live")).toThrow("not enabled");

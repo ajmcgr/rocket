@@ -2,8 +2,9 @@
 # Create/upload from a dedicated Stripe App developer account, never from
 # Rocket Developer Payments' platform account or its credentials.
 id: com.worksapp.rocket-revenue-verification
-version: 0.1.0
+version: 0.1.2
 name: Rocket Revenue Verification
+icon: ./rocket-icon.png
 declarations:
   distribution_type: public
   sandbox_install_compatible: true

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "@/lib/router-compat";
+import { Link, useParams, useLocation } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { RevenueCatConnection } from "@/components/RevenueCatConnection";
@@ -36,6 +36,11 @@ function moneyFromMinor(value: string, currency: string) {
 
 export default function AppRevenue() {
   const { id } = useParams();
+  const { search } = useLocation();
+  // External testing is an explicit developer entry, never the Marketplace
+  // installation default. The backend still requires pilot enrollment and ownership.
+  const installation = new URLSearchParams(search).get("stripe_installation") === "external_test"
+    ? "external_test" : "marketplace";
   const [status, setStatus] = useState<Status | null>(null);
   const [prices, setPrices] = useState<Price[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -44,11 +49,11 @@ export default function AppRevenue() {
   const [notice, setNotice] = useState("");
   const request = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     const { data, error: requestError } = await supabase.functions.invoke("rocket-stripe-revenue", {
-      body: { action, app_id: id, ...extra },
+      body: { action, app_id: id, installation, ...extra },
     });
     if (requestError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(requestError, "Stripe revenue request failed"));
     return data;
-  }, [id]);
+  }, [id, installation]);
   const refresh = useCallback(async () => {
     const next = await request("status") as Status;
     setStatus(next);

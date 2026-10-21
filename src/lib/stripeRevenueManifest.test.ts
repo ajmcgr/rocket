@@ -12,11 +12,14 @@ describe("read-only Stripe App package", () => {
     expect(validateManifest(manifest)).toBe(true);
     const yaml = require("js-yaml").load(readFileSync("stripe-revenue-app/stripe-app.yaml", "utf8"));
     expect(yaml.id).toBe(manifest.id);
+    expect(yaml.version).toBe(manifest.version);
+    expect(yaml.icon).toBe(manifest.icon);
     expect(yaml.declarations.allowed_redirect_uris).toEqual(manifest.allowed_redirect_uris);
     expect(yaml.declarations.stripe_api_access.permissions).toEqual(manifest.permissions);
     expect(yaml.extensions).toEqual([]);
   });
   it("rejects broader grants and altered callback origins", () => {
+    expect(() => validateManifest({ ...manifest, icon: undefined })).toThrow();
     expect(() => validateManifest({ ...manifest, permissions: [...manifest.permissions,
       { permission: "charge_write", purpose: "Unexpected" }] })).toThrow();
     expect(() => validateManifest({ ...manifest, allowed_redirect_uris: ["https://evil.invalid"] })).toThrow();
