@@ -9,19 +9,36 @@ const About = () => {
         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl">About Rocket</h1>
 
         <div className="mt-10 space-y-7 text-base leading-7 text-neutral-700 dark:text-neutral-300 sm:text-lg sm:leading-8">
-          <p>Rocket is an open app platform for discovering software and helping its builders be found.</p>
           <p className="font-semibold text-neutral-950 dark:text-white">Hello there!</p>
           <p>
-            More people can build useful software than ever before. The hard part is finding it. Promising apps can be scattered across launch sites, social posts, and personal websites, with little context to help you decide what is worth trying. Rocket brings them into a place where you can browse by category, explore new arrivals and rankings, and save the apps you want to revisit.
+            More people can build useful software than ever before. The hard part is finding it.
           </p>
           <p>
-            For the people making those apps, a Rocket profile is a clearer way to show what they have built. Vibe coders and developers can submit an app, claim an existing listing, improve its public information, and choose which verified details to share. That gives visitors a better basis for understanding the product while keeping the builder in control of their own information.
+            Promising apps are scattered across launch sites, social posts, and personal websites. You might hear about something useful, open a tab, and forget it by the next day. Somewhere else, someone has built exactly the tool you need, but you never come across it.
           </p>
           <p>
-            A listing is not an endorsement. Rising reflects Rocket app-page views, while Top Ranked combines reviews, bookmarks, and verified purchases; neither proves customer growth. A claimed app is not automatically verified in every way. Where an app supports Rocket identity or payments, those capabilities belong to that specific connected app; they are not available across the whole catalogue.
+            Rocket brings those apps together. A place to discover new arrivals, browse by category, explore what other people are finding, and save the things you want to try. Whether you are looking for a tool for work, something for a personal project, or just an interesting app, we want that search to feel easier.
           </p>
           <p>
-            Rocket is still growing. Our aim is to make discovery genuinely useful for visitors and to give builders a fairer, more trustworthy way to be found. We will keep improving the information people can rely on without asking them to mistake an indexed app for a recommendation.
+            For builders, getting an app online is only the beginning. You still need to explain what it does, find the people it could help, and give them a reason to try it. That is a lot to take on, especially when you are building on your own or with a small team.
+          </p>
+          <p>
+            An app profile on Rocket gives your work a place to be found. You can submit something new or claim an existing listing, verify your ownership, and keep its information up to date. Your developer profile connects the things you build, so people can get to know the person behind the software and discover what else you have made.
+          </p>
+          <p>
+            We also want people to have more context when deciding what to try. A clear description, a look at the app, feedback from other users, and details the developer has chosen to verify and share can all help. Builders should stay in control of what they make public.
+          </p>
+          <p>
+            That is why we are building Rocket as an open app platform. A place that stays useful beyond launch day, where people can keep discovering software and builders can keep improving how they present their work. You might arrive with a finished app, an early idea, or no plans to build anything at all. There is room for all of that here.
+          </p>
+          <p>
+            Rocket is still growing. We will keep listening to the people using it and the people building on it, and keep working on making those connections more useful.
+          </p>
+          <p>
+            We want good software to find the people who need it.
+          </p>
+          <p>
+            Thanks for being here.
           </p>
         </div>
 
