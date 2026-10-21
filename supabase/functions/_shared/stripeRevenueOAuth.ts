@@ -2,6 +2,42 @@
 export type RevenueMode = "test" | "live";
 export type RevenueEnv = (name: string) => string | undefined;
 export const REVENUE_REDIRECT_URI = "https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-stripe-revenue";
+export const REVENUE_PUBLISHER_ACCOUNT = "acct_1UNYZnLTVhRPFrYe";
+const ROCKET_PAYMENTS_ACCOUNT = "acct_1TfvwfL9pkHWyRRu";
+export type RevenueAccess = { userId: string; appId: string };
+
+// Server-only enrollment. IDs are never accepted as proof of ownership: callers
+// must independently authenticate and check the active domain-verified owner.
+export function revenueReviewAuthorized(env: RevenueEnv, access?: RevenueAccess, now = Date.now()) {
+  if (!access) return false;
+  try {
+    const entries: unknown = JSON.parse(env("STRIPE_REVENUE_REVIEW_ACCESS") || "[]");
+    if (!Array.isArray(entries)) return false;
+    return entries.some((entry) => entry && typeof entry === "object"
+      && entry.user_id === access.userId && entry.app_id === access.appId
+      && /^[0-9a-f-]{36}$/i.test(entry.user_id) && /^[0-9a-f-]{36}$/i.test(entry.app_id)
+      && typeof entry.expires_at === "string" && Date.parse(entry.expires_at) > now
+      && Date.parse(entry.expires_at) <= now + 31 * 24 * 60 * 60_000);
+  } catch { return false; }
+}
+
+export function revenueLiveAllowed(env: RevenueEnv, access?: RevenueAccess) {
+  return env("STRIPE_REVENUE_LIVE_ENABLED") === "true" || revenueReviewAuthorized(env, access);
+}
+
+export function validateRevenueSourceAccount(accountId: unknown) {
+  if (accountId === ROCKET_PAYMENTS_ACCOUNT || accountId === REVENUE_PUBLISHER_ACCOUNT)
+    throw new Error("Stripe revenue requires a separate app account");
+}
+
+export async function verifyRevenuePublisher(apiKey: string, request: typeof fetch = fetch) {
+  const response = await request("https://api.stripe.com/v1/account", {
+    headers: { Authorization: `Basic ${btoa(`${apiKey}:`)}` }, signal: AbortSignal.timeout(10_000),
+  });
+  const account = response.ok ? await response.json() : null;
+  if (account?.id !== REVENUE_PUBLISHER_ACCOUNT)
+    throw new Error("Stripe revenue publisher credential is invalid");
+}
 
 export function revenueInstallationMode(installation: unknown): RevenueMode {
   if (installation === undefined || installation === "marketplace") return "live";
@@ -32,8 +68,8 @@ export function revenueMode(env: RevenueEnv): RevenueMode {
   return mode;
 }
 
-export function revenueOAuthConfig(env: RevenueEnv, mode: RevenueMode = revenueMode(env)) {
-  if (mode === "live" && env("STRIPE_REVENUE_LIVE_ENABLED") !== "true")
+export function revenueOAuthConfig(env: RevenueEnv, mode: RevenueMode = revenueMode(env), access?: RevenueAccess) {
+  if (mode === "live" && !revenueLiveAllowed(env, access))
     throw new Error("Stripe live revenue verification is not enabled");
   const clientId = env("STRIPE_REVENUE_PUBLIC_CLIENT_ID");
   if (mode === "live" && (!clientId || !/^ca_[A-Za-z0-9]+$/.test(clientId)))
@@ -57,10 +93,10 @@ export function revenueOAuthConfig(env: RevenueEnv, mode: RevenueMode = revenueM
   return { mode, url, apiKey };
 }
 
-export function revenueAuthorizationUrl(env: RevenueEnv, mode: RevenueMode, state: string, redirectUri: string) {
+export function revenueAuthorizationUrl(env: RevenueEnv, mode: RevenueMode, state: string, redirectUri: string, access?: RevenueAccess) {
   if (redirectUri !== REVENUE_REDIRECT_URI) throw new Error("Stripe revenue callback is invalid");
   if (revenueStateMode(state, mode) !== mode) throw new Error("Stripe revenue OAuth mode mismatch");
-  const { url } = revenueOAuthConfig(env, mode);
+  const { url } = revenueOAuthConfig(env, mode, access);
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
   return url;

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Navigate, useLocation } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { safeReturnPath } from "@/lib/navigation";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -42,7 +43,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!user) {
     // Keep the original protected destination stable while Navigate is unmounting.
     // Otherwise an intermediate /login location can be nested into next repeatedly.
-    const from = unauthenticatedReturnTo.current ?? (location.pathname + location.search);
+    const from = unauthenticatedReturnTo.current ?? safeReturnPath(location.pathname + location.search);
     unauthenticatedReturnTo.current = from;
     return <Navigate to={`/login?next=${encodeURIComponent(from)}`} state={{ from }} replace />;
   }
@@ -52,7 +53,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="mx-auto max-w-4xl animate-pulse space-y-5"><div className="h-10 w-40 rounded bg-neutral-100" /><div className="h-44 rounded-2xl bg-neutral-100" /></div>
     </div>
   );
-  if (!verified) return <Navigate to={`/verify-email?email=${encodeURIComponent(user.email || "")}`} replace />;
+  if (!verified) {
+    const next = safeReturnPath(location.pathname + location.search);
+    return <Navigate to={`/verify-email?email=${encodeURIComponent(user.email || "")}&next=${encodeURIComponent(next)}`} replace />;
+  }
   return <>{children}</>;
 };
 

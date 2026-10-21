@@ -14,7 +14,7 @@ type Mapping = { stripe_price_id: string; stripe_product_id: string; currency: s
 type Point = { currency: string; mrr_minor: string; observed_at: string;
   verification_status: "verified" | "unsupported"; source_livemode: boolean;
   unsupported_subscriptions: number };
-type Status = { connect_available: boolean; connection: null | { status: string; external_account_id: string; livemode: boolean;
+type Status = { connect_available: boolean; private_only?: boolean; connection: null | { status: string; external_account_id: string; livemode: boolean;
   last_attempted_sync: string | null; last_successful_sync: string | null; last_error: string | null };
   mapping_version: number; visibility: Visibility; mappings: Mapping[]; latest: Point[] };
 
@@ -129,11 +129,12 @@ export default function AppRevenue() {
       <h2 className="font-semibold">Public visibility</h2>
       <p className="mt-2 text-sm text-neutral-600">Private by default. Only a fresh, fully supported live Stripe snapshot can appear on the public profile. Sandbox data never appears there.</p>
       <label className="mt-4 block text-sm">Subscription MRR
-        <select value={status.visibility} disabled={busy} onChange={(event) => run(async () => {
+        <select value={status.visibility} disabled={busy || status.private_only} onChange={(event) => run(async () => {
           await request("set_visibility", { visibility: event.target.value }); await refresh();
           setNotice("Visibility updated. Check the public profile to see exactly what is shown.");
         })} className="mt-2 block rounded-lg border px-3 py-2">{visibilityChoices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}</select>
       </label>
+      {status.private_only && <p className="mt-3 text-sm text-neutral-600">This connection stays private while Marketplace review is in progress.</p>}
       {!status.connection.livemode && <p className="mt-3 text-sm text-amber-700">This is a sandbox Stripe connection. Visibility settings are saved, but no test revenue will be published.</p>}
       <Link to={`/apps/${id}`} className="mt-4 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
