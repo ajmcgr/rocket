@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { loadAppMedia } from "./appMedia";
 const db = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { from: db.from, rpc: db.rpc },
@@ -54,6 +55,15 @@ const base = () => ({
         },
       ],
     ],
+    [
+      "b",
+      [
+        {
+          media_type: "screenshot",
+          source_url: "https://example.invalid/b.png",
+        },
+      ],
+    ],
   ]),
   now,
 });
@@ -100,7 +110,14 @@ describe("truthful homepage merchandising", () => {
             : table === "public_app_categories"
               ? [{ category: "Productivity", app_count: 8 }]
               : table === "public_user_collections"
-                ? [{ id: "c", name: "Public tools", slug: "public-tools", app_count: 1 }]
+                ? [
+                    {
+                      id: "c",
+                      name: "Public tools",
+                      slug: "public-tools",
+                      app_count: 1,
+                    },
+                  ]
                 : [];
       const result = {
         data: rows,
@@ -126,7 +143,9 @@ describe("truthful homepage merchandising", () => {
     const result = await loadHomeMerchandising();
     expect(result.top.map((row) => row.app.id)).toEqual(["b"]);
     expect(result.categories[0].category).toBe("Productivity");
-    expect(result.publicCollections.map((row) => row.slug)).toEqual(["public-tools"]);
+    expect(result.publicCollections.map((row) => row.slug)).toEqual([
+      "public-tools",
+    ]);
     expect(result.picks).toEqual([]);
     expect(result.rising[0].viewCount).toBe(12);
     expect(db.rpc).toHaveBeenCalledWith("get_public_app_rankings", {
@@ -167,7 +186,7 @@ describe("truthful homepage merchandising", () => {
     expect(result.picks.map((r) => r.app.id)).toEqual(["b", "a"]);
     expect(result.picks[1].pick?.headline).toBeNull();
   });
-  it("shows the newest recent listings even without logos or media", () => {
+  it("excludes image-free imports from screenshot shelves but keeps text rankings", () => {
     const input = base();
     const result = composeHome({
       ...input,
@@ -175,21 +194,63 @@ describe("truthful homepage merchandising", () => {
         { ...app("old"), discovered_at: "2020-01-01" },
         { ...app("b"), discovered_at: "2026-10-07T09:00:00Z", logo_url: null },
         { ...app("a"), discovered_at: "2026-10-07T10:00:00Z" },
+        { ...app("c"), discovered_at: "2026-10-07T11:00:00Z" },
         { ...app("future"), discovered_at: "2027-01-01" },
       ],
+      picks: [{ app_id: "c", placement: "lead" }],
+      rankedIds: ["c"],
     });
     expect(result.fresh.map((r) => r.app.id)).toEqual(["a", "b"]);
+    expect(result.picks).toEqual([]);
+    expect(result.top.map((r) => r.app.id)).toEqual(["c"]);
   });
-  it("loads newest public listings instead of intelligence scores", async () => {
+  it("fills all four screenshot cards after skipping a newer image-free import", async () => {
     const newest = [
-      { ...app("newest"), discovered_at: new Date(Date.now() - 60_000).toISOString() },
-      { ...app("second"), discovered_at: new Date(Date.now() - 120_000).toISOString(), logo_url: null },
+      {
+        ...app("no-image"),
+        discovered_at: new Date(Date.now() - 1_000).toISOString(),
+      },
+      {
+        ...app("newest"),
+        discovered_at: new Date(Date.now() - 60_000).toISOString(),
+      },
+      {
+        ...app("second"),
+        discovered_at: new Date(Date.now() - 120_000).toISOString(),
+        logo_url: null,
+      },
+      {
+        ...app("third"),
+        discovered_at: new Date(Date.now() - 180_000).toISOString(),
+      },
+      {
+        ...app("fourth"),
+        discovered_at: new Date(Date.now() - 240_000).toISOString(),
+      },
     ];
+    vi.mocked(loadAppMedia).mockResolvedValueOnce(
+      new Map(
+        newest.slice(1).map((row) => [
+          row.id,
+          [
+            {
+              id: row.id,
+              app_id: row.id,
+              media_type: "screenshot",
+              source_type: "launch",
+              source_url: "https://example.invalid/image.png",
+              sort_order: 0,
+            },
+          ],
+        ]),
+      ),
+    );
     db.rpc.mockResolvedValue({ data: [], error: null });
     const freshQuery: any = {};
     for (const method of ["select", "gte", "lte", "order", "limit"])
       freshQuery[method] = vi.fn(() => freshQuery);
-    freshQuery.then = (resolve: any) => Promise.resolve({ data: newest, error: null }).then(resolve);
+    freshQuery.then = (resolve: any) =>
+      Promise.resolve({ data: newest, error: null }).then(resolve);
     db.from.mockImplementation((table) => {
       if (table === "public_discoverable_apps") return freshQuery;
       const chain: any = {
@@ -199,17 +260,25 @@ describe("truthful homepage merchandising", () => {
         order: () => chain,
         limit: () => chain,
         range: () => chain,
-        then: (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve),
+        then: (resolve: any) =>
+          Promise.resolve({ data: [], error: null }).then(resolve),
       };
       return chain;
     });
     const result = await loadHomeMerchandising();
-    expect(result.fresh.map((row) => row.app.id)).toEqual(["newest", "second"]);
-    expect(freshQuery.order.mock.calls.map(([column]: string[]) => column)).toEqual([
-      "discovered_at", "id",
+    expect(result.fresh.map((row) => row.app.id)).toEqual([
+      "newest",
+      "second",
+      "third",
+      "fourth",
     ]);
-    expect(freshQuery.limit).toHaveBeenCalledWith(4);
-    expect(db.from.mock.calls.map(([table]) => table)).not.toContain("public_discoverable_app_intelligence");
+    expect(
+      freshQuery.order.mock.calls.map(([column]: string[]) => column),
+    ).toEqual(["discovered_at", "id"]);
+    expect(freshQuery.limit).toHaveBeenCalledWith(48);
+    expect(db.from.mock.calls.map(([table]) => table)).not.toContain(
+      "public_discoverable_app_intelligence",
+    );
   });
   it("hides evidence with fewer than three distinct eligible apps", () =>
     expect(

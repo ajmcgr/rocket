@@ -140,7 +140,7 @@ export function validateSubmission(value: unknown): SubmissionDetails {
     coupon_description: string("coupon_description", 200),
     logo_url: string("logo_url", 2048, 1),
     hero_url: string("hero_url", 2048, 1),
-    screenshots: list("screenshots", 6, 0, 2048),
+    screenshots: list("screenshots", 6, 1, 2048),
     video_url: youtubeUrl(string("video_url", 2048)),
   };
 }

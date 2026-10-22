@@ -195,6 +195,21 @@ describe("Rocket app submission", () => {
     expect(screen.getByRole("alert").textContent).toContain(
       "app icon and hero image",
     );
+    fireEvent.change(screen.getByLabelText(/^App icon \*/), {
+      target: { value: "https://example.com/icon.png" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Hero image \*/), {
+      target: { value: "https://example.com/hero.png" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("alert").textContent).toContain(
+      "at least one app screenshot",
+    );
+    fireEvent.change(screen.getByLabelText(/^Screenshot URLs/), {
+      target: { value: "https://example.com/screenshot.png" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText("Choose Your Plan")).toBeNull();
     expect(document.querySelector('input[type="date"]')).toBeNull();
   });
@@ -207,6 +222,7 @@ describe("Rocket app submission", () => {
       description: "A useful app for people working in teams.",
       logo_url: "https://example.com/icon.png",
       hero_url: "https://example.com/hero.png",
+      screenshots: ["https://example.com/screenshot.png"],
       categories: ["Productivity"],
       platforms: ["web"],
       slug: "example",

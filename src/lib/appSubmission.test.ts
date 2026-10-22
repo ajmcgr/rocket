@@ -13,6 +13,7 @@ const valid = () => ({
   slug: "example",
   logo_url: "https://example.com/logo.png",
   hero_url: "https://example.com/hero.png",
+  screenshots: ["https://example.com/screenshot.png"],
   categories: ["Productivity"],
   platforms: ["web"],
 });
@@ -51,13 +52,15 @@ describe("complete submission validation", () => {
       }),
     ).toEqual(valid());
   });
-  it("requires category, platform, icon, hero image and useful description", () => {
+  it("requires category, platform, icon, hero image, screenshot and useful description", () => {
     for (const patch of [
       { categories: [] },
       { platforms: [] },
       { platforms: ["not-a-platform"] },
       { logo_url: "" },
       { hero_url: "" },
+      { screenshots: [] },
+      { screenshots: [" "] },
       { description: "too short" },
       { slug: "Bad Slug" },
       { screenshots: Array(7).fill("https://example.com/image.png") },

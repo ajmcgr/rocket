@@ -401,6 +401,8 @@ export default function LaunchPreview() {
       if (step === 1) {
         if (!details.logo_url || !details.hero_url)
           throw new Error("Add an app icon and hero image");
+        if (!details.screenshots.length)
+          throw new Error("Add at least one app screenshot");
         youtubeUrl(details.video_url);
       }
       if (step === 2) validateSubmission(details);
@@ -688,7 +690,7 @@ export default function LaunchPreview() {
                   )}
                   <div className="rounded-xl border border-border p-4">
                     <label className="block text-sm font-semibold">
-                      Screenshots (up to 6 images)
+                      Screenshots * (1–6 images)
                       <input
                         type="file"
                         multiple
@@ -706,7 +708,7 @@ export default function LaunchPreview() {
                       lines
                       value={details.screenshots}
                       onChange={(value) => set("screenshots", value)}
-                      hint="Use images from your app website, or upload above. Recommended: 3–6 screenshots."
+                      hint="At least one app screenshot is required. Use images from your app website, or upload above. Recommended: 3–6 screenshots."
                     />
                     <div className="mt-3 grid grid-cols-3 gap-3">
                       {details.screenshots.map((src, index) => (
