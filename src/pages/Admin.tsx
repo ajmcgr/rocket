@@ -184,7 +184,7 @@ export default function Admin() {
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>
-      <Panel title="Outreach"><StatGrid data={obj(data.outreach)} /><p className="rocket-admin-muted">Founder sending remains disabled in test mode.</p></Panel>
+      <Panel title="Outreach"><StatGrid data={obj(data.outreach)} /></Panel>
     </>}
     {data && section === "ops" && <>
       <AdminMarketplaceOps />
