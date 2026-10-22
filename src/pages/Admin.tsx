@@ -25,7 +25,7 @@ const sections: Array<{ id: Section; label: string }> = [
 const adminRpc = supabase.rpc.bind(supabase) as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 const rows = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
 const obj = (value: unknown): Row => value && typeof value === "object" && !Array.isArray(value) ? value as Row : {};
-const label = (name: string) => name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+const label = (name: string) => name === "profile_views" ? "App Profile Views" : name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const count = (value: unknown) => typeof value === "number" ? value.toLocaleString() : "Not tracked";
 const statEmojis: Record<string, string> = {
   indexed: "📚", discoverable: "🧭", claimed: "✅", domain_verified: "🌐",
