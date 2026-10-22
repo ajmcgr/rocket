@@ -181,7 +181,7 @@ export default function Admin() {
       {section === "metrics" && <AdminInvestorMetrics data={investor} />}
       <Panel title="Catalogue"><StatGrid data={obj(data.catalogue)} /></Panel>
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
-      <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /><p className="rocket-admin-muted">“Not tracked” means Rocket has no reliable first-party counter for that event.</p></Panel>
+      <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>
       <Panel title="Outreach"><StatGrid data={obj(data.outreach)} /><p className="rocket-admin-muted">Founder sending remains disabled in test mode.</p></Panel>
