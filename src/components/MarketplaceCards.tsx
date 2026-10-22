@@ -246,16 +246,13 @@ export function StandardAppCard({
   metadata,
   rank,
 }: BaseProps & SaveProps) {
-  const hasCover = Boolean(coverMedia(media));
   return (
     <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-sky-300 hover:bg-neutral-50 hover:shadow-sm">
       <Link
         to={`/apps/${app.slug || app.id}`}
         className="min-w-0 focus-visible:outline-2 focus-visible:outline-sky-500"
       >
-        {hasCover && (
-          <Artwork app={app} media={media} className="h-40 w-full sm:h-44" />
-        )}
+        <Artwork app={app} media={media} className="h-40 w-full sm:h-44" />
         <div className="px-3 pb-3 pt-4 sm:px-4">
           <AppCardIdentity app={app} rank={rank} metadata={metadata} />
           <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed text-neutral-600">

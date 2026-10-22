@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { publicCollections, type Collection } from "./collections";
 import { marketplaceRpc } from "./marketplace";
 import type { Tables } from "@/integrations/supabase/types";
-import { loadAppMedia, type PublicAppMedia } from "./appMedia";
+import { coverMedia, loadAppMedia, type PublicAppMedia } from "./appMedia";
 
 export type HomeApp = Tables<"public_apps">;
 export type RocketViewRanking = Pick<
@@ -135,9 +135,11 @@ export function composeHome(input: {
     const app = byId.get(id);
     return app ? { app } : undefined;
   };
+  const hasCover = (app: HomeApp) =>
+    Boolean(coverMedia(input.media.get(app.id)));
   const picks = input.picks.flatMap((pick) => {
     const row = item(pick.app_id);
-    return row ? [{ ...row, pick }] : [];
+    return row && hasCover(row.app) ? [{ ...row, pick }] : [];
   });
   const recent = (app: HomeApp) => {
     const t = Date.parse(app.discovered_at);
@@ -145,7 +147,7 @@ export function composeHome(input: {
     return t <= now && t >= now - 30 * 86400000;
   };
   const fresh = input.fresh
-    .filter(recent)
+    .filter((app) => recent(app) && hasCover(app))
     .sort(
       (a, b) =>
         Date.parse(b.discovered_at) - Date.parse(a.discovered_at) ||
@@ -231,7 +233,9 @@ export async function loadHomeMerchandising({
         .lte("discovered_at", new Date(now).toISOString())
         .order("discovered_at", { ascending: false })
         .order("id", { ascending: true })
-        .limit(4),
+        // Read enough candidates to fill the shelf after excluding legacy
+        // imports without artwork. Text-based rankings still include them.
+        .limit(48),
     ),
     readRows(rankingsQuery()),
     readRows(

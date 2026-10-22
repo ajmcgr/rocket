@@ -31,21 +31,37 @@ describe("marketplace content treatments", () => {
     window.scrollTo = vi.fn();
     const { container } = render(
       <MemoryRouter>
-        <StandardAppCard app={app} media={[{
-          id: "portrait", app_id: app.id, media_type: "screenshot",
-          source_type: "owner", source_url: "https://example.com/portrait.png", sort_order: 0,
-        }]} />
+        <StandardAppCard
+          app={app}
+          media={[
+            {
+              id: "portrait",
+              app_id: app.id,
+              media_type: "screenshot",
+              source_type: "owner",
+              source_url: "https://example.com/portrait.png",
+              sort_order: 0,
+            },
+          ]}
+        />
       </MemoryRouter>,
     );
-    const foreground = await screen.findByAltText("Product image for Sample app");
+    const foreground = await screen.findByAltText(
+      "Product image for Sample app",
+    );
     const backdrop = container.querySelector(".app-screenshot-backdrop");
     expect(foreground.className).toContain("object-contain");
     expect(backdrop?.getAttribute("src")).toBe(foreground.getAttribute("src"));
-    expect(backdrop?.getAttribute("srcset")).toBe(foreground.getAttribute("srcset"));
+    expect(backdrop?.getAttribute("srcset")).toBe(
+      foreground.getAttribute("srcset"),
+    );
     expect(backdrop?.getAttribute("aria-hidden")).toBe("true");
     fireEvent.error(foreground);
     expect(screen.queryByAltText("Product image for Sample app")).toBeNull();
     expect(container.querySelector(".app-screenshot-backdrop")).toBeNull();
+    expect(
+      container.querySelector(".h-40")?.querySelector("img"),
+    ).not.toBeNull();
     cleanup();
   });
   it("omits the owner handle and keeps rating before saves in ranked rows", async () => {
@@ -109,7 +125,9 @@ describe("marketplace content treatments", () => {
     expect(cover.className).toContain("object-cover");
     expect(cover.getAttribute("src")).toContain("resize=cover");
     expect(cover.parentElement?.className).toContain("aspect-[16/9]");
-    expect(card?.querySelector('a[aria-label="View Sample app"] img[alt=""]')).not.toBeNull();
+    expect(
+      card?.querySelector('a[aria-label="View Sample app"] img[alt=""]'),
+    ).not.toBeNull();
     expect(card?.textContent).not.toContain("@maker");
     expect(screen.getByText("Productivity")).toBeTruthy();
     cleanup();
@@ -203,7 +221,7 @@ describe("marketplace content treatments", () => {
     );
   });
 
-  it("shows an unframed icon when media is unavailable and Rising as a ranked row", async () => {
+  it("preserves the cover area for legacy saved cards and keeps Rising as a ranked row", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     window.scrollTo = vi.fn();
     const container = document.createElement("div");
@@ -223,7 +241,8 @@ describe("marketplace content treatments", () => {
       const rising = Array.from(container.querySelectorAll("article")).find(
         (item) => item.className.includes("h-full") && item !== card,
       );
-      expect(card?.querySelectorAll("img")).toHaveLength(1);
+      expect(card?.querySelectorAll("img")).toHaveLength(2);
+      expect(card?.querySelector(".h-40 img")).not.toBeNull();
       expect(card?.className).toContain("border-neutral-200");
       expect(rising?.className).toContain("border-neutral-200");
       expect(
@@ -244,7 +263,9 @@ describe("marketplace content treatments", () => {
         8,
       );
       for (const article of container.querySelectorAll("article")) {
-        expect(article.querySelector('a[href="/apps/app-1"] img')).not.toBeNull();
+        expect(
+          article.querySelector('a[href="/apps/app-1"] img'),
+        ).not.toBeNull();
       }
       const viewLinks = Array.from(
         container.querySelectorAll('a[href="/apps/app-1"]'),
