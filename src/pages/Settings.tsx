@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/analytics";
 import MemberProfileSettings from "@/components/MemberProfileSettings";
 import AppIntegrationLinks from "@/components/AppIntegrationLinks";
+import AppActivityEmailPreference from "@/components/AppActivityEmailPreference";
 
 const supabase = _sb as any;
 
@@ -80,6 +81,7 @@ export const NotificationsSettings = () => {
           <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${emailsEnabled ? "left-[22px]" : "left-0.5"}`} />
         </button>
       </label>
+      <AppActivityEmailPreference />
     </section>
   );
 };
