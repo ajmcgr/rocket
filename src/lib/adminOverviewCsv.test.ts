@@ -28,3 +28,9 @@ describe("admin overview CSV", () => {
     expect(csv).toContain('"\'=HYPERLINK(""bad"")"');
   });
 });
+
+it("exports stored search and click numbers with the correct daily click scope", () => {
+  const csv = adminOverviewCsv({discovery: {searches: 4, outbound_clicks: 65}}, "7d", loadedAt, exportedAt);
+  expect(csv).toContain('"searches","4","tracked","Selected period","7d","Asia/Bangkok"');
+  expect(csv).toContain('"outbound_clicks","65","tracked","Selected UTC calendar days (daily-deduplicated)","7d","UTC"');
+});

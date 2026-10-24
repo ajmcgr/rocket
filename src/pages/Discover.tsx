@@ -16,6 +16,7 @@ import {
   MarketplaceListRow,
 } from "@/components/MarketplaceCards";
 import { track } from "@/lib/analytics";
+import { recordDiscoverySearch } from "@/lib/discoveryTracking";
 import { availableCategories } from "@/lib/appCategories";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
 import { marketplaceRpc } from "@/lib/marketplace";
@@ -289,10 +290,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
           className="mt-5 flex w-full max-w-3xl gap-2 rounded-xl border border-neutral-200 bg-white p-1.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200"
           onSubmit={(event) => {
             event.preventDefault();
-            track("discovery_search", {
-              source: "discover",
-              has_query: Boolean(safeSearch(query)),
-            });
+            void recordDiscoverySearch(safeSearch(query), "discover");
             change("q", safeSearch(query));
           }}
         >

@@ -99,3 +99,33 @@ describe("Existing view endpoint extended for outbound clicks", () => {
     expect(h.rpc).not.toHaveBeenCalled();
   });
 });
+
+
+describe("Search telemetry on the existing endpoint", () => {
+  it("accepts anonymous search submissions without an app and sends no raw query or IP to storage", async () => {
+    const h = tracking();
+    const res = await h.handler(h.request({ kind: "search", event_id: app, source: "header", query: "private query" }));
+    expect(res.status).toBe(200);
+    expect(h.rpc).toHaveBeenCalledWith("record_discovery_search", {
+      p_event_id: app, p_source: "header", p_visitor_hash: expect.stringMatching(/^[0-9a-f]{64}$/),
+    });
+    expect(JSON.stringify(h.rpc.mock.calls)).not.toMatch(/private query|192\.0\.2\.1/);
+    h.rpc.mockResolvedValueOnce({ data: false, error: null });
+    expect(await (await h.handler(h.request({ kind: "search", event_id: app, source: "discover" }))).json()).toMatchObject({ counted: false });
+  });
+  it("rejects unapproved origins, invalid IDs and entry points before any write", async () => {
+    const h = tracking();
+    for (const body of [
+      {kind: "search", event_id: "bad", source: "header"},
+      {kind: "search", event_id: app, source: "email@example.com"},
+      {kind: "search", source: "discover"},
+    ]) expect((await h.handler(h.request(body))).status).toBe(400);
+    expect((await h.handler(h.request({kind: "search", event_id: app, source: "header"}, "https://attacker.invalid"))).status).toBe(403);
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
+  it("reports storage failure without pretending a search was counted", async () => {
+    const h = tracking();
+    h.rpc.mockRejectedValueOnce(new Error("unavailable"));
+    expect((await h.handler(h.request({kind: "search", event_id: app, source: "homepage"}))).status).toBe(503);
+  });
+});

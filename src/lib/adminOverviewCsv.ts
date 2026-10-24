@@ -29,12 +29,13 @@ export function adminOverviewCsv(
     if (!stats || typeof stats !== "object" || Array.isArray(stats)) continue;
     for (const [metric, value] of Object.entries(stats)) {
       const tracked = typeof value === "number" && Number.isFinite(value);
-      const scope = key === "discovery" || key === "funnel" || (key === "users" && metric === "new_members")
+      const outbound = key === "discovery" && metric === "outbound_clicks";
+      const scope = outbound ? "Selected UTC calendar days (daily-deduplicated)" : key === "discovery" || key === "funnel" || (key === "users" && metric === "new_members")
         ? "Selected period"
         : key === "attention" && metric === "failed_imports" ? "Last 7 days" : "Current total";
       rows.push([
         section, metric, tracked ? value : "", tracked ? "tracked" : "not_tracked",
-        scope, period, "Asia/Bangkok", loadedAt, exportedAt,
+        scope, period, outbound ? "UTC" : "Asia/Bangkok", loadedAt, exportedAt,
       ]);
     }
   }
