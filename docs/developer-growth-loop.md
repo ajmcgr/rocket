@@ -36,9 +36,9 @@ Referrals start at deployment. No historical attribution was inferred from old U
 
 ## Validation and limits
 
-87 focused tests cover success guidance, ownership isolation, auth redirects, the existing onboarding, sharing, public/private card evidence, referral receipts, opt-outs and CSV. TypeScript and production build pass. Transactional SQL fixtures exercise the visit → confirmed signup → successful claim chain, duplicate protection, expiry, private targets, verified analytics, production/sandbox revenue, unique activation and non-admin denial. All fixtures roll back.
+87 focused tests cover success guidance, ownership isolation, auth redirects, the existing onboarding, sharing, public/private card evidence, referral receipts, opt-outs and CSV. TypeScript and production build pass. Transactional SQL fixtures exercise the visit → confirmed signup → successful claim chain, duplicate protection, expiry, private targets, verified analytics, production/sandbox revenue, unique activation and non-admin denial. All fixtures roll back. Attribution fixtures run under the actual restricted service role; confirmed account creation time comes from server-side auth.getUser, without granting access to auth.users.
 
-Production verification checks deployed admin counts, a public share action/arrival and live card/metadata responses. No production apps are submitted or claimed during testing; no real provider credentials, Launch mappings or payments are changed. Full new-provider OAuth handshakes remain covered by existing provider tests rather than reconnecting personal production accounts. Actual social posting and platform cache refresh are outside this change.
+Production verification checks deployed admin counts, a public share action/arrival and live card/metadata responses. No production apps are submitted or claimed during testing; no real provider credentials, Launch mappings or payments are changed. Provider behavior is regression-tested without reconnecting personal production accounts; fresh end-to-end provider OAuth handshakes were not performed. Actual social posting and platform cache refresh are outside this change.
 
 ## Measuring and next steps
 
@@ -74,3 +74,5 @@ Use the admin period filter to compare verified outcomes, share actions, visits 
 - `supabase/functions/rocket-share-card/index.tsx`
 - `supabase/migrations/20261024090235_developer_growth_loop.sql`
 - `tests/developer-growth-loop.sql`
+
+- `supabase/migrations/20261024093130_growth_signup_auth_boundary.sql`
