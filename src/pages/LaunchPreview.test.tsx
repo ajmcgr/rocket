@@ -255,5 +255,26 @@ describe("Rocket app submission", () => {
       action: "consume_preview",
       publish: true,
     });
+    await waitFor(() =>
+      expect(sessionStorage.getItem("rocket:just-published")).toBe("app"),
+    );
+  });
+  it("does not mark a failed or pending publication as published", async () => {
+    mocks.user = { id: "owner" };
+    sessionStorage.setItem(
+      "rocket:launch-preview-v1",
+      JSON.stringify({ ...preview(), publishAfterAuth: true }),
+    );
+    mocks.invoke.mockResolvedValue({
+      data: { app_id: "pending", published: false },
+      error: null,
+    });
+    await mount();
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toContain(
+        "identity review",
+      ),
+    );
+    expect(sessionStorage.getItem("rocket:just-published")).toBeNull();
   });
 });

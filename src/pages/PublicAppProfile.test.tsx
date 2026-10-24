@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Tables } from "@/integrations/supabase/types";
@@ -19,6 +26,7 @@ vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/components/SiteFooter", () => ({ default: () => null }));
 vi.mock("@/components/AppReviews", () => ({ default: () => null }));
 vi.mock("@/components/AppProfileBuyAction", () => ({ default: () => null }));
+vi.mock("@/lib/myApps", () => ({ loadMyApps: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => {
@@ -56,6 +64,29 @@ const app = {
 afterEach(() => {
   cleanup();
   auth.user = null;
+  sessionStorage.clear();
+});
+it("shows the optional opportunity only for the just-published app and dismisses it", async () => {
+  sessionStorage.setItem("rocket:just-published", app.id);
+  auth.user = { id: "submitter" };
+  render(<PublicAppProfile initialApp={app} />);
+  expect(screen.getByRole("region", { name: "App published" })).toBeTruthy();
+  expect(sessionStorage.getItem("rocket:just-published")).toBeNull();
+  await screen.findByRole("link", { name: "Verify ownership" });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "View your app" }));
+  });
+  await waitFor(() =>
+    expect(screen.queryByRole("region", { name: "App published" })).toBeNull(),
+  );
+  expect(
+    screen.getByRole("heading", { name: "Whisperit", level: 1 }),
+  ).toBeTruthy();
+});
+it("does not show a submission confirmation for ordinary visits or another app's marker", () => {
+  sessionStorage.setItem("rocket:just-published", "different-app");
+  render(<PublicAppProfile initialApp={app} />);
+  expect(screen.queryByRole("region", { name: "App published" })).toBeNull();
 });
 it("includes useful profile identity in server-rendered HTML", () => {
   const html = renderToStaticMarkup(<PublicAppProfile initialApp={app} />);
@@ -69,7 +100,9 @@ it("shows category and readable platform labels below the app description", () =
       initialApp={{ ...app, platforms: ["web", "ios", "android", "hardware"] }}
     />,
   );
-  expect(html.indexOf("Useful software")).toBeLessThan(html.indexOf("Productivity"));
+  expect(html.indexOf("Useful software")).toBeLessThan(
+    html.indexOf("Productivity"),
+  );
   for (const label of ["Web", "iOS", "Android", "Hardware"]) {
     expect(html).toContain(`>${label}</span>`);
   }

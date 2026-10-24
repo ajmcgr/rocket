@@ -47,6 +47,7 @@ import {
   type SubmissionDetails,
 } from "../../supabase/functions/_shared/appSubmission";
 import RocketShare from "@/components/RocketShare";
+import AppSubmissionSuccess from "@/components/AppSubmissionSuccess";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 import AppAgentIntegrations, {
   type PublicAgentIntegrations,
@@ -118,7 +119,7 @@ export default function PublicAppProfile({
   } | null>(null);
   const [saved, setSaved] = useState(false);
   const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
-  const [justPublished, setJustPublished] = useState(false);
+  const [justPublished, setJustPublished] = useState<string | null>(null);
   const [loading, setLoading] = useState(initialApp === undefined);
   const [error, setError] = useState(initialApp === null);
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function PublicAppProfile({
     try {
       if (sessionStorage.getItem("rocket:just-published") === app.id) {
         sessionStorage.removeItem("rocket:just-published");
-        setJustPublished(true);
+        setJustPublished(app.id);
       }
     } catch {
       /* Sharing remains available in private browsing modes. */
@@ -414,38 +415,14 @@ export default function PublicAppProfile({
         )}
         {app && !loading && !error && (
           <>
-            {justPublished && (
-              <div
-                role="status"
-                className="mt-5 rounded-2xl border border-sky-200 bg-white p-5 sm:p-6"
-              >
-                <p className="text-xs font-bold uppercase tracking-widest text-sky-700">
-                  Your app is on Rocket
-                </p>
-                <h2 className="mt-2 text-2xl font-bold">
-                  Share what you built.
-                </h2>
-                <p className="mt-1 text-sm text-neutral-600">
-                  People can now discover and save your app. Sharing is always
-                  your choice.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <RocketShare
-                    kind="app"
-                    identifier={app.slug || app.id}
-                    title={app.name}
-                    label="Share your app"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white"
-                  />
-                  <button
-                    type="button"
-                    className="min-h-11 rounded-xl border border-neutral-200 px-5 text-sm font-medium"
-                    onClick={() => setJustPublished(false)}
-                  >
-                    View app
-                  </button>
-                </div>
-              </div>
+            {justPublished === app.id && (
+              <AppSubmissionSuccess
+                key={`published:${app.id}`}
+                appId={app.id}
+                slug={app.slug}
+                name={app.name}
+                onViewApp={() => setJustPublished(null)}
+              />
             )}
             <div className="mt-5 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-7">
               <div className="flex items-start gap-4 sm:gap-6">
