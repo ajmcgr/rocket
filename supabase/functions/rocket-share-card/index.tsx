@@ -1,3 +1,4 @@
+import { loadPublicShareMetrics, loadPublicShareMetricsForApps, type ShareMetric } from "../_shared/publicShareMetrics.ts";
 import React from "npm:react@19.2.0";
 import { ImageResponse } from "npm:@vercel/og@0.8.5";
 import { createClient } from "npm:@supabase/supabase-js@2.101.1";
@@ -81,7 +82,7 @@ async function rasterDataUrl(value: unknown): Promise<string | null> {
   } catch { return null; }
 }
 
-type Card = { title: string; detail: string; kicker: string; url: string; logo: string | null; cover: string | null; logos?: string[]; recapMetrics?: { label: string; value: string }[] };
+type Card = { title: string; detail: string; kicker: string; url: string; logo: string | null; cover: string | null; logos?: string[]; recapMetrics?: { label: string; value: string; source?: string }[] };
 const recapImageCache = new Map<string, { bytes: Uint8Array; until: number }>();
 
 function truncateForCard(value: string, limit: number) {
@@ -123,6 +124,10 @@ async function loadCard(kind: string, id: string, includeCover: boolean): Promis
     if (error || !app) return null;
     const { data: media } = includeCover ? await db.from("public_app_media_covers").select("source_url").eq("app_id", app.id).limit(1) : { data: null };
     const [logo, cover] = await Promise.all([rasterDataUrl(app.logo_url), includeCover ? rasterDataUrl(media?.[0]?.source_url) : Promise.resolve(null)]);
+    const metrics = await loadPublicShareMetrics(db,app.id);
+    const {data:developer} = metrics.length ? await db.rpc("get_app_developer",{p_app_id:app.id}) : {data:null};
+    if (metrics.length) return {title:app.name.slice(0,120),detail:developer?.username ? `By @${developer.username}` : "Verified app traction",
+      kicker:"VERIFIED TRACTION",url:`tryrocket.ai/apps/${app.slug || app.id}`,logo,cover:null,recapMetrics:metrics};
     return { title: app.name.slice(0, 120), detail: (app.tagline || app.description || "Explore this app on Rocket").slice(0, 180), kicker: app.categories?.[0] || "App on Rocket", url: `tryrocket.ai/apps/${app.slug}`, logo, cover };
   }
   if (kind === "profile") {
@@ -131,6 +136,16 @@ async function loadCard(kind: string, id: string, includeCover: boolean): Promis
     if (error || !profile) return null;
     const { data: apps } = await db.rpc("get_public_member_apps", { p_username: id, p_offset: 0 });
     const count = Array.isArray(apps) ? apps.length : 0;
+    let featured: {name:string;metrics:ShareMetric[]} | null = null;
+    const publicApps=Array.isArray(apps) ? apps : [];
+    const publicMetrics=await loadPublicShareMetricsForApps(db,publicApps.map(app=>app.id));
+    for (const app of publicApps) {
+      const metrics = publicMetrics.get(app.id) || [];
+      if (metrics.length && (!featured || !metrics[0].label.startsWith("Daily"))) featured={name:app.name,metrics};
+      if (featured && !featured.metrics[0].label.startsWith("Daily")) break;
+    }
+    if (featured) return {title:`@${profile.username}`,detail:featured.name.slice(0,65),kicker:"VERIFIED APP TRACTION",url:`tryrocket.ai/@${profile.username}`,
+      logo:await rasterDataUrl(profile.avatar_url),cover:null,recapMetrics:featured.metrics};
     return { title: `@${profile.username}`, detail: profile.bio?.slice(0, 180) || "Building on Rocket", kicker: count ? count >= 25 ? "25 or more public apps" : `${count} public apps` : "Developer profile", url: `tryrocket.ai/@${profile.username}`, logo: await rasterDataUrl(profile.avatar_url), cover: null };
   }
   if (kind === "collection") {
@@ -150,7 +165,7 @@ function artwork(card: Card, width: number, height: number) {
     const square = height === width;
     const pad = portrait ? 76 : 56;
     return <div style={{ display: "flex", flexDirection: "column", width, height, padding: pad, backgroundColor: "#0b1522", color: "white", fontFamily: "Inter" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><img src={rocketLogo} width={portrait ? 245 : 190} height={portrait ? 85 : 65} style={{ objectFit: "contain" }} /><span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 27 : 22, fontWeight: 700, letterSpacing: 2 }}>ROCKET RECAP</span></div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><img src={rocketLogo} width={portrait ? 245 : 190} height={portrait ? 85 : 65} style={{ objectFit: "contain" }} /><span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 27 : 22, fontWeight: 700, letterSpacing: 2 }}>{card.kicker}</span></div>
       <div style={{ display: "flex", flexDirection: "column", marginTop: portrait ? 210 : square ? 100 : 65 }}>
         <span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 38 : 29, fontWeight: 700 }}>{card.detail}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 30, marginTop: 22 }}>
@@ -159,7 +174,7 @@ function artwork(card: Card, width: number, height: number) {
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: portrait ? "column" : "row", gap: portrait ? 38 : 28, marginTop: portrait ? 135 : square ? 95 : 60 }}>
-        {card.recapMetrics.map((metric) => <div key={metric.label} style={{ display: "flex", flexDirection: "column", flex: 1, padding: portrait ? 42 : 28, borderRadius: 25, border: "2px solid #31536b", backgroundColor: "#132638" }}><span style={{ display: "flex", color: "white", fontSize: portrait ? 112 : square ? 92 : 73, fontWeight: 700 }}>{metric.value}</span><span style={{ display: "flex", color: "#bdd0dd", fontSize: portrait ? 30 : 24 }}>{metric.label}</span></div>)}
+        {card.recapMetrics.map((metric) => <div key={metric.label} style={{ display: "flex", flexDirection: "column", flex: 1, padding: portrait ? 42 : 28, borderRadius: 25, border: "2px solid #31536b", backgroundColor: "#132638" }}><span style={{ display: "flex", color: "white", fontSize: metric.value.length>18 ? (portrait?56:square?40:32) : metric.value.length>12 ? (portrait?72:square?60:48) : portrait ? 112 : square ? 92 : 73, fontWeight: 700 }}>{metric.value}</span><span style={{ display: "flex", color: "#bdd0dd", fontSize: portrait ? 30 : 24 }}>{metric.label}</span>{metric.source && <span style={{display:"flex",color:"#9bb8ca",fontSize:portrait?23:18,marginTop:10}}>{metric.source}</span>}</div>)}
       </div>
       <div style={{ display: "flex", marginTop: "auto", paddingTop: 24, borderTop: "2px solid #31536b", justifyContent: "space-between", color: "#bdd0dd", fontSize: portrait ? 28 : 20 }}><span>The open app platform for builders.</span><span style={{ color: "#72c0ed" }}>{card.url}</span></div>
     </div>;
@@ -233,7 +248,7 @@ Deno.serve(async (req) => {
   try {
     const card = await loadCard(kind, id, variant !== "portrait");
     if (!card) return notFound();
-    if (req.method === "HEAD") return new Response(null, { headers: { "Content-Type": "image/png", "Cache-Control": kind === "recap" ? "no-store" : "public, max-age=300", "Access-Control-Allow-Origin": "*" } });
+    if (req.method === "HEAD") return new Response(null, { headers: { "Content-Type": "image/png", "Cache-Control": ["recap","app","profile"].includes(kind) ? "no-store" : "public, max-age=300", "Access-Control-Allow-Origin": "*" } });
     if (kind === "recap") {
       const key = `${id}:${variant}`;
       const cached = recapImageCache.get(key);
@@ -243,7 +258,7 @@ Deno.serve(async (req) => {
     const image = new ImageResponse(artwork(card, width, height), { width, height, fonts: cardFonts });
     const headers = new Headers(image.headers);
     headers.set("Access-Control-Allow-Origin", "*");
-    headers.set("Cache-Control", kind === "recap" ? "no-store" : kind === "collection" ? "public, max-age=30" : "public, max-age=300");
+    headers.set("Cache-Control", ["recap","app","profile"].includes(kind) ? "no-store" : kind === "collection" ? "public, max-age=30" : "public, max-age=300");
     headers.set("X-Content-Type-Options", "nosniff");
     if (req.method === "HEAD") return new Response(null, { headers });
     if (kind === "recap") {

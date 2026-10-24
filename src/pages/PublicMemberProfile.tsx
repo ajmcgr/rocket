@@ -1,3 +1,4 @@
+import RocketShare from "@/components/RocketShare";
 import SiteHeader from "@/components/SiteHeader";
 import PublicMemberApps from "@/components/PublicMemberApps";
 import PublicMemberCollections from '@/components/PublicMemberCollections';
@@ -30,6 +31,7 @@ export default function PublicMemberProfile({ profile }: { profile: MemberProfil
             {safeProfileUrl(profile.website) && <a href={safeProfileUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">Website ↗</a>}
             {socials.filter(([, handle]) => handle).map(([label, handle, base]) => <a key={label} href={`${base}${encodeURIComponent(handle)}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">{label} ↗</a>)}
           </div>
+          <RocketShare kind="profile" identifier={profile.username} title={`@${profile.username}`} label="Share profile" />
           <MarketplaceFollow key={profile.username} target={`developer:${profile.username}`} label="developer" />
         </div>
       </article>}

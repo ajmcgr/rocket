@@ -12,7 +12,7 @@ describe("Rocket sharing links", () => {
   it("generates one image endpoint with the requested dimensions variant", () => {
     const image = new URL(shareCardUrl("app", "launch", "portrait", "v2"));
     expect(image.searchParams.get("variant")).toBe("portrait");
-    expect(image.searchParams.get("v")).toBe("b4v2");
+    expect(image.searchParams.get("v")).toBe("b5v2");
   });
   it("uses supported intent URLs without suggesting a post was published", () => {
     const targets = shareTargets("Launch", canonicalShareUrl("app", "launch"));
