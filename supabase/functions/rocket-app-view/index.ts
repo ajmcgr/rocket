@@ -1,3 +1,4 @@
+import { recordGrowthRequest } from "../_shared/growthTracking.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.101.1";
 
 const allowedOrigins = new Set(["https://tryrocket.ai", "https://www.tryrocket.ai"]);
@@ -37,20 +38,33 @@ Deno.serve(async (req) => {
     return response(415, origin, { error: "Invalid content type" });
 
   let appId: string;
+  let growthBody: Record<string, unknown> | null = null;
   let eventId: string, searchSource: string;
   let kind = "view", source = "direct", sponsorshipId: string | null = null;
   try {
     const raw = await req.text();
-    if (raw.length > 200) return response(413, origin, { error: "Invalid request" });
+    if (raw.length > 600) return response(413, origin, { error: "Invalid request" });
     const body = JSON.parse(raw);
     appId = body?.app_id;
     eventId = body?.event_id;
     searchSource = body?.source;
     kind = body?.kind || "view";
+    if (["share_action", "referral_visit", "referral_signup"].includes(kind)) growthBody = body;
+    else if (raw.length > 200) return response(413, origin, {error:"Invalid request"});
     source = ["rocket_badge","rocket_share"].includes(body?.source) ? body.source : "direct";
     sponsorshipId = typeof body?.sponsorship_id === "string" ? body.sponsorship_id : null;
   } catch {
     return response(400, origin, { error: "Invalid request" });
+  }
+  if (growthBody) {
+    if (req.headers.get("DNT") === "1" || req.headers.get("Sec-GPC") === "1") return response(202, origin, {ok:true,counted:false});
+    const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    if (!ip) return response(202, origin, {ok:true,counted:false});
+    try {
+      const hash = await dailyVisitorHash(new Date().toISOString().slice(0,10),ip,(req.headers.get("user-agent") || "").slice(0,256));
+      const result = await recordGrowthRequest(req,growthBody,admin,hash);
+      return response(result.status,origin,result.body);
+    } catch { return response(503,origin,{error:"Growth tracking unavailable"}); }
   }
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (kind === "search" && (typeof eventId !== "string" || !uuid.test(eventId) ||

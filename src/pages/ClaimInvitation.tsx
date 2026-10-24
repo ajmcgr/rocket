@@ -3,6 +3,7 @@ import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
+import DeveloperActivationNextSteps from "@/components/DeveloperActivationNextSteps";
 import RocketShare from "@/components/RocketShare";
 
 const storageKey = "rocket:founder-claim-invitation";
@@ -72,6 +73,7 @@ export default function ClaimInvitation() {
       to="/login?next=%2Fclaim-invitation"
       className="mt-6 inline-flex rounded-xl bg-[#167ac6] px-5 py-3 font-semibold text-white"
     >Sign in to claim</Link>}
+    {done && invitation && <DeveloperActivationNextSteps appId={invitation.appId} />}
     {done && invitation && <div className="mt-6 flex flex-wrap gap-3"><RocketShare kind="app" identifier={claimedApp?.slug || invitation.appId} title={claimedApp?.name || "your app"} label="Share app" /><Link to={`/apps/${invitation.appId}`} className="inline-flex min-h-11 items-center rounded-xl border border-[#167ac6] px-5 py-3 font-semibold text-[#167ac6] dark:text-sky-300">View your app</Link></div>}
   </main></div>;
 }

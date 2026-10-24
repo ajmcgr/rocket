@@ -34,3 +34,9 @@ it("exports stored search and click numbers with the correct daily click scope",
   expect(csv).toContain('"searches","4","tracked","Selected period","7d","Asia/Bangkok"');
   expect(csv).toContain('"outbound_clicks","65","tracked","Selected UTC calendar days (daily-deduplicated)","7d","UTC"');
 });
+
+it('exports growth counts as selected-period outcomes and events',()=>{
+  const csv=adminOverviewCsv({growth:{activated_developers:2,verified_analytics_connections:3,share_actions:4,referral_registrations:1}},'7d',loadedAt,exportedAt);
+  expect(csv).toContain('"Developer growth loop","activated_developers","2","tracked","Selected period"');
+  expect(csv).toContain('"share_actions","4","tracked"');
+});

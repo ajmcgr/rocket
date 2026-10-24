@@ -128,7 +128,7 @@ describe("existing app ownership flow", () => {
         );
       }
       expect(
-        mocks.invoke.mock.calls.map(([, options]) => options.body),
+        mocks.invoke.mock.calls.map(([, options]) => options.body).filter(body => body.action !== "my_apps"),
       ).toEqual([
         {
           action: "claim",

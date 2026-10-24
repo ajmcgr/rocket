@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { safeReturnPath } from "@/lib/navigation";
+import { pendingGrowthReferral } from "@/lib/growthTracking";
 import { track } from "@/lib/analytics";
 import { NEWSLETTER_SIGNUP_FLAG, rememberOAuthSignup, forgetOAuthSignup } from "@/lib/beehiivAccountSync";
 
@@ -73,7 +74,7 @@ const Login = ({ mode = "login" as "login" | "signup" }) => {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { username: username.trim().replace(/^@/, ""), ref, [NEWSLETTER_SIGNUP_FLAG]: true } },
+          options: { data: { username: username.trim().replace(/^@/, ""), ref, rocket_growth_referral: pendingGrowthReferral(), [NEWSLETTER_SIGNUP_FLAG]: true } },
         });
         if (error) throw error;
         track("signup_completed", { method: "email", ref });

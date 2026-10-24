@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import { track } from "@/lib/analytics";
+import DeveloperActivationNextSteps from "@/components/DeveloperActivationNextSteps";
 import RocketShare from "@/components/RocketShare";
 
 type FoundApp = { id: string; name: string; description?: string | null; website_url: string; logo_url?: string | null; categories?: string[]; claim_state?: string };
@@ -139,6 +140,7 @@ export default function AddApp() {
     {resolvingApp && <div role="status" aria-label="Loading app" className="rocket-skeleton-surface mt-7 h-44 animate-pulse rounded-[1.5rem] border border-neutral-200 p-6"><div className="h-14 w-14 rounded-2xl bg-neutral-100" /></div>}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {success && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{success}</p>}
+    {success && app && <DeveloperActivationNextSteps appId={app.id} />}
     {success && app && <div className="mt-4 flex flex-wrap gap-3"><RocketShare kind="app" identifier={app.id} title={app.name} label="Share app" /><Link to={`/apps/${app.id}`} className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm">View app</Link></div>}
     {job?.status === "needs_review" && <div className="mt-6 rounded-xl border bg-white p-6">
       <h2 className="font-semibold">We found more than one possible app</h2><p className="mt-2 text-sm text-neutral-600">We won't guess which one is yours. Review the URL or contact Rocket for help.</p>

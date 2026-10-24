@@ -3,6 +3,7 @@ import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { loadMyApps } from "@/lib/myApps";
 import type { MyApp } from "@/components/AppJourney";
+import DeveloperActivationNextSteps from "@/components/DeveloperActivationNextSteps";
 import RocketShare from "@/components/RocketShare";
 
 export default function AppSubmissionSuccess({
@@ -70,8 +71,9 @@ export default function AppSubmissionSuccess({
         Your app is live on Rocket!
       </h2>
       <p className="mt-1 text-sm text-neutral-600">
-        Your app is now discoverable. Ready to start making money from it?
+        Your app is now discoverable. Choose an optional next step.
       </p>
+      {current && !current.failed && <DeveloperActivationNextSteps appId={appId} item={current.item} />}
       <h3 className="mt-4 font-semibold">Sell your app with Buy with Rocket</h3>
       <p className="mt-1 max-w-2xl text-sm text-neutral-600">
         Accept payments for app access and subscriptions through Rocket or your

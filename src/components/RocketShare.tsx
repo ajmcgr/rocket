@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Download, Link2, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { recordGrowthShare } from "@/lib/growthTracking";
 import { track } from "@/lib/analytics";
 import { attributedShareUrl, shareCardUrl, shareTargets, type ShareKind, type ShareVariant } from "@/lib/shareLinks";
 
@@ -34,6 +35,7 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
       await navigator.clipboard.writeText(text);
       setNotice(`${what === "link" ? "Link" : "Caption"} copied.`);
       track(what === "link" ? "share_link_copied" : "share_caption_copied", eventData);
+      void recordGrowthShare(kind, identifier, what);
     } catch { setNotice("Could not copy automatically."); }
   };
   const download = async () => {
@@ -51,12 +53,14 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      void recordGrowthShare(kind, identifier, "download");
       track("share_card_downloaded", { ...eventData, variant });
       if (kind === "rocket100") track("rocket100_shared", { destination: "download", identifier });
     } catch { setNotice("The image is unavailable right now. You can still copy the link."); }
     finally { setDownloading(false); }
   };
   const openTarget = (destination: string, href: string) => {
+    void recordGrowthShare(kind, identifier, "intent");
     track("share_destination_clicked", { ...eventData, destination });
     if (kind === "rocket100") track("rocket100_shared", { destination, identifier });
     window.open(href, "_blank", "noopener,noreferrer");
@@ -65,6 +69,7 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
     if (!navigator.share) return;
     try {
       await navigator.share({ title, url });
+      void recordGrowthShare(kind, identifier, "native");
       track("share_native_completed", eventData);
     } catch { /* The person may cancel the native sheet. */ }
   };

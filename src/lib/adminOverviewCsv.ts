@@ -3,6 +3,7 @@ const sections = [
   ["users", "People"],
   ["discovery", "Discovery"],
   ["funnel", "Developer funnel"],
+  ["growth", "Developer growth loop"],
   ["attention", "Needs attention"],
   ["outreach", "Outreach"],
 ] as const;
@@ -30,7 +31,7 @@ export function adminOverviewCsv(
     for (const [metric, value] of Object.entries(stats)) {
       const tracked = typeof value === "number" && Number.isFinite(value);
       const outbound = key === "discovery" && metric === "outbound_clicks";
-      const scope = outbound ? "Selected UTC calendar days (daily-deduplicated)" : key === "discovery" || key === "funnel" || (key === "users" && metric === "new_members")
+      const scope = outbound ? "Selected UTC calendar days (daily-deduplicated)" : key === "discovery" || key === "funnel" || key === "growth" || (key === "users" && metric === "new_members")
         ? "Selected period"
         : key === "attention" && metric === "failed_imports" ? "Last 7 days" : "Current total";
       rows.push([
