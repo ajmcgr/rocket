@@ -37,25 +37,32 @@ Deno.serve(async (req) => {
     return response(415, origin, { error: "Invalid content type" });
 
   let appId: string;
+  let eventId: string, searchSource: string;
   let kind = "view", source = "direct", sponsorshipId: string | null = null;
   try {
     const raw = await req.text();
     if (raw.length > 200) return response(413, origin, { error: "Invalid request" });
     const body = JSON.parse(raw);
     appId = body?.app_id;
+    eventId = body?.event_id;
+    searchSource = body?.source;
     kind = body?.kind || "view";
     source = ["rocket_badge","rocket_share"].includes(body?.source) ? body.source : "direct";
     sponsorshipId = typeof body?.sponsorship_id === "string" ? body.sponsorship_id : null;
   } catch {
     return response(400, origin, { error: "Invalid request" });
   }
-  if (typeof appId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId))
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (kind === "search" && (typeof eventId !== "string" || !uuid.test(eventId) ||
+    !["header", "homepage", "discover"].includes(searchSource)))
+    return response(400, origin, { error: "Invalid search" });
+  if (kind !== "search" && (typeof appId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId)))
     return response(400, origin, { error: "Invalid app" });
-  if (!["view","outbound"].includes(kind)) return response(400,origin,{error:"Invalid event"});
+  if (!["view","outbound","search"].includes(kind)) return response(400,origin,{error:"Invalid event"});
 
   // A verified paid-placement visit is not organic Rising momentum. The
   // active sponsorship RPC checks paid state, server time and app eligibility.
-  if (sponsorshipId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sponsorshipId)) {
+  if (kind !== "search" && sponsorshipId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sponsorshipId)) {
     try {
       const { data: active, error } = await admin.rpc("active_rocket_sponsorships", { p_category: null });
       if (error) throw error;
@@ -74,7 +81,9 @@ Deno.serve(async (req) => {
   try {
     const day = new Date().toISOString().slice(0, 10);
     const hash = await dailyVisitorHash(day, ip, (req.headers.get("user-agent") || "").slice(0, 256));
-    const { data, error } = kind === "outbound" ? await admin.rpc("record_marketplace_click", {
+    const { data, error } = kind === "search" ? await admin.rpc("record_discovery_search", {
+      p_event_id: eventId, p_source: searchSource, p_visitor_hash: hash,
+    }) : kind === "outbound" ? await admin.rpc("record_marketplace_click", {
       p_app_id: appId, p_source: source, p_visitor_hash: hash,
     }) : await admin.rpc("record_app_profile_view", {
       p_app_id: appId, p_view_day: day, p_viewer_hash: hash,

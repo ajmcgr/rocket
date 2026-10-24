@@ -50,6 +50,8 @@ function StatGrid({ data }: { data: Row }) {
     <div className="rocket-admin-stat" key={name}>
       <div className="rocket-admin-stat-header"><span>{label(name)}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
       <div className={`rocket-admin-stat-figure${typeof value === "number" ? "" : " rocket-admin-stat-figure-untracked"}`}><span aria-hidden="true">{statEmojis[name] || "📊"}</span><strong>{count(value)}</strong></div>
+      {name === "outbound_clicks" && <small>Daily-deduplicated · UTC calendar days</small>}
+      {name === "searches" && <small>Submitted searches · tracked from 24 Oct 2026</small>}
     </div>)}</div>;
 }
 

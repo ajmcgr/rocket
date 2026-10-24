@@ -10,6 +10,9 @@ import { MemoryRouter } from "@/test/MemoryRouter";
 import { useLocation } from "@/lib/router-compat";
 import AppShell, { useAppShell } from "./AppShell";
 
+const recordSearch = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/discoveryTracking", () => ({ recordDiscoverySearch: recordSearch }));
+
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     user: { id: "owner", email: "owner@example.com" },
@@ -107,6 +110,7 @@ it("uses one standard header/sidebar and keeps search and mobile navigation avai
     { target: { value: "tools" } },
   );
   fireEvent.submit(screen.getByRole("search"));
+  expect(recordSearch).toHaveBeenCalledWith("tools", "header");
   await waitFor(() =>
     expect(screen.getByTestId("current-route").textContent).toBe(
       "/discover?q=tools",

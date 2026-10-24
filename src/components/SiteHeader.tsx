@@ -46,6 +46,7 @@ import NotificationsBell from "./NotificationsBell";
 import HeaderShareBoundary from "./HeaderShareBoundary";
 const ShareExportModal = lazy(() => import("./ShareExportModal"));
 import LanguageSelector from "./LanguageSelector";
+import { recordDiscoverySearch } from "@/lib/discoveryTracking";
 import { createNavigationItems } from "@/lib/createNavigation";
 
 const siteShareUrl = () => {
@@ -177,6 +178,7 @@ export default function SiteHeader({
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     const query = search.trim();
+    void recordDiscoverySearch(query, "header");
     navigate(query ? `/discover?q=${encodeURIComponent(query)}` : "/discover");
   };
 

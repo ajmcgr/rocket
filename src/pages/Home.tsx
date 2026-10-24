@@ -6,7 +6,7 @@ import HomeMerchandising from "@/components/HomeMerchandising";
 import HomeStory from "@/components/HomeStory";
 import FeaturedAdRows from "@/components/FeaturedAdRows";
 import type { HomeMerchandising as HomeData } from "@/lib/homeMerchandising";
-import { track } from "@/lib/analytics";
+import { recordDiscoverySearch } from "@/lib/discoveryTracking";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home({ data }: { data: Promise<HomeData> }) {
@@ -16,7 +16,7 @@ export default function Home({ data }: { data: Promise<HomeData> }) {
   const search = (event: FormEvent) => {
     event.preventDefault();
     const term = query.trim();
-    track("discovery_search", { source: "homepage", has_query: Boolean(term) });
+    void recordDiscoverySearch(term, "homepage");
     navigate(term ? `/discover?q=${encodeURIComponent(term)}` : "/discover");
   };
 
