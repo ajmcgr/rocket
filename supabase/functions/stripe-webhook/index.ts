@@ -346,15 +346,17 @@ async function applySponsorshipCheckout(admin: any, stripe: Stripe, event: Strip
   if (bookingError || !booking) throw bookingError || new Error("Unknown sponsorship");
   const type = booking.sponsorship_type as keyof typeof advertisingProducts;
   const spec = advertisingProducts[type];
+  const fullyDiscounted = session.amount_total === 0;
   if (!spec || session.mode !== "payment" || session.status !== "complete"
-    || session.payment_status !== "paid" || session.livemode !== event.livemode
+    || !(session.payment_status === "paid" || (fullyDiscounted && session.payment_status === "no_payment_required"))
+    || session.livemode !== event.livemode
     || booking.stripe_livemode !== event.livemode
     || booking.stripe_checkout_session_id !== session.id
     || session.client_reference_id !== id
     || session.metadata?.rocket_sponsorship_type !== type
     || booking.amount_cents !== spec.amount
     || session.currency !== "usd" || session.amount_subtotal !== spec.amount
-    || !Number.isSafeInteger(session.amount_total) || session.amount_total! < 1
+    || !Number.isSafeInteger(session.amount_total) || session.amount_total! < 0
     || session.amount_total! > spec.amount
     || (session.amount_total !== spec.amount &&
       (session.total_details?.amount_discount !== spec.amount - session.amount_total!
@@ -389,24 +391,33 @@ async function applySponsorshipCheckout(admin: any, stripe: Stripe, event: Strip
     throw new Error("Sponsorship Stripe product/price mismatch");
   const intentId = typeof session.payment_intent === "string"
     ? session.payment_intent : session.payment_intent?.id;
-  if (!intentId) throw new Error("Missing sponsorship PaymentIntent");
-  const intent = await stripe.paymentIntents.retrieve(intentId);
-  if (intent.status !== "succeeded" || intent.livemode !== event.livemode
-    || intent.amount !== session.amount_total || intent.amount_received !== session.amount_total
-    || intent.currency !== "usd" || intent.metadata.rocket_sponsorship_id !== id)
-    throw new Error("Sponsorship payment is not verified");
-  const chargeId = typeof intent.latest_charge === "string"
-    ? intent.latest_charge : intent.latest_charge?.id;
-  if (!chargeId) throw new Error("Missing sponsorship charge");
-  const charge = await stripe.charges.retrieve(chargeId);
-  if (charge.payment_intent !== intentId || charge.livemode !== event.livemode
-    || charge.amount !== session.amount_total || charge.currency !== "usd")
-    throw new Error("Sponsorship charge mismatch");
-  const fullyRefunded = charge.refunded || charge.amount_refunded >= charge.amount;
-  const disputed = charge.disputed === true;
+  let fullyRefunded = false;
+  let disputed = false;
+  if (fullyDiscounted) {
+    // Stripe creates no PaymentIntent for a free completed Checkout. The
+    // signed session and canonical line item above must both prove that the
+    // entire booked price was discounted, with no tax or shipping added.
+    if (intentId) throw new Error("Unexpected PaymentIntent for fully discounted sponsorship");
+  } else {
+    if (!intentId) throw new Error("Missing sponsorship PaymentIntent");
+    const intent = await stripe.paymentIntents.retrieve(intentId);
+    if (intent.status !== "succeeded" || intent.livemode !== event.livemode
+      || intent.amount !== session.amount_total || intent.amount_received !== session.amount_total
+      || intent.currency !== "usd" || intent.metadata.rocket_sponsorship_id !== id)
+      throw new Error("Sponsorship payment is not verified");
+    const chargeId = typeof intent.latest_charge === "string"
+      ? intent.latest_charge : intent.latest_charge?.id;
+    if (!chargeId) throw new Error("Missing sponsorship charge");
+    const charge = await stripe.charges.retrieve(chargeId);
+    if (charge.payment_intent !== intentId || charge.livemode !== event.livemode
+      || charge.amount !== session.amount_total || charge.currency !== "usd")
+      throw new Error("Sponsorship charge mismatch");
+    fullyRefunded = charge.refunded || charge.amount_refunded >= charge.amount;
+    disputed = charge.disputed === true;
+  }
   const { data: applied, error } = await admin.rpc("apply_rocket_sponsorship_payment", {
     p_event_id: event.id, p_sponsorship_id: id, p_session_id: session.id,
-    p_payment_intent_id: intent.id, p_price_id: priceId,
+    p_payment_intent_id: intentId || null, p_price_id: priceId,
     p_amount_cents: session.amount_total, p_currency: "usd", p_livemode: event.livemode,
     p_paid_at: new Date(event.created * 1000).toISOString(),
     // Suppress activation atomically when a dispute predated checkout delivery.
@@ -428,7 +439,7 @@ async function applySponsorshipCheckout(admin: any, stripe: Stripe, event: Strip
     await sendBranded(RESEND_API_KEY, FROM_EMAIL, booking.purchaser_email,
       "sponsorship_booked", {
         type, appName: target?.name || "Your app", category: booking.target_category,
-        amount: spec.amount,
+        amount: session.amount_total,
         start: placed?.actual_start_at ? new Date(placed.actual_start_at).toUTCString() : "See My Advertising",
         end: placed?.actual_end_at ? new Date(placed.actual_end_at).toUTCString() : "See My Advertising",
       });
