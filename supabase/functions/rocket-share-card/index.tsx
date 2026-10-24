@@ -163,18 +163,18 @@ function artwork(card: Card, width: number, height: number) {
   if (card.recapMetrics) {
     const portrait = height > width;
     const square = height === width;
-    const pad = portrait ? 76 : 56;
+    const pad = portrait ? 76 : square ? 56 : 48;
     return <div style={{ display: "flex", flexDirection: "column", width, height, padding: pad, backgroundColor: "#0b1522", color: "white", fontFamily: "Inter" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><img src={rocketLogo} width={portrait ? 245 : 190} height={portrait ? 85 : 65} style={{ objectFit: "contain" }} /><span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 27 : 22, fontWeight: 700, letterSpacing: 2 }}>{card.kicker}</span></div>
-      <div style={{ display: "flex", flexDirection: "column", marginTop: portrait ? 210 : square ? 100 : 65 }}>
-        <span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 38 : 29, fontWeight: 700 }}>{card.detail}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 30, marginTop: 22 }}>
-          {card.logo && <img src={card.logo} width={portrait ? 150 : 110} height={portrait ? 150 : 110} style={{ borderRadius: 28, objectFit: "contain" }} />}
-          <span style={{ display: "flex", maxWidth: portrait ? 800 : square ? 820 : 930, overflow: "hidden", fontSize: portrait ? 86 : square ? 80 : 72, fontWeight: 700, letterSpacing: -3, lineHeight: 1.08 }}>{truncateForCard(card.title, portrait ? 42 : 38)}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><img src={rocketLogo} width={portrait ? 245 : square ? 190 : 165} height={portrait ? 85 : square ? 65 : 57} style={{ objectFit: "contain" }} /><span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 27 : square ? 22 : 20, fontWeight: 700, letterSpacing: 2 }}>{card.kicker}</span></div>
+      <div style={{ display: "flex", flexDirection: "column", marginTop: portrait ? 210 : square ? 100 : 24 }}>
+        <span style={{ display: "flex", color: "#72c0ed", fontSize: portrait ? 38 : square ? 29 : 24, fontWeight: 700 }}>{card.detail}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: portrait || square ? 30 : 20, marginTop: portrait || square ? 22 : 12 }}>
+          {card.logo && <img src={card.logo} width={portrait ? 150 : square ? 110 : 80} height={portrait ? 150 : square ? 110 : 80} style={{ borderRadius: 28, objectFit: "contain" }} />}
+          <span style={{ display: "flex", maxWidth: portrait ? 800 : square ? 820 : 930, overflow: "hidden", fontSize: portrait ? 86 : square ? 80 : 64, fontWeight: 700, letterSpacing: -3, lineHeight: 1.08 }}>{truncateForCard(card.title, portrait ? 42 : 38)}</span>
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: portrait ? "column" : "row", gap: portrait ? 38 : 28, marginTop: portrait ? 135 : square ? 95 : 60 }}>
-        {card.recapMetrics.map((metric) => <div key={metric.label} style={{ display: "flex", flexDirection: "column", flex: 1, padding: portrait ? 42 : 28, borderRadius: 25, border: "2px solid #31536b", backgroundColor: "#132638" }}><span style={{ display: "flex", color: "white", fontSize: metric.value.length>18 ? (portrait?56:square?40:32) : metric.value.length>12 ? (portrait?72:square?60:48) : portrait ? 112 : square ? 92 : 73, fontWeight: 700 }}>{metric.value}</span><span style={{ display: "flex", color: "#bdd0dd", fontSize: portrait ? 30 : 24 }}>{metric.label}</span>{metric.source && <span style={{display:"flex",color:"#9bb8ca",fontSize:portrait?23:18,marginTop:10}}>{metric.source}</span>}</div>)}
+      <div style={{ display: "flex", flexDirection: portrait ? "column" : "row", gap: portrait ? 38 : 28, marginTop: portrait ? 135 : square ? 95 : 26 }}>
+        {card.recapMetrics.map((metric) => <div key={metric.label} style={{ display: "flex", flexDirection: "column", flex: 1, padding: portrait ? 42 : square ? 28 : 22, borderRadius: 25, border: "2px solid #31536b", backgroundColor: "#132638" }}><span style={{ display: "flex", color: "white", fontSize: metric.value.length>18 ? (portrait?56:square?40:32) : metric.value.length>12 ? (portrait?72:square?60:48) : portrait ? 112 : square ? 92 : 64, fontWeight: 700 }}>{metric.value}</span><span style={{ display: "flex", color: "#bdd0dd", fontSize: portrait ? 30 : square ? 24 : 21 }}>{metric.label}</span>{metric.source && <span style={{display:"flex",color:"#9bb8ca",fontSize:portrait?23:square?18:16,marginTop:portrait||square?10:6}}>{metric.source}</span>}</div>)}
       </div>
       <div style={{ display: "flex", marginTop: "auto", paddingTop: 24, borderTop: "2px solid #31536b", justifyContent: "space-between", color: "#bdd0dd", fontSize: portrait ? 28 : 20 }}><span>The open app platform for builders.</span><span style={{ color: "#72c0ed" }}>{card.url}</span></div>
     </div>;
