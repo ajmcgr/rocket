@@ -128,18 +128,35 @@ function FeaturedCard({
         Sponsored
       </span>
       <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3">
-        <Link
-          to={href}
-          onClick={recordClick}
-          aria-label={`View ${placement.app.name}`}
-          className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
-        >
-          <AppLogo
-            name={placement.app.name}
-            src={placement.app.logo_url}
-            className="h-12 w-12"
-          />
-        </Link>
+        {website ? (
+          <a
+            href={website}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+            onClick={recordClick}
+            aria-label={`Visit ${placement.app.name} website`}
+            className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
+          >
+            <AppLogo
+              name={placement.app.name}
+              src={placement.app.logo_url}
+              className="h-12 w-12"
+            />
+          </a>
+        ) : (
+          <Link
+            to={href}
+            onClick={recordClick}
+            aria-label={`View ${placement.app.name}`}
+            className="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-sky-500"
+          >
+            <AppLogo
+              name={placement.app.name}
+              src={placement.app.logo_url}
+              className="h-12 w-12"
+            />
+          </Link>
+        )}
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-bold">{placement.app.name}</h3>
           {placement.app.tagline && (
@@ -149,7 +166,7 @@ function FeaturedCard({
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {website && (
+          {website ? (
             <a
               href={website}
               target="_blank"
@@ -159,10 +176,11 @@ function FeaturedCard({
             >
               Visit website
             </a>
+          ) : (
+            <Link to={href} onClick={recordClick} className={action}>
+              View app
+            </Link>
           )}
-          <Link to={href} onClick={recordClick} className={action}>
-            View app
-          </Link>
         </div>
       </div>
     </article>
