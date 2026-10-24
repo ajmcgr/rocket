@@ -10,26 +10,32 @@ do $$
 declare target text; visit uuid:=gen_random_uuid(); expired uuid:=gen_random_uuid(); admin_id uuid; original jsonb; current_stats jsonb;
   raw_count bigint; event uuid:=gen_random_uuid(); u uuid:='a2410000-0000-4000-8000-000000000001';
 begin
-  if has_function_privilege('anon','public.record_rocket_growth_event(uuid,text,text,text,text,text,uuid,uuid)','execute')
-    or has_function_privilege('authenticated','public.record_rocket_growth_event(uuid,text,text,text,text,text,uuid,uuid)','execute')
+  if has_function_privilege('anon','public.record_rocket_growth_event(uuid,text,text,text,text,text,uuid,uuid,timestamptz)','execute')
+    or has_function_privilege('authenticated','public.record_rocket_growth_event(uuid,text,text,text,text,text,uuid,uuid,timestamptz)','execute')
     or has_table_privilege('authenticated','app_graph.rocket_growth_events','select') then raise exception 'Growth ledger exposed'; end if;
   select id::text into target from public.public_apps limit 1;
+  set local role service_role;
   if not public.record_rocket_growth_event(visit,'referral_visit','app',target,null,repeat('a',64)) then raise exception 'Visit missing'; end if;
   if public.record_rocket_growth_event(visit,'referral_visit','app',target,null,repeat('a',64)) then raise exception 'Refresh duplicated visit'; end if;
+  reset role;
   update app_graph.rocket_growth_events set created_at=now()-interval '30 seconds' where event_id=visit;
-  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),'a2410000-0000-4000-8000-000000000002',visit) then raise exception 'Existing login counted as signup'; end if;
+  set local role service_role;
+  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),'a2410000-0000-4000-8000-000000000002',visit,now()-interval '30 days') then raise exception 'Existing login counted as signup'; end if;
   perform public.record_rocket_growth_event(expired,'referral_visit','app',target,null,repeat('a',64));
+  reset role;
   update app_graph.rocket_growth_events set created_at=now()-interval '8 days' where event_id=expired;
-  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),u,expired) then raise exception 'Expired referral accepted'; end if;
-  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),u,gen_random_uuid()) then raise exception 'Fabricated visit counted'; end if;
-  if not public.record_rocket_growth_event(event,'referral_signup',null,null,null,repeat('a',64),u,visit) then raise exception 'Confirmed referral signup missing'; end if;
-  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),u,visit) then raise exception 'Signup duplicated'; end if;
+  set local role service_role;
+  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),u,expired,now()-interval '20 seconds') then raise exception 'Expired referral accepted'; end if;
+  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),u,gen_random_uuid(),now()-interval '20 seconds') then raise exception 'Fabricated visit counted'; end if;
+  if not public.record_rocket_growth_event(event,'referral_signup',null,null,null,repeat('a',64),u,visit,now()-interval '20 seconds') then raise exception 'Confirmed referral signup missing'; end if;
+  if public.record_rocket_growth_event(gen_random_uuid(),'referral_signup',null,null,null,repeat('a',64),u,visit,now()-interval '20 seconds') then raise exception 'Signup duplicated'; end if;
   if public.record_rocket_growth_event(gen_random_uuid(),'referral_visit','app','growth-private-test',null,repeat('a',64)) then raise exception 'Private app event accepted'; end if;
   if not public.record_rocket_growth_event(gen_random_uuid(),'share_action','app',target,'link',repeat('b',64)) then raise exception 'Share action missing'; end if;
   begin
     perform public.record_rocket_growth_event(gen_random_uuid(),'analytics_connected','app',target,null,repeat('b',64));
     raise exception 'Client fabricated verified outcome';
   exception when raise_exception then if sqlerrm<>'Invalid growth event' then raise; end if; end;
+  reset role;
   select id into admin_id from auth.users where lower(email)='alex@alexmacgregor.com' and email_confirmed_at is not null;
   perform set_config('request.jwt.claim.sub',admin_id::text,true);
   original:=public.rocket_admin_growth('today');
