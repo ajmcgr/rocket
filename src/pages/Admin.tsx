@@ -40,6 +40,9 @@ const statEmojis: Record<string, string> = {
   site_failures: "🛠️", eligible: "✨", queued: "📬", sent: "📤",
   delivered: "✅", clicked: "👆", verified: "✔️", connected: "🔗",
   bounced: "↩️", suppressed: "🔕", skipped: "⏭️", failed: "⚠️",
+  share_actions: "📣", referral_visits: "👣", activated_developers: "⚡",
+  referral_registrations: "📝", verified_revenue_connections: "💰",
+  verified_analytics_connections: "📡", referred_developers_with_claims: "🏷️",
 };
 const when = (value: unknown) => typeof value === "string" ? new Date(value).toLocaleString() : "—";
 const appUrl = (row: Row) => `/apps/${encodeURIComponent(String(row.slug || row.id))}`;
@@ -185,7 +188,7 @@ export default function Admin() {
       <Panel title="Catalogue"><StatGrid data={obj(data.catalogue)} /></Panel>
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
-      <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /><p className="rocket-admin-muted">Activation: first recorded successful production sync on a currently owned app. Connections count verified outcomes, not clicks. Share actions include copies, downloads and social intents, not confirmed posts. Referral visits are tab landings, not unique people; registrations are confirmed new accounts. Attribution starts 24 Oct 2026 and lasts up to 7 days in the same tab.</p></Panel>
+      <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>
       <Panel title="Outreach"><StatGrid data={obj(data.outreach)} /></Panel>
