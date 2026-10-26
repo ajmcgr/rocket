@@ -176,6 +176,23 @@ async function allSubscriptionItems(subscription: Record<string, unknown>, token
   const listed = await stripeList(`/v1/subscription_items?subscription=${encodeURIComponent(String(subscription.id))}`, token, 1000);
   return listed as RevenueItem[];
 }
+async function subscriptionDiscounts(entry: Record<string, unknown>, token: string) {
+  if (!Array.isArray(entry.discounts) || entry.discounts.length === 0) return entry.discounts as unknown[] | null;
+  const original = entry.discounts;
+  try {
+    const path = `/v1/subscriptions/${encodeURIComponent(String(entry.id))}`;
+    let details = await stripeGet(`${path}?expand[]=discounts`, token);
+    if (details.id !== entry.id || details.livemode !== entry.livemode) return original;
+    const discounts = details.discounts as Array<Record<string, unknown>>;
+    if (!Array.isArray(discounts)) return original;
+    if (discounts.some((discount) => typeof (discount.source as Record<string, unknown> | undefined)?.coupon === "string"))
+      details = await stripeGet(`${path}?expand[]=discounts.source.coupon`, token);
+    else if (discounts.some((discount) => typeof discount.coupon === "string"))
+      details = await stripeGet(`${path}?expand[]=discounts.coupon`, token);
+    return details.id === entry.id && details.livemode === entry.livemode && Array.isArray(details.discounts)
+      ? details.discounts : original;
+  } catch { return original; } // Missing expansion permissions never authorize an undiscounted total.
+}
 async function mappedSubscriptions(mappings: MappedPrice[] | null, token: string, livemode: boolean) {
   const seen = new Map<string, RevenueSubscription>();
   for (const query of mappings ? mappings.map((mapping) => `&price=${encodeURIComponent(mapping.price_id)}`) : [""]) {
@@ -186,7 +203,7 @@ async function mappedSubscriptions(mappings: MappedPrice[] | null, token: string
       if (!id || seen.has(id)) continue;
       seen.set(id, { id, status: String(entry.status || ""), livemode,
         items: await allSubscriptionItems(entry, token),
-        discounts: entry.discounts as unknown[] | null,
+        discounts: await subscriptionDiscounts(entry, token),
         pause_collection: entry.pause_collection,
         cancel_at_period_end: Boolean(entry.cancel_at_period_end),
         cancel_at: typeof entry.cancel_at === "number" ? entry.cancel_at : null });
