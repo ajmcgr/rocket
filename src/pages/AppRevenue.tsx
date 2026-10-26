@@ -15,7 +15,7 @@ type Mapping = { stripe_price_id: string; stripe_product_id: string; currency: s
 type Point = { currency: string; mrr_minor: string; observed_at: string;
   verification_status: "verified" | "unsupported"; source_livemode: boolean;
   unsupported_subscriptions: number; unsupported_reasons?: Record<string, number> };
-type Status = { connect_available: boolean; private_only?: boolean; connection: null | { status: string; external_account_id: string; livemode: boolean;
+type Status = { connect_available: boolean; private_only?: boolean; visibility_default_pending?: boolean; connection: null | { status: string; external_account_id: string; livemode: boolean;
   last_attempted_sync: string | null; last_successful_sync: string | null; last_error: string | null };
   revenue_scope?: RevenueScope; mapping_version: number; visibility: Visibility; mappings: Mapping[]; latest: Point[] };
 
@@ -79,8 +79,8 @@ export default function AppRevenue() {
   return <main className="rocket-verification-page mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
     <h1 className="mt-5 font-display text-3xl">Revenue verification</h1>
-    <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue stays private until you explicitly change its visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
-    {id && <VerifiedProviderSelection appId={id} kind="revenue" />}
+    <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue amounts stay private unless you choose Range or Exact visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
+    {id && <VerifiedProviderSelection key={status?.connection?.last_successful_sync || id} appId={id} kind="revenue" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
     <section className="mt-6 rounded-2xl border bg-white p-6">
@@ -94,6 +94,7 @@ export default function AppRevenue() {
         {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
         {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Sync needs attention: {status.connection.last_error}</p>}
         {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Coming soon. Stripe revenue verification is not available until the read-only external integration has passed acceptance testing.</p>}
+        {!status.connection && status.connect_available && <p className="mt-3 text-sm text-neutral-600">{status.private_only ? "This review connection stays private." : "After a successful live sync, your listing shows a Stripe-verified badge by default. MRR amounts stay private. You can choose Private to hide the badge."}</p>}
         {!status.connection && status.connect_available && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
         })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Connect Stripe</button>}
@@ -134,6 +135,7 @@ export default function AppRevenue() {
         const result = await request("sync", { revenue_scope: scope }); await refresh();
         const unsupported = result.sync?.currencies?.some((point: Point) => point.verification_status === "unsupported");
         setNotice(unsupported ? "Stripe synced, but a subscription configuration is unsupported. See the private snapshot below; no unsupported total is published."
+          : result.sync?.visibility_default_applied ? "Live MRR verified. Your listing now shows a Stripe-verified badge; amounts remain private."
           : result.sync?.source_livemode ? "Live subscription MRR synced. Select Stripe as the revenue source and choose visibility to show it on your listing."
           : "Sandbox subscription MRR synced. Sandbox figures stay private.");
       })} className="mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">{scope === "account" ? "Sync total MRR" : "Sync selected products"}</button>}
@@ -145,9 +147,9 @@ export default function AppRevenue() {
     </section>}
     {status?.connection && <section className="mt-6 rounded-2xl border bg-white p-6">
       <h2 className="font-semibold">Public visibility</h2>
-      <p className="mt-2 text-sm text-neutral-600">Private by default. Only a fresh, fully supported live Stripe snapshot can appear on the public profile. Sandbox data never appears there.</p>
+      <p className="mt-2 text-sm text-neutral-600">New live connections default to Verified only after a successful sync: a verification badge appears, while MRR amounts stay private. Private hides the badge; Range or Exact shows revenue. Existing visibility choices are preserved. Sandbox data never appears publicly.</p>
       <label className="mt-4 block text-sm">Subscription MRR
-        <select value={status.visibility} disabled={busy || status.private_only} onChange={(event) => run(async () => {
+        <select value={status.visibility_default_pending ? "verified_only" : status.visibility} disabled={busy || status.private_only} onChange={(event) => run(async () => {
           await request("set_visibility", { visibility: event.target.value }); await refresh();
           setNotice("Visibility updated. Check the public profile to see exactly what is shown.");
         })} className="mt-2 block rounded-lg border px-3 py-2">{visibilityChoices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}</select>

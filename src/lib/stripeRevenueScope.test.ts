@@ -7,7 +7,7 @@ import * as mrr from '../../supabase/functions/_shared/stripeRevenueMrr';
 const user='10000000-0000-4000-8000-000000000001',app='20000000-0000-4000-8000-000000000001';
 const compiled=ts.transpileModule(readFileSync('supabase/functions/rocket-stripe-revenue/index.ts','utf8').replace(/^import[\s\S]*?from ["'][^"']+["'];\n/gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const price=(id:string,amount:string,interval='month')=>({id,product:'prod_fixture',currency:'usd',unit_amount_decimal:amount,billing_scheme:'per_unit',recurring:{interval,interval_count:1,usage_type:'licensed'}});
-async function fixture({products=false,conflict=false,revoked=false,discount=false,resolvedDiscount=false}={}){
+async function fixture({products=false,conflict=false,revoked=false,discount=false,resolvedDiscount=false,badgeDefault=false}={}){
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode('a'.repeat(32)),'AES-GCM',false,['encrypt']);
  const iv=new Uint8Array(12);const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode('fixture-token')));
  const b64=(b:Uint8Array)=>Buffer.from(b).toString('base64url');
@@ -17,6 +17,7 @@ async function fixture({products=false,conflict=false,revoked=false,discount=fal
  const points:unknown[]=[];
  const mappings=products?[{stripe_price_id:'price_first',stripe_product_id:'prod_fixture',currency:'usd'}]:[];
  const rpc=vi.fn(async(name:string,args:Record<string,unknown>)=>{
+  if(name==='apply_default_stripe_revenue_visibility') return {data:badgeDefault,error:null};
   if(name==='configure_app_stripe_revenue'){
    if(conflict)return {data:null,error:{code:'23505'}};
    expect(args.p_expected_version).toBe(binding.mapping_version);
@@ -57,6 +58,13 @@ describe('real Stripe revenue handler account scope',()=>{
   const f=await fixture({resolvedDiscount:true});const data=await (await f.post({revenue_scope:'account'})).json();
   expect(data.sync.currencies[0]).toMatchObject({mrr_minor:'1800.000000',verification_status:'verified'});
   expect(f.fetcher.mock.calls.some(([url])=>url.includes('/subscriptions/sub_one?expand[]=discounts'))).toBe(true);
+ });
+ it('applies the badge default only after a fully verified live sync',async()=>{
+  const f=await fixture({badgeDefault:true});const data=await (await f.post({revenue_scope:'account'})).json();
+  expect(data.sync.visibility_default_applied).toBe(true);
+  expect(f.rpc).toHaveBeenCalledWith('apply_default_stripe_revenue_visibility',{p_app_id:app,p_user_id:user,p_expected_version:2});
+  const unsupported=await fixture({discount:true,badgeDefault:true});await unsupported.post({revenue_scope:'account'});
+  expect(unsupported.rpc.mock.calls.some(([name])=>name==='apply_default_stripe_revenue_visibility')).toBe(false);
  });
  it('rejects cross-app account conflicts without recording a verified point',async()=>{
   const f=await fixture({conflict:true});expect((await f.post({revenue_scope:'account'})).status).toBe(409);expect(f.points).toEqual([]);

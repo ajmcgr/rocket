@@ -18,6 +18,13 @@ describe('Stripe MRR scope flow',()=>{
   fireEvent.click(screen.getByRole('button',{name:'Sync total MRR'}));
   await waitFor(()=>expect(mock.invoke).toHaveBeenCalledWith('rocket-stripe-revenue',{body:expect.objectContaining({action:'sync',revenue_scope:'account',app_id:'app-fixture'})}));
  });
+ it('offers Verified only as the pending default and lets the owner opt out before syncing',async()=>{
+  mock.invoke.mockImplementation(async(_name,{body})=>({data:body.action==='status'?{...base,visibility_default_pending:true}:{visibility:'private'}}));
+  render(<AppRevenue/>);const visibility=await screen.findByLabelText('Subscription MRR');
+  expect((visibility as HTMLSelectElement).value).toBe('verified_only');
+  fireEvent.change(visibility,{target:{value:'private'}});
+  await waitFor(()=>expect(mock.invoke).toHaveBeenCalledWith('rocket-stripe-revenue',{body:expect.objectContaining({action:'set_visibility',visibility:'private'})}));
+ });
  it('keeps saved individual products selected for existing users',async()=>{
   mock.invoke.mockResolvedValue({data:{...base,mappings:[{stripe_price_id:'price_saved'}]}});
   render(<AppRevenue/>);expect(((await screen.findByLabelText('Revenue scope')) as HTMLSelectElement).value).toBe('products');
