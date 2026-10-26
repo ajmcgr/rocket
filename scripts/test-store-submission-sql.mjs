@@ -21,7 +21,7 @@ grant usage on schema app_graph,auth to anon,authenticated,service_role;
 grant all on all tables in schema app_graph,public,auth to service_role;
 grant select on app_graph.apps to anon,authenticated;
 `);
-const migration='../supabase/migrations/20261026050134_mobile_store_submissions.sql';
+const migration='../supabase/migrations/20261026052529_mobile_store_submissions.sql';
 await pg.exec(readFileSync(new URL(migration,import.meta.url),'utf8'));
 await pg.exec(readFileSync(new URL('../supabase/migrations/20261003071805_app_submission_publish.sql',import.meta.url),'utf8'));
 const owner='00000000-0000-4000-8000-000000000001',other='00000000-0000-4000-8000-000000000002';
