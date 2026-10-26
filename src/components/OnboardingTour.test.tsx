@@ -62,7 +62,7 @@ beforeEach(() => {
   });
   sessionStorage.clear();
   vi.clearAllMocks();
-  mock.user = { id: "new-user", created_at: new Date().toISOString() };
+  mock.user = { id: "new-user", created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() };
   mock.loading = false;
   mock.location = { pathname: "/discover", search: "", hash: "" };
   mock.apps.mockResolvedValue([]);
@@ -223,6 +223,7 @@ describe("existing onboarding personalized journeys", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
   it("does not reopen for completed or returning members, but supports an explicit guide replay", async () => {
+    mock.location.search="?welcome=1";
     localStorage.setItem(key, "1");
     await start();
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -293,7 +294,7 @@ describe("existing onboarding personalized journeys", () => {
     await choose();
     await advance();
     await advance();
-    mock.user = { id: "other", created_at: new Date().toISOString() };
+    mock.user = { id: "other", created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() };
     mock.apps.mockResolvedValue([]);
     view.rerender(<OnboardingTour />);
     await act(async () => {});
@@ -306,4 +307,12 @@ describe("existing onboarding personalized journeys", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(mock.apps).not.toHaveBeenCalled();
   });
+  it("waits for verified email, then automatically opens on the verification welcome landing",async()=>{
+    mock.user.email_confirmed_at=null;mock.location.search="?welcome=1&utm_content=launch-post";
+    const view=await start();expect(screen.queryByRole("dialog")).toBeNull();expect(localStorage.getItem(key)).toBeNull();
+    mock.user={...mock.user,email_confirmed_at:new Date().toISOString()};view.rerender(<OnboardingTour/>);
+    await act(async()=>{await vi.advanceTimersByTimeAsync(601)});
+    expect(screen.getByText("Welcome to Rocket.")).toBeTruthy();
+  });
+
 });

@@ -440,6 +440,10 @@ export function extractHtml(html: string, pageUrl: string) {
     canonicalUrl: abs(link("canonical")) || pageUrl,
     imageUrl: abs(get("og:image")) || abs(link("icon")),
     faviconUrl: abs(link("icon")) || abs("/favicon.ico"),
+    iconUrls: [...new Set([
+      ...links.filter((item) => /(?:^|\s)apple-touch-icon(?:-precomposed)?(?:\s|$)/i.test(item.rel || "")).map((item) => abs(item.href)),
+      ...links.filter((item) => (item.rel || "").toLowerCase().split(/\s+/).includes("icon")).map((item) => abs(item.href)),
+    ].filter((value): value is string => Boolean(value)))].slice(0, 6),
     pricingUrl: abs(
       links.find((item) => /pricing/i.test(item.href || ""))?.href,
     ),

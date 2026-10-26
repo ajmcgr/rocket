@@ -1,3 +1,4 @@
+import { safeReturnPath } from "./navigation";
 import type { MyApp } from "@/components/AppJourney";
 
 // Keep the original key: shipping a better tour must not replay it for members.
@@ -38,10 +39,14 @@ export function canShowOnboarding(pathname: string, search = "", hash = "") {
         "utm_source",
         "utm_medium",
         "utm_campaign",
+        "utm_content",
+        "utm_term",
+        "welcome",
       ].includes(key)
     )
       return false;
   }
+  if (query.has("welcome") && query.get("welcome") !== "1") return false;
   return !hash || hash.replace(/^#/, "") === "onboarding";
 }
 export function ownedOnboardingApps(items: MyApp[]) {
@@ -66,4 +71,14 @@ export function onboardingDestination(
         action: "manage_app",
       }
     : { label: "Add my app", to: "/submit", action: "add_app" };
+}
+
+// A verification handoff requests the existing welcome on ordinary landing
+// pages only. Sensitive destinations and their query/hash remain unchanged.
+export function verificationReturnPath(value: string | null | undefined) {
+  const next = safeReturnPath(value);
+  const url = new URL(next, "https://tryrocket.ai");
+  if (!canShowOnboarding(url.pathname,url.search,url.hash)) return next;
+  url.searchParams.set("welcome","1");
+  return `${url.pathname}${url.search}${url.hash}`;
 }

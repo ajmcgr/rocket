@@ -10,11 +10,14 @@ import { APP_CATEGORIES } from "@/lib/appCategories";
 import {
   emptySubmission,
   submissionSlug,
+  submissionWebsite,
   validateSubmission,
   youtubeUrl,
   SUBMISSION_PLATFORMS,
   type SubmissionDetails,
 } from "../../supabase/functions/_shared/appSubmission";
+
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const DRAFT_KEY = "rocket:app-submission-v2";
 const STORAGE_KEY = "rocket:launch-preview-v1";
@@ -40,12 +43,14 @@ type Preview = {
     description: string;
     website_url: string;
     logo_url: string | null;
+    hero_url?: string | null;
     categories: string[];
   };
   publishAfterAuth?: boolean;
 };
 type Draft = {
   url: string;
+  importUrl?: string;
   details: SubmissionDetails;
   step: number;
   editing: boolean;
@@ -75,6 +80,8 @@ function Field({
   hint,
   multiline = false,
   maxLength = 2048,
+  onBlur,
+  invalid = false,
 }: {
   label: string;
   value: string;
@@ -82,6 +89,8 @@ function Field({
   hint?: string;
   multiline?: boolean;
   maxLength?: number;
+  onBlur?: () => void;
+  invalid?: boolean;
 }) {
   return (
     <label className="block text-sm font-semibold">
@@ -91,6 +100,9 @@ function Field({
           className={inputClass}
           rows={6}
           value={value}
+          onBlur={onBlur}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid ? "submission-url-error" : undefined}
           maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -98,6 +110,9 @@ function Field({
         <input
           className={inputClass}
           value={value}
+          onBlur={onBlur}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid ? "submission-url-error" : undefined}
           maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -154,6 +169,7 @@ export default function LaunchPreview() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [url, setUrl] = useState("");
+  const [importUrl, setImportUrl] = useState("");
   const [details, setDetails] = useState(emptySubmission);
   const [step, setStep] = useState(0);
   const [editing, setEditing] = useState(false);
@@ -162,6 +178,18 @@ export default function LaunchPreview() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
+  const [replaceImport, setReplaceImport] = useState(false);
+  const [urlError, setUrlError] = useState("");
+  const currentUrl = useRef(importUrl);
+  currentUrl.current = importUrl;
+  const currentDraft = useRef("");
+  currentDraft.current = JSON.stringify({url,details});
+  const normalizeWebsite = () => {
+    try { const normalized = submissionWebsite(url); setUrl(normalized); setUrlError(""); return normalized; }
+    catch (cause) { const message = (cause as Error).message; setUrlError(message); throw cause; }
+  };
+  const websiteValid = (() => { try { return Boolean(submissionWebsite(url)); } catch { return false; } })();
+  const hasDraftDetails = Object.entries(details).some(([key,value]) => key !== "submission_type" && (Array.isArray(value) ? value.length > 0 : Boolean(value)));
   const consuming = useRef(false);
   const errorRef = useRef<HTMLDivElement>(null);
   const set = <K extends keyof SubmissionDetails>(
@@ -175,6 +203,7 @@ export default function LaunchPreview() {
       ) as Draft | null;
       if (saved?.details && typeof saved.url === "string") {
         setUrl(saved.url);
+        setImportUrl(saved.importUrl ?? saved.url);
         setDetails({
           ...emptySubmission(),
           ...saved.details,
@@ -199,9 +228,9 @@ export default function LaunchPreview() {
     if (ready)
       sessionStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ url, details, step, editing }),
+        JSON.stringify({ url, importUrl, details, step, editing }),
       );
-  }, [ready, url, details, step, editing]);
+  }, [ready, url, importUrl, details, step, editing]);
   useEffect(() => {
     if (error) errorRef.current?.focus();
   }, [error]);
@@ -209,30 +238,32 @@ export default function LaunchPreview() {
     setBusy(true);
     setError("");
     setNotice("");
-    setPreview(null);
-    sessionStorage.removeItem(STORAGE_KEY);
+    const requestedUrl = importUrl;
+    const draftSnapshot = currentDraft.current;
     try {
-      const result = (await invoke("preview", {
-        url,
-        category: details.categories[0] || "",
-      })) as Preview;
+      const result = (await invoke("preview", { url: submissionWebsite(requestedUrl) })) as Preview;
+      if (currentUrl.current !== requestedUrl || currentDraft.current !== draftSnapshot) throw new Error("The draft changed while importing. Import again when you are ready; your edits have been kept.");
       setPreview(result);
+      setUrlError("");
+      sessionStorage.removeItem(STORAGE_KEY);
       if (result.outcome === "new") {
         setUrl(result.app.website_url);
-        setDetails((old) => ({
-          ...old,
+        setImportUrl(result.app.website_url);
+        setDetails({
+          ...emptySubmission(),
           name: result.app.name,
-          slug: old.slug || submissionSlug(result.app.name),
+          slug: submissionSlug(result.app.name),
           description: result.app.description,
           tagline: result.app.description.split(/[.!?]\s/)[0].slice(0, 200),
           logo_url: result.app.logo_url || "",
+          hero_url: result.app.hero_url || "",
           categories: result.app.categories
             .filter((c) =>
               APP_CATEGORIES.some((category) => category.name === c),
             )
             .slice(0, 3),
-          platforms: old.platforms.length ? old.platforms : ["web"],
-        }));
+          platforms: ["web"],
+        });
         setEditing(true);
         setStep(0);
         setNotice(
@@ -301,9 +332,10 @@ export default function LaunchPreview() {
     setBusy(true);
     setError("");
     try {
+      const website = normalizeWebsite();
       const checked = validateSubmission(details);
       const candidate = (await invoke("preview", {
-        url,
+        url: website,
         manual: true,
         details: checked,
         category: checked.categories[0],
@@ -391,6 +423,7 @@ export default function LaunchPreview() {
     setError("");
     setNotice("");
     try {
+      normalizeWebsite();
       if (
         step === 0 &&
         (details.name.trim().length < 2 ||
@@ -503,6 +536,14 @@ export default function LaunchPreview() {
             Find &amp; Claim Your App →
           </Link>
         </section>
+        <AlertDialog open={replaceImport} onOpenChange={setReplaceImport}>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Replace current draft?</AlertDialogTitle>
+              <AlertDialogDescription>A successful import will replace this draft’s details and images. If the import fails, your current draft will be kept.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel>Keep current draft</AlertDialogCancel>
+              <AlertDialogAction onClick={() => void readWebsite()}>Replace draft</AlertDialogAction></AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <section
           className="mt-8 rounded-2xl border border-border bg-card p-5 sm:p-6"
           aria-label="AI-assisted app submission"
@@ -514,8 +555,8 @@ export default function LaunchPreview() {
             <input
               id="launch-url"
               className={`${inputClass} mt-0 flex-1`}
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
               inputMode="url"
               autoComplete="url"
               placeholder="https://yourapp.com"
@@ -523,8 +564,8 @@ export default function LaunchPreview() {
             <button
               type="button"
               className={primary}
-              disabled={busy || !url.trim()}
-              onClick={() => void readWebsite()}
+              disabled={busy || !importUrl.trim()}
+              onClick={() => hasDraftDetails ? setReplaceImport(true) : void readWebsite()}
             >
               {busy ? "Finding your app…" : "Add with AI"}
             </button>
@@ -534,6 +575,7 @@ export default function LaunchPreview() {
             className="mt-4 text-sm font-semibold text-[#167ac6] underline"
             disabled={busy}
             onClick={() => {
+              if (!hasDraftDetails) setUrl(importUrl);
               setEditing(true);
               setPreview(null);
               setError("");
@@ -666,7 +708,9 @@ export default function LaunchPreview() {
                     onChange={(value) => set("tagline", value)}
                     hint="One clear sentence describing what your app does."
                   />
-                  <Field label="Website URL *" value={url} onChange={setUrl} />
+                  <Field label="Website URL *" value={url} onChange={(value) => { setUrl(value); setUrlError(""); }}
+                    onBlur={() => { try { normalizeWebsite(); } catch { /* Inline feedback. */ } }} invalid={Boolean(urlError)} />
+                  {urlError && <p id="submission-url-error" role="alert" className="text-sm text-red-700 dark:text-red-300">{urlError}</p>}
                   <Field
                     label="Developer @handle (optional)"
                     value={details.developer_handle}
@@ -681,7 +725,7 @@ export default function LaunchPreview() {
                   {imageField(
                     "logo_url",
                     "App icon *",
-                    "Recommended: 512 × 512 px.",
+                    "Use a square app icon. Recommended: 512 × 512 px. If no suitable icon was found, upload one or enter its image URL.",
                   )}
                   {imageField(
                     "hero_url",
@@ -901,6 +945,7 @@ export default function LaunchPreview() {
                       </p>
                     </div>
                   </div>
+                  {!websiteValid && <p role="alert" className="text-sm text-red-700 dark:text-red-300">Go back to Basic Information and enter a valid public website URL before publishing.</p>}
                   <p className="rounded-xl border border-border p-4 text-sm leading-6 text-muted-foreground">
                     Your app will be public immediately. Submission does not
                     verify ownership, revenue or customer numbers. Rocket ID and
@@ -937,7 +982,7 @@ export default function LaunchPreview() {
                   Save draft
                 </button>
               </div>
-              <button className={primary} disabled={busy}>
+              <button className={primary} disabled={busy || (step === 3 && !websiteValid)}>
                 {busy
                   ? "Working…"
                   : step === 3

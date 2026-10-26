@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   emptySubmission,
+  submissionWebsite,
   submissionSlug,
   validateSubmission,
   youtubeUrl,
@@ -67,4 +68,10 @@ describe("complete submission validation", () => {
     ])
       expect(() => validateSubmission({ ...valid(), ...patch })).toThrow();
   });
+  it("normalizes website URLs and rejects invalid/private/protocol-confused input",()=>{
+    expect(submissionWebsite(" example.com/path ")).toBe("https://example.com/path");
+    for(const value of ["not a url","localhost","http://127.0.0.1","http://[::1]","file:///etc/passwd","javascript:alert(1)","https://user:pass@example.com","https://example.com:8443","https://example.com./","https://example.internal"])
+      expect(()=>submissionWebsite(value)).toThrow();
+  });
+
 });
