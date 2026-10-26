@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { toPng } from "html-to-image";
 import {
   BarChart3,
@@ -44,7 +45,7 @@ type Preview = {
   review: ReviewSummary | null;
 };
 
-type ScreenshotFormat = "x" | "linkedin";
+type ScreenshotFormat = "square" | "x" | "linkedin";
 type GeneratedScreenshot = {
   url: string;
   filename: string;
@@ -53,6 +54,7 @@ type GeneratedScreenshot = {
 };
 
 const SCREENSHOT_FORMATS = {
+  square: { width: 1200, height: 1200, label: "Square" },
   x: { width: 1600, height: 900, label: "X" },
   linkedin: { width: 1200, height: 627, label: "LinkedIn" },
 } as const;
@@ -68,7 +70,7 @@ async function formatScreenshot(
   source: string,
   format: ScreenshotFormat,
 ): Promise<string> {
-  if (format === "x") return source;
+  if (format !== "linkedin") return source;
   const image = await imageDimensions(source);
   const { width, height } = SCREENSHOT_FORMATS.linkedin;
   const canvas = document.createElement("canvas");
@@ -192,6 +194,7 @@ export default function AdminAppScreenshots() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [generated, setGenerated] = useState<GeneratedScreenshot | null>(null);
+  const [activeFormat, setActiveFormat] = useState<ScreenshotFormat>("square");
   const cardRef = useRef<HTMLDivElement>(null);
   const generatedUrlRef = useRef<string | null>(null);
 
@@ -272,15 +275,18 @@ export default function AdminAppScreenshots() {
         );
         return;
       }
+      flushSync(() => setActiveFormat(format));
       await document.fonts.ready;
       await Promise.all(
         Array.from(cardRef.current.querySelectorAll("img"), (img) =>
           img.decode().catch(() => undefined),
         ),
       );
+      const sourceSize =
+        format === "square" ? SCREENSHOT_FORMATS.square : SCREENSHOT_FORMATS.x;
       const pageImage = await toPng(cardRef.current, {
-        width: 1600,
-        height: 900,
+        width: sourceSize.width,
+        height: sourceSize.height,
         pixelRatio: 1,
         backgroundColor: "#f6f8fb",
         cacheBust: true,
@@ -320,11 +326,11 @@ export default function AdminAppScreenshots() {
     <section className="rocket-admin-panel rocket-admin-screenshot-tool">
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
-        Download a clean app-page image sized for X or LinkedIn. The left menu
-        stays visible while the top controls are removed. Only public app
-        details, images, and verified metric visibility are shown; a
-        verified-only badge never reveals its private amount. Nothing is posted
-        automatically.
+        Download a square app-page image or a landscape version for X or
+        LinkedIn. The left menu stays visible while the top controls are
+        removed. Only public app details, images, and verified metric visibility
+        are shown; a verified-only badge never reveals its private amount.
+        Nothing is posted automatically.
       </p>
       <label className="rocket-admin-screenshot-search">
         Find a public app
@@ -378,16 +384,23 @@ export default function AdminAppScreenshots() {
               <button
                 className="rocket-admin-primary"
                 disabled={exporting}
+                onClick={() => void download("square")}
+              >
+                {exporting ? "Creating PNG…" : "Download square"}
+              </button>
+              <button
+                className="rocket-admin-primary"
+                disabled={exporting}
                 onClick={() => void download("x")}
               >
-                {exporting ? "Creating PNG…" : "Download for X"}
+                Download landscape for X
               </button>
               <button
                 className="rocket-admin-primary"
                 disabled={exporting}
                 onClick={() => void download("linkedin")}
               >
-                Download for LinkedIn
+                Download landscape for LinkedIn
               </button>
             </div>
           </div>
@@ -410,7 +423,10 @@ export default function AdminAppScreenshots() {
             </div>
           )}
           <div className="rocket-admin-screenshot-scroll">
-            <div className="rocket-admin-screenshot-page" ref={cardRef}>
+            <div
+              className={`rocket-admin-screenshot-page${activeFormat === "square" ? " is-square" : ""}`}
+              ref={cardRef}
+            >
               <aside
                 className="rocket-admin-screenshot-sidebar"
                 aria-label="Rocket menu in screenshot"
@@ -533,7 +549,7 @@ export default function AdminAppScreenshots() {
                       <div
                         className="rocket-admin-screenshot-images"
                         style={{
-                          gridTemplateColumns: `repeat(${preview.images.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${activeFormat === "square" ? Math.min(preview.images.length, 2) : preview.images.length}, minmax(0, 1fr))`,
                         }}
                       >
                         {preview.images.map((item, index) => (
