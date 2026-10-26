@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
+import { AnalyticsVisibilityControl } from "./AnalyticsVisibilityControl";
 
 type Connection = { status: string; project_id: string | null; project_name: string | null;
   verified_hostname: string | null; last_error: string | null; last_successful_sync: string | null };
@@ -110,15 +111,12 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
         }} className="ml-2 mt-4 rounded-xl bg-brand px-4 py-2 text-white disabled:opacity-50">
         Use verified PostHog</button>}
       {connected && status.selected && status.connection?.status === "active" && <div className="mt-5 border-t pt-4">
-        <label className="flex items-center justify-between gap-4">Public pageview visibility
-          <select value={status.visibility} disabled={busy} onChange={(event) => void run(async () => {
-            await request("set_visibility", { visibility: event.target.value }); await refresh();
+        <p className="mb-4 text-neutral-600">Controls what appears on your public app page. Your metrics stay private by default. Only pageviews for the latest completed UTC day can be shown—not monthly visitors or your history.</p>
+        <AnalyticsVisibilityControl value={status.visibility} disabled={busy} publicDisabled={!fresh}
+          onChange={(visibility) => void run(async () => {
+            await request("set_visibility", { visibility }); await refresh();
             setNotice("PostHog visibility updated.");
-          })} className="rounded-lg border p-2">
-            <option value="private">Private</option><option value="verified_only" disabled={!fresh}>Verified only</option>
-            <option value="range" disabled={!fresh}>Range</option><option value="exact" disabled={!fresh}>Exact</option>
-          </select>
-        </label>
+          })} />
         <Link to={"/apps/" + appId} className="mt-3 inline-block text-sky-700">Preview public app profile →</Link>
       </div>}
       {connected && <button disabled={busy} onClick={() => {
