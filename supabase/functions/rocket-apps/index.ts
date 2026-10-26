@@ -14,6 +14,7 @@ import {
 import { APP_CATEGORIES } from "../_shared/appCategories.ts";
 import { submissionCategory, submissionMedia, suggestedSubmissionCategory } from "../_shared/submissionImport.ts";
 import { validateAgentIntegrations } from "../_shared/agentIntegrations.ts";
+import { appleStoreApp, googlePlayApp, storeListing, storeImageUrl, storeSubmissionMedia, type StoreApp, type StoreListing } from "../_shared/storeListings.ts";
 
 const origin = Deno.env.get("SUPABASE_URL")!;
 const admin = createClient(origin, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -44,7 +45,7 @@ async function loggedIn(req: Request) {
 }
 
 type Extracted = {
-  sourceType: "website" | "launch" | "github" | "hacker_news";
+  sourceType: "website" | "launch" | "github" | "hacker_news" | "apple_app_store" | "google_play";
   externalId: string;
   sourceUrl: string;
   normalizedSourceUrl: string;
@@ -54,8 +55,53 @@ type Extracted = {
   imageUrl: string | null;
   faviconUrl: string | null;
   iconUrls?: string[];
+  storeApp?: StoreApp;
   evidence: Record<string, unknown>;
 };
+
+async function extractStore(listing: StoreListing): Promise<StoreApp> {
+  const endpoint = listing.type === "apple_app_store"
+    ? `https://itunes.apple.com/lookup?id=${listing.id}&country=${listing.country}&entity=software`
+    : `${listing.url}&hl=en&gl=US`;
+  try {
+    const page = await fetchPublicBytes(endpoint, 3_000_000);
+    const final = new URL(page.url);
+    if (final.protocol !== "https:" || final.hostname !== new URL(endpoint).hostname) throw new Error("Unexpected store redirect");
+    return listing.type === "apple_app_store"
+      ? appleStoreApp(listing, JSON.parse(new TextDecoder().decode(page.bytes)))
+      : googlePlayApp(listing, new TextDecoder().decode(page.bytes));
+  } catch {
+    throw new Error(`Could not read this ${listing.type === "apple_app_store" ? "App Store" : "Google Play"} listing. Check the URL and country, try again, or add details manually.`);
+  }
+}
+
+async function resolveStore(userId: string, app: StoreApp, fields: {name:string;description:string;logo_url:string|null}) {
+  const {listing} = app;
+  const existing = await admin.from("app_jobs").select("*").eq("user_id",userId).eq("normalized_url",listing.url).maybeSingle();
+  if (existing.error) throw existing.error;
+  if (existing.data?.status === "complete") return existing.data;
+  let job = existing.data;
+  if (!job) {
+    const inserted = await admin.from("app_jobs").upsert({user_id:userId,submitted_url:listing.url,normalized_url:listing.url,source_type:listing.type},
+      {onConflict:"user_id,normalized_url",ignoreDuplicates:true}).select("*").maybeSingle();
+    if (inserted.error) throw inserted.error;
+    job = inserted.data;
+    if (!job) {
+      const retry = await admin.from("app_jobs").select("*").eq("user_id",userId).eq("normalized_url",listing.url).single();
+      if (retry.error) throw retry.error;
+      job = retry.data;
+    }
+  }
+  const resolved = await admin.rpc("resolve_store_app_submission", {
+    p_user_id:userId,p_job_id:job.id,p_source_type:listing.type,p_external_id:listing.id,p_source_url:listing.url,
+    p_name:fields.name,p_description:fields.description,p_logo_url:fields.logo_url,
+    p_public_evidence:{observed_at:new Date().toISOString(),source:app.observed ? "store_listing" : "founder_manual_entry",developer_website:app.developerWebsite || null},
+  });
+  if (resolved.error) throw resolved.error;
+  const latest = await admin.from("app_jobs").select("*").eq("id",job.id).eq("user_id",userId).single();
+  if (latest.error) throw latest.error;
+  return latest.data;
+}
 
 async function extract(raw: string): Promise<Extracted> {
   const parsed = parsePublicUrl(raw);
@@ -66,6 +112,14 @@ async function extract(raw: string): Promise<Extracted> {
     );
   const normalizedSourceUrl = normalizeSourceUrl(raw);
   const now = new Date().toISOString();
+  const listing = storeListing(parsed);
+  if (listing) {
+    const app = await extractStore(listing);
+    return {sourceType:listing.type,externalId:listing.id,sourceUrl:listing.url,normalizedSourceUrl:listing.url,
+      websiteUrl:listing.type === "apple_app_store" ? `https://apps.apple.com/${listing.country}/app/id${listing.id}` : listing.url,
+      name:app.name,description:app.description,imageUrl:app.icon,faviconUrl:null,storeApp:app,
+      evidence:{observed_at:now,source:"store_listing",developer_website:app.developerWebsite || null}};
+  }
   if (sourceType === "github") {
     const [, owner, repo] = parsed.pathname.split("/");
     const api = await fetchPublicBytes(
@@ -223,6 +277,11 @@ async function storeSmallImage(
 
 async function submit(userId: string, raw: string) {
   const parsed = parsePublicUrl(raw);
+  const listing = storeListing(parsed);
+  if (listing) {
+    const app = await extractStore(listing);
+    return resolveStore(userId,app,{name:app.name,description:app.description,logo_url:app.icon});
+  }
   const sourceType = classifySource(parsed);
   if (sourceType === "unsupported")
     throw new Error("Paste the app's own public website URL instead");
@@ -390,9 +449,22 @@ async function preview(req: Request, body: Record<string, unknown>) {
   let logoUrl: string | null = null;
   let category: string | null = null;
   let heroUrl: string | null = null;
+  let storeApp: StoreApp | null = null;
+  let storeMedia: Awaited<ReturnType<typeof storeSubmissionMedia>> | null = null;
   let websiteUrl = parsed.toString();
   if (manual) {
-    if (classifySource(parsed) !== "website")
+    const listing = storeListing(parsed);
+    if (listing) {
+      try { storeApp = await extractStore(listing); }
+      catch {
+        // Manual submission remains available during store outages. It requires
+        // uploaded artwork; a failed fetch never authorizes arbitrary CDN URLs.
+        storeApp = {listing,observed:false,name:details?.name || "",description:details?.description || "",icon:null,screenshots:[],
+          category:null,platforms:[listing.type === "apple_app_store" ? "ios" : "android"],developerWebsite:""};
+      }
+      storeMedia = await storeSubmissionMedia(storeApp,url=>fetchPublicBytes(url,2_000_000));
+      websiteUrl = parsed.toString();
+    } else if (classifySource(parsed) !== "website")
       throw new Error("Manual entry requires the app's own website");
     name = details?.name || text(body.name, 240);
     description = details?.description || text(body.description, 2000);
@@ -404,6 +476,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
       const logo = parsePublicUrl(candidate);
       if (
         logo.hostname !== parsed.hostname &&
+        !storeMedia?.allowed_urls.includes(candidate) &&
         !candidate.startsWith(
           `${origin}/storage/v1/object/public/rocket-images/`,
         )
@@ -431,25 +504,33 @@ async function preview(req: Request, body: Record<string, unknown>) {
       name = item.name;
       description = item.description;
       websiteUrl = item.websiteUrl;
-      // GitHub/HN identify the app; media must come from its product website.
-      let media = { imageUrl:item.imageUrl, iconUrls:item.iconUrls || [] as string[] };
-      if (item.sourceType === "github" || item.sourceType === "hacker_news") {
-        try {
-          const page = await fetchPublicBytes(websiteUrl);
-          if (["text/html", "application/xhtml+xml"].includes(page.contentType)) {
-            const meta = extractHtml(new TextDecoder().decode(page.bytes), page.url);
-            media = {imageUrl:meta.imageUrl,iconUrls:meta.iconUrls};
-          }
-        } catch { /* Optional media must not fail the identity import. */ }
+      storeApp = item.storeApp || null;
+      if (storeApp) {
+        storeMedia = await storeSubmissionMedia(storeApp,url=>fetchPublicBytes(url,2_000_000));
+        logoUrl = storeMedia.logo_url;
+        heroUrl = storeMedia.hero_url;
+        category = storeApp.category;
+      } else {
+        // GitHub/HN identify the app; media must come from its product website.
+        let media = { imageUrl:item.imageUrl, iconUrls:item.iconUrls || [] as string[] };
+        if (item.sourceType === "github" || item.sourceType === "hacker_news") {
+          try {
+            const page = await fetchPublicBytes(websiteUrl);
+            if (["text/html", "application/xhtml+xml"].includes(page.contentType)) {
+              const meta = extractHtml(new TextDecoder().decode(page.bytes), page.url);
+              media = {imageUrl:meta.imageUrl,iconUrls:meta.iconUrls};
+            }
+          } catch { /* Optional media must not fail the identity import. */ }
+        }
+        const imported = await submissionMedia(websiteUrl,media.imageUrl,media.iconUrls,
+          (url) => fetchPublicBytes(url,2_000_000));
+        logoUrl = imported.logo_url;
+        heroUrl = imported.hero_url;
+        category = suggestedSubmissionCategory(item.sourceType,name,description);
       }
-      const imported = await submissionMedia(websiteUrl,media.imageUrl,media.iconUrls,
-        (url) => fetchPublicBytes(url,2_000_000));
-      logoUrl = imported.logo_url;
-      heroUrl = imported.hero_url;
-      category = suggestedSubmissionCategory(item.sourceType,name,description);
       // AI structures only observed public text. It cannot choose identity or
       // provide unobserved revenue, pricing or trust claims.
-      if (hasGeminiKey() && description.length >= 20) {
+      if ((!storeApp || !category) && hasGeminiKey() && description.length >= 20) {
         try {
           const answer = JSON.parse(
             await geminiText({
@@ -479,13 +560,16 @@ async function preview(req: Request, body: Record<string, unknown>) {
     /^www\./,
     "",
   );
-  const exactMatches = await admin
+  const listing = storeListing(normalized);
+  const storeMatches = listing ? await admin.rpc("lookup_store_app_submission",{p_source_type:listing.type,p_external_id:listing.id}) : null;
+  if (storeMatches?.error) throw storeMatches.error;
+  const exactMatches = storeMatches || await admin
     .from("public_apps")
     .select("id,name,description,website_url,logo_url,categories")
     .eq("website_url", normalized)
     .limit(3);
   if (exactMatches.error) throw exactMatches.error;
-  const hostMatches = exactMatches.data?.length
+  const hostMatches = listing || exactMatches.data?.length
     ? exactMatches
     : await admin
         .from("public_apps")
@@ -502,7 +586,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
       : {
           name,
           description,
-          website_url: normalized,
+          website_url: listing ? websiteUrl : normalized,
           logo_url: logoUrl,
           categories: category ? [category] : [],
         };
@@ -525,6 +609,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
       categories: display.categories,
       existing_app_id: exact.length === 1 ? exact[0].id : null,
       ...(details ? { details } : {}),
+      ...(storeApp ? {store_app:storeApp,store_media_urls:storeMedia?.allowed_urls || []} : {}),
     },
   });
   if (saved.error) throw saved.error;
@@ -535,6 +620,9 @@ async function preview(req: Request, body: Record<string, unknown>) {
     outcome,
     app: {
       hero_url: outcome === "new" ? heroUrl : null,
+      screenshots: outcome === "new" ? storeMedia?.screenshots || [] : [],
+      platforms: storeApp?.platforms,
+      developer_website_url: storeApp?.developerWebsite || "",
       id: exact.length === 1 ? exact[0].id : undefined,
       name: display.name,
       description: display.description,
@@ -580,58 +668,63 @@ async function consumePreview(userId: string, token: string, publish = false) {
         description: string;
         website_url: string;
         logo_url: string | null;
+        store_app?: StoreApp;
       };
-      const website = parsePublicUrl(fields.website_url);
-      const normalized = normalizeSourceUrl(website.toString());
-      const existing = await admin
-        .from("app_jobs")
-        .select("id,status,app_id,result")
-        .eq("user_id", userId)
-        .eq("normalized_url", normalized)
-        .maybeSingle();
-      if (existing.error) throw existing.error;
-      if (existing.data?.status === "complete") result = existing.data;
-      else {
-        const job =
-          existing.data ||
-          (
-            await admin
-              .from("app_jobs")
-              .insert({
-                user_id: userId,
-                submitted_url: pending.data.submitted_url,
-                normalized_url: normalized,
-                source_type: "website",
-              })
-              .select("id")
-              .single()
-          ).data;
-        if (!job) throw new Error("Could not create app submission");
-        const resolved = await admin.rpc("resolve_app_submission", {
-          p_user_id: userId,
-          p_job_id: job.id,
-          p_source_type: "website",
-          p_external_id: normalized,
-          p_source_url: normalized,
-          p_normalized_source_url: normalized,
-          p_website_url: normalized,
-          p_canonical_host: website.hostname.replace(/^www\./, ""),
-          p_name: fields.name,
-          p_description: fields.description,
-          p_logo_url: await storeSmallImage(fields.logo_url, null),
-          p_public_evidence: {
-            source: "founder_manual_entry",
-            observed_at: new Date().toISOString(),
-          },
-        });
-        if (resolved.error) throw resolved.error;
-        const latest = await admin
+      if (fields.store_app) {
+        result = await resolveStore(userId,fields.store_app,fields);
+      } else {
+        const website = parsePublicUrl(fields.website_url);
+        const normalized = normalizeSourceUrl(website.toString());
+        const existing = await admin
           .from("app_jobs")
-          .select("*")
-          .eq("id", job.id)
-          .single();
-        if (latest.error) throw latest.error;
-        result = latest.data;
+          .select("id,status,app_id,result")
+          .eq("user_id", userId)
+          .eq("normalized_url", normalized)
+          .maybeSingle();
+        if (existing.error) throw existing.error;
+        if (existing.data?.status === "complete") result = existing.data;
+        else {
+          const job =
+            existing.data ||
+            (
+              await admin
+                .from("app_jobs")
+                .insert({
+                  user_id: userId,
+                  submitted_url: pending.data.submitted_url,
+                  normalized_url: normalized,
+                  source_type: "website",
+                })
+                .select("id")
+                .single()
+            ).data;
+          if (!job) throw new Error("Could not create app submission");
+          const resolved = await admin.rpc("resolve_app_submission", {
+            p_user_id: userId,
+            p_job_id: job.id,
+            p_source_type: "website",
+            p_external_id: normalized,
+            p_source_url: normalized,
+            p_normalized_source_url: normalized,
+            p_website_url: normalized,
+            p_canonical_host: website.hostname.replace(/^www\./, ""),
+            p_name: fields.name,
+            p_description: fields.description,
+            p_logo_url: await storeSmallImage(fields.logo_url, null),
+            p_public_evidence: {
+              source: "founder_manual_entry",
+              observed_at: new Date().toISOString(),
+            },
+          });
+          if (resolved.error) throw resolved.error;
+          const latest = await admin
+            .from("app_jobs")
+            .select("*")
+            .eq("id", job.id)
+            .single();
+          if (latest.error) throw latest.error;
+          result = latest.data;
+        }
       }
     }
     const previewFields = pending.data.preview as { categories?: unknown };
@@ -669,6 +762,8 @@ async function consumePreview(userId: string, token: string, publish = false) {
       const fields = pending.data.preview as {
         details?: SubmissionDetails;
         website_url: string;
+        store_app?: StoreApp;
+        store_media_urls?: string[];
       };
       const details = validateSubmission(fields.details);
       const websiteHost = parsePublicUrl(fields.website_url).hostname.replace(
@@ -679,9 +774,11 @@ async function consumePreview(userId: string, token: string, publish = false) {
       const image = async (candidate: string) => {
         const url = parsePublicUrl(candidate);
         const uploaded = candidate.startsWith(uploadedPrefix);
+        const storeAsset = Boolean(fields.store_app && fields.store_media_urls?.includes(candidate)
+          && storeImageUrl(candidate,fields.store_app.listing.type));
         if (
           url.protocol !== "https:" ||
-          (!uploaded && url.hostname.replace(/^www\./, "") !== websiteHost)
+          (!uploaded && !storeAsset && url.hostname.replace(/^www\./, "") !== websiteHost)
         )
           throw new Error(
             "Upload your images to Rocket or use HTTPS images from your app website",
@@ -692,6 +789,7 @@ async function consumePreview(userId: string, token: string, publish = false) {
           final.protocol !== "https:" ||
           (uploaded
             ? !fetched.url.startsWith(uploadedPrefix)
+            : storeAsset ? !storeImageUrl(final.toString(),fields.store_app!.listing.type)
             : final.hostname.replace(/^www\./, "") !== websiteHost)
         )
           throw new Error("Image redirected outside the permitted website");

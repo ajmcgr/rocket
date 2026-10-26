@@ -44,6 +44,9 @@ type Preview = {
     website_url: string;
     logo_url: string | null;
     hero_url?: string | null;
+    screenshots?: string[];
+    platforms?: string[];
+    developer_website_url?: string;
     categories: string[];
   };
   publishAfterAuth?: boolean;
@@ -257,17 +260,21 @@ export default function LaunchPreview() {
           tagline: result.app.description.split(/[.!?]\s/)[0].slice(0, 200),
           logo_url: result.app.logo_url || "",
           hero_url: result.app.hero_url || "",
+          screenshots: result.app.screenshots || [],
+          developer_website_url: result.app.developer_website_url || "",
           categories: result.app.categories
             .filter((c) =>
               APP_CATEGORIES.some((category) => category.name === c),
             )
             .slice(0, 3),
-          platforms: ["web"],
+          platforms: result.app.platforms?.filter(p=>SUBMISSION_PLATFORMS.some(option=>option.id===p)) || ["web"],
         });
         setEditing(true);
         setStep(0);
         setNotice(
-          "We found your app. Review the details, add media, then publish.",
+          result.app.platforms?.length && !result.app.hero_url
+            ? "We imported the store listing. Review the details and screenshots, then add a landscape hero image before publishing."
+            : "We found your app. Review the details, add media, then publish.",
         );
       } else {
         setEditing(false);
@@ -471,7 +478,7 @@ export default function LaunchPreview() {
         label={label}
         value={details[kind]}
         onChange={(value) => set(kind, value)}
-        hint={`${hint} Upload an image or paste an HTTPS image URL from your app website.`}
+        hint={`${hint} Use imported artwork, upload an image, or paste an HTTPS image URL from your app website.`}
       />
       <label className="block text-sm font-medium">
         Upload {kind === "logo_url" ? "app icon" : "hero image"}
@@ -549,7 +556,7 @@ export default function LaunchPreview() {
           aria-label="AI-assisted app submission"
         >
           <label htmlFor="launch-url" className="text-sm font-semibold">
-            Your app website or Launch URL
+            Your app website, store listing or Launch URL
           </label>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <input
@@ -585,7 +592,7 @@ export default function LaunchPreview() {
             Add details manually
           </button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            AI-assisted import reads public website metadata. Review every field
+            AI-assisted import reads public website and store metadata. Review every field
             before publishing. Importing never verifies ownership.
           </p>
         </section>
@@ -710,7 +717,11 @@ export default function LaunchPreview() {
                   />
                   <Field label="Website URL *" value={url} onChange={(value) => { setUrl(value); setUrlError(""); }}
                     onBlur={() => { try { normalizeWebsite(); } catch { /* Inline feedback. */ } }} invalid={Boolean(urlError)} />
+                  <p className="text-sm text-muted-foreground">For a mobile app, you can use its App Store or Google Play listing as the destination.</p>
                   {urlError && <p id="submission-url-error" role="alert" className="text-sm text-red-700 dark:text-red-300">{urlError}</p>}
+                  {(/https:\/\/(?:apps\.apple\.com|play\.google\.com)\//i.test(url) || details.developer_website_url) &&
+                    <Field label="Developer website (optional)" value={details.developer_website_url || ""}
+                      onChange={value=>set("developer_website_url",value)} hint="Your developer or product website. This does not verify app ownership." />}
                   <Field
                     label="Developer @handle (optional)"
                     value={details.developer_handle}
@@ -929,6 +940,7 @@ export default function LaunchPreview() {
                         {details.platforms.join(" · ")}
                       </p>
                       <p className="break-all text-sm">{url}</p>
+                      {details.developer_website_url && <p className="break-all text-sm">Developer website: {details.developer_website_url}</p>}
                       <p className="break-all text-sm">
                         tryrocket.ai/apps/{details.slug}
                       </p>
@@ -999,10 +1011,12 @@ export default function LaunchPreview() {
             URLs Rocket can use to submit apps
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Use your app website, a product directory launch page, a GitHub
-            repository with a product website, or a Hacker News story linking to
-            the app. Product Hunt, Apple App Store, and Google Play listing URLs
-            are not supported yet. Paste the app’s own website URL instead.
+            Paste your app website, Apple App Store or Google Play listing, a
+            Launch page, a GitHub repository with a product website, or a Hacker
+            News story linking to the app. Store imports can include the icon,
+            screenshots, category and platform. Review every field before
+            publishing. If a store listing cannot be read, add its details manually.
+            Product Hunt imports are not supported yet.
           </p>
         </section>
         <p className="mt-8 text-sm text-muted-foreground">
