@@ -2,7 +2,7 @@
 // not query connections, private points, credentials, or visibility settings.
 export type ShareMetric = {label: string; value: string; source: string};
 const names: Record<string,string> = {ga4:"Google Analytics",posthog:"PostHog",stripe:"Stripe",revenuecat:"RevenueCat",polar:"Polar",dodo:"Dodo Payments"};
-const publicValue = (p:any) => p.visibility === 'exact' || p.visibility === 'range';
+const publicValue = (p:any) => p.visibility === 'exact' || p.visibility === 'range' || p.visibility === 'verified_only';
 function fresh(value:unknown,now:number) { const time=Date.parse(String(value)); return Number.isFinite(time) && time<=now+60000 && now-time<=72*3600000; }
 function number(value:unknown) { return value !== null && value !== '' && Number.isFinite(Number(value)) && Number(value)>=0; }
 function money(value:unknown,currency:string) {
@@ -22,8 +22,9 @@ export function publicShareMetrics(traffic:any[],stripe:any[],alternative:any[],
         const value=revenue.value_minor ?? revenue.mrr_minor;
         const lower=revenue.range_lower_minor,upper=revenue.range_upper_minor;
         const labels:Record<string,string>={mrr:'Monthly recurring revenue',subscription_mrr:'Subscription MRR',gross_revenue_30d:'Gross revenue · 30 days',paid_volume_30d:'Succeeded payments · 30 days'};
-        const label=labels[revenue.metric_type];
-        const text=revenue.visibility==='exact' && number(value) ? money(value,revenue.currency)
+        const label=revenue.provider==='stripe' && revenue.revenue_scope==='account' ? 'Stripe account MRR' : labels[revenue.metric_type];
+        const text=revenue.visibility==='verified_only' ? 'Verified'
+          : revenue.visibility==='exact' && number(value) ? money(value,revenue.currency)
           : revenue.visibility==='range' && number(lower) && (upper===null || number(upper) && Number(upper)>=Number(lower))
             ? `${money(lower,revenue.currency)}${upper===null ? '+' : `–${money(upper,revenue.currency)}`}` : null;
         if (label && text) result.push({label,value:text,source:`${names[revenue.provider] || 'Provider'} · ${(revenue.verified_at || revenue.last_verified_at).slice(0,10)}`});
@@ -33,9 +34,9 @@ export function publicShareMetrics(traffic:any[],stripe:any[],alternative:any[],
   const priority:Record<string,number>={active_users:0,sessions:1,views:2};
   const point=traffic.filter(p=>publicValue(p) && fresh(p.last_verified_at,now))
     .sort((a,b)=>(priority[a.metric_type]??3)-(priority[b.metric_type]??3)||String(b.metric_date).localeCompare(String(a.metric_date)))
-    .find(p=>p.visibility==='exact' ? number(p.value) : typeof p.value_range==='string' && p.value_range.length>0 && p.value_range.length<80);
+    .find(p=>p.visibility==='verified_only' || (p.visibility==='exact' ? number(p.value) : typeof p.value_range==='string' && p.value_range.length>0 && p.value_range.length<80));
   if (point && point.metric_type in priority) result.push({label:point.metric_type==='active_users'?'Daily active users':point.metric_type==='sessions'?'Daily sessions':'Daily views',
-    value:point.visibility==='range' ? point.value_range : new Intl.NumberFormat('en-US',{notation:Number(point.value)>=1000?'compact':'standard',maximumFractionDigits:1}).format(Number(point.value)),
+    value:point.visibility==='verified_only' ? 'Verified' : point.visibility==='range' ? point.value_range : new Intl.NumberFormat('en-US',{notation:Number(point.value)>=1000?'compact':'standard',maximumFractionDigits:1}).format(Number(point.value)),
     source:`${names[point.provider] || 'Provider'} · ${point.metric_date}`});
   return result.slice(0,2);
 }
