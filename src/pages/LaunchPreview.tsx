@@ -1010,6 +1010,24 @@ export default function LaunchPreview() {
           <h2 id="submit-supported-sources" className="text-xl font-semibold">
             URLs Rocket can use to submit apps
           </h2>
+          <ul className="submission-source-logos mt-4 flex flex-wrap items-center gap-3" aria-label="Submission sources">
+            <li className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm text-[#171717]">
+              <img src="/submission-sources/app-store.webp" alt="" width={28} height={28} className="h-7 w-7 object-contain" />
+              App Store
+            </li>
+            <li className="inline-flex h-11 items-center rounded-lg border border-border bg-white px-3">
+              <img src="/submission-sources/google-play.webp" alt="Google Play" width={112} height={22} className="h-[22px] w-28 object-contain" />
+            </li>
+            <li className="inline-flex h-11 items-center rounded-lg border border-border bg-white px-2">
+              <img src="/submission-sources/github.png" alt="GitHub" width={87} height={32} className="h-8 w-[87px] object-contain" />
+            </li>
+            <li className="inline-flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex h-11 items-center rounded-lg border border-border bg-white px-2">
+                <img src="/submission-sources/product-hunt.png" alt="Product Hunt" width={100} height={36} className="h-9 w-[100px] object-contain" />
+              </span>
+              <span>Not supported yet</span>
+            </li>
+          </ul>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Paste your app website, Apple App Store or Google Play listing, a
             Launch page, a GitHub repository with a product website, or a Hacker
