@@ -20,6 +20,7 @@ export type MrrResult = {
   currency: string; mrr_minor: string; included_subscriptions: number;
   excluded_subscriptions: number; unsupported_subscriptions: number;
   verification_status: "verified" | "unsupported";
+  unsupported_reasons: Record<string, number>;
 };
 
 function parseMinor(value: string): bigint | null {
@@ -62,9 +63,9 @@ export function calculateSubscriptionMrr(
   subscriptions: RevenueSubscription[], mappings: MappedPrice[], nowSeconds: number,
 ): MrrResult[] {
   const byPrice = new Map(mappings.map((mapping) => [mapping.price_id, mapping]));
-  const totals = new Map<string, { amount: bigint; included: number; excluded: number; unsupported: number }>();
+  const totals = new Map<string, { amount: bigint; included: number; excluded: number; unsupported: number; reasons: Record<string, number> }>();
   for (const mapping of mappings) if (!totals.has(mapping.currency))
-    totals.set(mapping.currency, { amount: 0n, included: 0, excluded: 0, unsupported: 0 });
+    totals.set(mapping.currency, { amount: 0n, included: 0, excluded: 0, unsupported: 0, reasons: {} });
   for (const subscription of subscriptions) {
     const mapped = subscription.items.map((item) => ({ item, mapping: byPrice.get(item.price?.id) }))
       .filter((entry): entry is { item: RevenueItem; mapping: MappedPrice } => Boolean(entry.mapping));
@@ -79,16 +80,23 @@ export function calculateSubscriptionMrr(
       // A discount applied to the subscription can span mapped and unmapped
       // items. V1 does not claim a verified number for that currency.
       if (Array.isArray(subscription.discounts) && subscription.discounts.length > 0) {
-        total.unsupported++; continue;
+        total.unsupported++; total.reasons.subscription_discount = (total.reasons.subscription_discount || 0) + 1; continue;
       }
       let contribution = 0n;
       let unsupported = false;
+      let reason = "unsupported_price";
       for (const { item, mapping } of entries) {
         const amount = monthlyMinor(item, mapping);
-        if (amount == null) { unsupported = true; break; }
+        if (amount == null) {
+          unsupported = true;
+          reason = Array.isArray(item.discounts) && item.discounts.length ? "item_discount"
+            : item.quantity == null || !Number.isSafeInteger(item.quantity) || item.quantity < 0 ? "invalid_quantity"
+            : "unsupported_price";
+          break;
+        }
         contribution += amount;
       }
-      if (unsupported) total.unsupported++;
+      if (unsupported) { total.unsupported++; total.reasons[reason] = (total.reasons[reason] || 0) + 1; }
       else { total.amount += contribution; total.included++; }
     }
   }
@@ -96,5 +104,6 @@ export function calculateSubscriptionMrr(
     currency, mrr_minor: formatMinor(value.amount), included_subscriptions: value.included,
     excluded_subscriptions: value.excluded, unsupported_subscriptions: value.unsupported,
     verification_status: value.unsupported ? "unsupported" : "verified",
+    unsupported_reasons: value.reasons,
   }));
 }

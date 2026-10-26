@@ -176,10 +176,10 @@ async function allSubscriptionItems(subscription: Record<string, unknown>, token
   const listed = await stripeList(`/v1/subscription_items?subscription=${encodeURIComponent(String(subscription.id))}`, token, 1000);
   return listed as RevenueItem[];
 }
-async function mappedSubscriptions(mappings: MappedPrice[], token: string, livemode: boolean) {
+async function mappedSubscriptions(mappings: MappedPrice[] | null, token: string, livemode: boolean) {
   const seen = new Map<string, RevenueSubscription>();
-  for (const mapping of mappings) {
-    const subs = await stripeList(`/v1/subscriptions?status=all&price=${encodeURIComponent(mapping.price_id)}`, token);
+  for (const query of mappings ? mappings.map((mapping) => `&price=${encodeURIComponent(mapping.price_id)}`) : [""]) {
+    const subs = await stripeList(`/v1/subscriptions?status=all${query}`, token);
     for (const entry of subs) {
       if (entry.livemode !== livemode) throw new Error("Stripe account mode changed; reconnect Stripe");
       const id = String(entry.id || "");
@@ -199,28 +199,56 @@ async function project(appId: string) {
   const result = await service.rpc("refresh_app_revenue_projection", { p_app_id: appId });
   if (result.error) throw result.error;
 }
-async function sync(appId: string, userId: string) {
+async function sync(appId: string, userId: string, requestedScope?: unknown) {
   await ownedApp(appId, userId);
   const { linked, row } = await boundConnection(appId, userId);
+  const scope = requestedScope ?? linked.revenue_scope ?? "products";
+  if (scope !== "account" && scope !== "products") throw new Error("Invalid revenue scope");
+  if (scope === "products" && linked.revenue_scope === "account") throw new Error("Select specific Stripe prices first");
   if (!["active", "error"].includes(row.status)) throw new Error("Reconnect Stripe before syncing");
   const mapped = await service.from("app_stripe_price_mappings")
     .select("stripe_price_id,stripe_product_id,currency")
     .eq("app_id", appId).eq("connection_id", row.id);
   if (mapped.error) throw mapped.error;
-  if (!mapped.data?.length) throw new Error("Select at least one Stripe price first");
+  if (scope === "products" && !mapped.data?.length) throw new Error("Select at least one Stripe price first");
   const now = new Date().toISOString();
   await service.from("app_revenue_connections").update({ last_attempted_sync: now }).eq("id", row.id);
   try {
     const token = await accessToken(row, { appId, userId });
-    const mappings = mapped.data.map((item) => ({ price_id: item.stripe_price_id,
+    let mappings = (mapped.data || []).map((item) => ({ price_id: item.stripe_price_id,
       product_id: item.stripe_product_id, currency: item.currency }));
-    const subscriptions = await mappedSubscriptions(mappings, token, row.livemode);
+    const subscriptions = await mappedSubscriptions(scope === "account" ? null : mappings, token, row.livemode);
+    let mappingVersion = linked.mapping_version;
+    if (scope === "account") {
+      // Include archived prices and every subscription item. Never silently omit
+      // an unsupported price, or freeze a total to today's active product list.
+      const prices = await stripeList("/v1/prices?type=recurring", token, 2000);
+      const byId = new Map<string, MappedPrice>();
+      for (const price of [...prices, ...subscriptions.flatMap((subscription) => subscription.items.map((item) => item.price))]) {
+        const product = typeof price.product === "string" ? price.product : (price.product as { id?: string } | null)?.id;
+        if (typeof price.id !== "string" || !/^price_[A-Za-z0-9]+$/.test(price.id)
+          || typeof product !== "string" || !/^prod_[A-Za-z0-9]+$/.test(product)
+          || typeof price.currency !== "string" || !/^[a-z]{3}$/.test(price.currency))
+          throw new Error("Stripe returned an invalid recurring price");
+        byId.set(price.id, { price_id: price.id, product_id: product, currency: price.currency });
+      }
+      mappings = [...byId.values()];
+      if (!mappings.length) throw new Error("Stripe account has no recurring prices yet");
+      const configured = await service.rpc("configure_app_stripe_revenue", {
+        p_app_id: appId, p_connection_id: row.id, p_user_id: userId,
+        p_scope: "account", p_prices: mappings, p_expected_version: linked.mapping_version,
+      });
+      if (configured.error) throw new Error(configured.error.code === "23505"
+        ? "This Stripe account is already used by another app. Use specific products for shared accounts."
+        : configured.error.message || "Stripe revenue scope could not be saved");
+      mappingVersion = configured.data;
+    }
     const results = calculateSubscriptionMrr(subscriptions, mappings, Math.floor(Date.now() / 1000));
     // Recheck ownership and mapping version after network I/O to avoid storing
     // a stale calculation after an app transfer or mapping edit.
     await ownedApp(appId, userId);
     const current = await binding(appId);
-    if (!current || current.connection_id !== row.id || current.mapping_version !== linked.mapping_version)
+    if (!current || current.connection_id !== row.id || current.mapping_version !== mappingVersion)
       throw new Error("Price mapping changed during sync; retry");
     const observed = new Date().toISOString();
     const saved = await service.from("app_revenue_metric_points").insert(results.map((result) => ({
@@ -234,7 +262,7 @@ async function sync(appId: string, userId: string) {
       last_successful_sync: observed, last_error: null, updated_at: observed }).eq("id", row.id);
     if (updated.error) throw updated.error;
     await project(appId);
-    return { observed_at: observed, currencies: results, source_livemode: row.livemode };
+    return { observed_at: observed, currencies: results, source_livemode: row.livemode, revenue_scope: scope };
   } catch (error) {
     const message = (error as Error).message.slice(0, 160);
     await service.from("app_revenue_connections").update({ status: "error", last_error: message,
@@ -313,7 +341,7 @@ async function handle(request: Request) {
     const mappings = await service.from("app_stripe_price_mappings")
       .select("stripe_product_id,stripe_price_id,currency").eq("app_id", app.id);
     if (mappings.error) throw mappings.error;
-    const points = await service.rpc("latest_app_revenue_points", {
+    const points = await service.rpc("latest_app_revenue_scope_points", {
       p_app_id: app.id, p_mapping_version: linked?.mapping_version ?? 0,
     });
     if (points.error) throw points.error;
@@ -323,6 +351,7 @@ async function handle(request: Request) {
       connection: row ? { status: row.status, external_account_id: row.external_account_id,
       livemode: row.livemode, last_attempted_sync: row.last_attempted_sync,
       last_successful_sync: row.last_successful_sync, last_error: row.last_error } : null,
+    revenue_scope: linked?.revenue_scope ?? "products",
     mapping_version: linked?.mapping_version ?? 0, visibility: linked?.visibility ?? "private",
     mappings: mappings.data || [], latest });
   }
@@ -389,7 +418,7 @@ async function handle(request: Request) {
     }
     return json({ mapping_version: replaced.data, mapped_prices: selected.length });
   }
-  if (body.action === "sync") return json({ sync: await sync(app.id, userId) });
+  if (body.action === "sync") return json({ sync: await sync(app.id, userId, body.revenue_scope) });
   if (body.action === "set_visibility") {
     if (reviewPrivateOnly(access) && body.visibility !== "private")
       return fail("This connection must remain private during review", 403);
@@ -423,8 +452,10 @@ Deno.serve(async (request) => {
       "Stripe revenue publisher credential is invalid"].includes(message))
       return fail(message, 503);
     if (["Connect Stripe first", "Select at least one Stripe price first", "Reconnect Stripe before syncing",
-      "Price mapping changed during sync; retry", "Stripe account exceeds the safe sync limit"].includes(message))
+      "Price mapping changed during sync; retry", "Stripe account exceeds the safe sync limit",
+      "Invalid revenue scope", "Select specific Stripe prices first", "Stripe account has no recurring prices yet"].includes(message))
       return fail(message, 400);
+    if (message.startsWith("This Stripe account is already used")) return fail(message, 409);
     if (message.startsWith("Stripe") || message.startsWith("Reconnect")) return fail(message, 502);
     return fail("Stripe revenue request failed", 500);
   }

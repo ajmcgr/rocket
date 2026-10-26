@@ -7,16 +7,17 @@ import { AlternativeRevenueConnection } from "@/components/AlternativeRevenueCon
 import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
 import "./AppVerification.css";
 
+type RevenueScope = "account" | "products";
 type Visibility = "private" | "verified_only" | "range" | "exact";
 type Price = { id: string; product_id: string; product_name: string; currency: string;
   unit_amount_decimal: string | null; interval: string; interval_count: number };
 type Mapping = { stripe_price_id: string; stripe_product_id: string; currency: string };
 type Point = { currency: string; mrr_minor: string; observed_at: string;
   verification_status: "verified" | "unsupported"; source_livemode: boolean;
-  unsupported_subscriptions: number };
+  unsupported_subscriptions: number; unsupported_reasons?: Record<string, number> };
 type Status = { connect_available: boolean; private_only?: boolean; connection: null | { status: string; external_account_id: string; livemode: boolean;
   last_attempted_sync: string | null; last_successful_sync: string | null; last_error: string | null };
-  mapping_version: number; visibility: Visibility; mappings: Mapping[]; latest: Point[] };
+  revenue_scope?: RevenueScope; mapping_version: number; visibility: Visibility; mappings: Mapping[]; latest: Point[] };
 
 const visibilityChoices: Array<{ value: Visibility; label: string }> = [
   { value: "private", label: "Private" },
@@ -42,6 +43,7 @@ export default function AppRevenue() {
   const installation = new URLSearchParams(search).get("stripe_installation") === "external_test"
     ? "external_test" : "marketplace";
   const [status, setStatus] = useState<Status | null>(null);
+  const [scope, setScope] = useState<RevenueScope>("account");
   const [prices, setPrices] = useState<Price[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -57,6 +59,7 @@ export default function AppRevenue() {
   const refresh = useCallback(async () => {
     const next = await request("status") as Status;
     setStatus(next);
+    setScope(next.revenue_scope === "account" || !next.mappings.length ? "account" : "products");
     setSelected(next.mappings.map((mapping) => mapping.stripe_price_id));
   }, [request]);
   useEffect(() => {
@@ -104,8 +107,17 @@ export default function AppRevenue() {
       </>}
     </section>
     {status?.connection && <section className="mt-6 rounded-2xl border bg-white p-6">
-      <h2 className="font-semibold">Products and prices for this app</h2>
-      <p className="mt-2 text-sm text-neutral-600">Select exact Stripe prices. A price can belong to only one Rocket app for this Stripe account. Changing the mapping clears public verification until the next successful sync.</p>
+      <h2 className="font-semibold">What revenue should Rocket show?</h2>
+      <label className="mt-4 block text-sm font-medium" htmlFor="stripe-revenue-scope">Revenue scope</label>
+      <select id="stripe-revenue-scope" value={scope} disabled={busy} onChange={(event) => setScope(event.target.value as RevenueScope)}
+        className="mt-2 min-h-11 w-full rounded-xl border bg-white px-3 py-2 text-sm">
+        <option value="account">Total account MRR</option>
+        <option value="products">Specific products</option>
+      </select>
+      {scope === "account" ? <p className="mt-3 text-sm text-neutral-600">Sync recurring revenue across the whole connected Stripe account, including new and archived prices. Choose specific products if this account also bills for other apps. Public metrics are labelled as account MRR, and an account total can be assigned to only one Rocket app.</p>
+        : <p className="mt-3 text-sm text-neutral-600">Select the recurring prices that belong to this app. A price can belong to only one Rocket app for this Stripe account.</p>}
+      <p className="mt-2 text-xs text-neutral-500">Changing revenue scope resets visibility to private and requires a fresh sync.</p>
+      {scope === "products" && <>
       <button disabled={busy} onClick={catalog} className="mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Load Stripe prices</button>
       {prices.length > 0 && <div className="mt-4 max-h-80 space-y-2 overflow-y-auto border-t pt-4">{prices.map((price) => <label key={price.id} className="flex items-start gap-3 text-sm">
         <input type="checkbox" checked={selected.includes(price.id)} disabled={busy} onChange={(event) => setSelected((current) => event.target.checked
@@ -117,11 +129,17 @@ export default function AppRevenue() {
         await request("save_mapping", { price_ids: selected }); await refresh();
         setNotice("Price mapping saved. Sync again before relying on a verified MRR point.");
       })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Save price mapping</button>}
-      {status.mappings.length > 0 && <button disabled={busy} onClick={() => run(async () => {
-        await request("sync"); await refresh(); setNotice("Subscription MRR was recalculated from Stripe. Sandbox figures remain private and cannot appear as production-verified revenue.");
-      })} className="ml-2 mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">Sync MRR</button>}
-      {status.latest.length > 0 && <div className="mt-5 border-t pt-4"><h3 className="text-sm font-semibold">Latest private snapshot</h3>
-        {status.latest.map((point) => <p key={point.currency} className="mt-2 text-sm">{point.currency.toUpperCase()}: {point.verification_status === "verified" ? moneyFromMinor(point.mrr_minor, point.currency) : "Unsupported configuration — not verified"}
+      </>}
+      {(scope === "account" || status.mappings.length > 0) && <button disabled={busy} onClick={() => run(async () => {
+        const result = await request("sync", { revenue_scope: scope }); await refresh();
+        const unsupported = result.sync?.currencies?.some((point: Point) => point.verification_status === "unsupported");
+        setNotice(unsupported ? "Stripe synced, but a subscription configuration is unsupported. See the private snapshot below; no unsupported total is published."
+          : result.sync?.source_livemode ? "Live subscription MRR synced. Select Stripe as the revenue source and choose visibility to show it on your listing."
+          : "Sandbox subscription MRR synced. Sandbox figures stay private.");
+      })} className="mt-4 rounded-xl border px-4 py-2 text-sm disabled:opacity-50">{scope === "account" ? "Sync total MRR" : "Sync selected products"}</button>}
+      {status.latest.length > 0 && <div className="mt-5 border-t pt-4"><h3 className="text-sm font-semibold">Latest private snapshot</h3><p className="mt-1 text-xs text-neutral-500">{status.revenue_scope === "account" ? "Whole Stripe account" : "Selected products"}</p>
+        {status.latest.map((point) => <p key={point.currency} className="mt-2 text-sm">{point.currency.toUpperCase()}: {point.verification_status === "verified" ? moneyFromMinor(point.mrr_minor, point.currency) : `Not verified — ${point.unsupported_subscriptions} unsupported subscription${point.unsupported_subscriptions === 1 ? "" : "s"}`}
+          {point.verification_status === "unsupported" && point.unsupported_reasons && <span className="block text-xs text-amber-700">{Object.keys(point.unsupported_reasons).map((reason) => ({ subscription_discount: "Subscription-level discount", item_discount: "Item-level discount", invalid_quantity: "Invalid subscription quantity", unsupported_price: "Unsupported recurring price configuration" })[reason] || "Unsupported configuration").join("; ")}. These subscriptions have not been silently omitted from a verified total.</span>}
           <span className="block text-xs text-neutral-500">{new Date(point.observed_at).toLocaleString()} · {point.source_livemode ? "Live" : "Sandbox"}{point.unsupported_subscriptions ? ` · ${point.unsupported_subscriptions} unsupported subscriptions` : ""}</span></p>)}
       </div>}
     </section>}
