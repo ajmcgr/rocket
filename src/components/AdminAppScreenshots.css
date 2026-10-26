@@ -113,9 +113,9 @@
     "Segoe UI",
     sans-serif;
 }
-.rocket-admin-screenshot-page.is-square {
+.rocket-admin-screenshot-page.is-compact {
   width: 1200px;
-  height: 1200px;
+  height: 1037px;
 }
 .rocket-admin-screenshot-sidebar {
   box-sizing: border-box;
@@ -127,8 +127,8 @@
   background: #fcfdff;
   color: #525252;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-sidebar {
-  height: 1200px;
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-sidebar {
+  height: 1037px;
 }
 .rocket-admin-screenshot-sidebar-brand {
   box-sizing: border-box;
@@ -399,24 +399,24 @@
 .rocket-admin-screenshot-image .app-screenshot-backdrop {
   object-fit: cover;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-main {
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-main {
   padding: 26px 28px;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-back {
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-back {
   margin-bottom: 13px;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-profile {
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-profile {
   min-height: 0;
   padding: 22px;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-gallery {
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-gallery {
   margin-top: 18px;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-gallery h4 {
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-gallery h4 {
   margin-bottom: 12px;
 }
-.rocket-admin-screenshot-page.is-square .rocket-admin-screenshot-image {
-  height: 290px;
+.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-image {
+  height: 228px;
 }
 @media (max-width: 700px) {
   .rocket-admin-screenshot-actions {
