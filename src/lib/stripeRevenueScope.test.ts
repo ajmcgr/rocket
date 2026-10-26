@@ -7,7 +7,7 @@ import * as mrr from '../../supabase/functions/_shared/stripeRevenueMrr';
 const user='10000000-0000-4000-8000-000000000001',app='20000000-0000-4000-8000-000000000001';
 const compiled=ts.transpileModule(readFileSync('supabase/functions/rocket-stripe-revenue/index.ts','utf8').replace(/^import[\s\S]*?from ["'][^"']+["'];\n/gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const price=(id:string,amount:string,interval='month')=>({id,product:'prod_fixture',currency:'usd',unit_amount_decimal:amount,billing_scheme:'per_unit',recurring:{interval,interval_count:1,usage_type:'licensed'}});
-async function fixture({products=false,conflict=false,revoked=false,discount=false}={}){
+async function fixture({products=false,conflict=false,revoked=false,discount=false,resolvedDiscount=false}={}){
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode('a'.repeat(32)),'AES-GCM',false,['encrypt']);
  const iv=new Uint8Array(12);const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode('fixture-token')));
  const b64=(b:Uint8Array)=>Buffer.from(b).toString('base64url');
@@ -27,9 +27,9 @@ async function fixture({products=false,conflict=false,revoked=false,discount=fal
  });
  function from(table:string){let inserted=false;const result=()=>({error:null,data:inserted?null:table==='app_owners'?(revoked?null:{app_id:app,verification_level:'domain_verified'}):table==='public_apps'?{id:app}:table==='app_revenue_bindings'?{...binding}:table==='app_revenue_connections'?{...connection}:table==='app_stripe_price_mappings'?mappings:[]});
   const chain={select:()=>chain,eq:()=>chain,is:()=>chain,maybeSingle:async()=>result(),single:async()=>result(),update:()=>chain,insert:(rows:unknown[])=>{inserted=true;points.push(...rows);return chain;},then:(resolve:(r:unknown)=>unknown)=>Promise.resolve(result()).then(resolve)};return chain;}
- const first={id:'sub_one',status:'active',livemode:true,items:{data:[{price:price('price_first','1000'),quantity:1}]},discounts:discount?[{}]:[]};
+ const first={id:'sub_one',status:'active',livemode:true,items:{data:[{price:price('price_first','1000'),quantity:1}]},discounts:resolvedDiscount?["di_fixture"]:discount?[{}]:[]};
  const second={id:'sub_two',status:'active',livemode:true,items:{data:[{price:price('price_new','12000','year'),quantity:1}]}};
- const fetcher=vi.fn(async(input:string)=>{const url=new URL(input);const data=url.pathname==='/v1/account'?{id:oauth.REVENUE_PUBLISHER_ACCOUNT}:url.pathname==='/v1/prices'?{data:[{...price('price_first','1000'),active:false},price('price_new','12000','year')],has_more:false}:url.searchParams.has('price')?{data:[first],has_more:false}:url.searchParams.has('starting_after')?{data:[second],has_more:false}:{data:[first],has_more:true};return Response.json(data);});
+ const fetcher=vi.fn(async(input:string)=>{const url=new URL(input);const data=url.pathname==='/v1/subscriptions/sub_one'?{...first,discounts:resolvedDiscount?[{id:'di_fixture',object:'discount',start:10,end:null,coupon:{duration:'forever',percent_off:20,amount_off:null}}]:first.discounts}:url.pathname==='/v1/account'?{id:oauth.REVENUE_PUBLISHER_ACCOUNT}:url.pathname==='/v1/prices'?{data:[{...price('price_first','1000'),active:false},price('price_new','12000','year')],has_more:false}:url.searchParams.has('price')?{data:[first],has_more:false}:url.searchParams.has('starting_after')?{data:[second],has_more:false}:{data:[first],has_more:true};return Response.json(data);});
  let handler!:(r:Request)=>Promise<Response>;
  const globals={...oauth,...mrr,createClient:(_u:string,k:string)=>k==='service'?{from,rpc}:{auth:{getUser:async()=>({data:{user:{id:user}},error:null})}},Deno:{env:{get:(n:string)=>env[n]},serve:(h:typeof handler)=>{handler=h;}},fetch:fetcher,verifyRevenuePublisher:(k:string)=>oauth.verifyRevenuePublisher(k,fetcher as typeof fetch)};
  new Function(...Object.keys(globals),compiled)(...Object.values(globals));
@@ -52,6 +52,11 @@ describe('real Stripe revenue handler account scope',()=>{
  it('fails closed on unsupported subscriptions and reports a non-sensitive reason',async()=>{
   const f=await fixture({discount:true});const data=await (await f.post({revenue_scope:'account'})).json();
   expect(data.sync.currencies[0]).toMatchObject({verification_status:'unsupported',unsupported_subscriptions:1,unsupported_reasons:{subscription_discount:1}});
+ });
+ it('resolves a permanent coupon through the read-only subscription endpoint before calculation',async()=>{
+  const f=await fixture({resolvedDiscount:true});const data=await (await f.post({revenue_scope:'account'})).json();
+  expect(data.sync.currencies[0]).toMatchObject({mrr_minor:'1800.000000',verification_status:'verified'});
+  expect(f.fetcher.mock.calls.some(([url])=>url.includes('/subscriptions/sub_one?expand[]=discounts'))).toBe(true);
  });
  it('rejects cross-app account conflicts without recording a verified point',async()=>{
   const f=await fixture({conflict:true});expect((await f.post({revenue_scope:'account'})).status).toBe(409);expect(f.points).toEqual([]);

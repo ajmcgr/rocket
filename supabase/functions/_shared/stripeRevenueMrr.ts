@@ -1,7 +1,8 @@
 // Pure, fail-closed Subscription MRR calculation. Amounts are in Stripe minor
 // units with six retained decimal places; no floating-point money arithmetic.
-export const MRR_CALCULATION_VERSION = 1;
+export const MRR_CALCULATION_VERSION = 2;
 const SCALE = 1_000_000n;
+const PERCENT = 100n * SCALE;
 
 export type MappedPrice = { price_id: string; product_id: string; currency: string };
 export type RevenuePrice = {
@@ -37,7 +38,34 @@ function formatMinor(value: bigint): string {
   return `${whole}.${fraction}`;
 }
 
-function monthlyMinor(item: RevenueItem, mapping: MappedPrice): bigint | null {
+// Only resolved, permanent percentage coupons have an unambiguous recurring
+// contribution here. Unresolved IDs, temporary/fixed/stacked discounts still
+// fail closed. A coupon's redemption validity does not revoke an applied discount.
+function discountFactor(discounts: unknown[] | null | undefined, product: string, now: number): bigint | null {
+  if (discounts == null) return PERCENT;
+  if (!Array.isArray(discounts)) return null;
+  if (discounts.length === 0) return PERCENT;
+  if (discounts.length !== 1) return null;
+  const discount = discounts[0] as Record<string, unknown> | null;
+  if (!discount || typeof discount !== "object" || discount.object !== "discount"
+    || typeof discount.start !== "number" || discount.start > now
+    || (discount.end != null && (typeof discount.end !== "number" || discount.end <= now))) return null;
+  const source = discount.source as Record<string, unknown> | undefined;
+  const coupon = (discount.coupon || source?.coupon) as Record<string, unknown> | undefined;
+  if (!coupon || typeof coupon !== "object") return null;
+  const applies = coupon.applies_to as { products?: unknown } | undefined;
+  if (applies != null) {
+    if (!Array.isArray(applies.products) || !applies.products.every((id) => typeof id === "string")) return null;
+    if (!applies.products.includes(product)) return PERCENT;
+  }
+  if (coupon.duration !== "forever" || coupon.amount_off != null
+    || typeof coupon.percent_off !== "number" || !Number.isFinite(coupon.percent_off)
+    || coupon.percent_off < 0 || coupon.percent_off > 100) return null;
+  const off = parseMinor(String(coupon.percent_off));
+  return off == null ? null : PERCENT - off;
+}
+
+function monthlyMinor(item: RevenueItem, mapping: MappedPrice, factor = PERCENT * PERCENT): bigint | null {
   const price = item.price;
   if (price.id !== mapping.price_id || price.currency !== mapping.currency
     || (typeof price.product === "string" ? price.product : price.product?.id) !== mapping.product_id
@@ -48,7 +76,6 @@ function monthlyMinor(item: RevenueItem, mapping: MappedPrice): bigint | null {
   if ((interval !== "month" && interval !== "year") || !Number.isSafeInteger(intervalCount)
     || !intervalCount || intervalCount < 1 || !Number.isSafeInteger(item.quantity)
     || item.quantity == null || item.quantity < 0) return null;
-  if (Array.isArray(item.discounts) && item.discounts.length > 0) return null;
   const raw = price.unit_amount_decimal ?? (price.unit_amount == null ? null : String(price.unit_amount));
   if (raw == null) return null;
   const amount = parseMinor(raw);
@@ -56,7 +83,8 @@ function monthlyMinor(item: RevenueItem, mapping: MappedPrice): bigint | null {
   const months = BigInt(intervalCount) * (interval === "year" ? 12n : 1n);
   // Retain six decimal places in the minor unit. Fractional remainder below
   // that precision is rounded half-up only after quantity multiplication.
-  return (amount * BigInt(item.quantity) + months / 2n) / months;
+  const denominator = months * PERCENT * PERCENT;
+  return (amount * BigInt(item.quantity) * factor + denominator / 2n) / denominator;
 }
 
 export function calculateSubscriptionMrr(
@@ -77,16 +105,18 @@ export function calculateSubscriptionMrr(
       const active = subscription.status === "active" && !subscription.pause_collection
         && !(subscription.cancel_at_period_end && subscription.cancel_at != null && subscription.cancel_at <= nowSeconds);
       if (!active) { total.excluded++; continue; }
-      // A discount applied to the subscription can span mapped and unmapped
-      // items. V1 does not claim a verified number for that currency.
-      if (Array.isArray(subscription.discounts) && subscription.discounts.length > 0) {
-        total.unsupported++; total.reasons.subscription_discount = (total.reasons.subscription_discount || 0) + 1; continue;
-      }
       let contribution = 0n;
       let unsupported = false;
       let reason = "unsupported_price";
       for (const { item, mapping } of entries) {
-        const amount = monthlyMinor(item, mapping);
+        const subscriptionFactor = discountFactor(subscription.discounts, mapping.product_id, nowSeconds);
+        const itemFactor = discountFactor(item.discounts, mapping.product_id, nowSeconds);
+        if (subscriptionFactor == null || itemFactor == null) {
+          unsupported = true;
+          reason = subscriptionFactor == null ? "subscription_discount" : "item_discount";
+          break;
+        }
+        const amount = monthlyMinor(item, mapping, subscriptionFactor * itemFactor);
         if (amount == null) {
           unsupported = true;
           reason = Array.isArray(item.discounts) && item.discounts.length ? "item_discount"
