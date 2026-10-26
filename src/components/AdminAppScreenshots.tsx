@@ -45,7 +45,7 @@ type Preview = {
   review: ReviewSummary | null;
 };
 
-type ScreenshotFormat = "square" | "x" | "linkedin";
+type ScreenshotFormat = "compact" | "x" | "linkedin";
 type GeneratedScreenshot = {
   url: string;
   filename: string;
@@ -54,7 +54,7 @@ type GeneratedScreenshot = {
 };
 
 const SCREENSHOT_FORMATS = {
-  square: { width: 1200, height: 1200, label: "Square" },
+  compact: { width: 1200, height: 1037, label: "Near-square" },
   x: { width: 1600, height: 900, label: "X" },
   linkedin: { width: 1200, height: 627, label: "LinkedIn" },
 } as const;
@@ -194,7 +194,7 @@ export default function AdminAppScreenshots() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [generated, setGenerated] = useState<GeneratedScreenshot | null>(null);
-  const [activeFormat, setActiveFormat] = useState<ScreenshotFormat>("square");
+  const [activeFormat, setActiveFormat] = useState<ScreenshotFormat>("compact");
   const cardRef = useRef<HTMLDivElement>(null);
   const generatedUrlRef = useRef<string | null>(null);
 
@@ -283,7 +283,9 @@ export default function AdminAppScreenshots() {
         ),
       );
       const sourceSize =
-        format === "square" ? SCREENSHOT_FORMATS.square : SCREENSHOT_FORMATS.x;
+        format === "compact"
+          ? SCREENSHOT_FORMATS.compact
+          : SCREENSHOT_FORMATS.x;
       const pageImage = await toPng(cardRef.current, {
         width: sourceSize.width,
         height: sourceSize.height,
@@ -326,7 +328,7 @@ export default function AdminAppScreenshots() {
     <section className="rocket-admin-panel rocket-admin-screenshot-tool">
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
-        Download a square app-page image or a landscape version for X or
+        Download a near-square app-page image or a landscape version for X or
         LinkedIn. The left menu stays visible while the top controls are
         removed. Only public app details, images, and verified metric visibility
         are shown; a verified-only badge never reveals its private amount.
@@ -384,9 +386,9 @@ export default function AdminAppScreenshots() {
               <button
                 className="rocket-admin-primary"
                 disabled={exporting}
-                onClick={() => void download("square")}
+                onClick={() => void download("compact")}
               >
-                {exporting ? "Creating PNG…" : "Download square"}
+                {exporting ? "Creating PNG…" : "Download 1200 × 1037"}
               </button>
               <button
                 className="rocket-admin-primary"
@@ -424,7 +426,7 @@ export default function AdminAppScreenshots() {
           )}
           <div className="rocket-admin-screenshot-scroll">
             <div
-              className={`rocket-admin-screenshot-page${activeFormat === "square" ? " is-square" : ""}`}
+              className={`rocket-admin-screenshot-page${activeFormat === "compact" ? " is-compact" : ""}`}
               ref={cardRef}
             >
               <aside
@@ -549,7 +551,7 @@ export default function AdminAppScreenshots() {
                       <div
                         className="rocket-admin-screenshot-images"
                         style={{
-                          gridTemplateColumns: `repeat(${activeFormat === "square" ? Math.min(preview.images.length, 2) : preview.images.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${activeFormat === "compact" ? Math.min(preview.images.length, 2) : preview.images.length}, minmax(0, 1fr))`,
                         }}
                       >
                         {preview.images.map((item, index) => (
