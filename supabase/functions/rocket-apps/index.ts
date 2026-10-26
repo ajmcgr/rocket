@@ -11,6 +11,8 @@ import {
   validateSubmission,
   type SubmissionDetails,
 } from "../_shared/appSubmission.ts";
+import { APP_CATEGORIES } from "../_shared/appCategories.ts";
+import { submissionCategory, submissionMedia, suggestedSubmissionCategory } from "../_shared/submissionImport.ts";
 import { validateAgentIntegrations } from "../_shared/agentIntegrations.ts";
 
 const origin = Deno.env.get("SUPABASE_URL")!;
@@ -51,6 +53,7 @@ type Extracted = {
   description: string;
   imageUrl: string | null;
   faviconUrl: string | null;
+  iconUrls?: string[];
   evidence: Record<string, unknown>;
 };
 
@@ -166,6 +169,7 @@ async function extract(raw: string): Promise<Extracted> {
     description: meta.description,
     imageUrl: meta.imageUrl,
     faviconUrl: meta.faviconUrl,
+    iconUrls: meta.iconUrls,
     evidence: {
       observed_at: now,
       fields: {
@@ -385,6 +389,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
   let description = "";
   let logoUrl: string | null = null;
   let category: string | null = null;
+  let heroUrl: string | null = null;
   let websiteUrl = parsed.toString();
   if (manual) {
     if (classifySource(parsed) !== "website")
@@ -426,15 +431,30 @@ async function preview(req: Request, body: Record<string, unknown>) {
       name = item.name;
       description = item.description;
       websiteUrl = item.websiteUrl;
-      logoUrl = item.imageUrl || item.faviconUrl;
+      // GitHub/HN identify the app; media must come from its product website.
+      let media = { imageUrl:item.imageUrl, iconUrls:item.iconUrls || [] as string[] };
+      if (item.sourceType === "github" || item.sourceType === "hacker_news") {
+        try {
+          const page = await fetchPublicBytes(websiteUrl);
+          if (["text/html", "application/xhtml+xml"].includes(page.contentType)) {
+            const meta = extractHtml(new TextDecoder().decode(page.bytes), page.url);
+            media = {imageUrl:meta.imageUrl,iconUrls:meta.iconUrls};
+          }
+        } catch { /* Optional media must not fail the identity import. */ }
+      }
+      const imported = await submissionMedia(websiteUrl,media.imageUrl,media.iconUrls,
+        (url) => fetchPublicBytes(url,2_000_000));
+      logoUrl = imported.logo_url;
+      heroUrl = imported.hero_url;
+      category = suggestedSubmissionCategory(item.sourceType,name,description);
       // AI structures only observed public text. It cannot choose identity or
       // provide unobserved revenue, pricing or trust claims.
-      if (hasGeminiKey() && description.length >= 80) {
+      if (hasGeminiKey() && description.length >= 20) {
         try {
           const answer = JSON.parse(
             await geminiText({
               system:
-                'Choose one broad category for this software from the given page metadata. Return JSON {"category": string}. Do not invent facts or change the app identity.',
+                `Choose the single best category from this exact list: ${APP_CATEGORIES.map(c => c.name).join("; ")}. Return JSON {"category": string|null}; use null if uncertain. Do not invent facts or change the app identity.`,
               user: JSON.stringify({ name, description }),
               json: true,
               temperature: 0,
@@ -444,7 +464,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
             typeof answer.category === "string" &&
             /^[\p{L}\p{N} &-]{2,60}$/u.test(answer.category)
           )
-            category = answer.category;
+            category = submissionCategory(answer.category) || category;
         } catch {
           /* deterministic metadata remains the source of truth */
         }
@@ -514,6 +534,7 @@ async function preview(req: Request, body: Record<string, unknown>) {
     expires_at: new Date(Date.now() + 30 * 60_000).toISOString(),
     outcome,
     app: {
+      hero_url: outcome === "new" ? heroUrl : null,
       id: exact.length === 1 ? exact[0].id : undefined,
       name: display.name,
       description: display.description,

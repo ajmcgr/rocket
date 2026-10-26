@@ -144,3 +144,19 @@ export function validateSubmission(value: unknown): SubmissionDetails {
     video_url: youtubeUrl(string("video_url", 2048)),
   };
 }
+
+// Browser validation gives immediate feedback; the server additionally checks
+// DNS/redirect destinations through parsePublicUrl and fetchPublicBytes.
+export function submissionWebsite(value: string): string {
+  const text = value.trim();
+  if (!text || text.length > 2048 || /\s/.test(text)) throw new Error("Enter a valid public website URL");
+  let url: URL;
+  try { url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(text) ? text : `https://${text}`); }
+  catch { throw new Error("Enter a valid public website URL"); }
+  if (!["https:", "http:"].includes(url.protocol) || url.username || url.password || url.port ||
+    !url.hostname.includes(".") || url.hostname.endsWith(".") || /^[\d.]+$/.test(url.hostname) || url.hostname.includes(":") ||
+    /(^localhost$|\.localhost$|\.local$|\.internal$|\.test$|\.invalid$|\.example$|\.onion$)/i.test(url.hostname))
+    throw new Error("Enter a public HTTP(S) website URL");
+  url.hash = "";
+  return url.toString();
+}

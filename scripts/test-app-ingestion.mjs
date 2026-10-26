@@ -40,3 +40,9 @@ test('extracts deterministic public metadata without executing scripts', () => {
   assert.equal(data.description, 'An app for teams');
   assert.equal(data.imageUrl, 'https://www.acme.com/logo.png');
 });
+
+test('separates observed social artwork from square icon candidates including apple touch icons', () => {
+ const result = extractHtml('<meta property="og:image" content="/social.png"><link rel="apple-touch-icon" href="/apple.png"><link rel="icon" href="/favicon.png">','https://example.com/');
+ assert.equal(result.imageUrl,'https://example.com/social.png');
+ assert.deepEqual(result.iconUrls,['https://example.com/apple.png','https://example.com/favicon.png']);
+});

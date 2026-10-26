@@ -67,7 +67,7 @@ export default function OnboardingTour() {
     viewed.current = -1;
   }, [userId]);
   useEffect(() => {
-    if (!userId || loading || !safe) {
+    if (!userId || !user?.email_confirmed_at || loading || !safe) {
       setOpen(false);
       return;
     }
@@ -88,7 +88,7 @@ export default function OnboardingTour() {
     } // Unavailable storage must not cause an unavoidable replay.
     const timer = setTimeout(() => setOpen(true), 600);
     return () => clearTimeout(timer);
-  }, [userId, user?.created_at, loading, safe]);
+  }, [userId, user?.created_at, user?.email_confirmed_at, loading, safe]);
   useEffect(() => {
     const launch = () => {
       if (!userId || loading || !safe) return;

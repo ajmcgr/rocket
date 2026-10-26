@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { safeReturnPath } from "@/lib/navigation";
+import { verificationReturnPath } from "@/lib/onboarding";
 import { syncNewAccountToBeehiiv } from "@/lib/beehiivAccountSync";
 
 const VerifyEmail = () => {
@@ -12,7 +12,7 @@ const VerifyEmail = () => {
   const rawToken = params.get("token") || "";
   const token = rawToken.trim().replace(/[).,>\s]+$/g, "");
   const email = params.get("email") || "";
-  const next = safeReturnPath(params.get("next"));
+  const next = verificationReturnPath(params.get("next"));
 
   const nav = useNavigate();
   const { toast } = useToast();
@@ -50,6 +50,8 @@ const VerifyEmail = () => {
         toast({ title: "Slow down", description: "Too many requests. Try again in an hour.", variant: "destructive" });
       } else if ((data as { already_verified?: boolean })?.already_verified) {
         toast({ title: "Already verified", description: "You're good to go." });
+        const {error:refreshError}=await supabase.auth.refreshSession();
+        if (refreshError) throw refreshError;
         nav(next, { replace: true });
       } else {
         toast({ title: "Sent", description: "Check your inbox for the new link." });
@@ -71,15 +73,24 @@ const VerifyEmail = () => {
           headers: { "x-verification-token": token },
         });
         if (cancelled) return;
-        const payload = data as { ok?: boolean; success?: boolean; error?: string; message?: string; signInUrl?: string } | null;
+        const payload = data as { ok?: boolean; success?: boolean; error?: string; message?: string; signInUrl?: string; user_id?: string } | null;
+        const finishSignedIn = async () => {
+          // Server-side email confirmation does not update the browser's cached
+          // user. Refresh first so the existing guide sees a confirmed account.
+          const {data:fresh,error:refreshError} = await supabase.auth.refreshSession();
+          if (refreshError || !fresh.user?.email_confirmed_at) throw new Error("Your email was verified. Sign in again to continue.");
+          if (cancelled) return;
+          void syncNewAccountToBeehiiv(fresh.user);
+          setState("success");
+          setTimeout(() => { if (!cancelled) nav(next,{replace:true}); },600);
+        };
         if (error || payload?.error) {
           // FALLBACK: if Supabase Auth already confirmed this user, treat as verified.
           try {
             const { data: fresh } = await supabase.auth.getUser();
             if (fresh.user?.email_confirmed_at) {
               if (cancelled) return;
-              setState("success");
-              setTimeout(() => nav(next, { replace: true }), 600);
+              await finishSignedIn();
               return;
             }
           } catch { /* ignore */ }
@@ -95,15 +106,14 @@ const VerifyEmail = () => {
           setMessage(detail || "This link is invalid or has expired.");
           return;
         }
-        setState("success");
-        // If signed out, the edge function returns a magic link — follow it to establish a session.
-        if (payload?.signInUrl) {
-          setTimeout(() => { window.location.href = payload.signInUrl!; }, 400);
+        const {data:current} = await supabase.auth.getSession();
+        if (current.session?.user.id && current.session.user.id === payload?.user_id) {
+          await finishSignedIn();
+        } else if (payload?.signInUrl) {
+          setState("success");
+          setTimeout(() => { if (!cancelled) window.location.href = payload.signInUrl!; },400);
         } else {
-          void supabase.auth.getUser().then(({ data: fresh }) => {
-            if (fresh.user) void syncNewAccountToBeehiiv(fresh.user);
-          });
-          setTimeout(() => nav(next, { replace: true }), 600);
+          await finishSignedIn();
         }
       } catch (e) {
         if (!cancelled) { setState("error"); setMessage((e as Error).message || "Something went wrong."); }
@@ -153,7 +163,7 @@ const VerifyEmail = () => {
               <Button onClick={resend} disabled={resending} size="lg" className="mt-6 w-full">
                 {resending ? "Sending…" : "Resend verification email"}
               </Button>
-              <Button asChild variant="outline" size="lg" className="mt-3 w-full"><Link to="/login">Back to login</Link></Button>
+              <Button asChild variant="outline" size="lg" className="mt-3 w-full"><Link to={`/login?next=${encodeURIComponent(next)}`}>Back to login</Link></Button>
             </>
           )}
         </div>
