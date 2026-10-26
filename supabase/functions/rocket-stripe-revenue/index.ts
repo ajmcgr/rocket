@@ -278,8 +278,17 @@ async function sync(appId: string, userId: string, requestedScope?: unknown) {
     const updated = await service.from("app_revenue_connections").update({ status: "active",
       last_successful_sync: observed, last_error: null, updated_at: observed }).eq("id", row.id);
     if (updated.error) throw updated.error;
+    let visibilityDefaultApplied = false;
+    if (row.livemode && !reviewPrivateOnly({ appId, userId }) && results.length
+      && results.every((result) => result.verification_status === "verified")) {
+      const defaulted = await service.rpc("apply_default_stripe_revenue_visibility", {
+        p_app_id: appId, p_user_id: userId, p_expected_version: current.mapping_version,
+      });
+      if (defaulted.error) throw defaulted.error;
+      visibilityDefaultApplied = defaulted.data === true;
+    }
     await project(appId);
-    return { observed_at: observed, currencies: results, source_livemode: row.livemode, revenue_scope: scope };
+    return { visibility_default_applied: visibilityDefaultApplied, observed_at: observed, currencies: results, source_livemode: row.livemode, revenue_scope: scope };
   } catch (error) {
     const message = (error as Error).message.slice(0, 160);
     await service.from("app_revenue_connections").update({ status: "error", last_error: message,
@@ -369,6 +378,7 @@ async function handle(request: Request) {
       livemode: row.livemode, last_attempted_sync: row.last_attempted_sync,
       last_successful_sync: row.last_successful_sync, last_error: row.last_error } : null,
     revenue_scope: linked?.revenue_scope ?? "products",
+    visibility_default_pending: Boolean(linked && linked.visibility_configured === false && row?.livemode && !reviewPrivateOnly(access)),
     mapping_version: linked?.mapping_version ?? 0, visibility: linked?.visibility ?? "private",
     mappings: mappings.data || [], latest });
   }
@@ -441,7 +451,7 @@ async function handle(request: Request) {
       return fail("This connection must remain private during review", 403);
     if (!["private", "verified_only", "range", "exact"].includes(String(body.visibility)))
       return fail("Invalid visibility");
-    const updated = await service.from("app_revenue_bindings").update({ visibility: body.visibility,
+    const updated = await service.from("app_revenue_bindings").update({ visibility: body.visibility, visibility_configured: true,
       updated_at: new Date().toISOString() }).eq("app_id", app.id).eq("connection_id", row.id);
     if (updated.error) throw updated.error;
     await project(app.id);
