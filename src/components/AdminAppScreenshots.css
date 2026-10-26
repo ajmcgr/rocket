@@ -119,8 +119,8 @@
   height: 900px;
   flex: none;
   overflow: hidden;
-  background: #131820;
-  color: #e8edf3;
+  background: #111;
+  color: #e8e8e8;
 }
 .rocket-admin-screenshot-sidebar-brand {
   box-sizing: border-box;
@@ -128,7 +128,7 @@
   display: flex;
   align-items: center;
   padding: 0 24px;
-  border-bottom: 1px solid #303944;
+  border-bottom: 1px solid #292929;
 }
 .rocket-admin-screenshot-sidebar-brand img {
   width: 151px;
@@ -145,7 +145,7 @@
 }
 .rocket-admin-screenshot-menu-section h4 {
   margin: 0 11px 6px;
-  color: #9da9b6;
+  color: #9d9d9d;
   font-size: 11px;
   line-height: 20px;
   font-weight: 700;
@@ -158,7 +158,7 @@
   gap: 12px;
   padding: 0 11px;
   border-radius: 8px;
-  color: #d7dfe7;
+  color: #dedede;
   font-size: 13px;
   font-weight: 500;
 }
@@ -166,7 +166,7 @@
   flex: none;
 }
 .rocket-admin-screenshot-menu-item.is-active {
-  background: #253545;
+  background: #282828;
   color: #fff;
   font-weight: 650;
 }
