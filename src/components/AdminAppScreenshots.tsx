@@ -13,6 +13,7 @@ import {
   Megaphone,
   MessageCircle,
   Palette,
+  PanelLeftClose,
   Plus,
   Send,
   Share2,
@@ -20,6 +21,7 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  Zap,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,9 +112,9 @@ const screenshotMenu = [
     title: "Discover",
     items: [
       { label: "Discover", icon: Compass },
-      { label: "Rising", icon: TrendingUp },
+      { label: "Rising", icon: Zap },
       { label: "New", icon: Flame },
-      { label: "Rankings", icon: BarChart3 },
+      { label: "Rankings", icon: TrendingUp },
       { label: "Categories", icon: Grid2X2 },
       { label: "Collections", icon: Bookmark },
     ],
@@ -415,6 +417,7 @@ export default function AdminAppScreenshots() {
               >
                 <div className="rocket-admin-screenshot-sidebar-brand">
                   <img src="/rocket-email-logo.png" alt="Rocket" />
+                  <PanelLeftClose size={16} aria-hidden="true" />
                 </div>
                 <nav>
                   {screenshotMenu.map((section) => (
@@ -425,12 +428,13 @@ export default function AdminAppScreenshots() {
                       <h4>{section.title}</h4>
                       {section.items.map(({ label, icon: Icon }) => (
                         <div
-                          className={`rocket-admin-screenshot-menu-item${label === "Discover" ? " is-active" : ""}`}
+                          className="rocket-admin-screenshot-menu-item"
                           key={label}
                         >
                           <Icon
-                            size={17}
-                            strokeWidth={1.9}
+                            size={18}
+                            strokeWidth={2}
+                            fill={label === "Saved" ? "currentColor" : "none"}
                             aria-hidden="true"
                           />
                           <span>{label}</span>
