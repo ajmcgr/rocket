@@ -3,6 +3,7 @@ import { Buffer } from "node:buffer";
 import { isIP } from "node:net";
 import http from "node:http";
 import https from "node:https";
+import { storeListing } from "./storeListings.ts";
 
 const TRACKING = /^(utm_[a-z0-9_]+|gclid|fbclid|msclkid|mc_cid|mc_eid)$/i;
 const BLOCKED_HOST =
@@ -40,6 +41,8 @@ export function parsePublicUrl(input: string): URL {
 
 export function normalizeSourceUrl(input: string): string {
   const url = parsePublicUrl(input);
+  const store = storeListing(url);
+  if (store) return store.url;
   url.protocol = "https:";
   url.hostname = url.hostname.toLowerCase().replace(/^www\./, "");
   url.pathname = url.pathname.replace(/\/+$/, "") || "/";
@@ -51,7 +54,7 @@ export function normalizeSourceUrl(input: string): string {
 
 export function classifySource(
   url: URL,
-): "website" | "launch" | "github" | "hacker_news" | "unsupported" {
+): "website" | "launch" | "github" | "hacker_news" | "apple_app_store" | "google_play" | "unsupported" {
   const host = url.hostname.replace(/^www\./, "");
   if (host === "trylaunch.ai" && /^\/launch\/[^/]+\/?$/.test(url.pathname))
     return "launch";
@@ -66,7 +69,9 @@ export function classifySource(
     /^\d+$/.test(url.searchParams.get("id") || "")
   )
     return "hacker_news";
-  if (["producthunt.com", "apps.apple.com", "play.google.com"].includes(host))
+  const store = storeListing(url);
+  if (store) return store.type;
+  if (host === "producthunt.com")
     return "unsupported";
   return "website";
 }

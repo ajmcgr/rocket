@@ -73,5 +73,10 @@ describe("complete submission validation", () => {
     for(const value of ["not a url","localhost","http://127.0.0.1","http://[::1]","file:///etc/passwd","javascript:alert(1)","https://user:pass@example.com","https://example.com:8443","https://example.com./","https://example.internal"])
       expect(()=>submissionWebsite(value)).toThrow();
   });
+  it("keeps developer websites optional for old drafts and validates new ones",()=>{
+    expect(validateSubmission({...valid(),developer_website_url:undefined}).developer_website_url).toBe("");
+    expect(validateSubmission({...valid(),developer_website_url:"example.com"}).developer_website_url).toBe("https://example.com/");
+    expect(()=>validateSubmission({...valid(),developer_website_url:"javascript:alert(1)"})).toThrow();
+  });
 
 });

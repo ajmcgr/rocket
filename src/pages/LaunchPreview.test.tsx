@@ -93,6 +93,19 @@ describe("Rocket app submission", () => {
       "Example",
     );
   });
+  it.each(["ios","android"])("imports %s store media and platform into the existing draft without publishing",async platform=>{
+    const website=platform==="ios"?"https://apps.apple.com/gb/app/id12345":"https://play.google.com/store/apps/details?id=com.example.app";
+    mocks.invoke.mockResolvedValue({data:{...preview(),app:{...preview().app,website_url:website,platforms:[platform],logo_url:"https://store-cdn.example.com/icon.png",screenshots:["https://store-cdn.example.com/screen.png"],developer_website_url:"https://example.com/"}},error:null});
+    await mount();fireEvent.change(screen.getByPlaceholderText("https://yourapp.com"),{target:{value:website}});
+    fireEvent.click(screen.getByRole("button",{name:"Add with AI"}));
+    await screen.findByDisplayValue("Example");
+    const draft=JSON.parse(sessionStorage.getItem("rocket:app-submission-v2")!);
+    expect(draft.url).toBe(website);expect(draft.details.platforms).toEqual([platform]);
+    expect(draft.details.screenshots).toHaveLength(1);expect(draft.details.hero_url).toBe("");
+    expect(draft.details.developer_website_url).toBe("https://example.com/");
+    expect(screen.getByText(/add a landscape hero image/)).toBeTruthy();
+    expect(mocks.invoke).toHaveBeenCalledTimes(1);
+  });
   it("lets failed automatic imports continue manually", async () => {
     mocks.invoke.mockResolvedValue({
       data: { error: "Website request timed out" },

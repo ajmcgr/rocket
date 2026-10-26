@@ -11,6 +11,7 @@ export type SubmissionDetails = {
   languages: string[];
   slug: string;
   developer_handle: string;
+  developer_website_url?: string;
   pricing_display: string;
   coupon_code: string;
   coupon_description: string;
@@ -41,6 +42,7 @@ export const emptySubmission = (): SubmissionDetails => ({
   languages: [],
   slug: "",
   developer_handle: "",
+  developer_website_url: "",
   pricing_display: "",
   coupon_code: "",
   coupon_description: "",
@@ -135,6 +137,8 @@ export function validateSubmission(value: unknown): SubmissionDetails {
     languages: list("languages", 5),
     slug,
     developer_handle: handle,
+    developer_website_url: typeof input.developer_website_url === "string" && input.developer_website_url.trim()
+      ? submissionWebsite(input.developer_website_url) : "",
     pricing_display: string("pricing_display", 60),
     coupon_code: string("coupon_code", 50),
     coupon_description: string("coupon_description", 200),

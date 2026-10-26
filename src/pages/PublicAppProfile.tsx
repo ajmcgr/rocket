@@ -9,6 +9,7 @@ import SiteHeader from "@/components/SiteHeader";
 import AppMarketplaceContext from "@/components/AppMarketplaceContext";
 import { recordOutbound, sourceAttribution } from "@/lib/marketplace";
 import { outboundWebsiteUrl } from "@/lib/outboundLinks";
+import { storeListing } from "../../supabase/functions/_shared/storeListings";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -79,6 +80,10 @@ const linkHost = (value: string) => {
   } catch {
     return "External link";
   }
+};
+const destinationLabel = (url: string) => {
+  try { const listing=storeListing(url); return listing?.type === "apple_app_store" ? "View on App Store" : listing ? "Get on Google Play" : "Visit website"; }
+  catch { return "Visit website"; }
 };
 
 export default function PublicAppProfile({
@@ -475,7 +480,7 @@ export default function PublicAppProfile({
                   }}
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#167ac6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1268aa] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075985]"
                 >
-                  Visit website <span aria-hidden="true">→</span>
+                  {destinationLabel(app.website_url)} <span aria-hidden="true">→</span>
                 </a>
                 <SaveAppButton
                   appId={app.id}
@@ -645,6 +650,10 @@ export default function PublicAppProfile({
                     <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
                       {submission && (
                         <>
+                          {submission.developer_website_url && /^https?:\/\//i.test(submission.developer_website_url) && <div>
+                            <dt className="text-neutral-500">Developer website</dt>
+                            <dd className="mt-1 font-medium"><a href={outboundWebsiteUrl(submission.developer_website_url)} target="_blank" rel="noopener noreferrer nofollow" className="text-sky-800 underline">{linkHost(submission.developer_website_url)} ↗</a></dd>
+                          </div>}
                           {submission.developer_handle && (
                             <div>
                               <dt className="text-neutral-500">
@@ -801,7 +810,7 @@ export default function PublicAppProfile({
                         key={`${source.source_type}-${source.source_url}`}
                         className="flex items-center justify-between gap-3 border-t border-neutral-100 pt-3 text-sm"
                       >
-                        <span className="capitalize">{source.source_type}</span>
+                        <span className="capitalize">{source.source_type === "apple_app_store" ? "Apple App Store" : source.source_type === "google_play" ? "Google Play" : source.source_type.replaceAll("_"," ")}</span>
                         <a
                           href={source.source_url}
                           target="_blank"
