@@ -537,7 +537,7 @@ export default function LaunchPreview() {
           </Link>
         </section>
         <AlertDialog open={replaceImport} onOpenChange={setReplaceImport}>
-          <AlertDialogContent>
+          <AlertDialogContent className="text-foreground">
             <AlertDialogHeader><AlertDialogTitle>Replace current draft?</AlertDialogTitle>
               <AlertDialogDescription>A successful import will replace this draft’s details and images. If the import fails, your current draft will be kept.</AlertDialogDescription></AlertDialogHeader>
             <AlertDialogFooter><AlertDialogCancel>Keep current draft</AlertDialogCancel>
