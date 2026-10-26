@@ -3,11 +3,23 @@ import { toPng } from "html-to-image";
 import {
   BarChart3,
   Bookmark,
+  Compass,
+  CreditCard,
   DollarSign,
   Eye,
+  Flame,
+  Grid2X2,
+  Layers3,
+  Megaphone,
+  MessageCircle,
+  Palette,
+  Plus,
+  Send,
   Share2,
   ShieldCheck,
+  TrendingUp,
   Users,
+  Wallet,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,6 +104,40 @@ const metricIcon = (label: string) =>
       : label === "Daily sessions"
         ? BarChart3
         : DollarSign;
+
+const screenshotMenu = [
+  {
+    title: "Discover",
+    items: [
+      { label: "Discover", icon: Compass },
+      { label: "Rising", icon: TrendingUp },
+      { label: "New", icon: Flame },
+      { label: "Rankings", icon: BarChart3 },
+      { label: "Categories", icon: Grid2X2 },
+      { label: "Collections", icon: Bookmark },
+    ],
+  },
+  {
+    title: "Apps",
+    items: [
+      { label: "Submit my app", icon: Plus },
+      { label: "My Apps", icon: Layers3 },
+      { label: "My Purchases", icon: CreditCard },
+      { label: "Saved", icon: Bookmark },
+    ],
+  },
+  {
+    title: "Monetize",
+    items: [
+      { label: "Advertise", icon: Megaphone },
+      { label: "Buy with Rocket", icon: Wallet },
+      { label: "Rocket ID", icon: ShieldCheck },
+    ],
+  },
+  { title: "Create", items: [{ label: "Brand Studio", icon: Palette }] },
+  { title: "Grow", items: [{ label: "Launch", icon: Send }] },
+  { title: "Community", items: [{ label: "Discord", icon: MessageCircle }] },
+];
 
 async function loadPreview(appId: string): Promise<Preview> {
   const [
@@ -272,10 +318,11 @@ export default function AdminAppScreenshots() {
     <section className="rocket-admin-panel rocket-admin-screenshot-tool">
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
-        Download an app-page image sized for X or LinkedIn. It uses the app’s
-        public details, product images, and any currently public verified
-        traffic or revenue cards. Private, expired, or disconnected metrics are
-        excluded. Nothing is posted automatically.
+        Download a clean app-page image sized for X or LinkedIn. The left menu
+        stays visible while the top controls are removed. Only public app
+        details, images, and verified metric visibility are shown; a
+        verified-only badge never reveals its private amount. Nothing is posted
+        automatically.
       </p>
       <label className="rocket-admin-screenshot-search">
         Find a public app
@@ -362,15 +409,41 @@ export default function AdminAppScreenshots() {
           )}
           <div className="rocket-admin-screenshot-scroll">
             <div className="rocket-admin-screenshot-page" ref={cardRef}>
-              <div className="rocket-admin-screenshot-site-header">
-                <img src="/rocket-email-logo.png" alt="Rocket" />
-                <span>
-                  tryrocket.ai/apps/{preview.app.slug || preview.app.id}
-                </span>
-              </div>
+              <aside
+                className="rocket-admin-screenshot-sidebar"
+                aria-label="Rocket menu in screenshot"
+              >
+                <div className="rocket-admin-screenshot-sidebar-brand">
+                  <img src="/rocket-email-logo.png" alt="Rocket" />
+                </div>
+                <nav>
+                  {screenshotMenu.map((section) => (
+                    <div
+                      className="rocket-admin-screenshot-menu-section"
+                      key={section.title}
+                    >
+                      <h4>{section.title}</h4>
+                      {section.items.map(({ label, icon: Icon }) => (
+                        <div
+                          className={`rocket-admin-screenshot-menu-item${label === "Discover" ? " is-active" : ""}`}
+                          key={label}
+                        >
+                          <Icon
+                            size={17}
+                            strokeWidth={1.9}
+                            aria-hidden="true"
+                          />
+                          <span>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </nav>
+              </aside>
               <div className="rocket-admin-screenshot-main">
                 <div className="rocket-admin-screenshot-back">
-                  ← &nbsp;Back to Discover
+                  ← &nbsp;Back to Discover{" "}
+                  <span> / Apps / {preview.app.name}</span>
                 </div>
                 <div className="rocket-admin-screenshot-profile">
                   <div className="rocket-admin-screenshot-identity">
@@ -453,7 +526,12 @@ export default function AdminAppScreenshots() {
                   {preview.images.length > 0 && (
                     <section className="rocket-admin-screenshot-gallery">
                       <h4>See {preview.app.name} in action</h4>
-                      <div className="rocket-admin-screenshot-images">
+                      <div
+                        className="rocket-admin-screenshot-images"
+                        style={{
+                          gridTemplateColumns: `repeat(${preview.images.length}, minmax(0, 1fr))`,
+                        }}
+                      >
                         {preview.images.map((item, index) => (
                           <div
                             key={item.id}
