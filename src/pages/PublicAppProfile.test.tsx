@@ -94,6 +94,10 @@ it("includes useful profile identity in server-rendered HTML", () => {
   expect(html).toContain("Visit website");
   expect(html).not.toContain('aria-label="Loading app profile"');
 });
+it("attributes website visits to Rocket without changing the original destination query", () => {
+  render(<PublicAppProfile initialApp={{ ...app, website_url: "https://whisperit.ai/?plan=pro#signup" }} />);
+  expect(screen.getByRole("link", { name: "Visit website", exact: true }).getAttribute("href")).toBe("https://whisperit.ai/?plan=pro&utm_source=rocket&utm_medium=referral&utm_campaign=app_listing#signup");
+});
 it("shows category and readable platform labels below the app description", () => {
   const html = renderToStaticMarkup(
     <PublicAppProfile
@@ -113,7 +117,7 @@ it("does not hide the profile while optional queries remain pending", () => {
     screen.getByRole("heading", { name: "Whisperit", level: 1 }),
   ).toBeTruthy();
   const website = screen.getByRole("link", { name: /Visit website/ });
-  expect(website.getAttribute("href")).toBe(app.website_url);
+  expect(website.getAttribute("href")).toBe("https://whisperit.ai?utm_source=rocket&utm_medium=referral&utm_campaign=app_listing");
   expect(website.getAttribute("rel")).toBe("noopener noreferrer");
 });
 it("places public traffic and revenue before the screenshot gallery", async () => {

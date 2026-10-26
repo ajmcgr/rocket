@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { outboundWebsiteUrl } from "@/lib/outboundLinks";
 import AppLogo from "./AppLogo";
 import SponsoredAdSkeleton from "./SponsoredAdSkeleton";
 
@@ -57,7 +58,10 @@ export default function SponsoredPlacement({ category }: { category?: string }) 
   if (loading) return <SponsoredAdSkeleton category />;
   if (!placement) return null;
   const href = `/apps/${placement.app.slug || placement.app.id}?sponsor=${placement.sponsorship_id}`;
-  const website = placement.destination_url?.startsWith("https://") ? placement.destination_url : null;
+  const website = placement.destination_url?.startsWith("https://")
+    ? outboundWebsiteUrl(placement.destination_url, {
+      campaign: placement.sponsorship_type, content: category ? "category" : "homepage",
+    }) : null;
   const recordClick = () => {
     track("sponsored_click", { sponsorship_id: placement.sponsorship_id, app_id: placement.app.id,
       slot_id: category ? `category:${category}` : "homepage_featured_1",

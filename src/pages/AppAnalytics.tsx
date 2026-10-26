@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
+import { AnalyticsVisibilityControl, type AnalyticsVisibility } from "@/components/AnalyticsVisibilityControl";
 import "./AppVerification.css";
 
-type Visibility = "private" | "verified_only" | "range" | "exact";
+type Visibility = AnalyticsVisibility;
 type Metric = "active_users" | "sessions" | "views";
 type Property = { id: string; name: string };
 type Stream = { id: string; name: string; hostname: string | null; matches_app: boolean };
@@ -17,11 +18,7 @@ type Status = { connection: null | { status: string; property_name: string | nul
   latest?: Array<{ metric_type: Metric; metric_date: string; metric_value: number }>;
   growth?: Record<string, { seven_day: number | null; thirty_day: number | null }> };
 const metrics: Array<{ id: Metric; label: string }> = [
-  { id: "active_users", label: "Active users" }, { id: "sessions", label: "Sessions" }, { id: "views", label: "Views" },
-];
-const choices: Array<{ id: Visibility; label: string }> = [
-  { id: "private", label: "Private" }, { id: "verified_only", label: "Verified only" },
-  { id: "range", label: "Range" }, { id: "exact", label: "Exact" },
+  { id: "active_users", label: "Active users" }, { id: "sessions", label: "Sessions" }, { id: "views", label: "Pageviews" },
 ];
 
 export default function AppAnalytics() {
@@ -103,13 +100,14 @@ export default function AppAnalytics() {
     </section>
     {id && <PostHogAnalytics appId={id} />}
     {status?.connection?.status === "active" && <section className="mt-6 rounded-2xl border bg-white p-6">
-      <h2 className="font-semibold">Public visibility</h2><p className="mt-2 text-sm text-neutral-600">Only the latest completed day is eligible for the public profile. These choices do not publish historical points. “Verified only” reveals no number.</p>
-      <div className="mt-5 space-y-4">{metrics.map((metric) => <label key={metric.id} className="flex items-center justify-between gap-4 border-t pt-4 text-sm">
-        <span>{metric.label}<span className="block text-xs text-neutral-500">Private latest day: {status.latest?.find((item) => item.metric_type === metric.id)?.metric_value.toLocaleString() ?? "—"}</span></span><select value={visible(metric.id)} disabled={busy} onChange={(event) => run(async () => {
-          await request("set_visibility", { metric_type: metric.id, visibility: event.target.value }); await refresh();
+      <h2 className="font-semibold">What should visitors see?</h2><p className="mt-2 text-sm text-neutral-600">Controls what appears on your public app page. Your metrics stay private by default. Only the latest completed day can be shown—not monthly totals or your history.</p>
+      <div className="mt-5 space-y-4">{metrics.map((metric) => <div key={metric.id} className="border-t pt-4 text-sm">
+        <AnalyticsVisibilityControl label={metric.label} metric={metric.label.toLowerCase()} value={visible(metric.id)} disabled={busy} onChange={(visibility) => void run(async () => {
+          await request("set_visibility", { metric_type: metric.id, visibility }); await refresh();
           setNotice("Public visibility updated. Review the public app profile to see exactly what others can see.");
-        })} className="rounded-lg border px-2 py-1">{choices.map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}</select>
-      </label>)}</div>
+        })} />
+        <p className="mt-2 text-xs text-neutral-500">Private latest day: {status.latest?.find((item) => item.metric_type === metric.id)?.metric_value.toLocaleString() ?? "—"}</p>
+      </div>)}</div>
       <Link to={`/apps/${id}`} className="mt-5 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
   </main>;

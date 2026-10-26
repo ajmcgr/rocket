@@ -19,13 +19,31 @@ describe("PostHog owner controls", () => {
       latest: { metric_date: "2025-12-31", metric_value: 42 },
     }, error: null });
     render(<PostHogAnalytics appId="app-1" />);
-    const visibility = await screen.findByRole("combobox", { name: "Public pageview visibility" });
-    expect((screen.getByRole("option", { name: "Exact" }) as HTMLOptionElement).disabled).toBe(true);
-    expect((screen.getByRole("option", { name: "Private" }) as HTMLOptionElement).disabled).toBe(false);
+    const visibility = await screen.findByRole("combobox", { name: "What should visitors see?" });
+    expect((screen.getByRole("option", { name: "Show exact pageviews" }) as HTMLOptionElement).disabled).toBe(true);
+    expect((screen.getByRole("option", { name: "Keep pageviews private" }) as HTMLOptionElement).disabled).toBe(false);
     expect(screen.getByText(/stale; sync again before sharing/)).toBeTruthy();
     fireEvent.change(visibility, { target: { value: "private" } });
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("rocket-posthog", {
       body: { action: "set_visibility", app_id: "app-1", visibility: "private" },
+    }));
+  });
+  it("explains the time period and keeps a fresh private connection private until selected", async () => {
+    invoke.mockResolvedValue({ data: {
+      connection: { status: "active", project_id: "project", project_name: "Example",
+        verified_hostname: "example.com", last_successful_sync: new Date().toISOString() },
+      selected: true, active_provider: "posthog", visibility: "private",
+      latest: { metric_date: "2026-10-25", metric_value: 3 },
+    }, error: null });
+    render(<PostHogAnalytics appId="app-2" />);
+    const select = await screen.findByRole("combobox", { name: "What should visitors see?" });
+    expect((select as HTMLSelectElement).value).toBe("private");
+    expect(screen.getByText(/latest completed UTC day/).textContent).toContain("not monthly visitors");
+    expect(screen.getByText(/Visitors see neither/)).toBeTruthy();
+    expect(invoke.mock.calls.every(([, args]) => args.body.action === "status")).toBe(true);
+    fireEvent.change(select, { target: { value: "verified_only" } });
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("rocket-posthog", {
+      body: { action: "set_visibility", app_id: "app-2", visibility: "verified_only" },
     }));
   });
 });

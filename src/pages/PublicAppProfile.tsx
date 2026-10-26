@@ -8,6 +8,7 @@ import {
 import SiteHeader from "@/components/SiteHeader";
 import AppMarketplaceContext from "@/components/AppMarketplaceContext";
 import { recordOutbound, sourceAttribution } from "@/lib/marketplace";
+import { outboundWebsiteUrl } from "@/lib/outboundLinks";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -465,7 +466,7 @@ export default function PublicAppProfile({
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <a
-                  href={app.website_url}
+                  href={outboundWebsiteUrl(app.website_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => {

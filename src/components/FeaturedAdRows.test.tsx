@@ -47,7 +47,8 @@ describe("featured homepage inventory", () => {
         name: "Visit website",
         exact: true,
       });
-      expect(website.getAttribute("href")).toBe("https://trymedia.ai/");
+      const expectedWebsite = `https://trymedia.ai/?utm_source=rocket&utm_medium=display&utm_campaign=featured_app&utm_content=${surface}`;
+      expect(website.getAttribute("href")).toBe(expectedWebsite);
       expect(website.getAttribute("rel")).toContain("sponsored");
       expect(
         screen.queryByRole("link", { name: "View app", exact: true }),
@@ -56,7 +57,7 @@ describe("featured homepage inventory", () => {
         screen
           .getByRole("link", { name: "Visit Media website" })
           .getAttribute("href"),
-      ).toBe("https://trymedia.ai/");
+      ).toBe(expectedWebsite);
       unmount();
 
       featuredAdsMock.loadFeaturedPlacements.mockResolvedValue({

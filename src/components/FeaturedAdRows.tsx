@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { outboundWebsiteUrl } from "@/lib/outboundLinks";
 import {
   loadFeaturedPlacements,
   rotateFooterPlacements,
@@ -97,7 +98,7 @@ function FeaturedCard({
 
   const href = `/apps/${placement.app.slug || placement.app.id}?sponsor=${placement.sponsorship_id}`;
   const website = placement.destination_url?.startsWith("https://")
-    ? placement.destination_url
+    ? outboundWebsiteUrl(placement.destination_url, { campaign: "featured_app", content: surface })
     : null;
   const recordClick = () => {
     track("sponsored_click", {
