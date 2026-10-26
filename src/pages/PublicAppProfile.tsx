@@ -568,7 +568,7 @@ export default function PublicAppProfile({
                         />
                       ) : (
                         <PublicMetricCard
-                          label={`Monthly recurring revenue · ${revenuePoint.point.currency.toUpperCase()}`}
+                          label={`${revenuePoint.point.revenue_scope === "account" ? "Stripe account MRR" : "Monthly recurring revenue"} · ${revenuePoint.point.currency.toUpperCase()}`}
                           icon={DollarSign}
                           value={publicRevenueValue(
                             revenuePoint.point.visibility,

@@ -52,6 +52,7 @@ export type Database = {
           range_upper_minor: number | null;
           observed_at: string;
           last_verified_at: string;
+          revenue_scope?: "account" | "products";
           provider: string;
         };
         Insert: {
@@ -64,6 +65,7 @@ export type Database = {
           range_upper_minor?: number | null;
           observed_at: string;
           last_verified_at: string;
+          revenue_scope?: "account" | "products";
           provider: string;
         };
         Update: {
@@ -76,6 +78,7 @@ export type Database = {
           range_upper_minor?: number | null;
           observed_at?: string;
           last_verified_at?: string;
+          revenue_scope?: "account" | "products";
           provider?: string;
         };
         Relationships: [];
