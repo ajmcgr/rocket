@@ -14,3 +14,9 @@ html.dark .rocket-submission-page {
   --border: #343a43;
   --muted-foreground: #c8cdd4;
 }
+
+/* Preserve supplied brand artwork against the global dark-mode white override. */
+.rocket-submission-page .submission-source-logos .bg-white {
+  background-color: #fff !important;
+  color: #171717;
+}
