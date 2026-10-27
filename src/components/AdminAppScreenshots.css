@@ -364,39 +364,8 @@
 .rocket-admin-screenshot-gallery {
   margin-top: 22px;
 }
-.rocket-admin-screenshot-gallery-controls {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  color: #737373;
-  font-size: 14px;
-  font-weight: 600;
-}
-.rocket-admin .rocket-admin-screenshot-gallery-controls button {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid #d4d4d4;
-  border-radius: 50%;
-  background: #fff;
-  color: #262626;
-}
-.rocket-admin .rocket-admin-screenshot-gallery-controls button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.rocket-admin-screenshot-images {
-  display: flex;
-  gap: 14px;
-}
 .rocket-admin-screenshot-image {
   position: relative;
-  aspect-ratio: 16 / 9;
-  flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #e5e5e5;
@@ -427,10 +396,6 @@
 }
 .rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-gallery {
   margin-top: 18px;
-}
-.rocket-admin-screenshot-page.is-compact
-  .rocket-admin-screenshot-gallery-controls {
-  margin-bottom: 10px;
 }
 @media (max-width: 700px) {
   .rocket-admin-screenshot-actions {

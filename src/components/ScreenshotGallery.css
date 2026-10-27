@@ -1,0 +1,41 @@
+.rocket-screenshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.rocket-screenshot-grid[data-layout="single"] > :first-child,
+.rocket-screenshot-grid[data-layout="triple"] > :last-child {
+  grid-column: 1 / -1;
+}
+
+.rocket-screenshot-grid > * {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  max-height: 460px;
+  overflow: hidden;
+}
+
+.rocket-screenshot-grid > * > img:not(.app-screenshot-backdrop) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: scale-down;
+}
+
+@media (max-width: 640px) {
+  .rocket-public-screenshot-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .rocket-public-screenshot-grid > * {
+    grid-column: 1;
+    aspect-ratio: 4 / 3;
+    max-height: 420px;
+  }
+}
