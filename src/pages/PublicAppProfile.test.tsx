@@ -175,8 +175,8 @@ it("places public traffic and revenue before the screenshot gallery", async () =
   const revenue = await screen.findByRole("region", {
     name: "Verified revenue",
   });
-  const gallery = screen.getByRole("heading", {
-    name: "See Whisperit in action",
+  const gallery = screen.getByRole("region", {
+    name: "Whisperit media",
   });
   expect(
     traffic.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING,
