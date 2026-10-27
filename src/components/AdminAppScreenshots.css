@@ -100,7 +100,6 @@
 .rocket-admin-screenshot-page {
   box-sizing: border-box;
   width: 1600px;
-  height: 900px;
   display: flex;
   overflow: hidden;
   flex: none;
@@ -115,20 +114,15 @@
 }
 .rocket-admin-screenshot-page.is-compact {
   width: 1200px;
-  height: 1037px;
 }
 .rocket-admin-screenshot-sidebar {
   box-sizing: border-box;
   width: 240px;
-  height: 900px;
   flex: none;
   overflow: hidden;
   border-right: 1px solid #e8edf2;
   background: #fcfdff;
   color: #525252;
-}
-.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-sidebar {
-  height: 1037px;
 }
 .rocket-admin-screenshot-sidebar-brand {
   box-sizing: border-box;
@@ -150,10 +144,13 @@
   color: #737373;
 }
 .rocket-admin-screenshot-sidebar nav {
-  padding: 16px 12px 20px;
+  padding: 16px 12px 12px;
 }
 .rocket-admin-screenshot-menu-section {
   margin: 0 0 16px;
+}
+.rocket-admin-screenshot-menu-section:last-child {
+  margin-bottom: 0;
 }
 .rocket-admin-screenshot-menu-section h4 {
   margin: 0 12px 4px;
@@ -181,7 +178,7 @@
   box-sizing: border-box;
   flex: 1;
   min-width: 0;
-  padding: 34px 38px 38px;
+  padding: 34px 38px 12px;
 }
 .rocket-admin-screenshot-back {
   margin-bottom: 17px;
@@ -194,7 +191,6 @@
 }
 .rocket-admin-screenshot-profile {
   box-sizing: border-box;
-  min-height: 750px;
   padding: 28px 30px;
   border: 1px solid #e5e5e5;
   border-radius: 26px;
@@ -400,7 +396,7 @@
   object-fit: cover;
 }
 .rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-main {
-  padding: 26px 28px;
+  padding: 26px 28px 12px;
 }
 .rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-back {
   margin-bottom: 13px;

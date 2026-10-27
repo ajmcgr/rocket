@@ -54,9 +54,9 @@ type GeneratedScreenshot = {
 };
 
 const SCREENSHOT_FORMATS = {
-  compact: { width: 1200, height: 1037, label: "Near-square" },
-  x: { width: 1600, height: 900, label: "X" },
-  linkedin: { width: 1200, height: 627, label: "LinkedIn" },
+  compact: { width: 1200, label: "Compact" },
+  x: { width: 1600, label: "X" },
+  linkedin: { width: 1200, label: "LinkedIn" },
 } as const;
 
 async function imageDimensions(dataUrl: string): Promise<HTMLImageElement> {
@@ -72,24 +72,14 @@ async function formatScreenshot(
 ): Promise<string> {
   if (format !== "linkedin") return source;
   const image = await imageDimensions(source);
-  const { width, height } = SCREENSHOT_FORMATS.linkedin;
+  const { width } = SCREENSHOT_FORMATS.linkedin;
+  const height = Math.round((image.naturalHeight * width) / image.naturalWidth);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("This browser cannot create a PNG canvas.");
-  const sourceHeight = (image.naturalWidth * height) / width;
-  context.drawImage(
-    image,
-    0,
-    0,
-    image.naturalWidth,
-    sourceHeight,
-    0,
-    0,
-    width,
-    height,
-  );
+  context.drawImage(image, 0, 0, width, height);
   return canvas.toDataURL("image/png");
 }
 
@@ -286,17 +276,30 @@ export default function AdminAppScreenshots() {
         format === "compact"
           ? SCREENSHOT_FORMATS.compact
           : SCREENSHOT_FORMATS.x;
+      const pageTop = cardRef.current.getBoundingClientRect().top;
+      const contentBottom = [
+        cardRef.current.querySelector(".rocket-admin-screenshot-profile"),
+        cardRef.current.querySelector(
+          ".rocket-admin-screenshot-menu-section:last-child .rocket-admin-screenshot-menu-item:last-child",
+        ),
+      ].reduce(
+        (bottom, element) =>
+          Math.max(bottom, element?.getBoundingClientRect().bottom || pageTop),
+        pageTop,
+      );
+      const captureHeight = Math.ceil(contentBottom - pageTop + 12);
       const pageImage = await toPng(cardRef.current, {
         width: sourceSize.width,
-        height: sourceSize.height,
+        height: captureHeight,
         pixelRatio: 1,
         backgroundColor: "#f6f8fb",
         cacheBust: true,
       });
       const image = await formatScreenshot(pageImage, format);
       const decoded = await imageDimensions(image);
-      const { width, height, label } = SCREENSHOT_FORMATS[format];
-      if (decoded.naturalWidth !== width || decoded.naturalHeight !== height) {
+      const { width, label } = SCREENSHOT_FORMATS[format];
+      const height = decoded.naturalHeight;
+      if (decoded.naturalWidth !== width || height <= 0) {
         throw new Error("The exported image has the wrong dimensions.");
       }
       const blob = await fetch(image).then((response) => response.blob());
@@ -328,8 +331,9 @@ export default function AdminAppScreenshots() {
     <section className="rocket-admin-panel rocket-admin-screenshot-tool">
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
-        Download a near-square app-page image or a landscape version for X or
-        LinkedIn. The left menu stays visible while the top controls are
+        Download a compact app-page image or a wide version for X or LinkedIn.
+        Each image ends at the app content or the left menu, whichever is taller.
+        The left menu stays visible while the top controls are
         removed. Only public app details, images, and verified metric visibility
         are shown; a verified-only badge never reveals its private amount.
         Nothing is posted automatically.
@@ -388,7 +392,7 @@ export default function AdminAppScreenshots() {
                 disabled={exporting}
                 onClick={() => void download("compact")}
               >
-                {exporting ? "Creating PNG…" : "Download 1200 × 1037"}
+                {exporting ? "Creating PNG…" : "Download compact (1200 wide)"}
               </button>
               <button
                 className="rocket-admin-primary"
