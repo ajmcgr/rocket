@@ -364,20 +364,39 @@
 .rocket-admin-screenshot-gallery {
   margin-top: 22px;
 }
-.rocket-admin-screenshot-gallery h4 {
-  margin: 0 0 15px;
-  font-size: 22px;
-  line-height: 1.3;
-  font-weight: 650;
-  letter-spacing: -0.02em;
+.rocket-admin-screenshot-gallery-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #737373;
+  font-size: 14px;
+  font-weight: 600;
+}
+.rocket-admin .rocket-admin-screenshot-gallery-controls button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #d4d4d4;
+  border-radius: 50%;
+  background: #fff;
+  color: #262626;
+}
+.rocket-admin .rocket-admin-screenshot-gallery-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .rocket-admin-screenshot-images {
-  display: grid;
+  display: flex;
   gap: 14px;
 }
 .rocket-admin-screenshot-image {
   position: relative;
   aspect-ratio: 16 / 9;
+  flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #e5e5e5;
@@ -385,6 +404,7 @@
   background: #f5f5f5;
   display: grid;
   place-items: center;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 7%);
 }
 .rocket-admin-screenshot-image img {
   display: block;
@@ -408,8 +428,9 @@
 .rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-gallery {
   margin-top: 18px;
 }
-.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-gallery h4 {
-  margin-bottom: 12px;
+.rocket-admin-screenshot-page.is-compact
+  .rocket-admin-screenshot-gallery-controls {
+  margin-bottom: 10px;
 }
 @media (max-width: 700px) {
   .rocket-admin-screenshot-actions {
