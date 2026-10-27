@@ -22,10 +22,24 @@ async function request<T>(
   const { data, error } = await supabase.functions.invoke("rocket-buy", {
     body: { action, app_id: appId, ...details },
   });
-  if (error || data?.error)
+  if (error || data?.error) {
+    let serverError = data?.error;
+    if (
+      !serverError &&
+      error &&
+      "context" in error &&
+      error.context instanceof Response
+    ) {
+      const response = await error.context
+        .clone()
+        .json()
+        .catch(() => null);
+      serverError = response?.error;
+    }
     throw new Error(
-      data?.error || error?.message || "Buy with Rocket is unavailable",
+      serverError || error?.message || "Buy with Rocket is unavailable",
     );
+  }
   return data as T;
 }
 
@@ -50,6 +64,7 @@ export default function AppProfileBuyAction({
       ? "developer_website"
       : "marketplace";
   const [canBuy, setCanBuy] = useState(false);
+  const [sellerCannotBuy, setSellerCannotBuy] = useState(false);
   const [rawEntitlement, setEntitlement] = useState<Entitlement>(null);
   const [entitlementOwner, setEntitlementOwner] = useState("");
   const entitlement =
@@ -69,6 +84,7 @@ export default function AppProfileBuyAction({
   useEffect(() => {
     let cancelled = false;
     setCanBuy(false);
+    setSellerCannotBuy(false);
     setPlans([]);
     setError("");
     setPlan(null);
@@ -82,7 +98,11 @@ export default function AppProfileBuyAction({
               return { plan: data?.available ? data.plan : null };
             })
         : Promise.resolve({ plan: null })
-      : request<{ plan: Plan | null; plans?: Plan[] }>("catalog", appId);
+      : request<{
+          plan: Plan | null;
+          plans?: Plan[];
+          viewer_is_seller?: boolean;
+        }>("catalog", appId);
     catalog
       .then((result) => {
         if (!cancelled) {
@@ -90,7 +110,10 @@ export default function AppProfileBuyAction({
             ("plans" in result ? (result.plans as Plan[]) : undefined) ||
             (result.plan ? [result.plan] : []);
           setPlans(offers);
-          setCanBuy(offers.length > 0);
+          const isSeller =
+            "viewer_is_seller" in result && !!result.viewer_is_seller;
+          setSellerCannotBuy(isSeller);
+          setCanBuy(offers.length > 0 && !isSeller);
           const explicit = new URLSearchParams(window.location.search).get(
             "offer",
           );
@@ -249,7 +272,9 @@ export default function AppProfileBuyAction({
           /existing_subscription|checkout_in_progress/.test(caught.message)
           ? "You already have a subscription or checkout for this app. Manage subscriptions in My Purchases. To resume an open checkout, select its original plan; wait for it to expire before changing plans."
           : caught instanceof Error
-            ? caught.message
+            ? caught.message === "cannot_buy_own_app"
+              ? "You can't buy your own app. Use a separate buyer account to test checkout."
+              : caught.message
             : "Checkout unavailable",
       );
       setBusy(false);
@@ -286,6 +311,12 @@ export default function AppProfileBuyAction({
             })
           }
         />
+      )}
+      {sellerCannotBuy && (
+        <p role="status" className="text-sm text-neutral-600">
+          You can’t buy your own app. Use a separate buyer account to test
+          checkout.
+        </p>
       )}
       {processing && (
         <span role="status" className="text-sm text-neutral-600">
