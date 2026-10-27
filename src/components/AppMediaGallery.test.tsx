@@ -33,3 +33,30 @@ it("keeps the blurred fill in sync through the original-image fallback, then rem
   fireEvent.error(image);
   expect(container.innerHTML).toBe("");
 });
+
+it("navigates screenshots with accessible arrows", () => {
+  render(
+    <AppMediaGallery
+      name="Example"
+      media={[0, 1, 2].map((index) => ({
+        id: `image-${index}`,
+        app_id: "app",
+        media_type: "screenshot" as const,
+        source_type: "owner" as const,
+        source_url: `https://example.com/${index}.png`,
+        sort_order: index,
+      }))}
+    />,
+  );
+  const previous = screen.getByRole("button", { name: "Previous screenshot" });
+  const next = screen.getByRole("button", { name: "Next screenshot" });
+  expect((previous as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.queryByText("1 / 3")).not.toBeNull();
+  fireEvent.click(next);
+  expect(screen.queryByText("2 / 3")).not.toBeNull();
+  fireEvent.click(next);
+  expect(screen.queryByText("3 / 3")).not.toBeNull();
+  expect((next as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(previous);
+  expect(screen.queryByText("2 / 3")).not.toBeNull();
+});
