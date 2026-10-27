@@ -124,4 +124,21 @@ describe("admin app screenshot data", () => {
       ),
     ).toEqual(["owner", "launch"]);
   });
+
+  it("exports only the first four ordered screenshots", () => {
+    const media = Array.from({ length: 6 }, (_, index) => ({
+      id: `image-${index}`,
+      app_id: "app",
+      media_type: "screenshot" as const,
+      source_type: "owner" as const,
+      source_url: `https://example.com/${index}.png`,
+      sort_order: index,
+    }));
+    expect(screenshotImages(media).map((item) => item.id)).toEqual([
+      "image-0",
+      "image-1",
+      "image-2",
+      "image-3",
+    ]);
+  });
 });
