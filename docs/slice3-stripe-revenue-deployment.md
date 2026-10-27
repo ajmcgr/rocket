@@ -48,6 +48,8 @@ No secret values belong in this document. If the Stripe App cannot be created in
 
 The new function and route can be disabled without touching GA4, Rocket Developer Payments, or Rocket billing. If deployed, set all revenue visibility to private, clear `public_app_revenue`, and disable the revenue Edge Function/frontend route before considering a schema rollback. Do not delete historical private points or Stripe payment records as part of rollback.
 
+For the October 27 general-availability change, set the existing `STRIPE_REVENUE_LIVE_ENABLED` Edge Function secret to `false` and redeploy `rocket-stripe-revenue`. This stops new general live authorizations while retaining explicitly enrolled pilot/review access. Leave encrypted connections, price mappings, private snapshots, and visibility preferences intact. Verify that an unenrolled owner cannot start live OAuth and that Launch's existing connection still loads. Do not change Rocket's separate payments account.
+
 ## Current boundary
 
 Stripe App v0.1.2 has been uploaded to publisher account `acct_1UNYZnLTVhRPFrYe`. The public client ID and dedicated live App key are configured; a read-only runtime account identity check verified the publisher on October 21, 2026. General live installation remains disabled. Code deployment does not submit the Marketplace listing for review. No mock amount may be shown on a production public profile. Production `/my-apps` access still requires Rocket domain verification; the paused `trylaunch.ai` GA4 acceptance test is unchanged.
@@ -69,3 +71,7 @@ New connections default to Total account MRR in the revenue settings flow; exist
 Launch's account-wide sync exposed one permanent percentage-discounted subscription. Calculation version 2 resolves discounts through the read-only subscription endpoint and subtracts a single permanent percentage coupon at subscription/item level, with exact decimal arithmetic and product restrictions. A permanent 100% coupon contributes verified zero. Unresolved, fixed, temporary, or stacked discounts remain unsupported; no subscription is silently omitted to obtain a verified total. No additional Stripe permissions are requested.
 
 The owner requested a badge-only default for future connections. After the first fully verified live sync, a new connection with no saved visibility preference selects Stripe only if no other revenue provider is selected, then publishes `verified_only` with every amount/range field null. Existing visibility preferences are preserved. Owners can opt out with Private before the first sync; review-only, sandbox, stale, unsupported and revoked-owner states never auto-publish.
+
+### General live availability — October 27, 2026
+
+With `STRIPE_REVENUE_LIVE_ENABLED=true`, live Marketplace OAuth is available to authenticated owners of domain-verified Rocket apps without pilot enrollment. The server still checks active app ownership at start and callback, validates single-use state, and keeps external sandbox installs pilot-only. Publisher credentials, account/price scope, revenue calculation, visibility preferences, and the Rocket payments account are unchanged. The owner explicitly waived the separate non-admin developer acceptance run, so independent live OAuth and sync remain unverified; do not describe them as tested.
