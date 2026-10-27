@@ -38,6 +38,13 @@ vi.mock("@/integrations/supabase/client", () => ({
                   status: "pending",
                   app: { name: "Pending app" },
                 },
+                {
+                  id: "submission:app-submitted",
+                  app_id: "app-submitted",
+                  owned: false,
+                  status: "submitted",
+                  app: { name: "Submitted app" },
+                },
               ]
             : integrationStatuses.responses[options.body.provider || _endpoint] || {
                 connection: null,
@@ -86,6 +93,10 @@ describe("My Apps next actions", () => {
       expect(
         container.querySelector('a[href="/my-apps/app-pending"]')?.textContent,
       ).toContain("Pending app");
+      expect(
+        container.querySelector('a[href="/apps/add?app=app-submitted"]')?.textContent,
+      ).toContain("Submitted app");
+      expect(container.textContent).toContain("Submitted · ownership unverified");
       expect(container.textContent).not.toContain("Domain verified");
       expect(container.textContent).toContain("Claim pending");
       expect(

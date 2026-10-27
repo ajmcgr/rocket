@@ -32,5 +32,6 @@ export function myAppStatus(item: MyApp): string {
       : "Claimed";
   if (item.status === "review") return "Review pending";
   if (item.status === "rejected") return "Not approved";
+  if (item.status === "submitted") return "Submitted · ownership unverified";
   return "Claim pending";
 }
