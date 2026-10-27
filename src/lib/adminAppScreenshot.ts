@@ -1,5 +1,6 @@
 import type { Tables } from "@/integrations/supabase/types";
 import type { PublicAppMedia } from "@/lib/appMedia";
+import { orderedScreenshots, screenshotPage } from "@/lib/screenshotGallery";
 import { featuredRevenue, featuredTraffic } from "@/lib/publicAppEvidence";
 import {
   publicRevenueValue,
@@ -94,16 +95,5 @@ export function screenshotMetrics(
 }
 
 export function screenshotImages(media: PublicAppMedia[]): PublicAppMedia[] {
-  return media
-    .filter(
-      (item) =>
-        item.media_type === "screenshot" || item.media_type === "thumbnail",
-    )
-    .sort(
-      (left, right) =>
-        Number(right.source_type === "owner") -
-          Number(left.source_type === "owner") ||
-        left.sort_order - right.sort_order,
-    )
-    .slice(0, 4);
+  return screenshotPage(orderedScreenshots(media));
 }
