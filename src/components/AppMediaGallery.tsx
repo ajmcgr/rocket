@@ -26,17 +26,7 @@ export default function AppMediaGallery({
   const visible = images.filter((item) => !failed.has(item.id)).slice(0, 12);
   if (!visible.length && !videos.length) return null;
   return (
-    <section className="mt-6" aria-labelledby="gallery-title">
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div>
-          <h2
-            id="gallery-title"
-            className="text-xl font-semibold tracking-tight"
-          >
-            See {name} in action
-          </h2>
-        </div>
-      </div>
+    <section className="mt-6" aria-label={`${name} media`}>
       {visible.length > 0 && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {visible.map((item, index) => (
