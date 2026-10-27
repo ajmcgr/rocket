@@ -12,12 +12,13 @@ const service = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KE
 const auth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
 const frontend = Deno.env.get("STRIPE_REVENUE_FRONTEND_ORIGIN") || "https://tryrocket.ai";
 const revenueEnv = (name: string) => Deno.env.get(name);
-// No owner can start or manage an unverified integration unless their exact
-// app ID is explicitly enrolled for the external acceptance pilot.
+// External test installation remains limited to enrolled apps. Live access
+// follows the production flag and still requires domain-verified ownership.
 const pilotAppIds = new Set((Deno.env.get("STRIPE_REVENUE_PILOT_APP_IDS") || "")
   .split(",").map((id) => id.trim())
   .filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
-const pilotEnabled = (appId: string, userId: string) => pilotAppIds.has(appId)
+const revenueAccessEnabled = (appId: string, userId: string) => revenueEnv("STRIPE_REVENUE_LIVE_ENABLED") === "true"
+  || pilotAppIds.has(appId)
   || revenueReviewAuthorized(revenueEnv, { appId, userId });
 const reviewPrivateOnly = (access: RevenueAccess) => revenueEnv("STRIPE_REVENUE_LIVE_ENABLED") !== "true"
   && revenueReviewAuthorized(revenueEnv, access);
@@ -306,7 +307,7 @@ async function callback(request: Request) {
   const claimed = await service.rpc("consume_app_revenue_oauth_state", { p_state_hash: await sha256(state) });
   const row = claimed.data?.[0];
   if (claimed.error || !row) return new Response("Connection request expired or already used", { status: 400 });
-  if (!pilotEnabled(row.app_id, row.user_id)) return new Response("Stripe revenue pilot is unavailable", { status: 503 });
+  if (!revenueAccessEnabled(row.app_id, row.user_id)) return new Response("Stripe revenue verification is unavailable", { status: 503 });
   try {
     await ownedApp(row.app_id, row.user_id);
     const mode = revenueStateMode(state, revenueMode(revenueEnv));
@@ -346,7 +347,7 @@ async function handle(request: Request) {
       .eq("user_id", userId).eq("verification_level", "domain_verified").is("revoked_at", null);
     if (owners.error) throw owners.error;
     const ids = (owners.data || []).map((owner) => owner.app_id).filter((appId) =>
-      pilotEnabled(appId, userId) && (revenueEnv("STRIPE_REVENUE_LIVE_ENABLED") === "true"
+      revenueAccessEnabled(appId, userId) && (revenueEnv("STRIPE_REVENUE_LIVE_ENABLED") === "true"
         || revenueReviewAuthorized(revenueEnv, { appId, userId })));
     if (!ids.length) return json({ apps: [] });
     const apps = await service.from("public_apps").select("id,name,logo_url").in("id", ids);
@@ -358,7 +359,7 @@ async function handle(request: Request) {
   const app = await ownedApp(body.app_id, userId);
   const access = { appId: app.id, userId };
   if (body.action === "status") {
-    if (!pilotEnabled(app.id, userId)) return json({ connect_available: false, connection: null,
+    if (!revenueAccessEnabled(app.id, userId)) return json({ connect_available: false, connection: null,
       mapping_version: 0, visibility: "private", mappings: [], latest: [] });
     const linked = await binding(app.id);
     const row = linked ? await connection(linked.connection_id) : null;
@@ -382,7 +383,7 @@ async function handle(request: Request) {
     mapping_version: linked?.mapping_version ?? 0, visibility: linked?.visibility ?? "private",
     mappings: mappings.data || [], latest });
   }
-  if (!pilotEnabled(app.id, userId)) return fail("Stripe revenue verification is coming soon", 503);
+  if (!revenueAccessEnabled(app.id, userId)) return fail("Stripe revenue verification is unavailable", 503);
   if (body.action === "start") {
     const mode = revenueInstallationMode(body.installation);
     if (mode === "test" && !pilotAppIds.has(app.id)) return fail("Stripe test pilot is unavailable", 503);

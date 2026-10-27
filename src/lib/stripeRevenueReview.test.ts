@@ -23,9 +23,11 @@ const source = readFileSync("supabase/functions/rocket-stripe-revenue/index.ts",
   .replace(/^import[\s\S]*?from ["'][^"']+["'];\n/gm, "");
 const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
 
-function fixture(options: { user?: string; revoked?: boolean; expired?: boolean; callback?: boolean } = {}) {
+function fixture(options: { user?: string; revoked?: boolean; expired?: boolean; callback?: boolean; generalLive?: boolean } = {}) {
   const user = options.user || reviewer;
-  const settings = { ...env, ...(options.expired ? { STRIPE_REVENUE_REVIEW_ACCESS: "[]" } : {}) };
+  const settings = { ...env, ...(options.expired ? { STRIPE_REVENUE_REVIEW_ACCESS: "[]" } : {}),
+    ...(options.generalLive ? { STRIPE_REVENUE_LIVE_ENABLED: "true",
+      STRIPE_REVENUE_PILOT_APP_IDS: "", STRIPE_REVENUE_REVIEW_ACCESS: "[]" } : {}) };
   const inserts: Record<string, unknown>[] = [];
   const rpc = vi.fn(async (name: string) => ({ data: name === "consume_app_revenue_oauth_state"
     ? (options.callback ? [{ app_id: app, user_id: reviewer }] : []) : null, error: null }));
@@ -35,7 +37,7 @@ function fixture(options: { user?: string; revoked?: boolean; expired?: boolean;
     const result = () => {
       if (inserted) return { data: table === "app_revenue_connections" ? { id: "connection-fixture" } : null, error: null };
       if (table === "app_owners") {
-        const ownerRows = options.revoked ? [] : [{ app_id: app, verification_level: "domain_verified" },
+        const ownerRows = options.revoked || user !== reviewer ? [] : [{ app_id: app, verification_level: "domain_verified" },
           { app_id: unrelated, verification_level: "domain_verified" }];
         return { data: filters.app_id ? ownerRows.find((row) => row.app_id === filters.app_id) || null : ownerRows, error: null };
       }
@@ -91,15 +93,15 @@ describe("deployed revenue handler review authorization", () => {
     expect(run.inserts[0].state_hash).not.toBe(url.searchParams.get("state"));
     expect(Date.parse(String(run.inserts[0].expires_at)) - Date.now()).toBeGreaterThan(590_000);
   });
-  it.each([{ user: other }, { expired: true }])("rejects unenrolled or expired review access", async (options) => {
+  it.each([{ user: other, status: 403 }, { expired: true, status: 503 }])("rejects unenrolled or expired review access", async (options) => {
     const run = fixture(options);
-    expect((await run.post("start")).status).toBe(503);
+    expect((await run.post("start")).status).toBe(options.status);
     expect(run.inserts).toEqual([]);
     expect(run.request).not.toHaveBeenCalled();
   });
   it("does not trust a user ID supplied in the request body", async () => {
     const run = fixture({ user: other });
-    expect((await run.post("start", app, { user_id: reviewer })).status).toBe(503);
+    expect((await run.post("start", app, { user_id: reviewer })).status).toBe(403);
   });
   it("rechecks domain ownership even for an enrolled reviewer", async () => {
     const run = fixture({ revoked: true });
@@ -147,6 +149,50 @@ describe("deployed revenue handler review authorization", () => {
     expect(run.inserts[0]).toMatchObject({ owner_user_id: reviewer, livemode: true });
     expect(run.inserts[0].access_token_ciphertext).not.toBe("fixture-access");
     expect(run.rpc).toHaveBeenCalledWith("bind_app_revenue_connection", { p_app_id: app, p_connection_id: "connection-fixture", p_user_id: reviewer });
+  });
+});
+
+describe("general live revenue access", () => {
+  it("allows a domain-verified owner outside the pilot to start public Marketplace OAuth", async () => {
+    const run = fixture({ generalLive: true });
+    const response = await run.post("start");
+    expect(response.status).toBe(200);
+    const url = new URL((await response.json()).authorization_url);
+    expect(url.origin + url.pathname).toBe("https://marketplace.stripe.com/oauth/v2/authorize");
+    expect(url.searchParams.get("client_id")).toBe("ca_registeredfixture");
+    expect(url.searchParams.get("redirect_uri")).toBe(oauth.REVENUE_REDIRECT_URI);
+    expect(run.inserts[0]).toMatchObject({ app_id: app, user_id: reviewer });
+    expect(run.inserts[0].state_hash).not.toBe(url.searchParams.get("state"));
+  });
+  it("does not open external test installation outside the pilot", async () => {
+    const run = fixture({ generalLive: true });
+    expect((await run.post("start", app, { installation: "external_test" })).status).toBe(503);
+  });
+  it("keeps session and app ownership checks for live access", async () => {
+    const revoked = fixture({ generalLive: true, revoked: true });
+    expect((await revoked.post("start")).status).toBe(403);
+    expect(revoked.request).not.toHaveBeenCalled();
+    const otherUser = fixture({ generalLive: true, user: other });
+    expect((await otherUser.post("start")).status).toBe(403);
+    expect(otherUser.request).not.toHaveBeenCalled();
+    const unsigned = await fixture({ generalLive: true }).handler(new Request(env.SUPABASE_URL, {
+      method: "POST", body: JSON.stringify({ action: "start", app_id: app }),
+    }));
+    expect(unsigned.status).toBe(401);
+  });
+  it("rechecks ownership and consumes single-use state on live callback", async () => {
+    const run = fixture({ generalLive: true, callback: true });
+    const response = await run.handler(new Request(`${oauth.REVENUE_REDIRECT_URI}?code=fixture&state=${oauth.createRevenueOAuthState("live")}`));
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`https://tryrocket.ai/my-apps/${app}/revenue`);
+    expect(run.inserts[0].access_token_ciphertext).not.toBe("fixture-access");
+    const revoked = fixture({ generalLive: true, callback: true, revoked: true });
+    await revoked.handler(new Request(`${oauth.REVENUE_REDIRECT_URI}?code=fixture&state=${oauth.createRevenueOAuthState("live")}`));
+    expect(revoked.request).not.toHaveBeenCalled();
+    expect(revoked.inserts).toEqual([]);
+    const replay = fixture({ generalLive: true });
+    expect((await replay.handler(new Request(`${oauth.REVENUE_REDIRECT_URI}?code=fixture&state=${oauth.createRevenueOAuthState("live")}`))).status).toBe(400);
+    expect(replay.request).not.toHaveBeenCalled();
   });
 });
 

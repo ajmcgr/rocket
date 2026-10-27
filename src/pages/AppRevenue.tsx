@@ -93,7 +93,7 @@ export default function AppRevenue() {
           : "Not connected"}</p>
         {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
         {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Sync needs attention: {status.connection.last_error}</p>}
-        {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Coming soon. Stripe revenue verification is not available until the read-only external integration has passed acceptance testing.</p>}
+        {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Stripe connection is temporarily unavailable. Please try again later.</p>}
         {!status.connection && status.connect_available && <p className="mt-3 text-sm text-neutral-600">{status.private_only ? "This review connection stays private." : "After a successful live sync, your listing shows a Stripe-verified badge by default. MRR amounts stay private. You can choose Private to hide the badge."}</p>}
         {!status.connection && status.connect_available && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
