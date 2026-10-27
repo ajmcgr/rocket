@@ -186,17 +186,15 @@ describe("multi-plan public checkout selection", () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     window.history.replaceState(null, "", path);
     mock.user = { id: "buyer" };
-    mock.invoke
-      .mockReset()
-      .mockImplementation(async (_name, options) => ({
-        data:
-          options.body.action === "catalog"
-            ? { plans: offers, plan: null }
-            : options.body.action === "status"
-              ? { plan: null, entitlement: null }
-              : { error: "fixture_no_payment" },
-        error: null,
-      }));
+    mock.invoke.mockReset().mockImplementation(async (_name, options) => ({
+      data:
+        options.body.action === "catalog"
+          ? { plans: offers, plan: null }
+          : options.body.action === "status"
+            ? { plan: null, entitlement: null }
+            : { error: "fixture_no_payment" },
+      error: null,
+    }));
     const container = document.createElement("div"),
       root = createRoot(container);
     await act(async () =>
@@ -291,6 +289,119 @@ describe("multi-plan public checkout selection", () => {
       ).toBe(false);
     } finally {
       await h.cleanup();
+    }
+  });
+});
+
+describe("seller checkout", () => {
+  it("shows the published offer without offering its seller a checkout", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    window.history.replaceState(null, "", "/apps/launch");
+    mock.user = { id: "seller" };
+    mock.invoke.mockReset().mockImplementation(async (_name, options) => ({
+      data:
+        options.body.action === "catalog"
+          ? {
+              plan: {
+                id: "plan",
+                name: "Launch Pro",
+                amount_cents: 3900,
+                currency: "usd",
+                interval: null,
+                billing_type: "one_time",
+              },
+              viewer_is_seller: true,
+            }
+          : { plan: null, entitlement: null },
+      error: null,
+    }));
+    const container = document.createElement("div"),
+      root = createRoot(container);
+    try {
+      await act(async () =>
+        root.render(
+          <AppProfileBuyAction
+            appId={launch}
+            appName="Launch"
+            websiteUrl="https://trylaunch.ai"
+          />,
+        ),
+      );
+      expect(container.textContent).toContain("Launch Pro");
+      expect(container.textContent).toContain("can’t buy your own app");
+      expect(container.querySelector("rocket-button")).toBeNull();
+      expect(
+        mock.invoke.mock.calls.some(
+          ([, options]) => options.body.action === "checkout",
+        ),
+      ).toBe(false);
+    } finally {
+      await act(async () => root.unmount());
+      window.history.replaceState(null, "", "/");
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("explains an owner rejection returned by the checkout function", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    window.history.replaceState(null, "", "/apps/launch");
+    mock.user = { id: "seller" };
+    mock.invoke.mockReset().mockImplementation(async (_name, options) => {
+      if (options.body.action === "catalog")
+        return {
+          data: {
+            plan: {
+              id: "plan",
+              name: "Launch Pro",
+              amount_cents: 3900,
+              currency: "usd",
+              interval: null,
+              billing_type: "one_time",
+              product_key: "launch-pro",
+              return_uri: "https://trylaunch.ai/return",
+            },
+          },
+          error: null,
+        };
+      if (options.body.action === "checkout")
+        return {
+          data: null,
+          error: {
+            message: "Edge Function returned a non-2xx status code",
+            context: new Response(
+              JSON.stringify({ error: "cannot_buy_own_app" }),
+              {
+                status: 403,
+              },
+            ),
+          },
+        };
+      return { data: { plan: null, entitlement: null }, error: null };
+    });
+    const container = document.createElement("div"),
+      root = createRoot(container);
+    try {
+      await act(async () =>
+        root.render(
+          <AppProfileBuyAction
+            appId={launch}
+            appName="Launch"
+            websiteUrl="https://trylaunch.ai"
+          />,
+        ),
+      );
+      await act(async () =>
+        container
+          .querySelector("rocket-button")!
+          .dispatchEvent(new Event("rocket-activate")),
+      );
+      expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+        "You can't buy your own app",
+      );
+    } finally {
+      await act(async () => root.unmount());
+      window.history.replaceState(null, "", "/");
+      vi.unstubAllGlobals();
     }
   });
 });

@@ -144,7 +144,12 @@ Deno.serve(async (req) => {
     if (action === "catalog") {
       const available = await offer(appId);
       const plans = available?.products.map(publicPlan) || [];
-      return json({ plans, plan: plans.length === 1 ? plans[0] : null });
+      const viewer = available ? await getRocketUser(req) : null;
+      return json({
+        plans,
+        plan: plans.length === 1 ? plans[0] : null,
+        viewer_is_seller: !!viewer && viewer.id === available?.client.created_by,
+      });
     }
     const rocketUser = await getRocketUser(req);
     const oauthToken = rocketUser ? null : await getConnectToken(req);
