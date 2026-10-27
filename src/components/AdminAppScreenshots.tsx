@@ -4,8 +4,6 @@ import { toPng } from "html-to-image";
 import {
   BarChart3,
   Bookmark,
-  ChevronLeft,
-  ChevronRight,
   Compass,
   CreditCard,
   DollarSign,
@@ -34,8 +32,10 @@ import {
   screenshotMetrics,
   type ScreenshotMetric,
 } from "@/lib/adminAppScreenshot";
+import { screenshotLayout, screenshotPage } from "@/lib/screenshotGallery";
 import { SUBMISSION_PLATFORMS } from "../../supabase/functions/_shared/appSubmission";
 import "./AdminAppScreenshots.css";
+import "./ScreenshotGallery.css";
 import AppScreenshot from "./AppScreenshot";
 
 type App = Tables<"public_apps">;
@@ -187,7 +187,7 @@ export default function AdminAppScreenshots() {
   const [message, setMessage] = useState("");
   const [generated, setGenerated] = useState<GeneratedScreenshot | null>(null);
   const [activeFormat, setActiveFormat] = useState<ScreenshotFormat>("compact");
-  const [screenshotIndex, setScreenshotIndex] = useState(0);
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(new Set());
   const cardRef = useRef<HTMLDivElement>(null);
   const generatedUrlRef = useRef<string | null>(null);
 
@@ -231,7 +231,7 @@ export default function AdminAppScreenshots() {
 
   const selectApp = async (appId: string) => {
     clearGenerated();
-    setScreenshotIndex(0);
+    setFailedImageIds(new Set());
     setQuery("");
     setResults([]);
     setLoading(true);
@@ -269,12 +269,20 @@ export default function AdminAppScreenshots() {
         );
         return;
       }
+      if (failedImageIds.size) {
+        throw new Error(
+          "A product image did not load. Fix its URL before exporting.",
+        );
+      }
       flushSync(() => setActiveFormat(format));
       await document.fonts.ready;
       await Promise.all(
-        Array.from(cardRef.current.querySelectorAll("img"), (img) =>
-          img.decode().catch(() => undefined),
-        ),
+        Array.from(cardRef.current.querySelectorAll("img"), async (img) => {
+          await img.decode();
+          if (!img.naturalWidth || !img.naturalHeight) {
+            throw new Error("An image did not finish loading.");
+          }
+        }),
       );
       const sourceSize =
         format === "compact"
@@ -543,63 +551,38 @@ export default function AdminAppScreenshots() {
                       })}
                     </div>
                   )}
-                  {preview.images.length > 0 && (
+                  {preview.images.some(
+                    (image) => !failedImageIds.has(image.id),
+                  ) && (
                     <section className="rocket-admin-screenshot-gallery">
-                      {preview.images.length > 2 && (
-                        <div className="rocket-admin-screenshot-gallery-controls">
-                          <span>
-                            {screenshotIndex + 1}–
-                            {Math.min(
-                              screenshotIndex + 2,
-                              preview.images.length,
-                            )}{" "}
-                            / {preview.images.length}
-                          </span>
-                          <button
-                            type="button"
-                            aria-label="Previous screenshot in preview"
-                            disabled={screenshotIndex === 0 || exporting}
-                            onClick={() => {
-                              setScreenshotIndex((index) =>
-                                Math.max(0, index - 1),
-                              );
-                              clearGenerated();
-                            }}
+                      <div
+                        className="rocket-admin-screenshot-images rocket-screenshot-grid"
+                        data-layout={screenshotLayout(
+                          preview.images.filter(
+                            (image) => !failedImageIds.has(image.id),
+                          ).length,
+                        )}
+                      >
+                        {screenshotPage(
+                          preview.images.filter(
+                            (image) => !failedImageIds.has(image.id),
+                          ),
+                        ).map((item, index) => (
+                          <div
+                            key={item.id}
+                            className="rocket-admin-screenshot-image"
                           >
-                            <ChevronLeft size={20} aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Next screenshot in preview"
-                            disabled={
-                              screenshotIndex >= preview.images.length - 2 ||
-                              exporting
-                            }
-                            onClick={() => {
-                              setScreenshotIndex((index) =>
-                                Math.min(preview.images.length - 2, index + 1),
-                              );
-                              clearGenerated();
-                            }}
-                          >
-                            <ChevronRight size={20} aria-hidden="true" />
-                          </button>
-                        </div>
-                      )}
-                      <div className="rocket-admin-screenshot-images">
-                        {preview.images
-                          .slice(screenshotIndex, screenshotIndex + 2)
-                          .map((item, index) => (
-                            <div
-                              key={item.id}
-                              className="rocket-admin-screenshot-image"
-                            >
-                              <AppScreenshot
-                                src={item.source_url}
-                                alt={`${preview.app.name} screenshot ${screenshotIndex + index + 1}`}
-                              />
-                            </div>
-                          ))}
+                            <AppScreenshot
+                              src={item.source_url}
+                              alt={`${preview.app.name} screenshot ${index + 1}`}
+                              onError={() =>
+                                setFailedImageIds((current) =>
+                                  new Set(current).add(item.id),
+                                )
+                              }
+                            />
+                          </div>
+                        ))}
                       </div>
                     </section>
                   )}
