@@ -52,8 +52,8 @@ export default function MyApps() {
     <main className="mx-auto max-w-6xl px-5 pb-24 pt-10 text-neutral-900 sm:px-8 sm:pt-14">
       <h1 className="font-display text-4xl sm:text-5xl">My Apps</h1>
       <p className="mt-3 max-w-2xl text-neutral-500">
-        Your apps in one place. Select an app to manage its listing, connections
-        and settings.
+        Apps you submitted or claimed. Verify ownership to manage a listing,
+        connections and settings.
       </p>
       <Link
         to="/submit"
@@ -97,8 +97,8 @@ export default function MyApps() {
           {items.map((item) => (
             <Link
               key={item.app_id}
-              to={`/my-apps/${item.app_id}`}
-              aria-label={`Manage ${item.app?.name || "app under review"}`}
+              to={item.status === "submitted" ? `/apps/add?app=${item.app_id}` : `/my-apps/${item.app_id}`}
+              aria-label={`${item.status === "submitted" ? "Verify ownership of" : "Manage"} ${item.app?.name || "app under review"}`}
               className="group flex min-h-52 min-w-0 flex-col rounded-3xl border border-neutral-200 bg-white p-6 transition hover:border-[#469DDA] hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#469DDA]"
             >
               <AppLogo
