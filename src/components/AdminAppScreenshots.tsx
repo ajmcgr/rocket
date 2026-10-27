@@ -280,18 +280,9 @@ export default function AdminAppScreenshots() {
         format === "compact"
           ? SCREENSHOT_FORMATS.compact
           : SCREENSHOT_FORMATS.x;
-      const pageTop = cardRef.current.getBoundingClientRect().top;
-      const contentBottom = [
-        cardRef.current.querySelector(".rocket-admin-screenshot-profile"),
-        cardRef.current.querySelector(
-          ".rocket-admin-screenshot-menu-section:last-child .rocket-admin-screenshot-menu-item:last-child",
-        ),
-      ].reduce(
-        (bottom, element) =>
-          Math.max(bottom, element?.getBoundingClientRect().bottom || pageTop),
-        pageTop,
+      const captureHeight = Math.ceil(
+        cardRef.current.getBoundingClientRect().height,
       );
-      const captureHeight = Math.ceil(contentBottom - pageTop + 12);
       const pageImage = await toPng(cardRef.current, {
         width: sourceSize.width,
         height: captureHeight,
@@ -336,11 +327,10 @@ export default function AdminAppScreenshots() {
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
         Download a compact app-page image or a wide version for X or LinkedIn.
-        Each image ends at the app content or the left menu, whichever is
-        taller. The left menu stays visible while the top controls are removed.
-        Only public app details, images, and verified metric visibility are
-        shown; a verified-only badge never reveals its private amount. Nothing
-        is posted automatically.
+        Each image ends just below the app content. The left menu stays visible
+        while the top controls are removed. Only public app details, images, and
+        verified metric visibility are shown; a verified-only badge never
+        reveals its private amount. Nothing is posted automatically.
       </p>
       <label className="rocket-admin-screenshot-search">
         Find a public app
