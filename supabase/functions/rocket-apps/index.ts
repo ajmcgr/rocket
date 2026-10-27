@@ -1302,7 +1302,17 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(100);
         if (claims.error) throw claims.error;
-        const ids = [...new Set((claims.data || []).map((c) => c.app_id))];
+        const submissions = await admin
+          .from("app_submission_details")
+          .select("app_id,created_at")
+          .eq("submitted_by", user.id)
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (submissions.error) throw submissions.error;
+        const ids = [...new Set([
+          ...(claims.data || []).map((c) => c.app_id),
+          ...(submissions.data || []).map((s) => s.app_id),
+        ])];
         const visible = ids.length
           ? await admin
               .from("public_apps")
@@ -1344,8 +1354,21 @@ Deno.serve(async (req) => {
           if (!previous || priority(entry.status) > priority(previous.status))
             byApp.set(entry.app_id, entry);
         }
+        const submittedWithoutClaim = (submissions.data || [])
+          .filter((s) => !byApp.has(s.app_id) && visible.data?.some((a) => a.id === s.app_id))
+          .map((s) => ({
+            id: `submission:${s.app_id}`,
+            app_id: s.app_id,
+            status: "submitted",
+            method: "submission",
+            verification_state: "unverified",
+            created_at: s.created_at,
+            review_reason: null,
+            completed_at: null,
+            rejected_at: null,
+          }));
         return json(
-          [...byApp.values()].map((c) => ({
+          [...byApp.values(), ...submittedWithoutClaim].map((c) => ({
             ...c,
             owned: (owners.data || []).some((o) => o.app_id === c.app_id),
             owner_verification_level:
