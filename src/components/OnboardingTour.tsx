@@ -374,7 +374,7 @@ export default function OnboardingTour() {
                 : "Supported revenue verification is available in eligible app settings. Availability depends on the provider."}
             </p>
             <p>
-              Stripe Revenue Verification · <strong>Coming Soon</strong>
+              Stripe Revenue Verification · <strong>Available for domain-verified app owners</strong>
             </p>
             <ul className="list-disc space-y-1 pl-5">
               <li>

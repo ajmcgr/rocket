@@ -355,21 +355,21 @@ Only then choose supported public visibility. Unsupported configurations, stale 
     group: "Verified metrics",
     title: "Stripe revenue verification",
     summary:
-      "Understand Stripe availability, exact price mapping, supported subscription MRR and public visibility.",
+      "Understand Stripe availability, account or price-scoped subscription MRR and public visibility.",
     sections: [
       section(
         "availability",
         "Check availability first",
-        `Stripe revenue verification uses the read-only Rocket Revenue Verification Stripe App. General availability is gated on Marketplace review and production acceptance. If Rocket shows Coming soon, the public connection flow is not enabled for your app.
+        `Stripe revenue verification uses the read-only Rocket Revenue Verification Stripe App. Domain-verified app owners can connect their own live Stripe account from Revenue settings. If the connection is temporarily unavailable, try again later.
 
-Do not substitute a full-access live API key or a separate payment integration to bypass that state. A test pilot or a successful test authorization is not a public live revenue integration.`,
+Do not substitute a full-access live API key or a separate payment integration. Sandbox authorizations and figures remain separate from live verification.`,
       ),
       section(
         "mapping",
-        "Connect and map only this app's prices",
+        "Connect and choose the revenue scope",
         `When connection is available, start Connect Stripe from the app's Revenue settings and authorize the correct Stripe account. Return to Rocket and check the account identifier and Live or Sandbox label.
 
-Choose Load Stripe prices. Select the exact recurring prices belonging to this app, save the mapping and run Sync MRR. A price can belong to only one Rocket app for that Stripe account. Changing the mapping clears public verification until a new successful sync.
+For an account dedicated to this app, choose total account MRR. If the account also bills for other apps, load Stripe prices, select the exact recurring prices belonging to this app, save the mapping and run Sync MRR. A price can belong to only one Rocket app for that Stripe account, and an account total can be assigned to only one Rocket app. Changing the scope clears public verification until a new successful sync.
 
 Review any unsupported-subscription message. A connected account alone cannot establish that every subscription is attributable to the app or supported by the calculation.`,
       ),

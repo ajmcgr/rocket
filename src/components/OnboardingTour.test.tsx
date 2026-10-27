@@ -179,7 +179,7 @@ describe("existing onboarding personalized journeys", () => {
     expect(screen.queryByText("Polar")).toBeNull();
     expect(
       screen.getByText(/Stripe Revenue Verification/).textContent,
-    ).toContain("Coming Soon");
+    ).toContain("Available for domain-verified app owners");
     expect(
       mock.invoke.mock.calls.every(
         ([, args]) => args.body.app_id === "owned-app",

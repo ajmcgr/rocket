@@ -11,7 +11,7 @@ async function fixture({products=false,conflict=false,revoked=false,discount=fal
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode('a'.repeat(32)),'AES-GCM',false,['encrypt']);
  const iv=new Uint8Array(12);const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode('fixture-token')));
  const b64=(b:Uint8Array)=>Buffer.from(b).toString('base64url');
- const env:Record<string,string>={SUPABASE_URL:'https://example.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'service',SUPABASE_ANON_KEY:'anon',STRIPE_REVENUE_LIVE_ENABLED:'true',STRIPE_REVENUE_PILOT_APP_IDS:app,STRIPE_REVENUE_PUBLIC_CLIENT_ID:'ca_fixture',STRIPE_REVENUE_APP_LIVE_API_KEY:'sk_live_fixture',STRIPE_REVENUE_TOKEN_ENCRYPTION_KEY:b64(new TextEncoder().encode('a'.repeat(32)))};
+ const env:Record<string,string>={SUPABASE_URL:'https://example.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'service',SUPABASE_ANON_KEY:'anon',STRIPE_REVENUE_LIVE_ENABLED:'true',STRIPE_REVENUE_PILOT_APP_IDS:'',STRIPE_REVENUE_PUBLIC_CLIENT_ID:'ca_fixture',STRIPE_REVENUE_APP_LIVE_API_KEY:'sk_live_fixture',STRIPE_REVENUE_TOKEN_ENCRYPTION_KEY:b64(new TextEncoder().encode('a'.repeat(32)))};
  const binding={connection_id:'connection',owner_user_id:user,mapping_version:1,revenue_scope:'products',visibility:'range'};
  const connection={id:'connection',owner_user_id:user,provider:'stripe',status:'active',livemode:true,external_account_id:'acct_fixture',access_token_expires_at:new Date(Date.now()+3600000).toISOString(),access_token_ciphertext:b64(cipher),access_token_iv:b64(iv)};
  const points:unknown[]=[];
