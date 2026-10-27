@@ -100,9 +100,8 @@
 .rocket-admin-screenshot-page {
   box-sizing: border-box;
   width: 1600px;
-  display: flex;
+  position: relative;
   overflow: hidden;
-  flex: none;
   background: #f7f9fc;
   color: #171717;
   font-family:
@@ -118,7 +117,8 @@
 .rocket-admin-screenshot-sidebar {
   box-sizing: border-box;
   width: 240px;
-  flex: none;
+  position: absolute;
+  inset: 0 auto 0 0;
   overflow: hidden;
   border-right: 1px solid #e8edf2;
   background: #fcfdff;
@@ -176,7 +176,7 @@
 }
 .rocket-admin-screenshot-main {
   box-sizing: border-box;
-  flex: 1;
+  margin-left: 240px;
   min-width: 0;
   padding: 34px 38px 12px;
 }
