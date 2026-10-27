@@ -71,7 +71,7 @@ export default function Admin() {
   const [search] = useSearchParams();
   const claimId = /^[0-9a-f-]{36}$/i.test(search.get("claim") || "") ? search.get("claim") : null;
   const section = (sections.some((item) => item.id === params.section) ? params.section : "home") as Section;
-  const [period, setPeriod] = useState<Period>("7d");
+  const [period, setPeriod] = useState<Period>(section === "home" ? "7d" : "30d");
   const [data, setData] = useState<Row | null>(null);
   const [snapshotLoadedAt, setSnapshotLoadedAt] = useState("");
   const [investor, setInvestor] = useState<Row | null>(null);
