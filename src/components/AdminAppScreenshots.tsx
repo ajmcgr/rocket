@@ -4,6 +4,8 @@ import { toPng } from "html-to-image";
 import {
   BarChart3,
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   CreditCard,
   DollarSign,
@@ -185,6 +187,7 @@ export default function AdminAppScreenshots() {
   const [message, setMessage] = useState("");
   const [generated, setGenerated] = useState<GeneratedScreenshot | null>(null);
   const [activeFormat, setActiveFormat] = useState<ScreenshotFormat>("compact");
+  const [screenshotIndex, setScreenshotIndex] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const generatedUrlRef = useRef<string | null>(null);
 
@@ -228,6 +231,7 @@ export default function AdminAppScreenshots() {
 
   const selectApp = async (appId: string) => {
     clearGenerated();
+    setScreenshotIndex(0);
     setQuery("");
     setResults([]);
     setLoading(true);
@@ -332,11 +336,11 @@ export default function AdminAppScreenshots() {
       <h2>App page screenshot</h2>
       <p className="rocket-admin-muted">
         Download a compact app-page image or a wide version for X or LinkedIn.
-        Each image ends at the app content or the left menu, whichever is taller.
-        The left menu stays visible while the top controls are
-        removed. Only public app details, images, and verified metric visibility
-        are shown; a verified-only badge never reveals its private amount.
-        Nothing is posted automatically.
+        Each image ends at the app content or the left menu, whichever is
+        taller. The left menu stays visible while the top controls are removed.
+        Only public app details, images, and verified metric visibility are
+        shown; a verified-only badge never reveals its private amount. Nothing
+        is posted automatically.
       </p>
       <label className="rocket-admin-screenshot-search">
         Find a public app
@@ -551,24 +555,61 @@ export default function AdminAppScreenshots() {
                   )}
                   {preview.images.length > 0 && (
                     <section className="rocket-admin-screenshot-gallery">
-                      <h4>See {preview.app.name} in action</h4>
-                      <div
-                        className="rocket-admin-screenshot-images"
-                        style={{
-                          gridTemplateColumns: `repeat(${Math.min(preview.images.length, 2)}, minmax(0, 1fr))`,
-                        }}
-                      >
-                        {preview.images.map((item, index) => (
-                          <div
-                            key={item.id}
-                            className="rocket-admin-screenshot-image"
+                      {preview.images.length > 2 && (
+                        <div className="rocket-admin-screenshot-gallery-controls">
+                          <span>
+                            {screenshotIndex + 1}–
+                            {Math.min(
+                              screenshotIndex + 2,
+                              preview.images.length,
+                            )}{" "}
+                            / {preview.images.length}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Previous screenshot in preview"
+                            disabled={screenshotIndex === 0 || exporting}
+                            onClick={() => {
+                              setScreenshotIndex((index) =>
+                                Math.max(0, index - 1),
+                              );
+                              clearGenerated();
+                            }}
                           >
-                            <AppScreenshot
-                              src={item.source_url}
-                              alt={`${preview.app.name} screenshot ${index + 1}`}
-                            />
-                          </div>
-                        ))}
+                            <ChevronLeft size={20} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Next screenshot in preview"
+                            disabled={
+                              screenshotIndex >= preview.images.length - 2 ||
+                              exporting
+                            }
+                            onClick={() => {
+                              setScreenshotIndex((index) =>
+                                Math.min(preview.images.length - 2, index + 1),
+                              );
+                              clearGenerated();
+                            }}
+                          >
+                            <ChevronRight size={20} aria-hidden="true" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="rocket-admin-screenshot-images">
+                        {preview.images
+                          .slice(screenshotIndex, screenshotIndex + 2)
+                          .map((item, index) => (
+                            <div
+                              key={item.id}
+                              className="rocket-admin-screenshot-image"
+                            >
+                              <AppScreenshot
+                                src={item.source_url}
+                                alt={`${preview.app.name} screenshot ${screenshotIndex + index + 1}`}
+                              />
+                            </div>
+                          ))}
                       </div>
                     </section>
                   )}
