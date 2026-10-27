@@ -555,7 +555,7 @@ export default function AdminAppScreenshots() {
                       <div
                         className="rocket-admin-screenshot-images"
                         style={{
-                          gridTemplateColumns: `repeat(${activeFormat === "compact" ? Math.min(preview.images.length, 2) : preview.images.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${Math.min(preview.images.length, 2)}, minmax(0, 1fr))`,
                         }}
                       >
                         {preview.images.map((item, index) => (

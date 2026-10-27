@@ -377,7 +377,7 @@
 }
 .rocket-admin-screenshot-image {
   position: relative;
-  height: 228px;
+  aspect-ratio: 16 / 9;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #e5e5e5;
@@ -410,9 +410,6 @@
 }
 .rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-gallery h4 {
   margin-bottom: 12px;
-}
-.rocket-admin-screenshot-page.is-compact .rocket-admin-screenshot-image {
-  height: 228px;
 }
 @media (max-width: 700px) {
   .rocket-admin-screenshot-actions {
