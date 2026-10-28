@@ -15,7 +15,7 @@ describe("official Rocket button", () => {
     const styles = host.shadowRoot!.querySelector("style")!.textContent!;
     expect(styles).toContain("font-size:14px;font-weight:500;line-height:20px");
     expect(styles).toContain("font-family:inherit");
-    expect(styles).toContain("width:16px;height:16px");
+    expect(styles).toContain("width:18px;height:18px");
     expect(styles).toContain("min-height:48px");
     expect(styles).not.toContain("font:700 16px");
   });
