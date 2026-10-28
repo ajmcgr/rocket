@@ -382,6 +382,13 @@ body {
   }
 }
 
+/* Keep the support launcher from covering the share dialog on narrow screens. */
+@media (max-width: 639px) {
+  body:has([data-rocket-share-dialog][data-state="open"]) #crisp-chatbox {
+    visibility: hidden !important;
+  }
+}
+
 /* -------------------- Dark mode --------------------
  * The app hardcodes light utilities (bg-white, text-neutral-*) in most
  * components, so `.dark` remaps those compiled utility classes directly.
