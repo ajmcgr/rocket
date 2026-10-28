@@ -1,4 +1,5 @@
-import { trackVerificationResult } from "@/lib/verificationAnalytics";
+import { trackVerificationJourney, trackVerificationResult } from "@/lib/verificationAnalytics";
+import VerificationProgress from "./VerificationProgress";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
@@ -36,7 +37,7 @@ export function AlternativeRevenueConnection({ appId, provider }: { appId: strin
       body: { action, app_id: appId, provider, ...extra },
     });
     if (invokeError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(invokeError, `${name} request failed`));
-    trackVerificationResult("revenue", provider, action, data, appId);
+    trackVerificationResult("revenue", provider, action, data, appId, extra);
     return data;
   }, [appId, provider, name]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);
@@ -49,6 +50,7 @@ export function AlternativeRevenueConnection({ appId, provider }: { appId: strin
   const connect = () => run(async () => {
     const key = credential;
     setCredential("");
+    trackVerificationJourney("verification_connection_started", { appId, kind: "revenue", provider });
     const result = await request("connect", { credential: key });
     setAccounts(result.accounts || []);
     await refresh();
@@ -74,6 +76,10 @@ export function AlternativeRevenueConnection({ appId, provider }: { appId: strin
         : status.connect_available ? "Ready to connect" : "Secure credential storage is not configured"}</p>
       {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last verified: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
       {status.connection?.last_error && <p className="mt-2 text-amber-700">Action required: {status.connection.last_error}</p>}
+      <VerificationProgress appId={appId} kind="revenue" provider={provider} connected={Boolean(status.connection)}
+        status={status.connection?.status} lastError={status.connection?.last_error}
+        successfulSync={status.connection?.last_successful_sync || status.latest?.verified_at}
+        visibility={status.source?.visibility || "private"} visibilityTarget={`${provider}-visibility`} />
       {status.connect_available && <div className="mt-4 flex flex-wrap items-end gap-2">
         <label className="min-w-60 flex-1">{provider === "polar" ? "Read-only organization token" : "Live Dodo API key (Rocket reads data only)"}
           <input type="password" autoComplete="off" value={credential} disabled={busy}
@@ -124,11 +130,12 @@ export function AlternativeRevenueConnection({ appId, provider }: { appId: strin
         <button type="button" disabled={busy} onClick={() => run(async () => {
           await request("sync"); await refresh(); setNotice(`${name} revenue refreshed.`);
         })} className="mt-3 rounded-xl border px-4 py-2 disabled:opacity-50">Sync now</button>
-        <label className="mt-4 block">Public visibility
+        <p className="mt-3 text-xs text-neutral-600">Private keeps revenue off your listing. Verified only shows a badge without an amount. Range or Exact shows supported verified {metricLabel.toLowerCase()} only when a fresh sync is eligible.</p>
+        <label id={`${provider}-visibility`} className="mt-4 block">Public visibility
           <select value={status.source.visibility} disabled={busy} onChange={(event) => run(async () => {
             await request("set_visibility", { visibility: event.target.value });
             await refresh(); setNotice("Visibility updated. Public display still requires a healthy, fresh live sync.");
-          })} className="mt-2 block rounded-lg border px-3 py-2">
+          })} className="mt-2 block w-full max-w-full rounded-lg border px-3 py-2 sm:w-auto">
             <option value="private">Private</option><option value="verified_only">Verified only</option>
             <option value="range">Range</option><option value="exact">Exact</option>
           </select>

@@ -1,4 +1,5 @@
-import { trackVerificationResult } from "@/lib/verificationAnalytics";
+import { trackVerificationJourney, trackVerificationResult } from "@/lib/verificationAnalytics";
+import VerificationProgress from "./VerificationProgress";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
@@ -43,7 +44,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
       body: { action, app_id: appId, ...extra },
     });
     if (requestError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(requestError, "RevenueCat request failed"));
-    trackVerificationResult("revenue", "revenuecat", action, data, appId);
+    trackVerificationResult("revenue", "revenuecat", action, data, appId, extra);
     return data;
   }, [appId]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);
@@ -65,6 +66,7 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
   const connectKey = () => run(async () => {
     const credential = apiKey;
     setApiKey("");
+    trackVerificationJourney("verification_connection_started", { appId, kind: "revenue", provider: "revenuecat" });
     const result = await request("connect_api_key", { credential });
     setProjects(result.projects || []);
     setProjectId(""); setApp(""); setPreview(null);
@@ -91,6 +93,10 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
       {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last verified: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
       {stale && <p className="mt-2 text-sm text-amber-700">This verification is stale. Public revenue is hidden until a successful sync.</p>}
       {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Action required: {status.connection.last_error}</p>}
+      <VerificationProgress appId={appId} kind="revenue" provider="revenuecat" connected={Boolean(status.connection)}
+        status={status.connection?.status} lastError={status.connection?.last_error}
+        successfulSync={status.connection?.last_successful_sync || status.latest?.verified_at}
+        visibility={status.source?.visibility || "private"} visibilityTarget="revenuecat-visibility" />
       {status.connect_available && <div className="mt-4 flex flex-wrap items-end gap-2 text-sm">
         <label className="min-w-60 flex-1">RevenueCat v2 read-only secret API key
           <input type="password" autoComplete="off" value={apiKey} disabled={busy}
@@ -153,11 +159,12 @@ export function RevenueCatConnection({ appId }: { appId: string }) {
         <button disabled={busy} onClick={() => run(async () => {
           await request("sync"); await refresh(); setNotice("RevenueCat revenue refreshed.");
         })} className="mt-3 rounded-xl border px-4 py-2 disabled:opacity-50">Sync now</button>
-        <label className="mt-4 block">Public visibility
+        <p className="mt-3 text-xs text-neutral-600">Private keeps revenue off your listing. Verified only shows a badge without an amount. Range or Exact shows supported verified gross revenue only when a fresh sync is eligible.</p>
+        <label id="revenuecat-visibility" className="mt-4 block">Public visibility
           <select value={status.source.visibility} disabled={busy} onChange={(event) => run(async () => {
             await request("set_visibility", { visibility: event.target.value });
             await refresh(); setNotice("Visibility updated. Public display still requires a healthy, fresh provider sync.");
-          })} className="mt-2 block rounded-lg border px-3 py-2">
+          })} className="mt-2 block w-full max-w-full rounded-lg border px-3 py-2 sm:w-auto">
             <option value="private">Private</option><option value="verified_only">Verified only</option>
             <option value="range">Range</option><option value="exact">Exact</option>
           </select>

@@ -1,9 +1,9 @@
 import { trackVerificationResult } from "@/lib/verificationAnalytics";
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { AnalyticsVisibilityControl } from "./AnalyticsVisibilityControl";
+import VerificationProgress from "./VerificationProgress";
 
 type Connection = { status: string; project_id: string | null; project_name: string | null;
   verified_hostname: string | null; last_error: string | null; last_successful_sync: string | null };
@@ -25,7 +25,7 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
     });
     if (invokeError || data?.error) throw new Error(data?.error
       || await edgeFunctionErrorMessage(invokeError, "PostHog request failed"));
-    trackVerificationResult("analytics", "posthog", action, data, appId);
+    trackVerificationResult("analytics", "posthog", action, data, appId, extra);
     return data;
   }, [appId]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);
@@ -59,6 +59,10 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
       {status.connection?.verified_hostname && <p className="mt-1 text-neutral-500">Verified host: {status.connection.verified_hostname}</p>}
       {status.connection?.last_successful_sync && <p className="mt-1 text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}{fresh ? "" : " · stale; sync again before sharing"}</p>}
       {status.connection?.last_error && <p className="mt-2 text-amber-700">{status.connection.last_error}</p>}
+      <VerificationProgress appId={appId} kind="analytics" provider="posthog" connected={Boolean(connected)}
+        status={status.connection?.status} lastError={status.connection?.last_error}
+        successfulSync={status.connection?.last_successful_sync} visibility={status.visibility}
+        visibilityTarget="posthog-visibility" />
       {status.latest && <p className="mt-2 text-neutral-700">Private completed-day pageviews: {status.latest.metric_value.toLocaleString()} on {status.latest.metric_date} UTC</p>}
       {!connected && <div className="mt-4 flex flex-wrap items-end gap-3">
         <label>PostHog region
@@ -110,14 +114,13 @@ export function PostHogAnalytics({ appId }: { appId: string }) {
           });
         }} className="ml-2 mt-4 rounded-xl bg-brand px-4 py-2 text-white disabled:opacity-50">
         Use verified PostHog</button>}
-      {connected && status.selected && status.connection?.status === "active" && <div className="mt-5 border-t pt-4">
+      {connected && status.selected && status.connection?.status === "active" && <div id="posthog-visibility" className="mt-5 border-t pt-4">
         <p className="mb-4 text-neutral-600">Controls what appears on your public app page. Your metrics stay private by default. Only pageviews for the latest completed UTC day can be shown—not monthly visitors or your history.</p>
         <AnalyticsVisibilityControl value={status.visibility} disabled={busy} publicDisabled={!fresh}
           onChange={(visibility) => void run(async () => {
             await request("set_visibility", { visibility }); await refresh();
             setNotice("PostHog visibility updated.");
           })} />
-        <Link to={"/apps/" + appId} className="mt-3 inline-block text-sky-700">Preview public app profile →</Link>
       </div>}
       {connected && <button disabled={busy} onClick={() => {
         if (!window.confirm("Disconnect PostHog? Rocket will stop syncing and remove its public traffic verification.")) return;

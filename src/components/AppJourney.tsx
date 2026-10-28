@@ -229,9 +229,9 @@ export default function AppJourney({ item }: { item: MyApp }) {
         )
       ) : (
         <div>
-          <p className="font-semibold text-neutral-900">Domain verified</p>
+          <p className="font-semibold text-neutral-900">Prove your app's traction.</p>
           <p className="mt-1 text-neutral-600">
-            Your public listing shows that you control the website.
+            Your domain is verified. Connect your analytics or revenue provider to showcase verified performance on Rocket. You choose which supported metrics, if any, appear publicly.
           </p>
           <IntegrationCards key={item.app_id} appId={item.app_id} />
         </div>

@@ -9,14 +9,14 @@ beforeEach(() => {
 });
 it("never equates CTA, previews, private status reads or failed/incomplete syncs with verification", () => {
   for (const [action, result] of [
-    ["start", { authorization_url: "secret" }],
     ["preview", { value_minor: 100 }],
     ["status", { connection: { status: "active" } }],
     ["sync", { error: "failed" }],
     ["select_property", { sync: { complete: false } }],
+    ["start", { authorization_url: "secret" }],
   ])
     trackVerificationResult("analytics", "posthog", action as string, result);
-  expect(track).not.toHaveBeenCalled();
+  expect(track.mock.calls.map(([event]) => event)).toEqual(["verification_connection_started"]);
 });
 it("counts server-confirmed GA analytics sync without sending private response fields", () => {
   trackVerificationResult("analytics", "ga4", "select_property", {
@@ -25,7 +25,9 @@ it("counts server-confirmed GA analytics sync without sending private response f
   });
   expect(track.mock.calls.map(([event]) => event)).toEqual([
     "analytics_connected",
+    "verification_connection_authorized",
     "analytics_sync_succeeded",
+    "verification_sync_completed",
   ]);
   expect(JSON.stringify(track.mock.calls)).not.toContain("private name");
 });
@@ -42,9 +44,9 @@ it("counts revenue only after successful server connection, binding and sync", (
   });
   expect(track.mock.calls.map(([event]) => event)).toEqual([
     "revenue_connected",
-    "revenue_connected",
+    "verification_connection_authorized",
     "revenue_sync_succeeded",
-    "revenue_sync_succeeded",
+    "verification_sync_completed",
   ]);
   expect(JSON.stringify(track.mock.calls)).not.toContain("123456");
 });
@@ -62,7 +64,27 @@ it("requires authenticated server confirmation of an OAuth return and deduplicat
     trackVerificationResult("analytics", "posthog", "status", {
       connection: { status: "select_property" },
     });
-  expect(track).toHaveBeenCalledTimes(1);
+  expect(track.mock.calls.map(([event]) => event)).toEqual([
+    "analytics_connected", "verification_connection_authorized",
+  ]);
+});
+
+it("records Stripe authorization only after a started OAuth request returns an active owner status", () => {
+  trackVerificationResult("revenue", "stripe", "start", { authorization_url: "https://marketplace.stripe.com/oauth/v2/authorize" }, "app-1");
+  trackVerificationResult("revenue", "stripe", "status", { connection: null }, "app-1");
+  expect(track.mock.calls.map(([event]) => event)).toEqual(["verification_connection_started"]);
+  trackVerificationResult("revenue", "stripe", "status", { connection: { status: "active" } }, "app-1");
+  trackVerificationResult("revenue", "stripe", "status", { connection: { status: "active" } }, "app-1");
+  expect(track.mock.calls.map(([event]) => event)).toEqual([
+    "verification_connection_started", "revenue_connected", "verification_connection_authorized",
+  ]);
+});
+
+it("records visibility without leaking response amounts or treating a failed update as success", () => {
+  trackVerificationResult("revenue", "stripe", "set_visibility", { error: "forbidden" }, "app-1", { visibility: "exact" });
+  trackVerificationResult("revenue", "stripe", "set_visibility", { visibility: "verified_only", mrr_minor: 123456 }, "app-1", { visibility: "verified_only" });
+  expect(track.mock.calls.map(([event]) => event)).toEqual(["verification_visibility_changed"]);
+  expect(JSON.stringify(track.mock.calls)).not.toContain("123456");
 });
 
 it("does not double-count the same connection during mapping and resets only on confirmed disconnect", () => {
