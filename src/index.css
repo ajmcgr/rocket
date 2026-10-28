@@ -166,3 +166,10 @@
     bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* Keep the support launcher from covering the share dialog on narrow screens. */
+@media (max-width: 639px) {
+  body:has([data-rocket-share-dialog][data-state="open"]) #crisp-chatbox {
+    visibility: hidden !important;
+  }
+}

@@ -76,7 +76,7 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
   };
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild><button type="button" className={className || "inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:border-sky-300 hover:text-sky-700"} onClick={() => { track("share_button_clicked", eventData); onOpen?.(); }}><Share2 size={16} aria-hidden="true" />{label}</button></DialogTrigger>
-    <DialogContent motion="gentle" className="max-h-[90dvh] max-w-lg overflow-y-auto p-5 sm:p-6">
+    <DialogContent motion="gentle" data-rocket-share-dialog className="max-h-[90dvh] max-w-lg overflow-y-auto p-5 sm:p-6">
       <DialogHeader><DialogTitle>Share {kind === "app" ? "this app" : kind === "profile" ? "this profile" : kind === "rocket100" ? "your Rocket 100 profile" : kind === "recap" ? "your recap" : "this collection"}</DialogTitle><DialogDescription>Choose a place to share, or download a Rocket card.</DialogDescription></DialogHeader>
       <img src={card} alt={`${title} share card preview`} className="mt-3 max-h-52 w-full rounded-xl border border-neutral-200 bg-white object-contain" loading="lazy" />
       <div className="mt-3 grid grid-cols-3 gap-2" role="group" aria-label="Share card format">{variants.map((item) => <button key={item.key} type="button" aria-pressed={variant === item.key} onClick={() => setVariant(item.key)} className={`min-h-11 rounded-lg border px-2 py-2 text-xs ${variant === item.key ? "border-sky-600 bg-sky-50 text-sky-900" : "border-neutral-200"}`}><span className="block font-semibold">{item.label}</span><span>{item.dimensions}</span></button>)}</div>
