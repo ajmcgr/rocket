@@ -5,6 +5,8 @@ import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { RevenueCatConnection } from "@/components/RevenueCatConnection";
 import { AlternativeRevenueConnection } from "@/components/AlternativeRevenueConnection";
 import { VerifiedProviderSelection } from "@/components/VerifiedProviderSelection";
+import VerificationProgress from "@/components/VerificationProgress";
+import { trackVerificationEntry, trackVerificationResult } from "@/lib/verificationAnalytics";
 import "./AppVerification.css";
 
 type RevenueScope = "account" | "products";
@@ -54,6 +56,7 @@ export default function AppRevenue() {
       body: { action, app_id: id, installation, ...extra },
     });
     if (requestError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(requestError, "Stripe revenue request failed"));
+    trackVerificationResult("revenue", "stripe", action, data, id, extra);
     return data;
   }, [id, installation]);
   const refresh = useCallback(async () => {
@@ -63,6 +66,7 @@ export default function AppRevenue() {
     setSelected(next.mappings.map((mapping) => mapping.stripe_price_id));
   }, [request]);
   useEffect(() => {
+    if (id) trackVerificationEntry(id, "revenue");
     if (new URLSearchParams(window.location.search).get("stripe") === "error")
       setError("Stripe authorization could not be completed. No revenue was published.");
     refresh().catch((cause) => setError((cause as Error).message));
@@ -78,8 +82,9 @@ export default function AppRevenue() {
   });
   return <main className="rocket-verification-page mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
-    <h1 className="mt-5 font-display text-3xl">Revenue verification</h1>
-    <p className="mt-2 text-sm text-neutral-600">Choose one primary revenue verification source for this app. Revenue amounts stay private unless you choose Range or Exact visibility. This page never handles payments or changes Buy with Rocket checkout.</p>
+    <h1 className="mt-5 font-display text-3xl">Verify your app's revenue.</h1>
+    <p className="mt-2 text-sm text-neutral-600">Connect a supported revenue provider to build trust with customers and other developers. Demonstrate genuine traction, strengthen your public app profile, and share verified achievements. Revenue amounts stay private unless you choose Range or Exact.</p>
+    <p className="mt-2 text-xs text-neutral-500">Apps with publicly shared verified traction may be considered for Rocket editorial features. Placement is never guaranteed. Verification does not change payments or Buy with Rocket checkout.</p>
     {id && <VerifiedProviderSelection key={status?.connection?.last_successful_sync || id} appId={id} kind="revenue" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
@@ -93,6 +98,12 @@ export default function AppRevenue() {
           : "Not connected"}</p>
         {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
         {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Sync needs attention: {status.connection.last_error}</p>}
+        {id && <VerificationProgress appId={id} kind="revenue" provider="stripe" connected={Boolean(status.connection)}
+          status={status.connection?.status} lastError={status.connection?.last_error}
+          successfulSync={status.connection?.last_successful_sync}
+          eligibleLive={Boolean(status.connection?.livemode && !status.private_only && status.latest.length > 0
+            && status.latest.every((point) => point.source_livemode && point.verification_status === "verified"))}
+          visibility={status.visibility} />}
         {!status.connection && !status.connect_available && <p className="mt-4 text-sm text-amber-700">Stripe connection is temporarily unavailable. Please try again later.</p>}
         {!status.connection && status.connect_available && <p className="mt-3 text-sm text-neutral-600">{status.private_only ? "This review connection stays private." : "After a successful live sync, your listing shows a Stripe-verified badge by default. MRR amounts stay private. You can choose Private to hide the badge."}</p>}
         {!status.connection && status.connect_available && <button disabled={busy} onClick={() => run(async () => {
@@ -145,9 +156,10 @@ export default function AppRevenue() {
           <span className="block text-xs text-neutral-500">{new Date(point.observed_at).toLocaleString()} · {point.source_livemode ? "Live" : "Sandbox"}{point.unsupported_subscriptions ? ` · ${point.unsupported_subscriptions} unsupported subscriptions` : ""}</span></p>)}
       </div>}
     </section>}
-    {status?.connection && <section className="mt-6 rounded-2xl border bg-white p-6">
+    {status?.connection && <section id="verification-visibility" className="mt-6 rounded-2xl border bg-white p-6">
       <h2 className="font-semibold">Public visibility</h2>
       <p className="mt-2 text-sm text-neutral-600">New live connections default to Verified only after a successful sync: a verification badge appears, while MRR amounts stay private. Private hides the badge; Range or Exact shows revenue. Existing visibility choices are preserved. Sandbox data never appears publicly.</p>
+      <p className="mt-2 text-sm text-neutral-600"><strong>Private:</strong> revenue information stays private. <strong>Verified only:</strong> show the verification badge without the amount. <strong>Range or Exact:</strong> display the supported verified revenue metric on your listing. You must choose Range or Exact to disclose a number.</p>
       <label className="mt-4 block text-sm">Subscription MRR
         <select value={status.visibility_default_pending ? "verified_only" : status.visibility} disabled={busy || status.private_only} onChange={(event) => run(async () => {
           await request("set_visibility", { visibility: event.target.value }); await refresh();
@@ -156,7 +168,6 @@ export default function AppRevenue() {
       </label>
       {status.private_only && <p className="mt-3 text-sm text-neutral-600">This connection stays private while Marketplace review is in progress.</p>}
       {!status.connection.livemode && <p className="mt-3 text-sm text-amber-700">This is a sandbox Stripe connection. Visibility settings are saved, but no test revenue will be published.</p>}
-      <Link to={`/apps/${id}`} className="mt-4 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
     {id && <RevenueCatConnection appId={id} />}
     {id && <AlternativeRevenueConnection appId={id} provider="polar" />}

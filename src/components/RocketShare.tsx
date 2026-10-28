@@ -12,6 +12,7 @@ type Props = {
   label?: string;
   className?: string;
   version?: string;
+  onOpen?: () => void;
 };
 
 const variants: { key: ShareVariant; label: string; dimensions: string }[] = [
@@ -20,7 +21,7 @@ const variants: { key: ShareVariant; label: string; dimensions: string }[] = [
   { key: "portrait", label: "Portrait", dimensions: "1080 × 1920" },
 ];
 
-export default function RocketShare({ kind, identifier, title, label = "Share", className, version }: Props) {
+export default function RocketShare({ kind, identifier, title, label = "Share", className, version, onOpen }: Props) {
   const [open, setOpen] = useState(false);
   const [variant, setVariant] = useState<ShareVariant>("landscape");
   const [notice, setNotice] = useState("");
@@ -74,7 +75,7 @@ export default function RocketShare({ kind, identifier, title, label = "Share", 
     } catch { /* The person may cancel the native sheet. */ }
   };
   return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogTrigger asChild><button type="button" className={className || "inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:border-sky-300 hover:text-sky-700"} onClick={() => track("share_button_clicked", eventData)}><Share2 size={16} aria-hidden="true" />{label}</button></DialogTrigger>
+    <DialogTrigger asChild><button type="button" className={className || "inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:border-sky-300 hover:text-sky-700"} onClick={() => { track("share_button_clicked", eventData); onOpen?.(); }}><Share2 size={16} aria-hidden="true" />{label}</button></DialogTrigger>
     <DialogContent motion="gentle" className="max-h-[90dvh] max-w-lg overflow-y-auto p-5 sm:p-6">
       <DialogHeader><DialogTitle>Share {kind === "app" ? "this app" : kind === "profile" ? "this profile" : kind === "rocket100" ? "your Rocket 100 profile" : kind === "recap" ? "your recap" : "this collection"}</DialogTitle><DialogDescription>Choose a place to share, or download a Rocket card.</DialogDescription></DialogHeader>
       <img src={card} alt={`${title} share card preview`} className="mt-3 max-h-52 w-full rounded-xl border border-neutral-200 bg-white object-contain" loading="lazy" />

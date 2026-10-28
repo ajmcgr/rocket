@@ -4,6 +4,13 @@
 // Zero cost when no provider is loaded.
 
 export type AnalyticsEvent =
+  | "verification_entry_viewed"
+  | "verification_connection_started"
+  | "verification_connection_authorized"
+  | "verification_sync_completed"
+  | "verification_visibility_changed"
+  | "verification_profile_preview_clicked"
+  | "verification_share_clicked"
   | "onboarding_started"
   | "onboarding_intent_selected"
   | "onboarding_step_viewed"

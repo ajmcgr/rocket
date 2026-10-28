@@ -23,8 +23,8 @@ export default function DeveloperActivationNextSteps({ appId, item }: { appId: s
   const eligible = owned?.owned && owned.app_id === appId && owned.owner_verification_level === "domain_verified";
   if (dismissed || !user) return null;
   return <section aria-label="Optional developer next steps" className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
-    <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Build trust in your app</h3><button type="button" className="min-h-11 shrink-0 text-sm underline" onClick={() => setDismissed(true)}>Skip for now</button></div>
-    <p className="text-sm text-neutral-600">Optional steps to help people discover you and trust what you build.</p>
+    <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Prove your app's traction.</h3><button type="button" className="min-h-11 shrink-0 text-sm underline" onClick={() => setDismissed(true)}>Skip for now</button></div>
+    <p className="text-sm text-neutral-600">Connect your analytics or revenue provider to showcase verified performance on Rocket. Complete your profile and share the metrics you choose to make public.</p>
     <ul className="mt-3 space-y-3 text-sm">
       <li><Link to="/settings/profile" className="font-semibold text-sky-800 dark:text-sky-300 hover:underline">Complete your developer profile →</Link><p className="text-neutral-600">Give your apps a recognizable builder identity.</p></li>
       {eligible ? <>

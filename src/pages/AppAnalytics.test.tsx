@@ -21,7 +21,7 @@ it("explains GA4 disclosure and sends the unchanged metric and visibility values
   const pageviews = await screen.findByRole("combobox", { name: "Pageviews" });
   expect((pageviews as HTMLSelectElement).value).toBe("private");
   expect(screen.getByText(/latest completed day can be shown/).textContent).toContain("not monthly totals");
-  expect(invoke).toHaveBeenCalledTimes(1);
+  expect(invoke.mock.calls.filter(([name]) => name === "rocket-ga4")).toHaveLength(1);
   fireEvent.change(pageviews, { target: { value: "range" } });
   await waitFor(() => expect(invoke).toHaveBeenCalledWith("rocket-ga4", {
     body: { action: "set_visibility", app_id: "app-1", metric_type: "views", visibility: "range" },

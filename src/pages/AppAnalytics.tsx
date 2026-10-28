@@ -1,4 +1,5 @@
-import { trackVerificationResult } from "@/lib/verificationAnalytics";
+import { trackVerificationEntry, trackVerificationResult } from "@/lib/verificationAnalytics";
+import VerificationProgress from "@/components/VerificationProgress";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,11 +35,12 @@ export default function AppAnalytics() {
   const request = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     const { data, error: invocationError } = await supabase.functions.invoke("rocket-ga4", { body: { action, app_id: id, ...extra } });
     if (invocationError || data?.error) throw new Error(data?.error || await edgeFunctionErrorMessage(invocationError, "Google Analytics request failed"));
-    trackVerificationResult("analytics", "ga4", action, data, id);
+    trackVerificationResult("analytics", "ga4", action, data, id, extra);
     return data;
   }, [id]);
   const refresh = useCallback(async () => setStatus(await request("status") as Status), [request]);
   useEffect(() => {
+    if (id) trackVerificationEntry(id, "analytics");
     if (new URLSearchParams(window.location.search).get("ga4") === "error") setError("Google authorization could not be completed. Please try connecting again.");
     refresh().catch((cause) => setError((cause as Error).message));
   }, [refresh]);
@@ -53,8 +55,9 @@ export default function AppAnalytics() {
   const visible = (metric: Metric) => status?.visibility.find((item) => item.metric_type === metric)?.visibility || "private";
   return <main className="rocket-verification-page mx-auto max-w-3xl px-6 py-10 text-neutral-900">
     <Link to="/my-apps" className="text-sm text-sky-700">← My Apps</Link>
-    <h1 className="mt-5 font-display text-3xl">Traffic connection</h1>
-    <p className="mt-2 text-sm text-neutral-600">Connect a traffic source for this domain-verified app. Rocket reads traffic only. Every metric remains private until you choose otherwise.</p>
+    <h1 className="mt-5 font-display text-3xl">Verify your app's traffic.</h1>
+    <p className="mt-2 text-sm text-neutral-600">Connect Google Analytics or PostHog to showcase supported verified usage metrics. Demonstrate genuine traction, strengthen your public app profile, and share verified achievements. Metrics stay private until you choose visibility.</p>
+    <p className="mt-2 text-xs text-neutral-500">Apps with publicly shared verified traction may be considered for Rocket editorial features. Placement is never guaranteed.</p>
     {id && <VerifiedProviderSelection appId={id} kind="analytics" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{notice}</p>}
@@ -67,6 +70,9 @@ export default function AppAnalytics() {
         {status.connection?.last_successful_sync && <p className="mt-1 text-xs text-neutral-500">Last successful sync: {new Date(status.connection.last_successful_sync).toLocaleString()}</p>}
         {(["sessions", "views"] as const).map((metric) => status.growth?.[metric]?.seven_day != null && <p key={metric} className="mt-1 text-xs text-neutral-500">{metric === "sessions" ? "Sessions" : "Views"}: {status.growth[metric].seven_day! > 0 ? "+" : ""}{status.growth[metric].seven_day}% versus the preceding complete 7 days</p>)}
         {status.connection?.last_error && <p className="mt-2 text-sm text-amber-700">Sync needs attention: {status.connection.last_error}</p>}
+        {id && <VerificationProgress appId={id} kind="analytics" provider="ga4" connected={Boolean(status.connection)}
+          status={status.connection?.status} lastError={status.connection?.last_error}
+          successfulSync={status.connection?.last_successful_sync} visibility={status.visibility.map((item) => item.visibility)} />}
         {(!status.connection || status.connection.status === "disconnected") && <button disabled={busy} onClick={() => run(async () => {
           const result = await request("start"); window.location.assign(result.authorization_url);
         })} className="mt-4 rounded-xl bg-brand hover:bg-brand-hover px-4 py-2 text-sm text-white disabled:opacity-50">Connect Google Analytics</button>}
@@ -99,7 +105,7 @@ export default function AppAnalytics() {
       </>}
     </section>
     {id && <PostHogAnalytics appId={id} />}
-    {status?.connection?.status === "active" && <section className="mt-6 rounded-2xl border bg-white p-6">
+    {status?.connection?.status === "active" && <section id="verification-visibility" className="mt-6 rounded-2xl border bg-white p-6">
       <h2 className="font-semibold">What should visitors see?</h2><p className="mt-2 text-sm text-neutral-600">Controls what appears on your public app page. Your metrics stay private by default. Only the latest completed day can be shown—not monthly totals or your history.</p>
       <div className="mt-5 space-y-4">{metrics.map((metric) => <div key={metric.id} className="border-t pt-4 text-sm">
         <AnalyticsVisibilityControl label={metric.label} metric={metric.label.toLowerCase()} value={visible(metric.id)} disabled={busy} onChange={(visibility) => void run(async () => {
@@ -108,7 +114,6 @@ export default function AppAnalytics() {
         })} />
         <p className="mt-2 text-xs text-neutral-500">Private latest day: {status.latest?.find((item) => item.metric_type === metric.id)?.metric_value.toLocaleString() ?? "—"}</p>
       </div>)}</div>
-      <Link to={`/apps/${id}`} className="mt-5 inline-block text-sm text-sky-700">Preview public app profile →</Link>
     </section>}
   </main>;
 }
