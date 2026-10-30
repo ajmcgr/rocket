@@ -20,10 +20,16 @@ starting point; earlier apps are not posted from a backlog.
 3. Apply only `20261030044914_rocket_x_app_posting.sql` to Rocket's Supabase
    project, using the established migration process. Do not run a blanket
    `supabase db push` against this project's divergent migration history.
-4. Run the workflow manually with `dry_run: true`. It must confirm the X
-   account and ledger without reserving or publishing. The next scheduled run
-   posts an eligible app. A manual run with `dry_run: false` also consumes that
-   UTC day's single posting slot.
+4. Merge the workflow, then run it manually with `dry_run: true`. GitHub only
+   allows manual dispatch once a new workflow exists on the default branch.
+   The dry run must confirm the X account and ledger without reserving or
+   publishing. Scheduled runs cannot post while the repository Actions variable
+   `ROCKET_X_AUTO_POST_ENABLED` is absent or not `true`.
+5. After the dry run succeeds, set `ROCKET_X_AUTO_POST_ENABLED` to `true` in
+   repository Actions variables. The next scheduled run posts an eligible app.
+   A manual run with `dry_run: false` also consumes that UTC day's single
+   posting slot. Removing the variable pauses posting without altering the
+   ledger.
 
 The script calls X's `/2/users/me` before reserving an app and stops if the
 credential is not for `@tryrocketai`. The posting ledger is private to the

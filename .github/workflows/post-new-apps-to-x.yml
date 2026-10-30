@@ -28,12 +28,13 @@ jobs:
           node-version: "22"
       - name: Test posting safeguards
         run: node --test scripts/post-new-app-to-x.test.mjs
-      - name: Post one eligible app
+      - name: Verify or post one eligible app
+        if: github.event_name != 'schedule' || vars.ROCKET_X_AUTO_POST_ENABLED == 'true'
         env:
           ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
           ROCKET_X_API_KEY: ${{ secrets.ROCKET_X_API_KEY }}
           ROCKET_X_API_SECRET: ${{ secrets.ROCKET_X_API_SECRET }}
           ROCKET_X_ACCESS_TOKEN: ${{ secrets.ROCKET_X_ACCESS_TOKEN }}
           ROCKET_X_ACCESS_TOKEN_SECRET: ${{ secrets.ROCKET_X_ACCESS_TOKEN_SECRET }}
-          ROCKET_X_DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || !inputs.dry_run && 'false' || 'true' }}
+          ROCKET_X_DRY_RUN: ${{ vars.ROCKET_X_AUTO_POST_ENABLED == 'true' && (github.event_name == 'schedule' || !inputs.dry_run) && 'false' || 'true' }}
         run: node scripts/post-new-app-to-x.mjs
