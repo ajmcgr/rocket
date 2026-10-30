@@ -1,0 +1,39 @@
+name: Post new Rocket apps to X
+
+on:
+  schedule:
+    - cron: "17 15 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Verify credentials and ledger without posting
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rocket-x-app-posting
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test posting safeguards
+        run: node --test scripts/post-new-app-to-x.test.mjs
+      - name: Post one eligible app
+        env:
+          ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
+          ROCKET_X_API_KEY: ${{ secrets.ROCKET_X_API_KEY }}
+          ROCKET_X_API_SECRET: ${{ secrets.ROCKET_X_API_SECRET }}
+          ROCKET_X_ACCESS_TOKEN: ${{ secrets.ROCKET_X_ACCESS_TOKEN }}
+          ROCKET_X_ACCESS_TOKEN_SECRET: ${{ secrets.ROCKET_X_ACCESS_TOKEN_SECRET }}
+          ROCKET_X_DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || !inputs.dry_run && 'false' || 'true' }}
+        run: node scripts/post-new-app-to-x.mjs
