@@ -17,7 +17,7 @@ starting point; earlier apps are not posted from a backlog.
    `ROCKET_X_API_KEY`, `ROCKET_X_API_SECRET`, `ROCKET_X_ACCESS_TOKEN`, and
    `ROCKET_X_ACCESS_TOKEN_SECRET`. The existing
    `ROCKET_SUPABASE_SERVICE_ROLE_KEY` secret is also required.
-3. Apply only `20261030120000_rocket_x_app_posting.sql` to Rocket's Supabase
+3. Apply only `20261030044914_rocket_x_app_posting.sql` to Rocket's Supabase
    project, using the established migration process. Do not run a blanket
    `supabase db push` against this project's divergent migration history.
 4. Run the workflow manually with `dry_run: true`. It must confirm the X
