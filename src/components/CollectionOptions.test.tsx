@@ -27,6 +27,9 @@ vi.mock("@/lib/collections", () => ({
     c.id
       ? `${personal ? "/my-collections" : "/collections"}/${c.slug}`
       : "/saved-apps",
+  collectionCreator: (c: any) => c.username
+    ? { label: `@${c.username}`, href: c.profile_username === c.username ? `/@${c.username}` : null }
+    : { label: c.full_name?.trim() || "Rocket member", href: null },
 }));
 vi.mock("@/lib/router-compat", () => ({
   Link: ({ to, children, ...props }: any) => (
@@ -98,6 +101,22 @@ it("keeps personal three-dot controls outside the collection link and hides them
     screen.queryByRole("button", { name: "Collection options for Tools" }),
   ).toBeNull();
   expect(m.apps).not.toHaveBeenCalled();
+});
+it("links a public creator handle separately from the collection card", () => {
+  render(<CollectionCard collection={{ ...custom, username: "alex", profile_username: "alex" }} />);
+  expect(screen.getByRole("link", { name: "View Tools collection" }).getAttribute("href")).toBe("/collections/tools");
+  expect(screen.getByRole("link", { name: "@alex" }).getAttribute("href")).toBe("/@alex");
+});
+it("shows an unpublished signup handle without a broken profile link", () => {
+  render(<CollectionCard collection={{ ...custom, username: "jpsear" }} />);
+  expect(screen.getByText(/apps · @jpsear/)).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "@jpsear" })).toBeNull();
+});
+it("shows a creator name or Rocket member when no handle is published", () => {
+  const view = render(<CollectionCard collection={{ ...custom, full_name: "Van" }} />);
+  expect(screen.getByText(/apps · Van/)).toBeTruthy();
+  view.rerender(<CollectionCard collection={custom} />);
+  expect(screen.getByText(/apps · Rocket member/)).toBeTruthy();
 });
 it("loads Saved lazily for the signed-in user and switches the membership editor with the chosen app", async () => {
   render(<CollectionOptions collection={saved} />);

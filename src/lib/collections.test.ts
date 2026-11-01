@@ -10,6 +10,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 import {
   collectionApps,
+  collectionCreator,
   collectionDetail,
   collectionPath,
   createCollection,
@@ -44,6 +45,13 @@ beforeEach(() => {
       };
     return q;
   });
+});
+it("prioritizes a valid handle and links only an existing public profile", () => {
+  const c = { name: "Tools", slug: "tools", app_count: 1, updated_at: null, logos: [] };
+  expect(collectionCreator({ ...c, username: "alex", profile_username: "alex", full_name: "Alex" })).toEqual({ label: "@alex", href: "/@alex" });
+  expect(collectionCreator({ ...c, username: "jpsear" })).toEqual({ label: "@jpsear", href: null });
+  expect(collectionCreator({ ...c, username: "../../invalid", full_name: " Van " })).toEqual({ label: "Van", href: null });
+  expect(collectionCreator(c)).toEqual({ label: "Rocket member", href: null });
 });
 it("uses the public-only projection and excludes empty discovery collections", async () => {
   await publicCollections(24, "alex");

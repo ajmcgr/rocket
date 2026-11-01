@@ -1,6 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import CollectionDetail from "@/pages/CollectionDetail";
-import { collectionApps, collectionDetail } from "@/lib/collections";
+import {
+  collectionApps,
+  collectionCreator,
+  collectionDetail,
+} from "@/lib/collections";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 import NotFound from "@/pages/NotFound";
 
@@ -27,7 +31,7 @@ export const Route = createFileRoute("/collections/$slug")({
         ],
       };
     const title = `${collection.name} | Rocket`;
-    const description = `${collection.app_count} apps curated by ${collection.username ? `@${collection.username}` : "a Rocket member"}.`;
+    const description = `${collection.app_count} apps curated by ${collectionCreator(collection).label}.`;
     const url = `https://tryrocket.ai/collections/${encodeURIComponent(collection.slug)}`;
     return {
       meta: [
@@ -36,7 +40,22 @@ export const Route = createFileRoute("/collections/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
-        { property: "og:image", content: shareCardUrl("collection", collection.slug, "landscape", shareCardVersion(collection.name, collection.app_count, collection.logos, collection.updated_at)) },
+        {
+          property: "og:image",
+          content: shareCardUrl(
+            "collection",
+            collection.slug,
+            "landscape",
+            shareCardVersion(
+              collection.name,
+              collection.app_count,
+              collection.logos,
+              collection.updated_at,
+              collection.username,
+              collection.full_name,
+            ),
+          ),
+        },
         { name: "twitter:card", content: "summary_large_image" },
       ],
       links: [{ rel: "canonical", href: url }],
