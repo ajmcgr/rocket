@@ -150,11 +150,11 @@ async function loadCard(kind: string, id: string, includeCover: boolean): Promis
   }
   if (kind === "collection") {
     if (!/^[a-z0-9-]{1,100}$/.test(id)) return null;
-    const { data: collection, error } = await db.from("public_user_collections").select("id,name,slug,username,app_count,logos").eq("slug", id).maybeSingle();
+    const { data: collection, error } = await db.from("public_user_collections").select("id,name,slug,username,full_name,app_count,logos").eq("slug", id).maybeSingle();
     if (error || !collection || !collection.id) return null;
     const logos = (Array.isArray(collection.logos) ? collection.logos.slice(0, 4) : []);
     const images = (await Promise.all(logos.map(rasterDataUrl))).filter((image): image is string => Boolean(image));
-    return { title: collection.name.slice(0, 120), detail: `${collection.app_count} public apps curated by ${collection.username ? `@${collection.username}` : "a Rocket member"}`, kicker: "Public collection", url: `tryrocket.ai/collections/${collection.slug}`, logo: null, cover: null, logos: images };
+    return { title: collection.name.slice(0, 120), detail: `${collection.app_count} public apps curated by ${collection.username ? `@${collection.username}` : collection.full_name?.trim() || "Rocket member"}`, kicker: "Public collection", url: `tryrocket.ai/collections/${collection.slug}`, logo: null, cover: null, logos: images };
   }
   return null;
 }

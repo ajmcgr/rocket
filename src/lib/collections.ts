@@ -12,11 +12,22 @@ export type Collection = {
   app_count: number;
   logos: (string | null)[];
   username?: string | null;
+  profile_username?: string | null;
   full_name?: string | null;
   avatar_url?: string | null;
 };
 export type CollectionApp = Tables<"public_apps">;
 export const COLLECTION_PAGE_SIZE = 24;
+export function collectionCreator(collection: Collection) {
+  const username = collection.username?.trim();
+  if (username && /^[a-z0-9_]{2,30}$/.test(username)) {
+    return {
+      label: `@${username}`,
+      href: collection.profile_username === username ? `/@${username}` : null,
+    };
+  }
+  return { label: collection.full_name?.trim() || "Rocket member", href: null };
+}
 export function collectionPath(collection: Collection, personal = false) {
   if (collection.slug === "saved" && !collection.id) return "/saved-apps";
   return `${personal ? "/my-collections" : "/collections"}/${encodeURIComponent(collection.slug)}`;

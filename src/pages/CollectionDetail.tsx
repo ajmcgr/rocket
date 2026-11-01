@@ -7,6 +7,7 @@ import { useSavedAppControls } from "@/hooks/useSavedAppControls";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   collectionApps,
+  collectionCreator,
   collectionDetail,
   setCollectionMembership,
   COLLECTION_PAGE_SIZE,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/collections";
 import { loadAppMedia, type PublicAppMedia } from "@/lib/appMedia";
 import RocketShare from "@/components/RocketShare";
+import { shareCardVersion } from "@/lib/shareLinks";
 import {
   loadAppCardMetadata,
   type AppCardMetadata,
@@ -129,6 +131,7 @@ function CollectionDetailContent({
       setBusy(false);
     }
   }
+  const creator = collection ? collectionCreator(collection) : null;
   const content = (
     <main className="mx-auto max-w-6xl px-5 pb-28 pt-10 sm:px-8">
       <Link
@@ -163,19 +166,19 @@ function CollectionDetailContent({
           {!personal && (
             <p className="mt-2">
               Curated by{" "}
-              {collection.username ? (
+              {creator?.href ? (
                 <Link
                   className="text-[#469DDA] hover:underline"
-                  to={`/u/${collection.username}`}
+                  to={creator.href}
                 >
-                  @{collection.username}
+                  {creator.label}
                 </Link>
               ) : (
-                "a Rocket member"
+                creator?.label
               )}
             </p>
           )}
-          {(personal ? collection.visibility === "public" : true) && <div className="mt-4"><RocketShare kind="collection" identifier={collection.slug} title={collection.name} label="Share collection" version={collection.updated_at || undefined} /></div>}
+          {(personal ? collection.visibility === "public" : true) && <div className="mt-4"><RocketShare kind="collection" identifier={collection.slug} title={collection.name} label="Share collection" version={shareCardVersion(collection.updated_at, collection.username, collection.full_name)} /></div>}
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {apps.map((app) => (
               <div key={app.id} className="min-w-0">
