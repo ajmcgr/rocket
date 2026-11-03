@@ -353,7 +353,7 @@ export default function SiteHeader({
             <form
               onSubmit={submitSearch}
               role="search"
-              className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#167ac6] sm:flex xl:col-start-1 xl:row-start-1 xl:w-full xl:justify-self-start"
+              className="hidden h-10 min-w-0 max-w-lg flex-1 items-center rounded-xl border border-[#e8edf2] bg-[#f7f9fb] px-3 focus-within:border-[#167ac6] sm:flex xl:col-span-2 xl:row-start-1 xl:w-full xl:justify-self-start"
             >
               <span className="mr-2 text-base" aria-hidden="true">
                 🔎
