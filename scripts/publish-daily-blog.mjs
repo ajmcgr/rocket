@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { coverSvg, coverVariantCount } from "./blog-cover.mjs";
 
 const articlesPath = join(process.cwd(), "src/content/articles.ts");
 const coversPath = join(process.cwd(), "public/blog-covers");
@@ -39,39 +40,6 @@ const publishDate = process.env.BLOG_PUBLISH_DATE || dateInBangkok();
 if (!/^\d{4}-\d{2}-\d{2}$/.test(publishDate)) {
   throw new Error("BLOG_PUBLISH_DATE must use YYYY-MM-DD.");
 }
-
-const xml = (value) => value.replace(/[&<>'"]/g, (char) => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&apos;", "\"": "&quot;",
-}[char]));
-
-const coverSvg = (title) => `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
-  <title id="title">${xml(title)}</title>
-  <desc id="desc">A Rocket editorial illustration about building and launching an app.</desc>
-  <rect width="1600" height="900" fill="#F5F5F3"/>
-  <rect x="382" y="175" width="836" height="550" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
-  <rect x="461" y="256" width="678" height="352" rx="24" fill="#1676E3"/>
-  <rect x="461" y="256" width="678" height="47" rx="24" fill="#0A0A0A"/>
-  <circle cx="501" cy="280" r="8" fill="#F2683C"/>
-  <circle cx="527" cy="280" r="8" fill="#E1E1DE"/>
-  <circle cx="553" cy="280" r="8" fill="#FFFFFF"/>
-  <rect x="496" y="334" width="170" height="239" rx="16" fill="#FFFFFF"/>
-  <circle cx="581" cy="421" r="49" fill="#F2683C"/>
-  <path d="M550 448l31-69 31 69h-21l-10-25-10 25z" fill="#0A0A0A"/>
-  <rect x="527" y="499" width="108" height="14" rx="7" fill="#0A0A0A"/>
-  <rect x="703" y="334" width="400" height="110" rx="16" fill="#0A0A0A"/>
-  <rect x="738" y="368" width="170" height="18" rx="9" fill="#F5F5F3"/>
-  <rect x="738" y="403" width="259" height="12" rx="6" fill="#B8B8B5"/>
-  <rect x="703" y="466" width="190" height="107" rx="16" fill="#F2683C"/>
-  <rect x="913" y="466" width="190" height="107" rx="16" fill="#E1E1DE"/>
-  <path d="M750 542l48-63 48 63z" fill="#FFFFFF"/>
-  <circle cx="1008" cy="519" r="31" fill="#1676E3"/>
-  <rect x="541" y="650" width="518" height="17" rx="8.5" fill="#0A0A0A"/>
-  <circle cx="354" cy="206" r="24" fill="#F2683C"/>
-  <circle cx="1242" cy="700" r="30" fill="#1676E3"/>
-  <path d="M1211 165h65v65" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-`;
 
 const cleanText = (value, field, max) => {
   if (typeof value !== "string") throw new Error(`Gemini returned an invalid ${field}.`);
@@ -158,6 +126,10 @@ const marker = "export const articles: Article[] = [";
 if (!articleSource.includes(marker)) throw new Error("The articles insertion marker is missing.");
 
 await mkdir(coversPath, { recursive: true });
-await writeFile(join(coversPath, coverFilename), coverSvg(article.title), "utf8");
+const latestCover = articleSource.match(/cover: "\/blog-covers\/([^"/]+\.svg)"/)?.[1];
+const latestCoverSvg = latestCover ? await readFile(join(coversPath, latestCover), "utf8").catch(() => "") : "";
+const latestVariant = Number(latestCoverSvg.match(/data-variant="(\d+)"/)?.[1]);
+const nextVariant = Number.isInteger(latestVariant) ? (latestVariant + 1) % coverVariantCount : undefined;
+await writeFile(join(coversPath, coverFilename), coverSvg(article.title, article.slug, nextVariant), "utf8");
 await writeFile(articlesPath, articleSource.replace(marker, `${marker}\n${entry}`), "utf8");
 console.log(`Published ${article.slug} for ${publishDate}.`);
