@@ -46,6 +46,11 @@ const SiteFooter = () => {
               </Link>
             </li>
             <li>
+              <Link to="/docs/rocket-mcp" className="hover:text-neutral-900">
+                MCP
+              </Link>
+            </li>
+            <li>
               <Link to="/faq" className="hover:text-neutral-900">
                 FAQ
               </Link>
