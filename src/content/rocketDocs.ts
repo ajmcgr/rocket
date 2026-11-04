@@ -589,6 +589,18 @@ Create subscriptions and credits are separate from Developer membership. Adverti
     ],
   },
   {
+    slug: "rocket-mcp",
+    group: "Growth & tools",
+    title: "Connect an AI assistant to Rocket's app catalogue",
+    summary: "Use Rocket's public, read-only MCP endpoint to find apps and browse categories.",
+    sections: [
+      section("connect", "MCP endpoint", `Use **https://tryrocket.ai/mcp** as the remote HTTP MCP server URL. No Rocket account or API key is required. This server only returns public catalogue information and cannot change an app or account.`),
+      section("tools", "Available tools", `- **search_apps**: Search by a required query, optional category and limit (1–10).\n- **get_app**: Get an app by Rocket slug or ID, including its public developer, review summary and owner-approved verified metrics.\n- **browse_categories**: List public categories, URLs and app counts.\n- **get_trending_apps**: Browse Rocket's Rising results, optionally by category, with a limit of 1–10.\n\nApp profile URLs include \`utm_source=rocket_mcp\` so visits from this integration can be identified. Private verification values stay private.`),
+      section("requests", "Example requests", `In a compatible assistant, ask “Search Rocket for tools to manage customer feedback” or “Show Rising productivity apps on Rocket.” For a direct protocol check, send a JSON-RPC \`initialize\` request over HTTP POST with \`Accept: application/json, text/event-stream\` and \`Content-Type: application/json\`, then call \`tools/list\` and \`tools/call\`. For example: \`{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"search_apps\",\"arguments\":{\"query\":\"analytics\",\"limit\":5}}\`.`),
+      section("clients", "Connect Claude, ChatGPT or another client", `In Claude, open **Customize → Connectors → Add custom connector**, name it Rocket, enter the endpoint above, and select **No sign in** if prompted. Workspace administrators may need to add the connector first. See [Claude's current connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).\n\nIn ChatGPT workspaces that support custom remote MCP servers, open **Plugins → Add custom MCP server**, enter the same HTTPS URL, and choose no authentication. Availability and workspace permissions vary; see [ChatGPT's current setup guide](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt).\n\nFor other remote MCP clients, add the same URL as a Streamable HTTP server. Check your client's support for remote, unauthenticated MCP servers.`),
+    ],
+  },
+  {
     slug: "advertising",
     group: "Growth & tools",
     title: "Book and understand advertising",

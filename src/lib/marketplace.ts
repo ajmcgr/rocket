@@ -100,7 +100,7 @@ export const marketplaceTable = <Name extends keyof MarketplaceRelations>(
 ) => (supabase as unknown as SupabaseClient<PendingDatabase>).from(name);
 export function sourceAttribution(search: string) {
   const source = new URLSearchParams(search).get("utm_source");
-  return source === "rocket_badge" || source === "rocket_share"
+  return source === "rocket_badge" || source === "rocket_share" || source === "rocket_mcp"
     ? source
     : "direct";
 }

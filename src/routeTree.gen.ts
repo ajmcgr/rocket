@@ -28,6 +28,7 @@ import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MediaKitRouteImport } from './routes/media-kit'
 import { Route as PicksRouteImport } from './routes/picks'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -234,6 +235,11 @@ const LaunchRoute = LaunchRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MediaKitRoute = MediaKitRouteImport.update({
@@ -819,6 +825,7 @@ export interface FileRoutesByFullPath {
   '/join': typeof JoinRoute
   '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/media-kit': typeof MediaKitRoute
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
@@ -951,6 +958,7 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/media-kit': typeof MediaKitRoute
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
@@ -1083,6 +1091,7 @@ export interface FileRoutesById {
   '/join': typeof JoinRoute
   '/launch': typeof LaunchRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/media-kit': typeof MediaKitRoute
   '/picks': typeof PicksRoute
   '/pricing': typeof PricingRoute
@@ -1217,6 +1226,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/launch'
     | '/login'
+    | '/mcp'
     | '/media-kit'
     | '/picks'
     | '/pricing'
@@ -1349,6 +1359,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/launch'
     | '/login'
+    | '/mcp'
     | '/media-kit'
     | '/picks'
     | '/pricing'
@@ -1480,6 +1491,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/launch'
     | '/login'
+    | '/mcp'
     | '/media-kit'
     | '/picks'
     | '/pricing'
@@ -1614,6 +1626,7 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   LaunchRoute: typeof LaunchRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   MediaKitRoute: typeof MediaKitRoute
   PicksRoute: typeof PicksRoute
   PricingRoute: typeof PricingRoute
@@ -1790,6 +1803,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/media-kit': {
@@ -2779,6 +2799,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   LaunchRoute: LaunchRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   MediaKitRoute: MediaKitRoute,
   PicksRoute: PicksRoute,
   PricingRoute: PricingRoute,
