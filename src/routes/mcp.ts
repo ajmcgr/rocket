@@ -36,9 +36,12 @@ function response(message: string, status: number) {
   return new Response(message, { status, headers: { "Cache-Control": "no-store", "Content-Type": "text/plain; charset=utf-8" } });
 }
 
-async function serve(request: Request) {
+export async function serve(request: Request) {
   if (!allowedOrigin(request)) return response("Origin not allowed", 403);
   if (rateLimited(clientAddress(request))) return response("Rate limit exceeded", 429);
+  if (request.method === "GET" && request.headers.get("accept")?.includes("text/html")) {
+    return Response.redirect(new URL("/docs/rocket-mcp", request.url), 302);
+  }
   const length = Number(request.headers.get("content-length") || "0");
   if (length > MAX_BODY_BYTES) return response("Request too large", 413);
   if (request.method === "POST") {
