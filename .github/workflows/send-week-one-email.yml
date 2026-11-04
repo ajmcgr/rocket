@@ -1,0 +1,41 @@
+name: Send Rocket one-week follow-up
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/send-week-one-email.yml
+      - scripts/send-week-one-email.mjs
+      - scripts/send-week-one-email.test.mjs
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Check eligibility without queueing email
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rocket-week-one-email
+  cancel-in-progress: false
+
+jobs:
+  queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test queue runner
+        run: node --test scripts/send-week-one-email.test.mjs
+      - name: Queue eligible emails
+        env:
+          ROCKET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ROCKET_SUPABASE_SERVICE_ROLE_KEY }}
+          WEEK_ONE_DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || github.event_name == 'workflow_dispatch' && !inputs.dry_run && 'false' || 'true' }}
+        run: node scripts/send-week-one-email.mjs
