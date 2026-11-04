@@ -22,6 +22,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Send,
+  Clock3,
+  Star,
   MessageCircle,
   CreditCard,
   Share2,
@@ -302,6 +304,23 @@ export default function SiteHeader({
                 />
                 {!sidebarCompact && <span>Launch</span>}
               </a>
+              {user && [
+                { label: "Post", href: "https://trypost.ai", icon: Clock3 },
+                { label: "Media", href: "https://trymedia.ai", icon: Star },
+              ].map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={sidebarCompact ? label : undefined}
+                  aria-label={sidebarCompact ? `${label} (opens in a new tab)` : undefined}
+                  className={`flex min-h-9 items-center gap-3 rounded-lg text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 ${sidebarCompact ? "justify-center px-0" : "px-3"}`}
+                >
+                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                  {!sidebarCompact && <span>{label}</span>}
+                </a>
+              ))}
             </div>
             <div>
               {sidebarCompact ? (
