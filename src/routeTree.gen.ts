@@ -77,6 +77,7 @@ import { Route as ConnectAuthorizeRouteImport } from './routes/connect.authorize
 import { Route as CreateBrandingRouteImport } from './routes/create_.branding'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email.unsubscribe'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OutreachUnsubscribeRouteImport } from './routes/outreach.unsubscribe'
 import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
@@ -480,6 +481,11 @@ const DocsSlugRoute = DocsSlugRouteImport.update({
   path: '/docs/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -857,6 +863,7 @@ export interface FileRoutesByFullPath {
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
   '/docs/$slug': typeof DocsSlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$token': typeof InviteTokenRoute
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -987,6 +994,7 @@ export interface FileRoutesByTo {
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create/branding': typeof CreateBrandingRoute
   '/docs/$slug': typeof DocsSlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$token': typeof InviteTokenRoute
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -1119,6 +1127,7 @@ export interface FileRoutesById {
   '/connect/authorize': typeof ConnectAuthorizeRoute
   '/create_/branding': typeof CreateBrandingRoute
   '/docs/$slug': typeof DocsSlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$token': typeof InviteTokenRoute
   '/outreach/unsubscribe': typeof OutreachUnsubscribeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -1252,6 +1261,7 @@ export interface FileRouteTypes {
     | '/connect/authorize'
     | '/create/branding'
     | '/docs/$slug'
+    | '/email/unsubscribe'
     | '/invite/$token'
     | '/outreach/unsubscribe'
     | '/resources/$slug'
@@ -1382,6 +1392,7 @@ export interface FileRouteTypes {
     | '/connect/authorize'
     | '/create/branding'
     | '/docs/$slug'
+    | '/email/unsubscribe'
     | '/invite/$token'
     | '/outreach/unsubscribe'
     | '/resources/$slug'
@@ -1513,6 +1524,7 @@ export interface FileRouteTypes {
     | '/connect/authorize'
     | '/create_/branding'
     | '/docs/$slug'
+    | '/email/unsubscribe'
     | '/invite/$token'
     | '/outreach/unsubscribe'
     | '/resources/$slug'
@@ -1626,6 +1638,7 @@ export interface RootRouteChildren {
   ConnectAuthorizeRoute: typeof ConnectAuthorizeRoute
   CreateBrandingRoute: typeof CreateBrandingRoute
   DocsSlugRoute: typeof DocsSlugRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   InviteTokenRoute: typeof InviteTokenRoute
   OutreachUnsubscribeRoute: typeof OutreachUnsubscribeRoute
   ResourcesSlugRoute: typeof ResourcesSlugRoute
@@ -2120,6 +2133,13 @@ declare module '@tanstack/react-router' {
       path: '/docs/$slug'
       fullPath: '/docs/$slug'
       preLoaderRoute: typeof DocsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$token': {
@@ -2783,6 +2803,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectAuthorizeRoute: ConnectAuthorizeRoute,
   CreateBrandingRoute: CreateBrandingRoute,
   DocsSlugRoute: DocsSlugRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   InviteTokenRoute: InviteTokenRoute,
   OutreachUnsubscribeRoute: OutreachUnsubscribeRoute,
   ResourcesSlugRoute: ResourcesSlugRoute,

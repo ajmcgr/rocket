@@ -7,7 +7,7 @@ type RpcClient = {
 type Job = {
   id: string;
   recipient: string;
-  kind: "published" | "claimed" | "recap" | "app_saved" | "app_collected";
+  kind: "published" | "claimed" | "recap" | "app_saved" | "app_collected" | "week_one";
   context: Record<string, unknown>;
 };
 type Layout = (data: {
@@ -29,6 +29,37 @@ const escape = (value: unknown) =>
 
 export function sharingEmailContent(job: Job) {
   const c = job.context;
+  if (job.kind === "week_one") {
+    const token = typeof c.unsubscribe_token === "string" && /^[0-9a-f]{64}$/.test(c.unsubscribe_token)
+      ? c.unsubscribe_token : "";
+    if (!token) throw new Error("Invalid unsubscribe token in week-one email queue");
+    const unsubscribe = `https://tryrocket.ai/email/unsubscribe?token=${token}`;
+    const appId = typeof c.app_id === "string" && /^[0-9a-f-]{36}$/i.test(c.app_id) ? c.app_id : "";
+    const appName = String(c.app_name || "your app").replace(/[\r\n]+/g, " ").slice(0, 120);
+    const ownsApp = !!appId;
+    const verifiedOwner = ownsApp && c.verification_level === "domain_verified";
+    const revenueUrl = verifiedOwner
+      ? `https://tryrocket.ai/my-apps/${appId}/revenue?utm_source=rocket&utm_medium=email&utm_campaign=week_one`
+      : "";
+    const body = verifiedOwner
+      ? `<p>It's been a week since you joined Rocket. You can help people understand the traction behind ${escape(appName)} by connecting eligible analytics or revenue data.</p><p>Connections are optional. Review your verification settings and choose which supported metrics appear publicly. You can also <a href="${revenueUrl}" style="color:#00598a;">review revenue verification</a>.</p>`
+      : ownsApp
+        ? `<p>It's been a week since you joined Rocket. Take another look at ${escape(appName)} and keep your listing up to date.</p><p>If you verify ownership of an eligible app, you can explore optional analytics and revenue verification. You choose supported public visibility.</p>`
+        : `<p>It's been a week since you joined Rocket. Come back to discover useful software, save the apps you like, or add one you're building.</p><p>Developers with an eligible owned app can optionally connect analytics or revenue verification and choose what to show publicly.</p>`;
+    const ctaUrl = verifiedOwner
+      ? `https://tryrocket.ai/my-apps/${appId}/analytics?utm_source=rocket&utm_medium=email&utm_campaign=week_one`
+      : ownsApp ? `https://tryrocket.ai/my-apps?utm_source=rocket&utm_medium=email&utm_campaign=week_one`
+        : "https://tryrocket.ai/discover?utm_source=rocket&utm_medium=email&utm_campaign=week_one";
+    return {
+      title: "Your first week on Rocket",
+      preheader: ownsApp ? "Build trust in your Rocket listing" : "Discover more on Rocket",
+      bodyHtml: body,
+      text: `${verifiedOwner ? `Review verification for ${appName}` : ownsApp ? `Manage ${appName}` : "Explore Rocket"}: ${ctaUrl}${verifiedOwner ? `\nReview revenue verification: ${revenueUrl}` : ""}\n\nConnections are optional. You choose supported public visibility.\n\nUnsubscribe from follow-up emails: ${unsubscribe}`,
+      ctaLabel: verifiedOwner ? "Review verification" : ownsApp ? "Manage my app" : "Explore apps",
+      ctaUrl,
+      footer: `You're receiving this one-week follow-up because you joined Rocket. <a href="${unsubscribe}" style="color:#00598a;">Unsubscribe from follow-up emails</a>. Account, security, and purchase emails are unaffected.`,
+    };
+  }
   if (job.kind === "recap") {
     const month =
       typeof c.month === "string" && /^\d{4}-(0[1-9]|1[0-2])-01$/.test(c.month)

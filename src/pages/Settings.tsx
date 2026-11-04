@@ -7,6 +7,7 @@ import { track } from "@/lib/analytics";
 import MemberProfileSettings from "@/components/MemberProfileSettings";
 import AppIntegrationLinks from "@/components/AppIntegrationLinks";
 import AppActivityEmailPreference from "@/components/AppActivityEmailPreference";
+import WeekOneEmailPreference from "@/components/WeekOneEmailPreference";
 
 const supabase = _sb as any;
 
@@ -82,6 +83,7 @@ export const NotificationsSettings = () => {
         </button>
       </label>
       <AppActivityEmailPreference />
+      <WeekOneEmailPreference />
     </section>
   );
 };
