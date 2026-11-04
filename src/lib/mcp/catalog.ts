@@ -52,7 +52,7 @@ export class PublicCatalogue {
   constructor(
     private readonly baseUrl: string,
     private readonly publishableKey: string,
-    private readonly fetcher: typeof fetch = fetch,
+    private readonly fetcher: typeof fetch = (input, init) => fetch(input, init),
   ) {}
 
   private async read(path: string, params?: URLSearchParams, body?: object): Promise<unknown> {
