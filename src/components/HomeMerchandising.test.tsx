@@ -166,22 +166,22 @@ describe("homepage section gates", () => {
         [...view.container.querySelectorAll('section[aria-label^="Sponsored apps, row"], section[aria-labelledby^="home-"]')]
           .map((section) => section.getAttribute("aria-label") || section.querySelector("h2")?.textContent),
       ).toEqual([
-        "Rising",
+        "Top Ranked",
         "Sponsored apps, row 1",
         "Our picks",
         "Sponsored apps, row 2",
         "New & Noteworthy",
-        "Top Ranked",
+        "Rising",
         "Sponsored apps, row 3",
         "Categories",
       ]);
       expect(
         [...view.container.querySelectorAll("h2")].map((h) => h.textContent),
       ).toEqual([
-        "Rising",
+        "Top Ranked",
         "Our picks",
         "New & Noteworthy",
-        "Top Ranked",
+        "Rising",
         "Categories",
       ]);
       expect(view.container.textContent).toContain(

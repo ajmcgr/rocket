@@ -85,9 +85,9 @@ const sections: { heading: string; items: NavItem[] }[] = [
     heading: "Discover",
     items: [
       { label: "Discover", to: "/discover", icon: Compass },
-      { label: "Rising", to: "/rising", icon: Zap },
-      { label: "New", to: "/discover?view=new", icon: Flame },
       { label: "Rankings", to: "/discover?view=rankings", icon: TrendingUp },
+      { label: "New", to: "/discover?view=new", icon: Flame },
+      { label: "Rising", to: "/rising", icon: Zap },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
       { label: "Collections", to: "/collections", icon: Bookmark },
     ],

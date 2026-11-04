@@ -106,9 +106,9 @@ const screenshotMenu = [
     title: "Discover",
     items: [
       { label: "Discover", icon: Compass },
-      { label: "Rising", icon: Zap },
-      { label: "New", icon: Flame },
       { label: "Rankings", icon: TrendingUp },
+      { label: "New", icon: Flame },
+      { label: "Rising", icon: Zap },
       { label: "Categories", icon: Grid2X2 },
       { label: "Collections", icon: Bookmark },
     ],

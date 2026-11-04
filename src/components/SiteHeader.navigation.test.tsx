@@ -74,7 +74,7 @@ describe("Sidebar destinations", () => {
         expect(sidebar.queryByRole("link", { name: "My Profile" })).toBeNull();
         expect(sidebar.getByText("Grow")).toBeTruthy();
         const discoveryLinks = sidebar.getAllByRole("link").slice(0, 6).map((link) => link.textContent);
-        expect(discoveryLinks).toEqual(["Discover", "Rising", "New", "Rankings", "Categories", "Collections"]);
+        expect(discoveryLinks).toEqual(["Discover", "Rankings", "New", "Rising", "Categories", "Collections"]);
         expect(sidebar.getByRole("link", { name: "Launch" }).getAttribute("href")).toBe("https://trylaunch.ai");
         expect(sidebar.queryByRole("link", { name: "Post" })).toBeNull();
         expect(sidebar.queryByRole("link", { name: "Media" })).toBeNull();
