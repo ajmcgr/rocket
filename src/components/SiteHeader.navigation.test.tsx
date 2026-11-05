@@ -75,15 +75,15 @@ describe("Sidebar destinations", () => {
         expect(sidebar.getByText("Grow")).toBeTruthy();
         const discoveryLinks = sidebar.getAllByRole("link").slice(0, 6).map((link) => link.textContent);
         expect(discoveryLinks).toEqual(["Discover", "Rankings", "New", "Rising", "Categories", "Collections"]);
-        expect(sidebar.getByRole("link", { name: "Launch" }).getAttribute("href")).toBe("https://trylaunch.ai");
+        const launch = sidebar.getByRole("link", { name: "Launch" });
+        const post = sidebar.getByRole("link", { name: "Post" });
+        const media = sidebar.getByRole("link", { name: "Media" });
+        expect(launch.getAttribute("href")).toBe("https://trylaunch.ai");
+        expect(post.getAttribute("href")).toBe("https://trypost.ai");
+        expect(media.getAttribute("href")).toBe("https://trymedia.ai");
+        expect(launch.compareDocumentPosition(post) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(post.compareDocumentPosition(media) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         if (signedIn) {
-          const launch = sidebar.getByRole("link", { name: "Launch" });
-          const post = sidebar.getByRole("link", { name: "Post" });
-          const media = sidebar.getByRole("link", { name: "Media" });
-          expect(post.getAttribute("href")).toBe("https://trypost.ai");
-          expect(media.getAttribute("href")).toBe("https://trymedia.ai");
-          expect(launch.compareDocumentPosition(post) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-          expect(post.compareDocumentPosition(media) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
           const apps = sidebar.getByRole("link", { name: "My Apps" });
           const purchases = sidebar.getByRole("link", { name: "My Purchases" });
           expect(sidebar.getByRole("link", { name: "Saved" })).toBeTruthy();
@@ -102,8 +102,6 @@ describe("Sidebar destinations", () => {
           expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
           expect(sidebar.getByText("Create")).toBeTruthy();
         } else {
-          expect(sidebar.queryByRole("link", { name: "Post" })).toBeNull();
-          expect(sidebar.queryByRole("link", { name: "Media" })).toBeNull();
           for (const label of ["My Apps", "My Purchases", "Saved"]) {
             expect(sidebar.queryByRole("link", { name: label })).toBeNull();
           }
