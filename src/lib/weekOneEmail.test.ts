@@ -20,17 +20,23 @@ describe("one-week Rocket follow-up", () => {
     expect(email.bodyHtml).toContain(`/my-apps/${appId}/revenue`);
     expect(email.text).toContain(`/my-apps/${appId}/revenue`);
     expect(email.bodyHtml).toContain("optional");
+    expect(email.bodyHtml).toContain("Featured App and Category Sponsor");
+    expect(email.bodyHtml).toContain("/advertise?utm_source=rocket&amp;");
+    expect(email.text).toContain("/advertise?utm_source=rocket&");
   });
 
   it("links other owners to their apps", () => {
     const email = sharingEmailContent(job({ app_id: appId, app_name: "Test App", verification_level: "claimed" }));
     expect(email.ctaUrl).toContain("/my-apps?");
     expect(email.ctaLabel).toBe("Manage my app");
+    expect(email.bodyHtml).toContain("Featured App and Category Sponsor");
+    expect(email.text).toContain("/advertise?utm_source=rocket&");
   });
 
   it("links explorers to Discover and requires an unsubscribe token", () => {
     const email = sharingEmailContent(job({}));
     expect(email.ctaUrl).toContain("/discover?");
+    expect(email.bodyHtml).not.toContain("Featured App and Category Sponsor");
     expect(() => sharingEmailContent(job({ unsubscribe_token: "bad" }))).toThrow("Invalid unsubscribe token");
   });
 });

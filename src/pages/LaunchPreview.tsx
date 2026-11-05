@@ -1006,6 +1006,17 @@ export default function LaunchPreview() {
             </div>
           </form>
         )}
+        <section className="mt-9 rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="submit-advertising-title">
+          <h2 id="submit-advertising-title" className="text-xl font-semibold">Grow your app on Rocket</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Publishing is free. Once you manage an eligible app, you can choose a paid
+            Featured App placement or sponsor a category to reach more people.
+            Ads are separate from your listing and do not change organic rankings.
+          </p>
+          <Link to="/advertise" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-[#167ac6] hover:underline">
+            Explore advertising →
+          </Link>
+        </section>
         <section className="mt-9" aria-labelledby="submit-supported-sources">
           <h2 id="submit-supported-sources" className="text-xl font-semibold">
             URLs Rocket can use to submit apps

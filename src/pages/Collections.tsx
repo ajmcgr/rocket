@@ -9,6 +9,7 @@ import {
   type Collection,
 } from "@/lib/collections";
 import { useAuth } from "@/contexts/AuthContext";
+import { recordDiscoverySurfaceView } from "@/lib/discoveryTracking";
 
 function CollectionsContent({
   personal = false,
@@ -18,6 +19,7 @@ function CollectionsContent({
   initial?: Collection[];
 }) {
   const { user } = useAuth();
+  useEffect(() => { if (!personal) recordDiscoverySurfaceView("collections", "directory"); }, [personal]);
   const [rows, setRows] = useState(initial.slice(0, COLLECTION_PAGE_SIZE));
   const [hasMore, setHasMore] = useState(initial.length > COLLECTION_PAGE_SIZE);
   const [page, setPage] = useState(0);

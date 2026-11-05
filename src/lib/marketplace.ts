@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { recordDiscoveryOutbound } from "@/lib/discoveryTracking";
 import type { Database, Tables } from "@/integrations/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 type Details = {
@@ -112,6 +113,7 @@ export function recordOutbound(appId: string) {
     )
   )
     return;
+  recordDiscoveryOutbound(appId);
   void supabase.functions
     .invoke("rocket-app-view", {
       body: {

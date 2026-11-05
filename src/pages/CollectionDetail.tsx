@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { StandardAppCard } from "@/components/MarketplaceCards";
 import { useSavedAppControls } from "@/hooks/useSavedAppControls";
 import { useAuth } from "@/contexts/AuthContext";
+import { recordDiscoverySurfaceView } from "@/lib/discoveryTracking";
 import {
   collectionApps,
   collectionCreator,
@@ -36,6 +37,7 @@ function CollectionDetailContent({
   initial?: CollectionDetailData;
 }) {
   const { user } = useAuth();
+  useEffect(() => { if (!personal) recordDiscoverySurfaceView("collections", "detail"); }, [personal, slug]);
   const navigate = useNavigate();
   const [collection, setCollection] = useState<Collection | null>(
     initial?.collection || null,

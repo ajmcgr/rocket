@@ -8,6 +8,7 @@ import {
 import SiteHeader from "@/components/SiteHeader";
 import AppMarketplaceContext from "@/components/AppMarketplaceContext";
 import { recordOutbound, sourceAttribution } from "@/lib/marketplace";
+import { recordDiscoveryProfileView } from "@/lib/discoveryTracking";
 import { outboundWebsiteUrl } from "@/lib/outboundLinks";
 import { storeListing } from "../../supabase/functions/_shared/storeListings";
 import { useDocumentMeta } from "@/hooks/useDocumentMeta";
@@ -274,6 +275,7 @@ export default function PublicAppProfile({
       );
       // Optional evidence failures must not hide a valid public profile.
       if (appResult.data && !appResult.error) {
+        recordDiscoveryProfileView(appResult.data.id);
         track("app_profile_viewed", {
           app_id: appResult.data.id,
           source: sponsorId ? "sponsored" : "organic",

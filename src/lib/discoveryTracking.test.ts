@@ -6,12 +6,18 @@ vi.mock("@/lib/analytics", () => ({ track }));
 afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 describe("Persistent discovery submissions", () => {
   it("records each submission once with an opaque event ID and no query text", async () => {
-    vi.stubGlobal("window", { location: { origin: "https://tryrocket.ai" } });
+    const values = new Map<string, string>();
+    vi.stubGlobal("window", { location: { origin: "https://tryrocket.ai", search: "" }, innerWidth: 1200,
+      sessionStorage: { getItem: (key: string) => values.get(key) || null, setItem: (key: string, value: string) => values.set(key, value) } });
+    vi.stubGlobal("navigator", { doNotTrack: "0" });
+    invoke.mockResolvedValue({ data: true, error: null });
     for (const source of ["header", "homepage", "discover"] as const) await recordDiscoverySearch("private text", source);
-    expect(invoke).toHaveBeenCalledTimes(3);
-    const ids = invoke.mock.calls.map(([, args]) => args.body.event_id);
+    expect(invoke).toHaveBeenCalledTimes(6);
+    const searchCalls = invoke.mock.calls.filter(([, args]) => args.body.kind === "search");
+    const ids = searchCalls.map(([, args]) => args.body.event_id);
     expect(new Set(ids).size).toBe(3);
-    expect(invoke.mock.calls[0]).toEqual(["rocket-app-view", {body: {kind: "search", source: "header", event_id: expect.any(String)}}]);
+    expect(searchCalls[0]).toEqual(["rocket-app-view", {body: {kind: "search", source: "header", event_id: expect.any(String)}}]);
+    expect(invoke.mock.calls.filter(([, args]) => args.body.kind === "journey")).toHaveLength(3);
     expect(JSON.stringify(invoke.mock.calls)).not.toContain("private text");
   });
   it("does not persist empty/punctuation-only searches or preview traffic", async () => {

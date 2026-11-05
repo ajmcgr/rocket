@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
 
   let appId: string;
   let growthBody: Record<string, unknown> | null = null;
+  let journeyBody: Record<string, unknown> | null = null;
   let eventId: string, searchSource: string;
   let kind = "view", source = "direct", sponsorshipId: string | null = null;
   try {
@@ -50,6 +51,7 @@ Deno.serve(async (req) => {
     searchSource = body?.source;
     kind = body?.kind || "view";
     if (["share_action", "referral_visit", "referral_signup"].includes(kind)) growthBody = body;
+    else if (kind === "journey") journeyBody = body;
     else if (raw.length > 200) return response(413, origin, {error:"Invalid request"});
     source = ["rocket_badge","rocket_share"].includes(body?.source) ? body.source : "direct";
     sponsorshipId = typeof body?.sponsorship_id === "string" ? body.sponsorship_id : null;
@@ -65,6 +67,40 @@ Deno.serve(async (req) => {
       const result = await recordGrowthRequest(req,growthBody,admin,hash);
       return response(result.status,origin,result.body);
     } catch { return response(503,origin,{error:"Growth tracking unavailable"}); }
+  }
+  if (journeyBody) {
+    if (req.headers.get("DNT") === "1" || req.headers.get("Sec-GPC") === "1") return response(202, origin, { ok: true, counted: false });
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const eventKind = journeyBody.event_kind;
+    const app = journeyBody.app_id;
+    const search = journeyBody.search_id;
+    const section = journeyBody.section;
+    const resultCount = journeyBody.result_count;
+    if (typeof journeyBody.event_id !== "string" || !uuid.test(journeyBody.event_id) ||
+      typeof journeyBody.session_id !== "string" || !uuid.test(journeyBody.session_id) ||
+      !["surface_view", "search", "search_results", "app_card_click", "app_profile_view", "outbound_click"].includes(String(eventKind)) ||
+      !["homepage", "catalogue", "search", "categories", "collections", "rankings", "related", "direct", "mcp"].includes(String(journeyBody.surface)) ||
+      !["mobile", "tablet", "desktop"].includes(String(journeyBody.device)) ||
+      !["organic", "direct", "social", "referral", "mcp"].includes(String(journeyBody.acquisition_source)) ||
+      (section != null && (typeof section !== "string" || !/^[a-z0-9_-]{1,48}$/.test(section))) ||
+      (["app_card_click", "app_profile_view", "outbound_click"].includes(String(eventKind)) !== (typeof app === "string" && uuid.test(app))) ||
+      (["search", "search_results"].includes(String(eventKind)) !== (typeof search === "string" && uuid.test(search))) ||
+      ((eventKind === "search_results") !== (Number.isInteger(resultCount) && Number(resultCount) >= 0 && Number(resultCount) <= 100000)))
+      return response(400, origin, { error: "Invalid discovery event" });
+    const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    if (!ip) return response(202, origin, { ok: true, counted: false });
+    try {
+      const hash = await dailyVisitorHash(new Date().toISOString().slice(0, 10), ip, (req.headers.get("user-agent") || "").slice(0, 256));
+      const { data, error } = await admin.rpc("record_discovery_journey", {
+        p_event_id: journeyBody.event_id, p_session_id: journeyBody.session_id,
+        p_event_kind: eventKind, p_surface: journeyBody.surface, p_section: section ?? null,
+        p_app_id: app ?? null, p_search_id: search ?? null,
+        p_result_count: resultCount ?? null, p_device: journeyBody.device,
+        p_acquisition_source: journeyBody.acquisition_source, p_visitor_hash: hash,
+      });
+      if (error) throw error;
+      return response(200, origin, { ok: true, counted: Boolean(data) });
+    } catch { return response(503, origin, { error: "Discovery tracking unavailable" }); }
   }
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (kind === "search" && (typeof eventId !== "string" || !uuid.test(eventId) ||

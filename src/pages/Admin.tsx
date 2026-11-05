@@ -75,6 +75,7 @@ export default function Admin() {
   const [data, setData] = useState<Row | null>(null);
   const [snapshotLoadedAt, setSnapshotLoadedAt] = useState("");
   const [investor, setInvestor] = useState<Row | null>(null);
+  const [journeys, setJourneys] = useState<Row | null>(null);
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
   const [error, setError] = useState("");
@@ -82,13 +83,14 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState<{ target: string; message: string; error: boolean } | null>(null);
   const refresh = useCallback(async () => {
-    setError(""); setData(null); setInvestor(null); setToday([]); setInternalTests([]);
-    const [result, batch, claims, tests, investorResult] = await Promise.all([
+    setError(""); setData(null); setInvestor(null); setJourneys(null); setToday([]); setInternalTests([]);
+    const [result, batch, claims, tests, investorResult, journeyResult] = await Promise.all([
       adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section === "screenshots" ? "marketing" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_first_batch", {}) : Promise.resolve(null),
       section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
       section === "outreach" ? adminRpc("rocket_admin_outreach_test_candidates", {}) : Promise.resolve(null),
       section === "metrics" ? adminRpc("rocket_admin_investor_metrics", {}) : Promise.resolve(null),
+      section === "home" || section === "metrics" ? adminRpc("rocket_admin_discovery_journeys", { p_period: period }) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
     if (batch?.error) { setError(batch.error.message); return; }
@@ -100,6 +102,7 @@ export default function Admin() {
     setData({ ...obj(result.data), ...(claims ? { claims: claims.data } : {}) });
     setSnapshotLoadedAt(new Date().toISOString());
     setInvestor(investorResult ? obj(investorResult.data) : null);
+    setJourneys(journeyResult && !journeyResult.error ? obj(journeyResult.data) : null);
   }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
   useEffect(() => {
@@ -188,6 +191,17 @@ export default function Admin() {
       <Panel title="Catalogue"><StatGrid data={obj(data.catalogue)} /></Panel>
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
+      {journeys && <Panel title="Discovery journeys">
+        <p className="rocket-admin-muted">Recorded tab events since {journeys.since ? new Date(String(journeys.since)).toLocaleDateString() : "rollout"}. Visits are page loads, not unique visitors. Internal discovery source is separate from external acquisition.</p>
+        <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />
+        <h3>Acquisition by tab session</h3>
+        <div className="rocket-admin-list">{rows(journeys.acquisition_sessions).map((row, index) => <article key={`${row.source}-${index}`}><strong>{label(String(row.source))}</strong><p>{count(row.sessions)} sessions</p></article>)}</div>
+        <h3>Internal discovery</h3>
+        <div className="rocket-admin-list">{rows(journeys.surfaces).map((row, index) => <article key={`${row.surface}-${row.section}-${index}`}>
+          <strong>{label(String(row.surface))}{row.section ? ` · ${label(String(row.section))}` : ""}</strong>
+          <p>Recorded visits {count(row.visits)} · Card clicks {count(row.card_clicks)} · App profiles {count(row.profile_views)} · Outbound clicks {count(row.outbound_clicks)}</p>
+        </article>)}</div>
+      </Panel>}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>
