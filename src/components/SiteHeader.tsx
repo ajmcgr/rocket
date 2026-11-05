@@ -304,7 +304,7 @@ export default function SiteHeader({
                 />
                 {!sidebarCompact && <span>Launch</span>}
               </a>
-              {user && [
+              {[
                 { label: "Post", href: "https://trypost.ai", icon: Clock3 },
                 { label: "Media", href: "https://trymedia.ai", icon: Star },
               ].map(({ label, href, icon: Icon }) => (
