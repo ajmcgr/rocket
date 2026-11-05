@@ -204,6 +204,42 @@ it("passes the MCP Available filter to server-side search before pagination", as
   await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({ p_mcp: false })));
 });
 
+it("preserves punctuation in app name searches", async () => {
+  mocks.rpc.mockResolvedValue({ data: { apps: [], total: 0 }, error: null });
+  mocks.from.mockImplementation(() => {
+    const builder: any = {};
+    for (const method of ["select", "order", "limit", "eq", "in"])
+      builder[method] = () => builder;
+    builder.then = (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve);
+    return builder;
+  });
+  render(<MemoryRouter initialEntries={["/discover?q=next.js"]}><Discover /></MemoryRouter>);
+  await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({
+    p_query: "next.js",
+  })));
+  fireEvent.change(screen.getByRole("textbox", { name: "Search apps" }), { target: { value: "C++" } });
+  fireEvent.click(screen.getByRole("button", { name: "Search" }));
+  await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({
+    p_query: "C++",
+  })));
+});
+
+it("clears hidden pricing filters when switching discovery sections", async () => {
+  mocks.rpc.mockResolvedValue({ data: { apps: [], total: 0 }, error: null });
+  mocks.from.mockImplementation(() => {
+    const builder: any = {};
+    for (const method of ["select", "order", "limit", "eq", "in"])
+      builder[method] = () => builder;
+    builder.then = (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve);
+    return builder;
+  });
+  render(<MemoryRouter initialEntries={["/discover?view=all&pricing=free&billing=subscription"]}><Discover /></MemoryRouter>);
+  fireEvent.click(await screen.findByRole("button", { name: "New" }));
+  await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("search_marketplace", expect.objectContaining({
+    p_pricing: "", p_billing: "", p_sort: "discovered",
+  })));
+});
+
 describe("engagement rankings", () => {
   function setup(error: any = null) {
     mocks.rpc.mockResolvedValue({
