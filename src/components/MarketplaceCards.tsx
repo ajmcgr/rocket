@@ -307,7 +307,7 @@ export function RankedAppRow({
       >
         <AppLogo name={app.name} src={app.logo_url} className="h-11 w-11" />
       </Link>
-      <div className="min-w-32 flex-1">
+      <div className="min-w-0 flex-1">
         <Link
           to={`/apps/${app.slug || app.id}`}
           className="block focus-visible:outline-2 focus-visible:outline-[#167ac6]"

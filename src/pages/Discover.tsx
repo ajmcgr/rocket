@@ -27,7 +27,6 @@ const PAGE_SIZE = 24;
 const RANKING_SIZE = 20;
 const safeSearch = (value: string) =>
   value
-    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
     .trim()
     .slice(0, 80);
 
@@ -256,7 +255,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
     else next.delete(key);
     if (key !== "view") next.set("view", "all");
     if (key === "view" && value !== "all") {
-      for (const filter of ["q", "category", "platform", "source", "sort", "mcp"])
+      for (const filter of ["q", "category", "platform", "source", "pricing", "billing", "sort", "mcp"])
         next.delete(filter);
       setQuery("");
     }
@@ -307,10 +306,10 @@ export default function Discover({ initialCategories = [], initialView, initialS
             Search
           </button>
         </form>
-        <div className="mt-5 flex items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+        <div className="mt-5 flex flex-col gap-3 border-b border-neutral-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
         <nav
           aria-label="Discover sections"
-          className="flex min-w-0 gap-2 overflow-x-auto [scrollbar-width:none]"
+          className="grid min-w-0 grid-cols-4 gap-1 sm:flex sm:gap-2"
         >
           {(
             [
@@ -327,14 +326,14 @@ export default function Discover({ initialCategories = [], initialView, initialS
                 change("view", key);
               }}
               aria-current={view === key ? "page" : undefined}
-              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${view === key ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
+              className={`rounded-xl px-1 py-2 text-xs font-medium transition-colors sm:shrink-0 sm:px-4 sm:text-sm ${view === key ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
             >
               {label}
             </button>
           ))}
         </nav>
         {view !== "rankings" && (
-          <label className="flex shrink-0 items-center gap-2 text-sm font-medium text-neutral-600">
+          <label className="flex shrink-0 items-center gap-2 self-end text-sm font-medium text-neutral-600 sm:self-auto">
             <span className="hidden sm:inline">Platform</span>
             <select
               aria-label="Browse by platform"
