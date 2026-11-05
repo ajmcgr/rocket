@@ -16,7 +16,7 @@ import {
   MarketplaceListRow,
 } from "@/components/MarketplaceCards";
 import { track } from "@/lib/analytics";
-import { recordDiscoverySearch } from "@/lib/discoveryTracking";
+import { recordDiscoverySearch, recordDiscoverySurfaceView, recordSearchResults } from "@/lib/discoveryTracking";
 import { availableCategories } from "@/lib/appCategories";
 import { publicMarketplaceRead } from "@/lib/publicMarketplaceCache";
 import { marketplaceRpc } from "@/lib/marketplace";
@@ -96,6 +96,10 @@ export default function Discover({ initialCategories = [], initialView, initialS
     !source &&
     !pricing && !billing && !mcp &&
     page === 0;
+
+  useEffect(() => {
+    recordDiscoverySurfaceView(view === "rankings" ? "rankings" : view === "categories" || category ? "categories" : search ? "search" : "catalogue");
+  }, [view, category, search]);
 
   useEffect(() => {
     setQuery(rawSearch);
@@ -179,6 +183,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
         if (!canceled) {
           setApps(data || []);
           setCount(total || 0);
+          if (search && page === 0) recordSearchResults(total);
           setMedia(new Map());
           setSignals(new Map());
           setLoading(false);

@@ -1,4 +1,4 @@
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { Await } from "@tanstack/react-router";
 import { Link, useNavigate } from "@/lib/router-compat";
 import SiteHeader from "@/components/SiteHeader";
@@ -6,13 +6,14 @@ import HomeMerchandising from "@/components/HomeMerchandising";
 import HomeStory from "@/components/HomeStory";
 import FeaturedAdRows from "@/components/FeaturedAdRows";
 import type { HomeMerchandising as HomeData } from "@/lib/homeMerchandising";
-import { recordDiscoverySearch } from "@/lib/discoveryTracking";
+import { recordDiscoverySearch, recordDiscoverySurfaceView } from "@/lib/discoveryTracking";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home({ data }: { data: Promise<HomeData> }) {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  useEffect(() => { recordDiscoverySurfaceView("homepage"); }, []);
   const search = (event: FormEvent) => {
     event.preventDefault();
     const term = query.trim();

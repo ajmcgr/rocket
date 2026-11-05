@@ -111,6 +111,8 @@ describe("sharing email outbox", () => {
     expect(content.bodyHtml).toContain("&lt;Launch&gt;");
     expect(content.bodyHtml).not.toContain("<Launch>");
     expect(content.ctaUrl).toContain("/apps/launch");
+    expect(content.bodyHtml).toContain("Featured App and Category Sponsor");
+    expect(content.bodyHtml).toContain("utm_campaign=app_published");
   });
   it("does not share a private claimed listing", () => {
     const content = sharingEmailContent({

@@ -41,10 +41,11 @@ export function sharingEmailContent(job: Job) {
     const revenueUrl = verifiedOwner
       ? `https://tryrocket.ai/my-apps/${appId}/revenue?utm_source=rocket&utm_medium=email&utm_campaign=week_one`
       : "";
+    const advertisingUrl = `https://tryrocket.ai/advertise?utm_source=rocket&utm_medium=email&utm_campaign=week_one`;
     const body = verifiedOwner
-      ? `<p>It's been a week since you joined Rocket. You can help people understand the traction behind ${escape(appName)} by connecting eligible analytics or revenue data.</p><p>Connections are optional. Review your verification settings and choose which supported metrics appear publicly. You can also <a href="${revenueUrl}" style="color:#00598a;">review revenue verification</a>.</p>`
+      ? `<p>It's been a week since you joined Rocket. You can help people understand the traction behind ${escape(appName)} by connecting eligible analytics or revenue data.</p><p>Connections are optional. Review your verification settings and choose which supported metrics appear publicly. You can also <a href="${escape(revenueUrl)}" style="color:#00598a;">review revenue verification</a>.</p><p>Want to reach more people? Rocket offers separate paid <a href="${escape(advertisingUrl)}" style="color:#00598a;">Featured App and Category Sponsor placements</a>. Ads do not change organic rankings.</p>`
       : ownsApp
-        ? `<p>It's been a week since you joined Rocket. Take another look at ${escape(appName)} and keep your listing up to date.</p><p>If you verify ownership of an eligible app, you can explore optional analytics and revenue verification. You choose supported public visibility.</p>`
+        ? `<p>It's been a week since you joined Rocket. Take another look at ${escape(appName)} and keep your listing up to date.</p><p>If you verify ownership of an eligible app, you can explore optional analytics and revenue verification. You choose supported public visibility.</p><p>Want to reach more people? Rocket offers separate paid <a href="${escape(advertisingUrl)}" style="color:#00598a;">Featured App and Category Sponsor placements</a>. Ads do not change organic rankings.</p>`
         : `<p>It's been a week since you joined Rocket. Come back to discover useful software, save the apps you like, or add one you're building.</p><p>Developers with an eligible owned app can optionally connect analytics or revenue verification and choose what to show publicly.</p>`;
     const ctaUrl = verifiedOwner
       ? `https://tryrocket.ai/my-apps/${appId}/analytics?utm_source=rocket&utm_medium=email&utm_campaign=week_one`
@@ -54,7 +55,7 @@ export function sharingEmailContent(job: Job) {
       title: "Your first week on Rocket",
       preheader: ownsApp ? "Build trust in your Rocket listing" : "Discover more on Rocket",
       bodyHtml: body,
-      text: `${verifiedOwner ? `Review verification for ${appName}` : ownsApp ? `Manage ${appName}` : "Explore Rocket"}: ${ctaUrl}${verifiedOwner ? `\nReview revenue verification: ${revenueUrl}` : ""}\n\nConnections are optional. You choose supported public visibility.\n\nUnsubscribe from follow-up emails: ${unsubscribe}`,
+      text: `${verifiedOwner ? `Review verification for ${appName}` : ownsApp ? `Manage ${appName}` : "Explore Rocket"}: ${ctaUrl}${verifiedOwner ? `\nReview revenue verification: ${revenueUrl}` : ""}${ownsApp ? `\nExplore separate paid Featured App and Category Sponsor placements: ${advertisingUrl}\nAds do not change organic rankings.` : ""}\n\nConnections are optional. You choose supported public visibility.\n\nUnsubscribe from follow-up emails: ${unsubscribe}`,
       ctaLabel: verifiedOwner ? "Review verification" : ownsApp ? "Manage my app" : "Explore apps",
       ctaUrl,
       footer: `You're receiving this one-week follow-up because you joined Rocket. <a href="${unsubscribe}" style="color:#00598a;">Unsubscribe from follow-up emails</a>. Account, security, and purchase emails are unaffected.`,
@@ -113,7 +114,7 @@ export function sharingEmailContent(job: Job) {
   if (job.kind === "published")
     return {
       title: `${subjectName} is now on Rocket`,
-      bodyHtml: `<p>Your app is now live on Rocket. People can discover it, save it and explore what you've built.</p><p><a href="${share}" style="color:#00598a;">Share your app</a> · <a href="${url}" style="color:#00598a;">View your listing</a></p><p><img src="https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-share-card?kind=app&amp;id=${encodeURIComponent(slug)}&amp;variant=landscape" alt="${name} share card" width="496" style="display:block;max-width:100%;height:auto;border-radius:12px;" /></p>`,
+      bodyHtml: `<p>Your app is now live on Rocket. People can discover it, save it and explore what you've built.</p><p><a href="${share}" style="color:#00598a;">Share your app</a> · <a href="${url}" style="color:#00598a;">View your listing</a></p><p><img src="https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-share-card?kind=app&amp;id=${encodeURIComponent(slug)}&amp;variant=landscape" alt="${name} share card" width="496" style="display:block;max-width:100%;height:auto;border-radius:12px;" /></p><p>Want more reach? <a href="https://tryrocket.ai/advertise?utm_source=rocket&amp;utm_medium=email&amp;utm_campaign=app_published" style="color:#00598a;">Explore separate paid Featured App and Category Sponsor placements</a>. Ads do not change organic rankings.</p>`,
       ctaLabel: "Share App",
       ctaUrl: share,
       footer: "You received this because you published an app on Rocket.",

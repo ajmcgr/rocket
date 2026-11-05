@@ -66,6 +66,8 @@ vi.mock("@/integrations/supabase/client", async () => {
             const result =
               name === "rocket_admin_snapshot"
                 ? mocks.snapshot
+                : name === "rocket_admin_discovery_journeys"
+                  ? { search_sessions: 0, acquisition_sessions: [], surfaces: [] }
                 : name === "rocket_redeem_claim_invitation"
                   ? { app_id: args.p_app_id }
                 : name === "rocket_admin_claims"
@@ -137,7 +139,7 @@ describe("admin Supabase client binding", () => {
       name: "rocket_admin_snapshot",
       args: {
         p_section: section === "developer-testing" ? "home" : section,
-        p_period: "30d",
+        p_period: section === "home" ? "all" : "30d",
       },
     });
     if (section === "ops")
@@ -271,12 +273,12 @@ describe("admin Supabase client binding", () => {
   });
 
   it("exports only the loaded overview snapshot for the selected period", async () => {
-    mocks.snapshot = { period: "30d", catalogue: { indexed: 6500 } };
+    mocks.snapshot = { period: "all", catalogue: { indexed: 6500 } };
     render(<Admin />);
     const button = await screen.findByRole("button", { name: "Export CSV" });
     await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(button);
-    expect(mocks.exportCsv).toHaveBeenLastCalledWith(mocks.snapshot, "30d", expect.any(String));
+    expect(mocks.exportCsv).toHaveBeenLastCalledWith(mocks.snapshot, "all", expect.any(String));
     mocks.snapshot = { period: "7d", discovery: { saves: 4 } };
     fireEvent.change(screen.getByRole("combobox", { name: "Period" }), { target: { value: "7d" } });
     await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
