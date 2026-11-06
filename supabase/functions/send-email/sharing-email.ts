@@ -7,7 +7,7 @@ type RpcClient = {
 type Job = {
   id: string;
   recipient: string;
-  kind: "published" | "claimed" | "recap" | "app_saved" | "app_collected" | "week_one";
+  kind: "published" | "claimed" | "recap" | "app_saved" | "app_collected" | "week_one" | "weekly";
   context: Record<string, unknown>;
 };
 type Layout = (data: {
@@ -29,6 +29,23 @@ const escape = (value: unknown) =>
 
 export function sharingEmailContent(job: Job) {
   const c = job.context;
+  if (job.kind === "weekly") {
+    const token = typeof c.unsubscribe_token === "string" && /^[0-9a-f]{64}$/.test(c.unsubscribe_token)
+      ? c.unsubscribe_token : "";
+    if (!token) throw new Error("Invalid unsubscribe token in weekly email queue");
+    const unsubscribe = `https://tryrocket.ai/email/unsubscribe?kind=weekly&token=${token}`;
+    const discover = "https://tryrocket.ai/discover?utm_source=rocket&utm_medium=email&utm_campaign=weekly";
+    const apps = "https://tryrocket.ai/my-apps?utm_source=rocket&utm_medium=email&utm_campaign=weekly";
+    return {
+      title: "Your week on Rocket",
+      preheader: "Find useful apps and build trust in yours",
+      bodyHtml: `<p>See what people are building and find software worth saving on Rocket.</p><p>Building an app? Keep your listing current. If you manage an eligible app, you can optionally connect analytics or revenue verification. Your metrics stay private until you choose a supported public visibility setting.</p><p><a href="${apps}" style="color:#00598a;">Manage your apps and verification</a></p>`,
+      text: `Find useful apps on Rocket: ${discover}\nManage your apps and optional verification: ${apps}\nMetrics stay private until you choose a supported public visibility setting.\n\nUnsubscribe from weekly emails: ${unsubscribe}`,
+      ctaLabel: "Explore apps",
+      ctaUrl: discover,
+      footer: `You opted in to weekly Rocket emails. <a href="${unsubscribe}" style="color:#00598a;">Unsubscribe from weekly emails</a>. Account, security, and purchase messages are unaffected.`,
+    };
+  }
   if (job.kind === "week_one") {
     const token = typeof c.unsubscribe_token === "string" && /^[0-9a-f]{64}$/.test(c.unsubscribe_token)
       ? c.unsubscribe_token : "";
