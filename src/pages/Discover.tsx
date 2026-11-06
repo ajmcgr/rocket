@@ -33,7 +33,7 @@ const safeSearch = (value: string) =>
 export default function Discover({ initialCategories = [], initialView, initialSearchData }: {
   initialCategories?: Tables<"public_app_categories">[];
   initialView?: string | null;
-  initialSearchData?: { key: string; apps: App[]; count: number };
+  initialSearchData?: { key: string; apps: App[]; count: number; hasMore?: boolean };
 }) {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(params.get("q") || "");
@@ -57,7 +57,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
     }),
   });
   const [count, setCount] = useState(initialSearchData?.count || 0);
-  const [rankingHasMore, setRankingHasMore] = useState(false);
+  const [rankingHasMore, setRankingHasMore] = useState(initialSearchData?.hasMore || false);
   const [loading, setLoading] = useState(initialView !== "categories" && !initialSearchData);
   const [error, setError] = useState<string | null>(null);
   const category = params.get("category") || "";
@@ -71,7 +71,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
     0,
     Math.min(Math.floor(Number(params.get("page") || 0) || 0), 1000),
   );
-  const categoryPageKey = `${category}:${page}:${sort}`;
+  const categoryPageKey = `${["rankings", "new"].includes(params.get("view") || "") ? params.get("view") : "all"}:${category}:${page}:${sort}`;
   const categoryPageHref = (targetPage: number) => {
     const next = new URLSearchParams(params);
     if (targetPage === 0) next.delete("page");
@@ -85,7 +85,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
   )
     ? params.get("view")!
     : "all";
-  const hasServerCategoryData = initialSearchData?.key === categoryPageKey && view === "all"
+  const hasServerCategoryData = initialSearchData?.key === categoryPageKey
     && !search && !platform && !source && !pricing && !billing && !mcp;
   const pageTitle = view === "rankings" ? "Rankings" : view === "new" ? "New" : view === "categories" ? "Categories" : category && view === "all" ? `${category} Apps` : "Discover";
   const showOverview =
@@ -109,6 +109,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
     if (!hasServerCategoryData || !initialSearchData) return;
     setApps(initialSearchData.apps);
     setCount(initialSearchData.count);
+    setRankingHasMore(Boolean(initialSearchData.hasMore));
     setError(null);
     setLoading(false);
   }, [initialSearchData, hasServerCategoryData]);

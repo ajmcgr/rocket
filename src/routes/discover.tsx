@@ -32,17 +32,34 @@ export const Route = createFileRoute("/discover")({
     if (error) throw error;
     const validCategory = APP_CATEGORIES.some((item) => item.name === deps.category);
     let initialSearchData;
-    if (deps.view !== "categories" && deps.view !== "rankings" && deps.view !== "new" && validCategory && !deps.hasOtherFilters) {
+    if (deps.view !== "categories" && deps.view !== "rankings" && !deps.hasOtherFilters && (!deps.category || validCategory)) {
       const result = await marketplaceRpc("search_marketplace", {
         p_query: "", p_category: deps.category, p_platform: "", p_pricing: "",
-        p_billing: "", p_source: "", p_sort: deps.sort, p_mcp: false,
+        p_billing: "", p_source: "", p_sort: deps.view === "new" ? "discovered" : deps.sort, p_mcp: false,
         p_offset: deps.page * 24, p_limit: 24,
       });
       if (result.error) throw result.error;
       initialSearchData = {
-        key: `${deps.category}:${deps.page}:${deps.sort}`,
+        key: `${discoverView(deps.view)}:${deps.category}:${deps.page}:${deps.sort}`,
         apps: result.data?.apps || [],
         count: result.data?.total || 0,
+      };
+    } else if (deps.view === "rankings" && !deps.hasOtherFilters && !deps.category) {
+      const ranking = await marketplaceRpc("get_public_app_rankings_page", {
+        p_category: deps.category, p_offset: deps.page * 20, p_limit: 21,
+      });
+      if (ranking.error) throw ranking.error;
+      const ids = (ranking.data || []).slice(0, 20).map((row) => row.app_id);
+      const apps = ids.length
+        ? await supabase.from("public_discoverable_apps").select("*").in("id", ids)
+        : { data: [], error: null };
+      if (apps.error) throw apps.error;
+      const byId = new Map((apps.data || []).map((app) => [app.id, app]));
+      initialSearchData = {
+        key: `rankings:${deps.category}:${deps.page}:${deps.sort}`,
+        apps: ids.flatMap((id) => byId.get(id) ? [byId.get(id)!] : []),
+        count: ids.length,
+        hasMore: (ranking.data || []).length > 20,
       };
     }
     return { categories: data || [], initialView: deps.view, initialSearchData };
