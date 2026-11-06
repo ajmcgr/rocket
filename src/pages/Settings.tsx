@@ -8,6 +8,7 @@ import MemberProfileSettings from "@/components/MemberProfileSettings";
 import AppIntegrationLinks from "@/components/AppIntegrationLinks";
 import AppActivityEmailPreference from "@/components/AppActivityEmailPreference";
 import WeekOneEmailPreference from "@/components/WeekOneEmailPreference";
+import WeeklyEmailPreference from "@/components/WeeklyEmailPreference";
 
 const supabase = _sb as any;
 
@@ -62,26 +63,12 @@ export const IntegrationsSettings = () => {
 };
 
 export const NotificationsSettings = () => {
-  const [emailsEnabled, setEmailsEnabled] = useState<boolean>(() => localStorage.getItem("notif_emails") !== "0");
-  const toggleEmails = (v: boolean) => {
-    setEmailsEnabled(v);
-    localStorage.setItem("notif_emails", v ? "1" : "0");
-  };
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-6">
       <h2 className="text-base font-semibold">Notifications</h2>
       <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">Your in-app inbox includes app submissions, ownership and verification, analytics connections, Rocket ID, Buy with Rocket, and billing updates alongside your Create activity.</p>
       <a href="/notifications" className="mt-3 inline-block text-sm font-medium text-brand hover:underline">View notifications →</a>
-      <label className="mt-4 flex items-center justify-between gap-4">
-        <span className="text-sm text-neutral-700">Product & launch emails</span>
-        <button
-          onClick={() => toggleEmails(!emailsEnabled)}
-          className={`relative h-6 w-11 rounded-full transition ${emailsEnabled ? "bg-brand" : "bg-neutral-300"}`}
-          aria-pressed={emailsEnabled}
-        >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${emailsEnabled ? "left-[22px]" : "left-0.5"}`} />
-        </button>
-      </label>
+      <WeeklyEmailPreference />
       <AppActivityEmailPreference />
       <WeekOneEmailPreference />
     </section>
