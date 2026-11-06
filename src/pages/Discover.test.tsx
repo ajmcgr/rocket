@@ -63,7 +63,7 @@ it("renders server-loaded category results immediately with crawlable pagination
   });
   mocks.invoke.mockResolvedValue({ data: null, error: null });
   const initialSearchData = {
-    key: "Productivity:1:launched",
+    key: "all:Productivity:1:launched",
     apps: [{ id: "app-1", name: "Productivity App" }] as never,
     count: 60,
   };
@@ -79,6 +79,34 @@ it("renders server-loaded category results immediately with crawlable pagination
     .toContain("page=2");
   expect(screen.getByRole("link", { name: "Previous Productivity apps page" }).getAttribute("href"))
     .toBe("/discover?view=all&category=Productivity");
+  expect(mocks.rpc).not.toHaveBeenCalled();
+});
+
+it.each([
+  { view: "new", app: "New App", key: "new::0:launched", count: 25 },
+  { view: "rankings", app: "Ranked App", key: "rankings::0:launched", count: 1 },
+])("renders server-loaded $view results without refetching", async ({ view, app, key, count }) => {
+  mocks.from.mockImplementation(() => {
+    const builder = {
+      select: () => builder,
+      order: () => builder,
+      limit: () => builder,
+      then: (resolve: (value: unknown) => unknown) =>
+        Promise.resolve({ data: [], error: null }).then(resolve),
+    };
+    return builder;
+  });
+  mocks.invoke.mockResolvedValue({ data: null, error: null });
+  render(
+    <MemoryRouter initialEntries={[`/discover?view=${view}`]}>
+      <Discover initialView={view} initialSearchData={{
+        key, apps: [{ id: "app-1", name: app }] as never, count, hasMore: true,
+      }} />
+    </MemoryRouter>,
+  );
+
+  expect((await screen.findAllByRole("article")).some((element) => element.textContent?.includes(app))).toBe(true);
+  expect(screen.getByRole("button", { name: "Next" })).toBeTruthy();
   expect(mocks.rpc).not.toHaveBeenCalled();
 });
 
