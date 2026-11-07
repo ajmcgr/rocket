@@ -44,6 +44,8 @@ const statEmojis: Record<string, string> = {
   referral_registrations: "📝", verified_revenue_connections: "💰",
   verified_analytics_connections: "📡", referred_developers_with_claims: "🏷️",
 };
+const acquisitionEmojis: Record<string, string> = { direct: "🎯", organic: "🌱", referral: "🔗", social: "💬" };
+const discoveryEmojis: Record<string, string> = { catalogue: "📚", categories: "🗂️", collections: "🔖", homepage: "🏠", rankings: "🏆", search: "🔎" };
 const when = (value: unknown) => typeof value === "string" ? new Date(value).toLocaleString() : "—";
 const appUrl = (row: Row) => `/apps/${encodeURIComponent(String(row.slug || row.id))}`;
 const outreachStatuses = ["eligible", "queued", "sent", "delivered", "clicked", "claimed", "verified", "connected", "bounced", "suppressed", "skipped", "failed"];
@@ -56,6 +58,23 @@ function StatGrid({ data }: { data: Row }) {
       {name === "outbound_clicks" && <small>Daily-deduplicated · UTC calendar days</small>}
       {name === "searches" && <small>Submitted searches · tracked from 24 Oct 2026</small>}
     </div>)}</div>;
+}
+
+function JourneyCards({ data, kind }: { data: Row[]; kind: "acquisition" | "discovery" }) {
+  return <div className="rocket-admin-stats">{data.map((row, index) => {
+    const name = String(kind === "acquisition" ? row.source : row.surface);
+    const title = kind === "discovery" && row.section ? `${label(name)} · ${label(String(row.section))}` : label(name);
+    const emoji = kind === "acquisition" ? acquisitionEmojis[name.toLowerCase()] || "🧭" : discoveryEmojis[name.toLowerCase()] || "🧭";
+    const value = kind === "acquisition" ? row.sessions : row.visits;
+    return <div className="rocket-admin-stat rocket-admin-journey-stat" key={`${name}-${row.section || ""}-${index}`}>
+      <div className="rocket-admin-stat-header"><span>{title}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
+      <div className={`rocket-admin-stat-figure${typeof value === "number" ? "" : " rocket-admin-stat-figure-untracked"}`}><span aria-hidden="true">{emoji}</span><strong>{count(value)}</strong></div>
+      {kind === "acquisition" ? <small>Tab sessions</small> : <div className="rocket-admin-journey-breakdown">
+        <span>Recorded visits</span>
+        <div><span>Card clicks <strong>{count(row.card_clicks)}</strong></span><span>App profiles <strong>{count(row.profile_views)}</strong></span><span>Outbound clicks <strong>{count(row.outbound_clicks)}</strong></span></div>
+      </div>}
+    </div>;
+  })}</div>;
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -195,12 +214,9 @@ export default function Admin() {
         <p className="rocket-admin-muted">Recorded tab events since {journeys.since ? new Date(String(journeys.since)).toLocaleDateString() : "rollout"}. Visits are page loads, not unique visitors. Internal discovery source is separate from external acquisition.</p>
         <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />
         <h3>Acquisition by tab session</h3>
-        <div className="rocket-admin-list">{rows(journeys.acquisition_sessions).map((row, index) => <article key={`${row.source}-${index}`}><strong>{label(String(row.source))}</strong><p>{count(row.sessions)} sessions</p></article>)}</div>
+        <JourneyCards data={rows(journeys.acquisition_sessions)} kind="acquisition" />
         <h3>Internal discovery</h3>
-        <div className="rocket-admin-list">{rows(journeys.surfaces).map((row, index) => <article key={`${row.surface}-${row.section}-${index}`}>
-          <strong>{label(String(row.surface))}{row.section ? ` · ${label(String(row.section))}` : ""}</strong>
-          <p>Recorded visits {count(row.visits)} · Card clicks {count(row.card_clicks)} · App profiles {count(row.profile_views)} · Outbound clicks {count(row.outbound_clicks)}</p>
-        </article>)}</div>
+        <JourneyCards data={rows(journeys.surfaces)} kind="discovery" />
       </Panel>}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
