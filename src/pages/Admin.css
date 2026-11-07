@@ -39,6 +39,11 @@ html.dark .rocket-admin {
 .rocket-admin-stat-figure span{font-size:clamp(2.25rem,3vw,3.5rem);line-height:1}
 .rocket-admin-stat-figure strong{font-size:clamp(2.5rem,4vw,4rem);line-height:1.05;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .rocket-admin-stat-figure-untracked strong{font-size:clamp(1.6rem,2.4vw,2.6rem);letter-spacing:-.02em}
+.rocket-admin-journey-stat small,.rocket-admin-journey-breakdown{color:var(--text-secondary,#666);font-size:.85rem}
+.rocket-admin-journey-breakdown{display:grid;gap:10px}
+.rocket-admin-journey-breakdown>div{display:flex;flex-wrap:wrap;gap:8px 16px}
+.rocket-admin-journey-breakdown>div span{white-space:nowrap}
+.rocket-admin-journey-breakdown strong{color:var(--text-primary,#171717);font-variant-numeric:tabular-nums}
 .rocket-admin-list{display:grid;gap:10px}
 .rocket-admin-list article{border:1px solid var(--border-color,#e4e4e4);border-radius:12px;padding:14px}
 .rocket-admin-list article p{font-size:.88rem;color:var(--text-secondary,#666);margin:7px 0}
