@@ -211,11 +211,8 @@ export default function Admin() {
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
       {journeys && <Panel title="Discovery journeys">
-        <p className="rocket-admin-muted">Recorded tab events since {journeys.since ? new Date(String(journeys.since)).toLocaleDateString() : "rollout"}. Visits are page loads, not unique visitors. Internal discovery source is separate from external acquisition.</p>
         <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />
-        <h3>Acquisition by tab session</h3>
         <JourneyCards data={rows(journeys.acquisition_sessions)} kind="acquisition" />
-        <h3>Internal discovery</h3>
         <JourneyCards data={rows(journeys.surfaces)} kind="discovery" />
       </Panel>}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
