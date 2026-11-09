@@ -482,7 +482,7 @@ export default function Discover({ initialCategories = [], initialView, initialS
                   ? count ? `Showing ${page * RANKING_SIZE + 1}–${page * RANKING_SIZE + count} ranked apps` : "No ranked apps"
                 : `${count.toLocaleString()} ${count === 1 ? "app" : "apps"}`}
           </span>
-          <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by reviews, bookmarks and verified purchases" : view === "new" ? "Newest listings on Rocket" : "Public Launch activity"}</span>
+          {view !== "categories" && <span>{view === "all" ? "All Apps" : view === "rankings" ? "Ranked by reviews, bookmarks and verified purchases" : "Newest listings on Rocket"}</span>}
         </div>
         {error && (
           <div
