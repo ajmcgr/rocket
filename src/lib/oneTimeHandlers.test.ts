@@ -134,16 +134,18 @@ describe("actual production checkout handler (isolated)",()=>{
   it("reuses open sessions and never reuses a completed request",async()=>{for(const status of ["open","complete"]){const h=checkoutHarness("one_time",true,status);expect((await h.handler(request(body))).status).toBe(status==="open"?200:409);expect(h.create).not.toHaveBeenCalled();}});
 });
 
-function webhookHarness(validSignature=true, mode=true) {
-  const metadata={rocket_user_id:"buyer",rocket_client_id:"launch",rocket_product_id:"product"};
+function webhookHarness(validSignature=true, mode=true, options?:{checkoutMode?:"payment"|"subscription";metadata?:Record<string,string>;attempt?:boolean}) {
+  const metadata=options?.metadata??{rocket_user_id:"buyer",rocket_client_id:"launch",rocket_product_id:"product"};
+  const checkoutMode=options?.checkoutMode??"payment";
   const attempt={user_id:"buyer",client_id:"launch",product_id:"product",stripe_checkout_session_id:"cs_real"};
   const transaction={...attempt,id:"purchase",stripe_payment_intent_id:"pi_real"};
   const grants=new Set<string>(); const rpc=vi.fn(async(_name:string,args:any)=>{grants.add(args.p_transaction_id);return {error:null};});
-  const admin={rpc,from:(table:string)=>query(table==="connect_developer_accounts"?{id:"merchant",client_id:"launch"}:table==="connect_checkout_attempts"?attempt:table==="connect_products"?product:table==="connect_transactions"?transaction:null,{insert:()=>query(null),upsert:()=>query(null)})};
-  const checkout={id:"cs_real",mode:"payment",status:"complete",payment_status:"paid",livemode:true,amount_total:3900,currency:"usd",metadata,payment_intent:"pi_real"};
+  const admin={rpc,from:(table:string)=>query(table==="connect_developer_accounts"?{id:"merchant",client_id:"launch"}:table==="connect_checkout_attempts"?(options?.attempt===false?null:attempt):table==="connect_products"?product:table==="connect_transactions"?transaction:null,{insert:()=>query(null),upsert:()=>query(null)})};
+  const checkout={id:"cs_real",mode:checkoutMode,status:"complete",payment_status:"paid",livemode:true,amount_total:3900,currency:"usd",metadata,payment_intent:"pi_real"};
   const intent={id:"pi_real",metadata,status:"succeeded",livemode:true,amount:3900,amount_received:3900,currency:"usd",application_fee_amount:195,latest_charge:{id:"ch_real",payment_intent:"pi_real",paid:true,captured:true,livemode:true,refunded:false,disputed:false}};
-  const stripe={webhooks:{constructEventAsync:async()=>{if(!validSignature)throw Error("bad signature");return {id:"evt_mock",type:"checkout.session.completed",livemode:mode,account:"acct_launch",created:1,data:{object:{id:"cs_real",mode:"payment"}}};}},checkout:{sessions:{retrieve:async()=>checkout,listLineItems:async()=>({has_more:false,data:[{quantity:1,price:{id:"price_real",product:"prod_real"},amount_total:3900,currency:"usd"}]})}},paymentIntents:{retrieve:async()=>intent}};
-  return {grants,rpc,checkout,intent,handler:load("supabase/functions/connect-payment-webhook/index.ts",stripe,admin)};
+  const retrieve=vi.fn(async()=>checkout);
+  const stripe={webhooks:{constructEventAsync:async()=>{if(!validSignature)throw Error("bad signature");return {id:"evt_mock",type:"checkout.session.completed",livemode:mode,account:"acct_launch",created:1,data:{object:{id:"cs_real",mode:checkoutMode}}};}},checkout:{sessions:{retrieve,listLineItems:async()=>({has_more:false,data:[{quantity:1,price:{id:"price_real",product:"prod_real"},amount_total:3900,currency:"usd"}]})}},paymentIntents:{retrieve:async()=>intent}};
+  return {grants,rpc,checkout,intent,retrieve,handler:load("supabase/functions/connect-payment-webhook/index.ts",stripe,admin)};
 }
 const webhookRequest=()=>new Request("https://mock.invalid/",{method:"POST",headers:{"stripe-signature":"mock"},body:"mock"});
 describe("actual one-time webhook handler (isolated)",()=>{
@@ -151,4 +153,7 @@ describe("actual one-time webhook handler (isolated)",()=>{
   it.each([[false,true],[true,false]])("rejects signature or environment mismatch",async(sig,mode)=>{const h=webhookHarness(sig,mode);expect((await h.handler(webhookRequest())).status).toBe(400);expect(h.rpc).not.toHaveBeenCalled();});
   it("never fulfils unpaid or amount-mismatched checkouts",async()=>{const h=webhookHarness();h.checkout.payment_status="unpaid";expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc).not.toHaveBeenCalled();const g=webhookHarness();g.intent.amount_received=1;expect((await g.handler(webhookRequest())).status).toBe(500);expect(g.rpc).not.toHaveBeenCalled();});
   it("keeps a canonically refunded charge revoked despite checkout delivery",async()=>{const h=webhookHarness();h.intent.latest_charge.refunded=true;expect((await h.handler(webhookRequest())).status).toBe(200);expect(h.rpc.mock.calls.find(([name])=>name==="connect_settle_one_time")?.[1].p_status).toBe("refunded");});
+  it("acknowledges unrelated connected-account checkouts without granting access",async()=>{const h=webhookHarness(true,true,{metadata:{plan:"boost"},attempt:false});const response=await h.handler(webhookRequest());expect(response.status).toBe(200);expect(await response.json()).toMatchObject({received:true,ignored:true});expect(h.retrieve).toHaveBeenCalledWith("cs_real",{stripeAccount:"acct_launch"});expect(h.rpc).not.toHaveBeenCalled();});
+  it("keeps an unmapped Rocket checkout retryable",async()=>{const h=webhookHarness(true,true,{attempt:false});expect((await h.handler(webhookRequest())).status).toBe(500);expect(h.rpc).not.toHaveBeenCalled();});
+  it("acknowledges unrelated subscription checkouts",async()=>{const h=webhookHarness(true,true,{checkoutMode:"subscription",metadata:{plan:"boost"},attempt:false});const response=await h.handler(webhookRequest());expect(response.status).toBe(200);expect(await response.json()).toMatchObject({received:true,ignored:true});expect(h.rpc).not.toHaveBeenCalled();});
 });

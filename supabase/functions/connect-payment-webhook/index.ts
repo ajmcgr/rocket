@@ -79,6 +79,19 @@ Deno.serve(async (req) => {
   if (received && !isDuplicate) return reply({ error: "event_record_failed" }, 500);
   try {
     const object: any = event.data.object;
+    const ignoreUnrelatedCheckout = async (sessionId: string) => {
+      // A connected seller can run its own Checkout. Only Rocket-created
+      // sessions carry these metadata keys; never swallow a missing Rocket mapping.
+      const checkout = await stripe.checkout.sessions.retrieve(sessionId, { stripeAccount: accountId });
+      const metadata = checkout.metadata || {};
+      if (["rocket_user_id", "rocket_client_id", "rocket_product_id"].some((key) => Object.hasOwn(metadata, key)))
+        throw new Error("Unmapped Rocket checkout");
+      const { error } = await admin.from("connect_webhook_events").update({
+        processing_result: "stale", detail: { message: "unrelated connected-account checkout" },
+      }).eq("event_id", event.id);
+      if (error) throw error;
+      return reply({ received: true, ignored: true });
+    };
     if (["charge.dispute.created", "charge.dispute.closed"].includes(event.type) &&
       (event.type === "charge.dispute.created" || object.status === "won")) {
       try {
@@ -122,7 +135,8 @@ Deno.serve(async (req) => {
     if (["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type) && object.mode === "payment") {
       const { data: attempt, error: attemptError } = await admin.from("connect_checkout_attempts").select("*")
         .eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).eq("client_id", account.client_id).maybeSingle();
-      if (attemptError || !attempt) throw attemptError || new Error("Unmapped one-time checkout");
+      if (attemptError) throw attemptError;
+      if (!attempt) return await ignoreUnrelatedCheckout(object.id);
       const { data: product, error: productError } = await admin.from("connect_products").select("*")
         .eq("id", attempt.product_id).eq("client_id", account.client_id).eq("developer_account_id", account.id).maybeSingle();
       if (productError || !product || billingType(product) !== "one_time") throw productError || new Error("One-time product mapping mismatch");
@@ -176,8 +190,10 @@ Deno.serve(async (req) => {
       return reply({ received: true });
     }
     if (event.type === "checkout.session.completed") {
-      const { data: attempt } = await admin.from("connect_checkout_attempts").select("*").eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).maybeSingle();
-      if (!attempt || object.mode !== "subscription") throw new Error("Unmapped checkout");
+      const { data: attempt, error: attemptError } = await admin.from("connect_checkout_attempts").select("*").eq("stripe_checkout_session_id", object.id).eq("stripe_account_id", accountId).maybeSingle();
+      if (attemptError) throw attemptError;
+      if (!attempt) return await ignoreUnrelatedCheckout(object.id);
+      if (object.mode !== "subscription") throw new Error("Unmapped checkout");
       if (object.payment_status !== "paid") {
         await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "checkout payment is not settled" } }).eq("event_id", event.id);
         return reply({ received: true, ignored: true });
