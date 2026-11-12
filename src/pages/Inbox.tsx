@@ -84,7 +84,7 @@ export default function Inbox() {
         setMessages((current) => ({ ...current, [selectedId]: [...(data || [])].reverse() }));
         setHasOlder((data || []).length === 50);
         void db.from("rocket_conversation_state").update({ last_read_at: new Date().toISOString() })
-          .eq("conversation_id", selectedId).eq("user_id", user.id).then(() => { void refresh(); window.dispatchEvent(new Event("rocket:inbox-read")); });
+          .eq("conversation_id", selectedId).eq("user_id", user.id).then(() => { void refresh(); window.dispatchEvent(new Event("rocket:inbox-read")); window.dispatchEvent(new Event("rocket:notifications-refresh")); });
       });
     return () => { activeEffect = false; };
   }, [selectedId, user?.id]);
@@ -97,6 +97,7 @@ export default function Inbox() {
         // RLS-protected conversation query before including message content.
         void db.from("rocket_conversations").select("id").eq("id", message.conversation_id).maybeSingle().then(({ data }: any) => {
           if (!data) return;
+          window.dispatchEvent(new Event("rocket:notifications-refresh"));
           setMessages((current) => {
             const history = current[message.conversation_id] || [];
             if (history.some((item) => item.id === message.id || item.client_message_id === message.client_message_id)) return current;
@@ -106,7 +107,7 @@ export default function Inbox() {
             void db.from("rocket_conversation_state")
               .update({ last_read_at: new Date().toISOString() })
               .eq("conversation_id", selectedId).eq("user_id", user.id)
-              .then(() => window.dispatchEvent(new Event("rocket:inbox-read")));
+              .then(() => { window.dispatchEvent(new Event("rocket:inbox-read")); window.dispatchEvent(new Event("rocket:notifications-refresh")); });
           }
           void refresh();
         });
