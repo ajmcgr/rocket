@@ -9,6 +9,7 @@ import AppIntegrationLinks from "@/components/AppIntegrationLinks";
 import AppActivityEmailPreference from "@/components/AppActivityEmailPreference";
 import WeekOneEmailPreference from "@/components/WeekOneEmailPreference";
 import WeeklyEmailPreference from "@/components/WeeklyEmailPreference";
+import InboxEmailPreference from "@/components/InboxEmailPreference";
 
 const supabase = _sb as any;
 
@@ -69,6 +70,7 @@ export const NotificationsSettings = () => {
       <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">Your in-app inbox includes app submissions, ownership and verification, analytics connections, Rocket ID, Buy with Rocket, and billing updates alongside your Create activity.</p>
       <a href="/notifications" className="mt-3 inline-block text-sm font-medium text-brand hover:underline">View notifications →</a>
       <WeeklyEmailPreference />
+      <InboxEmailPreference />
       <AppActivityEmailPreference />
       <WeekOneEmailPreference />
     </section>

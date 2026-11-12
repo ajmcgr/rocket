@@ -16,6 +16,7 @@ import { edgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { BarChart3 } from "lucide-react";
 import RocketShare from "@/components/RocketShare";
 import AgentIntegrationsPanel from "@/components/AgentIntegrationsPanel";
+import AcquisitionSettings from "@/components/AcquisitionSettings";
 
 export default function MyAppSettings() {
   const { id } = useParams<{ id: string }>();
@@ -288,6 +289,9 @@ export default function MyAppSettings() {
           </div>
           {item.owned && item.owner_verification_level === "domain_verified" && (
             <AgentIntegrationsPanel appId={item.app_id} />
+          )}
+          {item.owned && item.owner_verification_level === "domain_verified" && (
+            <AcquisitionSettings appId={item.app_id} />
           )}
         </div>
       )}

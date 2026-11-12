@@ -11,6 +11,7 @@ import AdminInvestorMetrics from "@/components/AdminInvestorMetrics";
 import AdminNewsletter from "@/components/AdminNewsletter";
 import AdminRocket100 from "@/components/AdminRocket100";
 import AdminAppScreenshots from "@/components/AdminAppScreenshots";
+import AdminAcquisitionReview from "@/components/AdminAcquisitionReview";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "screenshots" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -202,6 +203,7 @@ export default function Admin() {
     </header>
     <nav className="rocket-admin-tabs" aria-label="Admin sections">{sections.map((item) => <Link key={item.id} to={item.id === "home" ? "/admin" : `/admin/${item.id}`} className={section === item.id ? "active" : ""}>{item.label}</Link>)}</nav>
     {data && section === "developer-testing" && <AdminDeveloperTesting />}
+    {data && section === "ops" && <AdminAcquisitionReview />}
     {data && section === "screenshots" && <AdminAppScreenshots />}
     {error && <p className="rocket-admin-error" role="alert">{error}</p>}
     {!data && !error && <div className="rocket-admin-loading" role="status" aria-label="Loading admin data"><div /><div /><div /><div /></div>}

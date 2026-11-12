@@ -55,6 +55,7 @@ import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
 import AppAgentIntegrations, {
   type PublicAgentIntegrations,
 } from "@/components/AppAgentIntegrations";
+import AppAcquisitionCard from "@/components/AppAcquisitionCard";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -510,6 +511,7 @@ export default function PublicAppProfile({
                 appName={app.name}
                 websiteUrl={app.website_url}
               />
+              <AppAcquisitionCard appId={app.id} />
               {presentation?.pricing_display && (
                 <p className="mt-3 text-xs text-neutral-500">
                   Pricing: {presentation.pricing_display} · Information supplied

@@ -87,7 +87,14 @@ export type AnalyticsEvent =
   | "rocket_recap_share_revoked"
   | "rocket_recap_public_visited"
   | "rocket_recap_profile_clicked"
-  | "rocket_recap_app_clicked";
+  | "rocket_recap_app_clicked"
+  | "for_sale_page_viewed"
+  | "acquisition_listing_viewed"
+  | "contact_founder_clicked"
+  | "acquisition_enquiry_initiated"
+  | "acquisition_listing_created"
+  | "acquisition_listing_disabled"
+  | "rocket_message_sent";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;

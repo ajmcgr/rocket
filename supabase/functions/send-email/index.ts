@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { deliverClaimEmail } from "./claim-email.ts";
 import { deliverSharingEmail } from "./sharing-email.ts";
+import { deliverInboxEmail } from "./inbox-email.ts";
 
 import { renderEmail } from "./layout.ts";
 
@@ -69,6 +70,11 @@ Deno.serve(async (req) => {
     if (input.action === "sharing_email") {
       const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const result = await deliverSharingEmail(admin, input, RESEND_API_KEY, FROM_EMAIL, renderEmail);
+      return new Response(JSON.stringify(result.body), { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (input.action === "inbox_email") {
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const result = await deliverInboxEmail(admin, input, RESEND_API_KEY, FROM_EMAIL, renderEmail);
       return new Response(JSON.stringify(result.body), { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
