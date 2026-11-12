@@ -33,6 +33,23 @@ type BuyStatus = {
   platform_fee_bps: number;
   launch_ready: boolean;
 };
+type SalesSummary = {
+  partial: boolean;
+  currencies: {
+    currency: string; payment_count: number; one_time_purchase_count: number;
+    gross_cents: number; revenue_cents: number; subscription_revenue_cents: number;
+    one_time_revenue_cents: number; gross_platform_fee_cents: number; refund_cents: number;
+  }[];
+  recent: {
+    payment_id: string; product_name: string; billing_type: string; paid_at: string;
+    amount_cents: number; application_fee_cents: number; refund_cents: number;
+    currency: string; legacy: boolean;
+  }[];
+};
+const salesMoney = (minor: number, currency: string) => {
+  const formatter = new Intl.NumberFormat(undefined, { style: "currency", currency: currency.toUpperCase() });
+  return formatter.format(minor / 10 ** (formatter.resolvedOptions().maximumFractionDigits ?? 2));
+};
 type PendingStripeAccount = {
   id: string;
   stripe_account_id: string;
@@ -102,6 +119,8 @@ export default function ProductionBuySetup({
       "",
   );
   const [status, setStatus] = useState<BuyStatus | null>(null);
+  const [sales, setSales] = useState<SalesSummary | null>(null);
+  const [salesError, setSalesError] = useState("");
   const [pendingAccount, setPendingAccount] =
     useState<PendingStripeAccount | null>(null);
   const [country, setCountry] = useState("");
@@ -126,6 +145,13 @@ export default function ProductionBuySetup({
       setError("");
       const next = await request<BuyStatus>("status", appId);
       setStatus(next);
+      try {
+        setSales(await request<SalesSummary>("sales", appId));
+        setSalesError("");
+      } catch (caught) {
+        setSales(null);
+        setSalesError(caught instanceof Error ? caught.message : "Sales unavailable");
+      }
       if (next.merchant?.ready) {
         setCatalogLoading(true);
         setCatalogError("");
@@ -161,6 +187,7 @@ export default function ProductionBuySetup({
       onStatus?.(next);
     } catch (caught: unknown) {
       setStatus(null);
+      setSales(null);
       setPendingAccount(null);
       setError(
         caught instanceof Error
@@ -381,6 +408,36 @@ export default function ProductionBuySetup({
         )}
       {status && (
         <div className="mt-6 space-y-6">
+          <section className="rounded-xl border border-neutral-200 p-4" aria-label="Buy with Rocket sales">
+            <h3 className="font-semibold">Sales</h3>
+            {salesError && <p role="alert" className="mt-2 text-sm text-red-600">Sales report unavailable: {salesError}</p>}
+            {sales?.partial && <p className="mt-2 text-sm text-amber-700">Some older payments lack the payment ledger. These totals include their original order records, but past renewals and partial refunds may be missing.</p>}
+            {sales && !sales.currencies.length && <p className="mt-2 text-sm text-neutral-600">No confirmed sales yet.</p>}
+            {sales?.currencies.map((currency) => (
+              <div key={currency.currency} className="mt-4">
+                <h4 className="font-medium">{currency.currency.toUpperCase()}</h4>
+                <dl className="mt-2 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  {([
+                    ["Revenue after refunds", currency.revenue_cents],
+                    ["Subscription revenue", currency.subscription_revenue_cents],
+                    ["One-time revenue", currency.one_time_revenue_cents],
+                    ["Gross transaction volume", currency.gross_cents],
+                    ["Gross Rocket fees", currency.gross_platform_fee_cents],
+                    ["Refunds", currency.refund_cents],
+                  ] as const).map(([title, amount]) => <div key={title}><dt className="text-neutral-600">{title}</dt><dd className="font-semibold">{salesMoney(amount, currency.currency)}</dd></div>)}
+                  <div><dt className="text-neutral-600">Payments</dt><dd className="font-semibold">{currency.payment_count}</dd></div>
+                  <div><dt className="text-neutral-600">One-time purchases</dt><dd className="font-semibold">{currency.one_time_purchase_count}</dd></div>
+                </dl>
+              </div>
+            ))}
+            {!!sales?.recent.length && <details className="mt-5 text-sm"><summary className="cursor-pointer font-medium">Recent transactions</summary>
+              <ul className="mt-3 divide-y divide-neutral-200">{sales.recent.map((payment) => <li key={payment.payment_id} className="py-2">
+                <span className="font-medium">{payment.product_name}</span> · {payment.billing_type === "one_time" ? "One-time" : "Subscription"} · {salesMoney(payment.amount_cents, payment.currency)} · {new Date(payment.paid_at).toLocaleDateString()}
+                {payment.refund_cents > 0 && <span> · Refunded {salesMoney(payment.refund_cents, payment.currency)}</span>}
+              </li>)}</ul>
+            </details>}
+            <p className="mt-3 text-xs text-neutral-500">Verified Rocket payment records only. Gross Rocket fees exclude Stripe processing fees. Subscription revenue includes recorded renewals; one-time payments are excluded from MRR.</p>
+          </section>
           <div className="rounded-xl border border-neutral-200 p-4">
             <h3 className="font-semibold">1. Stripe account</h3>
             <p className="mt-1 text-sm text-neutral-600">

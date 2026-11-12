@@ -93,4 +93,16 @@ describe("official Rocket button", () => {
     button.click();
     expect(activate).toHaveBeenCalledTimes(1);
   });
+  it("uses subscription wording while retaining the Rocket checkout activation", () => {
+    const host = document.createElement("rocket-button");
+    host.setAttribute("action", "subscribe");
+    document.body.append(host);
+    const button = host.shadowRoot!.querySelector("button")!;
+    expect(button.getAttribute("aria-label")).toBe("Subscribe with Rocket");
+    expect(button.textContent).toBe("Subscribe with Rocket");
+    const activate = vi.fn();
+    host.addEventListener("rocket-activate", activate);
+    button.click();
+    expect(activate).toHaveBeenCalledTimes(1);
+  });
 });

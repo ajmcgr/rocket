@@ -37,7 +37,7 @@ button:disabled{background:#e6eaf0;color:#526171;border-color:#a5afbb;cursor:not
           const app = this.getAttribute("app-id");
           const offer = this.getAttribute("offer-id");
           const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-          if (proceed && this.getAttribute("action") === "buy" && uuid.test(app || "") && (!offer || uuid.test(offer))) {
+          if (proceed && ["buy", "subscribe"].includes(this.getAttribute("action")) && uuid.test(app || "") && (!offer || uuid.test(offer))) {
             const url = new URL(`/apps/${app}`, "https://tryrocket.ai");
             url.searchParams.set("buy", "1");
             url.searchParams.set("source", "developer_website");
@@ -56,8 +56,9 @@ button:disabled{background:#e6eaf0;color:#526171;border-color:#a5afbb;cursor:not
     }
     update() {
       if (!this.control) return;
-      const buy = this.getAttribute("action") === "buy";
-      const label = buy ? "Buy with Rocket" : "Continue with Rocket";
+      const action = this.getAttribute("action");
+      const buy = action === "buy" || action === "subscribe";
+      const label = action === "subscribe" ? "Subscribe with Rocket" : buy ? "Buy with Rocket" : "Continue with Rocket";
       const variant = this.getAttribute("variant");
       this.control.className = ["dark", "light"].includes(variant)
         ? variant

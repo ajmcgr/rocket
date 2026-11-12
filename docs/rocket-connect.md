@@ -61,7 +61,7 @@ Run `npm run test:rocket-connect` after deployment for public security smoke che
 
 ## Official Rocket Buttons
 
-Use the versioned hosted kit at `https://tryrocket.ai/buttons/v1/rocket-buttons.js` for both fixed labels: **Continue with Rocket** and **Buy with Rocket**. The same implementation powers Rocket’s own controls. Preview the primary blue, dark, light, loading and disabled states at [Buy with Rocket](https://tryrocket.ai/buy-with-rocket#rocket-buttons). Follow the [brand usage spec](https://tryrocket.ai/buttons/v1/brand-usage.html).
+Use the versioned hosted kit at `https://tryrocket.ai/buttons/v1/rocket-buttons.js` for fixed labels: **Continue with Rocket**, **Buy with Rocket** for one-time offers, and **Subscribe with Rocket** for recurring offers (`action="subscribe"`). The same implementation powers Rocket’s own controls. Preview the primary blue, dark, light, loading and disabled states at [Buy with Rocket](https://tryrocket.ai/buy-with-rocket#rocket-buttons). Follow the [brand usage spec](https://tryrocket.ai/buttons/v1/brand-usage.html).
 
 Attach your existing sign-in or purchase handler to `rocket-activate`. Without app-id the kit emits only the event. With app-id and optional offer-id, a Buy button navigates to Rocket’s hosted picker after an uncancelled event. It makes no payment requests, grants no access and accepts no custom mark or wording. Keep existing OAuth and payment eligibility/entitlement checks. Set the boolean `loading` attribute during the existing handler and remove it when complete; set `disabled` when ineligible.
 
