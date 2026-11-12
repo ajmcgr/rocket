@@ -23,6 +23,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ForSaleRouteImport } from './routes/for-sale'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as JoinRouteImport } from './routes/join'
@@ -51,6 +52,7 @@ import { Route as AppEditorRouteImport } from './routes/_app/editor'
 import { Route as AppFilesRouteImport } from './routes/_app/files'
 import { Route as AppGenerateRouteImport } from './routes/_app/generate'
 import { Route as AppIconsRouteImport } from './routes/_app/icons'
+import { Route as AppInboxRouteImport } from './routes/_app/inbox'
 import { Route as AppInsightsRouteImport } from './routes/_app/insights'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppLogosRouteImport } from './routes/_app/logos'
@@ -212,6 +214,11 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForSaleRoute = ForSaleRouteImport.update({
+  id: '/for-sale',
+  path: '/for-sale',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -350,6 +357,11 @@ const AppGenerateRoute = AppGenerateRouteImport.update({
 const AppIconsRoute = AppIconsRouteImport.update({
   id: '/icons',
   path: '/icons',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInboxRoute = AppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInsightsRoute = AppInsightsRouteImport.update({
@@ -820,6 +832,7 @@ export interface FileRoutesByFullPath {
   '/developer': typeof DeveloperRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
+  '/for-sale': typeof ForSaleRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/join': typeof JoinRoute
@@ -848,6 +861,7 @@ export interface FileRoutesByFullPath {
   '/files': typeof AppFilesRoute
   '/generate': typeof AppGenerateRoute
   '/icons': typeof AppIconsRoute
+  '/inbox': typeof AppInboxRoute
   '/insights': typeof AppInsightsRoute
   '/library': typeof AppLibraryRoute
   '/logos': typeof AppLogosRoute
@@ -953,6 +967,7 @@ export interface FileRoutesByTo {
   '/developer': typeof DeveloperRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
+  '/for-sale': typeof ForSaleRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/join': typeof JoinRoute
@@ -981,6 +996,7 @@ export interface FileRoutesByTo {
   '/files': typeof AppFilesRoute
   '/generate': typeof AppGenerateRoute
   '/icons': typeof AppIconsRoute
+  '/inbox': typeof AppInboxRoute
   '/insights': typeof AppInsightsRoute
   '/library': typeof AppLibraryRoute
   '/logos': typeof AppLogosRoute
@@ -1086,6 +1102,7 @@ export interface FileRoutesById {
   '/developer': typeof DeveloperRoute
   '/discover': typeof DiscoverRoute
   '/faq': typeof FaqRoute
+  '/for-sale': typeof ForSaleRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/join': typeof JoinRoute
@@ -1114,6 +1131,7 @@ export interface FileRoutesById {
   '/_app/files': typeof AppFilesRoute
   '/_app/generate': typeof AppGenerateRoute
   '/_app/icons': typeof AppIconsRoute
+  '/_app/inbox': typeof AppInboxRoute
   '/_app/insights': typeof AppInsightsRoute
   '/_app/library': typeof AppLibraryRoute
   '/_app/logos': typeof AppLogosRoute
@@ -1221,6 +1239,7 @@ export interface FileRouteTypes {
     | '/developer'
     | '/discover'
     | '/faq'
+    | '/for-sale'
     | '/forgot-password'
     | '/gallery'
     | '/join'
@@ -1249,6 +1268,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/generate'
     | '/icons'
+    | '/inbox'
     | '/insights'
     | '/library'
     | '/logos'
@@ -1354,6 +1374,7 @@ export interface FileRouteTypes {
     | '/developer'
     | '/discover'
     | '/faq'
+    | '/for-sale'
     | '/forgot-password'
     | '/gallery'
     | '/join'
@@ -1382,6 +1403,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/generate'
     | '/icons'
+    | '/inbox'
     | '/insights'
     | '/library'
     | '/logos'
@@ -1486,6 +1508,7 @@ export interface FileRouteTypes {
     | '/developer'
     | '/discover'
     | '/faq'
+    | '/for-sale'
     | '/forgot-password'
     | '/gallery'
     | '/join'
@@ -1514,6 +1537,7 @@ export interface FileRouteTypes {
     | '/_app/files'
     | '/_app/generate'
     | '/_app/icons'
+    | '/_app/inbox'
     | '/_app/insights'
     | '/_app/library'
     | '/_app/logos'
@@ -1621,6 +1645,7 @@ export interface RootRouteChildren {
   DeveloperRoute: typeof DeveloperRoute
   DiscoverRoute: typeof DiscoverRoute
   FaqRoute: typeof FaqRoute
+  ForSaleRoute: typeof ForSaleRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GalleryRoute: typeof GalleryRoute
   JoinRoute: typeof JoinRoute
@@ -1768,6 +1793,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-sale': {
+      id: '/for-sale'
+      path: '/for-sale'
+      fullPath: '/for-sale'
+      preLoaderRoute: typeof ForSaleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -1964,6 +1996,13 @@ declare module '@tanstack/react-router' {
       path: '/icons'
       fullPath: '/icons'
       preLoaderRoute: typeof AppIconsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inbox': {
+      id: '/_app/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AppInboxRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/insights': {
@@ -2665,6 +2704,7 @@ interface AppRouteChildren {
   AppFilesRoute: typeof AppFilesRoute
   AppGenerateRoute: typeof AppGenerateRoute
   AppIconsRoute: typeof AppIconsRoute
+  AppInboxRoute: typeof AppInboxRoute
   AppInsightsRoute: typeof AppInsightsRoute
   AppLibraryRoute: typeof AppLibraryRoute
   AppLogosRoute: typeof AppLogosRoute
@@ -2725,6 +2765,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFilesRoute: AppFilesRoute,
   AppGenerateRoute: AppGenerateRoute,
   AppIconsRoute: AppIconsRoute,
+  AppInboxRoute: AppInboxRoute,
   AppInsightsRoute: AppInsightsRoute,
   AppLibraryRoute: AppLibraryRoute,
   AppLogosRoute: AppLogosRoute,
@@ -2794,6 +2835,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeveloperRoute: DeveloperRoute,
   DiscoverRoute: DiscoverRoute,
   FaqRoute: FaqRoute,
+  ForSaleRoute: ForSaleRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GalleryRoute: GalleryRoute,
   JoinRoute: JoinRoute,

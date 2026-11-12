@@ -51,6 +51,7 @@ const ShareExportModal = lazy(() => import("./ShareExportModal"));
 import LanguageSelector from "./LanguageSelector";
 import { recordDiscoverySearch } from "@/lib/discoveryTracking";
 import { createNavigationItems } from "@/lib/createNavigation";
+import { supabase } from "@/integrations/supabase/client";
 
 const siteShareUrl = () => {
   const url = new URL("/", typeof window !== "undefined" ? window.location.origin : "https://tryrocket.ai");
@@ -92,6 +93,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: "Rising", to: "/rising", icon: Zap },
       { label: "Categories", to: "/discover?view=categories", icon: Grid2X2 },
       { label: "Collections", to: "/collections", icon: Bookmark },
+      { label: "Apps for Sale", to: "/for-sale", icon: Wallet },
     ],
   },
   {
@@ -101,6 +103,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
       { label: "Saved", to: "/my-collections", icon: Bookmark },
+      { label: "Inbox", to: "/inbox", icon: MessageCircle },
     ],
   },
   {
@@ -131,6 +134,7 @@ export default function SiteHeader({
   const [search, setSearch] = useState("");
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const [avatarImageLoaded, setAvatarImageLoaded] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const { user, loading, signOut } = useAuth();
   const profileHref = useMyProfileHref(user);
   const sidebarSections = sections
@@ -153,6 +157,31 @@ export default function SiteHeader({
   const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)
     ?.avatar_url;
   const initial = (user?.email?.[0] || "U").toUpperCase();
+
+  useEffect(() => {
+    if (!user?.id) { setUnreadMessages(0); return; }
+    let live = true;
+    const countUnread = async () => {
+      const db = supabase as any;
+      const [{ data: conversations }, { data: states }] = await Promise.all([
+        db.from("rocket_conversations").select("id,last_message_at,last_message_sender_id").order("last_activity_at", { ascending: false }).limit(100),
+        db.from("rocket_conversation_state").select("conversation_id,last_read_at").eq("user_id", user.id),
+      ]);
+      if (!live || !conversations) return;
+      const stateMap = new Map((states || []).map((item: any) => [item.conversation_id, item.last_read_at]));
+      setUnreadMessages(conversations.filter((item: any) => {
+        const read = stateMap.get(item.id) as string | null | undefined;
+        return item.last_message_sender_id !== user.id && item.last_message_at && (!read || item.last_message_at > read);
+      }).length);
+    };
+    void countUnread();
+    const timer = window.setInterval(() => void countUnread(), 60_000);
+    const channel = supabase.channel(`rocket-inbox-badge-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "rocket_messages" }, () => void countUnread())
+      .subscribe();
+    window.addEventListener("rocket:inbox-read", countUnread);
+    return () => { live = false; window.clearInterval(timer); window.removeEventListener("rocket:inbox-read", countUnread); void supabase.removeChannel(channel); };
+  }, [user?.id, pathname]);
 
   useEffect(() => {
     setSidebarCompact(
@@ -207,6 +236,7 @@ export default function SiteHeader({
           aria-hidden="true"
         />
         {!sidebarCompact && <span>{label}</span>}
+        {label === "Inbox" && unreadMessages > 0 && <span className="ml-auto rounded-full bg-sky-600 px-1.5 text-[10px] font-semibold text-white" aria-label={`${unreadMessages} unread conversations`}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
       </Link>
     );
   };

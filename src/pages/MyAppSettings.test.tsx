@@ -74,6 +74,9 @@ vi.mock("@/components/AppDisconnectControls", () => ({
 vi.mock("@/components/AgentIntegrationsPanel", () => ({
   default: () => <div>Agent integration form</div>,
 }));
+vi.mock("@/components/AcquisitionSettings", () => ({
+  default: () => <div>Acquisition settings</div>,
+}));
 
 it("opens an owned app's settings from its card route", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
