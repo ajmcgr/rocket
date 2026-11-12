@@ -13,7 +13,7 @@ import { useLocation } from "@/lib/router-compat";
 import "@/components/notifications.css";
 
 export type NotificationKind =
-  "asset" | "export" | "billing" | "system" | "project" | "app" | "monetize";
+  "asset" | "export" | "billing" | "system" | "project" | "app" | "monetize" | "message";
 export type Notification = {
   id: string;
   kind: NotificationKind;

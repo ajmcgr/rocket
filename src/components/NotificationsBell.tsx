@@ -12,6 +12,7 @@ import {
   CreditCard,
   FolderOpen,
   Info,
+  MessageCircle,
   X,
 } from "@/components/EmojiIcons";
 import {
@@ -35,6 +36,7 @@ const ICONS: Record<
   system: Info,
   app: FolderOpen,
   monetize: CreditCard,
+  message: MessageCircle,
 };
 
 const timeAgo = (ts: number) => {

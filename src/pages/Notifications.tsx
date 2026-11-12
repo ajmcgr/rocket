@@ -15,6 +15,7 @@ import {
   CreditCard,
   FolderOpen,
   Info,
+  MessageCircle,
   X,
 } from "@/components/EmojiIcons";
 import {
@@ -33,10 +34,12 @@ const ICONS: Record<
   system: Info,
   app: FolderOpen,
   monetize: CreditCard,
+  message: MessageCircle,
 };
 const FILTERS: { id: "all" | "unread" | NotificationKind; label: string }[] = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
+  { id: "message", label: "Messages" },
   { id: "app", label: "My Apps" },
   { id: "monetize", label: "Monetize" },
   { id: "asset", label: "Designs" },
