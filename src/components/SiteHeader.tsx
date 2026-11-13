@@ -425,6 +425,16 @@ export default function SiteHeader({
             <ThemeToggle />
             {user && (
               <>
+                <Link
+                  to="/inbox"
+                  title="Inbox"
+                  aria-label={unreadMessages ? `Inbox, ${unreadMessages} unread conversations` : "Inbox"}
+                  aria-current={pathname === "/inbox" ? "page" : undefined}
+                  className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-neutral-700 hover:bg-neutral-100 md:inline-flex"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  {unreadMessages > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-semibold text-white" aria-hidden="true">{unreadMessages > 9 ? "9+" : unreadMessages}</span>}
+                </Link>
                 <div
                   data-tour="nav-notifications"
                   className="hidden md:inline-flex"
@@ -465,6 +475,12 @@ export default function SiteHeader({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to={profileHref}>My Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/inbox" className="flex items-center justify-between">
+                      Inbox
+                      {unreadMessages > 0 && <span className="rounded-full bg-sky-600 px-1.5 text-[10px] font-semibold text-white" aria-label={`${unreadMessages} unread conversations`}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings">Settings</Link>
