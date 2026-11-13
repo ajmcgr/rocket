@@ -127,7 +127,7 @@ export default function MyAppSettings() {
       {!loading && !error && item && (
         <div className="mt-7 space-y-3">
           {item.owned && <nav aria-label="App developer toolkit" className="flex flex-wrap gap-2 pb-2 text-sm font-medium">
-            {[["Overview", "overview"], ["Analytics", "analytics"], ["Improve", "improve"], ["Beta", "beta"], ["Verification", "verification"], ["Monetize", "monetize"], ...(item.owner_verification_level === "domain_verified" ? [["Agent Integrations", "agent-integrations"]] : [])].map(([label, anchor]) => <a key={anchor} href={`#${anchor}`} className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-neutral-700 hover:border-sky-300 hover:text-sky-800">{label}</a>)}
+            {[["Overview", "overview"], ["Analytics", "analytics"], ["Improve", "improve"], ["Beta", "beta"], ["Verification", "verification"], ["Monetize", "monetize"], ...(item.owner_verification_level === "domain_verified" ? [["Agent Integrations", "agent-integrations"], ["Sell My App", "acquisition"]] : [])].map(([label, anchor]) => <a key={anchor} href={`#${anchor}`} className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-neutral-700 hover:border-sky-300 hover:text-sky-800">{label}</a>)}
           </nav>}
           {item.app && <div className="flex flex-wrap gap-3">
             <Link
