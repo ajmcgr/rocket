@@ -110,6 +110,27 @@ export const faqSections = [
     ],
   },
   {
+    title: "Apps for Sale",
+    questions: [
+      {
+        q: "How do I find apps available to buy?",
+        a: "Browse Apps for Sale to see approved listings marked For sale or Open to offers. You can filter by category, availability and asking price. An asking price is seller-provided and may be absent.",
+      },
+      {
+        q: "How do I list my app for sale?",
+        a: "Claim your app and complete domain verification, then open its Apps for Sale settings in My Apps. Choose For sale or Open to offers, add the requested details and save. The listing appears publicly only after Rocket reviews it. You can later choose Not for sale to hide it.",
+      },
+      {
+        q: "How do I contact a seller?",
+        a: "Open an approved listing and select Contact Founder. Sign in when prompted, then use Rocket Inbox to discuss the opportunity with the owner. Keep sensitive financial or legal documents out of an initial message.",
+      },
+      {
+        q: "Does Rocket verify ownership or handle the acquisition?",
+        a: "Rocket requires domain verification and reviews listing eligibility, but this does not establish legal ownership or verify seller-provided claims. Rocket Inbox supports introductions; Rocket does not provide acquisition checkout, escrow, due diligence or ownership transfer. Buyers and sellers must arrange those steps independently.",
+      },
+    ],
+  },
+  {
     title: "Payments and Buy with Rocket",
     questions: [
       {
