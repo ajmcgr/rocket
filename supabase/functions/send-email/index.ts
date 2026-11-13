@@ -1,6 +1,7 @@
 // redeploy: 2026-06-12-v11-inline
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { deliverClaimEmail } from "./claim-email.ts";
+import { deliverAcquisitionReviewEmail } from "./acquisition-review-email.ts";
 import { deliverSharingEmail } from "./sharing-email.ts";
 import { deliverInboxEmail } from "./inbox-email.ts";
 
@@ -65,6 +66,11 @@ Deno.serve(async (req) => {
     if (input.action === "claim_email") {
       const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const result = await deliverClaimEmail(admin, input, RESEND_API_KEY, FROM_EMAIL, renderEmail);
+      return new Response(JSON.stringify(result.body), { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (input.action === "acquisition_review_email") {
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const result = await deliverAcquisitionReviewEmail(admin, input, RESEND_API_KEY, FROM_EMAIL, renderEmail);
       return new Response(JSON.stringify(result.body), { status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (input.action === "sharing_email") {
