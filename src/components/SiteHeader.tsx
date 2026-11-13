@@ -103,7 +103,6 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
       { label: "Saved", to: "/my-collections", icon: Bookmark },
-      { label: "Inbox", to: "/inbox", icon: MessageCircle },
     ],
   },
   {
@@ -236,7 +235,6 @@ export default function SiteHeader({
           aria-hidden="true"
         />
         {!sidebarCompact && <span>{label}</span>}
-        {label === "Inbox" && unreadMessages > 0 && <span className="ml-auto rounded-full bg-sky-600 px-1.5 text-[10px] font-semibold text-white" aria-label={`${unreadMessages} unread conversations`}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
       </Link>
     );
   };
