@@ -62,7 +62,7 @@ function StatGrid({ data }: { data: Row }) {
 }
 
 function JourneyCards({ data, kind }: { data: Row[]; kind: "acquisition" | "discovery" }) {
-  return <div className="rocket-admin-stats">{data.map((row, index) => {
+  return <div className="rocket-admin-stats rocket-admin-journey-grid">{data.map((row, index) => {
     const name = String(kind === "acquisition" ? row.source : row.surface);
     const title = kind === "discovery" && row.section ? `${label(name)} · ${label(String(row.section))}` : label(name);
     const emoji = kind === "acquisition" ? acquisitionEmojis[name.toLowerCase()] || "🧭" : discoveryEmojis[name.toLowerCase()] || "🧭";
@@ -70,10 +70,6 @@ function JourneyCards({ data, kind }: { data: Row[]; kind: "acquisition" | "disc
     return <div className="rocket-admin-stat rocket-admin-journey-stat" key={`${name}-${row.section || ""}-${index}`}>
       <div className="rocket-admin-stat-header"><span>{title}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
       <div className={`rocket-admin-stat-figure${typeof value === "number" ? "" : " rocket-admin-stat-figure-untracked"}`}><span aria-hidden="true">{emoji}</span><strong>{count(value)}</strong></div>
-      {kind === "acquisition" ? <small>Tab sessions</small> : <div className="rocket-admin-journey-breakdown">
-        <span>Recorded visits</span>
-        <div><span>Card clicks <strong>{count(row.card_clicks)}</strong></span><span>App profiles <strong>{count(row.profile_views)}</strong></span><span>Outbound clicks <strong>{count(row.outbound_clicks)}</strong></span></div>
-      </div>}
     </div>;
   })}</div>;
 }
