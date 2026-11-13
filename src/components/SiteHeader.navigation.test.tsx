@@ -27,6 +27,32 @@ afterEach(() => {
 });
 
 describe("Sidebar destinations", () => {
+  it("shows Inbox in the signed-in header and account menu", async () => {
+    vi.stubGlobal("scrollTo", vi.fn());
+    vi.stubGlobal("localStorage", { getItem: vi.fn(() => null), setItem: vi.fn() });
+    auth.user = { email: "owner@example.com" };
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SiteHeader />
+      </MemoryRouter>,
+    );
+    expect(within(await screen.findByRole("banner")).getByRole("link", { name: "Inbox" }).getAttribute("href")).toBe("/inbox");
+    fireEvent.keyDown(screen.getByRole("button", { name: "Account menu" }), { key: "ArrowDown" });
+    expect((await screen.findByRole("menuitem", { name: "Inbox" })).getAttribute("href")).toBe("/inbox");
+  });
+
+  it("hides Inbox from the signed-out header", async () => {
+    vi.stubGlobal("scrollTo", vi.fn());
+    vi.stubGlobal("localStorage", { getItem: vi.fn(() => null), setItem: vi.fn() });
+    auth.user = null;
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SiteHeader />
+      </MemoryRouter>,
+    );
+    expect(within(await screen.findByRole("banner")).queryByRole("link", { name: "Inbox" })).toBeNull();
+  });
+
   it("places the collapse control in the logo row and keeps expansion available", async () => {
     vi.stubGlobal("scrollTo", vi.fn());
     vi.stubGlobal("localStorage", {
