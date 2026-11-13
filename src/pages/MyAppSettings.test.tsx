@@ -75,7 +75,7 @@ vi.mock("@/components/AgentIntegrationsPanel", () => ({
   default: () => <div>Agent integration form</div>,
 }));
 vi.mock("@/components/AcquisitionSettings", () => ({
-  default: () => <div>Acquisition settings</div>,
+  default: () => <div id="acquisition">Acquisition settings</div>,
 }));
 
 it("opens an owned app's settings from its card route", async () => {
@@ -98,6 +98,8 @@ it("opens an owned app's settings from its card route", async () => {
     expect(container.textContent).toContain("GitHub builds");
     expect(container.textContent).toContain("Agent integration form");
     expect(container.textContent).toContain("Ownership and connections");
+    expect(container.querySelector('a[href="#acquisition"]')?.textContent).toBe("Sell My App");
+    expect(container.querySelector("#acquisition")).not.toBeNull();
     expect(
       container.querySelector('a[href="/my-apps/app-owned/edit"]'),
     ).not.toBeNull();
@@ -124,6 +126,7 @@ it("does not offer Agent Integrations editing to an unverified owner", async () 
     ));
     expect(container.textContent).not.toContain("Agent integration form");
     expect(container.querySelector('a[href="#agent-integrations"]')).toBeNull();
+    expect(container.querySelector('a[href="#acquisition"]')).toBeNull();
   } finally {
     await act(async () => root.unmount());
     container.remove();
