@@ -185,6 +185,39 @@ These fields are free to configure and are labelled developer-declared. Rocket d
     ],
   },
   {
+    slug: "apps-for-sale",
+    group: "Your app",
+    title: "Apps for Sale",
+    summary:
+      "Browse acquisition listings, list a verified app, and contact a founder through Rocket Inbox.",
+    sections: [
+      section(
+        "browse",
+        "Browse available apps",
+        `Open [Apps for Sale](/for-sale) to find listings marked **For sale** or **Open to offers**. Filter by availability, category and asking price, or sort by recent listing and price. Open an app profile to read the seller's description and any public Rocket evidence.
+
+An asking price is optional. Listing details and prices come from the seller; Rocket's public verification badges have their own separate requirements.`,
+      ),
+      section(
+        "list",
+        "List an app you own",
+        `1. [Claim and verify ownership](/docs/claim-and-verify) of your app's domain.
+2. Open [My Apps](/your-apps), select the app and find **Apps for Sale** in its settings.
+3. Choose **For sale** or **Open to offers**. Add a short description and, if useful, a reason for selling or preferred buyer. A USD asking price is optional for **For sale**.
+4. Save the listing. It stays hidden until Rocket reviews and approves it.
+
+Changes to an approved listing may require another review and hide it in the meantime. Choose **Not for sale** and save to remove the public acquisition listing; existing Inbox conversations remain.`,
+      ),
+      section(
+        "contact",
+        "Contact the founder",
+        `On an approved app profile, select **Contact Founder** and sign in if needed. The conversation opens in [Inbox](/inbox), where buyer and seller can continue discussing the opportunity. The app owner can also open Inbox from the listing settings.
+
+Rocket checks domain control and reviews listing eligibility, but does not guarantee legal ownership or the accuracy of seller-provided information. Inbox is for introductions and messages. Arrange due diligence, payment, contracts and ownership transfer independently; Rocket does not provide acquisition checkout or escrow.`,
+      ),
+    ],
+  },
+  {
     slug: "developer-profile",
     group: "Your app",
     title: "Build your developer profile",
