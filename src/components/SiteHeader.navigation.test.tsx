@@ -98,18 +98,18 @@ describe("Sidebar destinations", () => {
         expect(sidebar.queryByRole("link", { name: "Docs" })).toBeNull();
         expect(sidebar.queryByText("Resources")).toBeNull();
         expect(sidebar.queryByRole("link", { name: "My Profile" })).toBeNull();
-        expect(sidebar.getByText("Grow")).toBeTruthy();
         const discoveryLinks = sidebar.getAllByRole("link").slice(0, 6).map((link) => link.textContent);
         expect(discoveryLinks).toEqual(["Discover", "Rankings", "New", "Rising", "Categories", "Collections"]);
-        const launch = sidebar.getByRole("link", { name: "Launch" });
-        const post = sidebar.getByRole("link", { name: "Post" });
-        const media = sidebar.getByRole("link", { name: "Media" });
-        expect(launch.getAttribute("href")).toBe("https://trylaunch.ai");
-        expect(post.getAttribute("href")).toBe("https://trypost.ai");
-        expect(media.getAttribute("href")).toBe("https://trymedia.ai");
-        expect(launch.compareDocumentPosition(post) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-        expect(post.compareDocumentPosition(media) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         if (signedIn) {
+          expect(sidebar.getByText("Grow")).toBeTruthy();
+          const launch = sidebar.getByRole("link", { name: "Launch" });
+          const post = sidebar.getByRole("link", { name: "Post" });
+          const media = sidebar.getByRole("link", { name: "Media" });
+          expect(launch.getAttribute("href")).toBe("https://trylaunch.ai");
+          expect(post.getAttribute("href")).toBe("https://trypost.ai");
+          expect(media.getAttribute("href")).toBe("https://trymedia.ai");
+          expect(launch.compareDocumentPosition(post) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+          expect(post.compareDocumentPosition(media) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
           const apps = sidebar.getByRole("link", { name: "My Apps" });
           const purchases = sidebar.getByRole("link", { name: "My Purchases" });
           expect(sidebar.getByRole("link", { name: "Saved" })).toBeTruthy();
@@ -129,6 +129,10 @@ describe("Sidebar destinations", () => {
           expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
           expect(sidebar.getByText("Create")).toBeTruthy();
         } else {
+          expect(sidebar.queryByText("Grow")).toBeNull();
+          for (const label of ["Launch", "Post", "Media"]) {
+            expect(sidebar.queryByRole("link", { name: label })).toBeNull();
+          }
           for (const label of ["My Apps", "My Purchases", "Saved"]) {
             expect(sidebar.queryByRole("link", { name: label })).toBeNull();
           }

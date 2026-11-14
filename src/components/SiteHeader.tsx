@@ -305,7 +305,7 @@ export default function SiteHeader({
                 <div className="space-y-0.5">{section.items.map(navItem)}</div>
               </div>
             ))}
-            <div>
+            {user && <div>
               {sidebarCompact ? (
                 <div
                   className="mx-2 mb-2 border-t border-neutral-200"
@@ -349,7 +349,7 @@ export default function SiteHeader({
                   {!sidebarCompact && <span>{label}</span>}
                 </a>
               ))}
-            </div>
+            </div>}
             <div>
               {sidebarCompact ? (
                 <div
