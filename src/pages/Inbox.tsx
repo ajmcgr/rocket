@@ -174,7 +174,7 @@ export default function Inbox() {
       <aside className={`${selectedId ? "hidden md:block" : "block"} border-r border-neutral-200`}>
         <h2 className="border-b border-neutral-200 p-4 font-semibold">Conversations</h2>
         {loading && <p className="p-4 text-sm text-neutral-600">Loading conversations…</p>}
-        {!loading && visible.length === 0 && <p className="p-4 text-sm text-neutral-600">No conversations yet. Explore <Link to="/for-sale" className="text-sky-700 underline">Apps for Sale</Link> and contact a founder.</p>}
+        {!loading && visible.length === 0 && <p className="p-4 text-sm text-neutral-600">No conversations yet. Explore <Link to="/marketplace" className="text-sky-700 underline">Marketplace</Link> and contact a founder.</p>}
         {visible.map((row) => {
           const peerId = row.buyer_id === user?.id ? row.seller_id : row.buyer_id;
           const peer = profiles[peerId];
