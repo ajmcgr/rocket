@@ -68,6 +68,8 @@ vi.mock("@/integrations/supabase/client", async () => {
                 ? mocks.snapshot
                 : name === "rocket_admin_discovery_journeys"
                   ? { search_sessions: 0, acquisition_sessions: [], surfaces: [] }
+                : name === "rocket_admin_acquisition_metrics"
+                  ? { approved_listings: 1, pending_listings: 0 }
                 : name === "rocket_redeem_claim_invitation"
                   ? { app_id: args.p_app_id }
                 : name === "rocket_admin_claims"
@@ -120,6 +122,15 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("admin Supabase client binding", () => {
+  it("shows Apps for Sale counts and links to the existing review queue", async () => {
+    render(<Admin />);
+    const panel = (await screen.findByText("Apps for Sale")).closest("section")!;
+    expect(panel.textContent).toContain("Approved Listings");
+    expect(panel.textContent).toContain("Pending Listings");
+    expect(panel.textContent).toMatch(/Approved Listings.*1.*Pending Listings.*0/s);
+    expect(panel.querySelector("a")?.getAttribute("href")).toBe("/admin/ops");
+    expect(mocks.requests).toContainEqual({ name: "rocket_admin_acquisition_metrics", args: {} });
+  });
   it.each([
     ["home", "Catalogue"],
     ["metrics", "Catalogue"],

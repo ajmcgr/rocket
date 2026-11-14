@@ -44,6 +44,7 @@ const statEmojis: Record<string, string> = {
   share_actions: "📣", referral_visits: "👣", activated_developers: "⚡",
   referral_registrations: "📝", verified_revenue_connections: "💰",
   verified_analytics_connections: "📡", referred_developers_with_claims: "🏷️",
+  approved_listings: "🏷️", pending_listings: "📋",
 };
 const acquisitionEmojis: Record<string, string> = { direct: "🎯", organic: "🌱", referral: "🔗", social: "💬" };
 const discoveryEmojis: Record<string, string> = { catalogue: "📚", categories: "🗂️", collections: "🔖", homepage: "🏠", rankings: "🏆", search: "🔎" };
@@ -92,6 +93,7 @@ export default function Admin() {
   const [snapshotLoadedAt, setSnapshotLoadedAt] = useState("");
   const [investor, setInvestor] = useState<Row | null>(null);
   const [journeys, setJourneys] = useState<Row | null>(null);
+  const [acquisitionMetrics, setAcquisitionMetrics] = useState<Row | null>(null);
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
   const [error, setError] = useState("");
@@ -99,14 +101,15 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState<{ target: string; message: string; error: boolean } | null>(null);
   const refresh = useCallback(async () => {
-    setError(""); setData(null); setInvestor(null); setJourneys(null); setToday([]); setInternalTests([]);
-    const [result, batch, claims, tests, investorResult, journeyResult] = await Promise.all([
+    setError(""); setData(null); setInvestor(null); setJourneys(null); setAcquisitionMetrics(null); setToday([]); setInternalTests([]);
+    const [result, batch, claims, tests, investorResult, journeyResult, acquisitionResult] = await Promise.all([
       adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section === "screenshots" ? "marketing" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_first_batch", {}) : Promise.resolve(null),
       section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
       section === "outreach" ? adminRpc("rocket_admin_outreach_test_candidates", {}) : Promise.resolve(null),
       section === "metrics" ? adminRpc("rocket_admin_investor_metrics", {}) : Promise.resolve(null),
       section === "home" || section === "metrics" ? adminRpc("rocket_admin_discovery_journeys", { p_period: period }) : Promise.resolve(null),
+      section === "home" ? adminRpc("rocket_admin_acquisition_metrics", {}) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
     if (batch?.error) { setError(batch.error.message); return; }
@@ -119,6 +122,7 @@ export default function Admin() {
     setSnapshotLoadedAt(new Date().toISOString());
     setInvestor(investorResult ? obj(investorResult.data) : null);
     setJourneys(journeyResult && !journeyResult.error ? obj(journeyResult.data) : null);
+    setAcquisitionMetrics(acquisitionResult && !acquisitionResult.error ? obj(acquisitionResult.data) : null);
   }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
   useEffect(() => {
@@ -212,6 +216,10 @@ export default function Admin() {
         <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />
         <JourneyCards data={rows(journeys.acquisition_sessions)} kind="acquisition" />
         <JourneyCards data={rows(journeys.surfaces)} kind="discovery" />
+      </Panel>}
+      {section === "home" && <Panel title="Apps for Sale">
+        <StatGrid data={{ approved_listings: acquisitionMetrics?.approved_listings, pending_listings: acquisitionMetrics?.pending_listings }} />
+        <p className="rocket-admin-note"><Link to="/admin/ops">Review acquisition listings in Ops →</Link></p>
       </Panel>}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
