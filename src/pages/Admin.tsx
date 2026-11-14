@@ -219,7 +219,6 @@ export default function Admin() {
       </Panel>}
       {section === "home" && <Panel title="Apps for Sale">
         <StatGrid data={{ approved_listings: acquisitionMetrics?.approved_listings, pending_listings: acquisitionMetrics?.pending_listings }} />
-        <p className="rocket-admin-note"><Link to="/admin/ops">Review acquisition listings in Ops →</Link></p>
       </Panel>}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
