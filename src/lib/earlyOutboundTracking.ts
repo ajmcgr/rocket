@@ -13,13 +13,13 @@ export const earlyOutboundTrackingScript = `(function(){
     var params=new URLSearchParams(location.search);
     var source=params.get("utm_source");
     if(source!=="rocket_badge"&&source!=="rocket_share"&&source!=="rocket_mcp")source="direct";
-    queueMicrotask(function(){
+    setTimeout(function(){
       // React can dispatch its delegated click after this document listener.
       if(event.rocketOutboundHandled)return;
       try{fetch("https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-app-view",{
         method:"POST",mode:"cors",keepalive:true,headers:{"Content-Type":"application/json"},
         body:JSON.stringify({app_id:id,kind:"outbound",source:source,sponsorship_id:params.get("sponsor")})
       }).catch(function(){});}catch(e){}
-    });
+    },0);
   });
 })();`;

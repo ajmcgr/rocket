@@ -6,7 +6,7 @@ const appId = "00000000-0000-4000-8000-000000000001";
 
 function install(search = "") {
   let click: ((event: Record<string, unknown>) => void) | undefined;
-  const microtasks: Array<() => void> = [];
+  const tasks: Array<() => void> = [];
   class Element {
     closest() {
       return { getAttribute: () => appId };
@@ -17,9 +17,9 @@ function install(search = "") {
     location: { origin: "https://tryrocket.ai", search },
     document: { addEventListener: (_: string, handler: typeof click) => { click = handler; } },
     Element, URLSearchParams, JSON, fetch,
-    queueMicrotask: (task: () => void) => microtasks.push(task),
+    setTimeout: (task: () => void) => tasks.push(task),
   });
-  return { click: click!, target: new Element(), fetch, flush: () => microtasks.splice(0).forEach(task => task()) };
+  return { click: click!, target: new Element(), fetch, flush: () => tasks.splice(0).forEach(task => task()) };
 }
 
 describe("early outbound click tracking", () => {
