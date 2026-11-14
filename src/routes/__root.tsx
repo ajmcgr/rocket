@@ -17,6 +17,7 @@ import { recoverStaleAsset } from "@/lib/staleAssetRecovery";
 import NotFound from "@/pages/NotFound";
 import SiteFooter from "@/components/SiteFooter";
 import appCss from "../styles.css?url";
+import { earlyOutboundTrackingScript } from "@/lib/earlyOutboundTracking";
 
 // ported from main.tsx — browser extensions (e.g. MetaMask) inject scripts that can
 // throw unhandled rejections unrelated to the app; swallow those before hydration.
@@ -83,6 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             'try{var theme=localStorage.getItem("theme");document.documentElement.classList.toggle("dark",theme==="dark"||(theme!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))}catch(e){}',
         },
         { children: extensionErrorSuppression },
+        { children: earlyOutboundTrackingScript },
         {
           src: "https://www.googletagmanager.com/gtag/js?id=G-0SNE7T7S79",
           async: true,
