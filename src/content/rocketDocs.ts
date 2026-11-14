@@ -194,7 +194,7 @@ These fields are free to configure and are labelled developer-declared. Rocket d
       section(
         "browse",
         "Browse available apps",
-        `Open [Apps for Sale](/for-sale) to find listings marked **For sale** or **Open to offers**. Filter by availability, category and asking price, or sort by recent listing and price. Open an app profile to read the seller's description and any public Rocket evidence.
+        `Open [Marketplace](/marketplace) to find listings marked **For sale** or **Open to offers**. Filter by availability, category and asking price, or sort by recent listing and price. Open an app profile to read the seller's description and any public Rocket evidence.
 
 An asking price is optional. Listing details and prices come from the seller; Rocket's public verification badges have their own separate requirements.`,
       ),

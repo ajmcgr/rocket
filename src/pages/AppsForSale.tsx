@@ -39,7 +39,7 @@ export default function AppsForSale({ initial }: { initial?: SaleItem[] }) {
   return <div className="marketplace-page min-h-screen bg-[#f6f8fb] text-neutral-900">
     {listSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema).replace(/</g, "\\u003c") }} />}
     <SiteHeader /><main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-    <h1 className="text-4xl font-bold tracking-tight">Apps for Sale</h1>
+    <h1 className="text-4xl font-bold tracking-tight">Marketplace</h1>
     <p className="mt-3 max-w-2xl text-neutral-600">Discover software businesses available for acquisition. Connect directly with founders and explore your next opportunity.</p>
     <div className="mt-8 grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5" aria-label="Filter apps for sale">
       <label className="text-sm">Availability<select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 block min-h-11 w-full rounded-lg border px-3"><option value="all">All</option><option value="for_sale">For sale</option><option value="open_to_offers">Open to offers</option></select></label>
