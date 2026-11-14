@@ -475,9 +475,11 @@ export default function PublicAppProfile({
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <a
                   href={outboundWebsiteUrl(app.website_url)}
+                  data-rocket-outbound-app-id={app.id}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => {
+                  onClick={(event) => {
+                    Object.assign(event.nativeEvent, { rocketOutboundHandled: true });
                     track("outbound_app_clicked", { app_id: app.id });
                     recordOutbound(app.id);
                   }}
