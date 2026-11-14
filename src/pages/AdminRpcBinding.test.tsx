@@ -122,13 +122,13 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("admin Supabase client binding", () => {
-  it("shows Apps for Sale counts and links to the existing review queue", async () => {
+  it("shows Apps for Sale counts without an extra link below the cards", async () => {
     render(<Admin />);
     const panel = (await screen.findByText("Apps for Sale")).closest("section")!;
     expect(panel.textContent).toContain("Approved Listings");
     expect(panel.textContent).toContain("Pending Listings");
     expect(panel.textContent).toMatch(/Approved Listings.*1.*Pending Listings.*0/s);
-    expect(panel.querySelector("a")?.getAttribute("href")).toBe("/admin/ops");
+    expect(panel.querySelector("a")).toBeNull();
     expect(mocks.requests).toContainEqual({ name: "rocket_admin_acquisition_metrics", args: {} });
   });
   it.each([
