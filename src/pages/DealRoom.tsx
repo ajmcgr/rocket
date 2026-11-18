@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
+import DealFeeBreakdown from "@/components/DealFeeBreakdown";
 import { agreementFields, centsFromInput, checklistTemplate, dealsDb as db, money, nextAction, statusLabel,
-  type Approval, type ChecklistItem, type Deal, type Offer, type Version } from "@/lib/rocketDeals";
+  type Approval, type ChecklistItem, type Deal, type DealCurrency, type DealFinancial, type FeeQuote, type Offer, type Version } from "@/lib/rocketDeals";
 
 type Agreement = Version<{ terms: Record<string,string> }>;
 type Checklist = Version<{ items: ChecklistItem[] }>;
@@ -26,6 +27,9 @@ export default function DealRoom() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [financial, setFinancial] = useState<DealFinancial | null>(null);
+  const [latestQuote, setLatestQuote] = useState<FeeQuote | null>(null);
+  const [counterQuote, setCounterQuote] = useState<FeeQuote | null>(null);
   const [app, setApp] = useState<App | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [tab, setTab] = useState<Tab>("Overview");
@@ -47,7 +51,7 @@ export default function DealRoom() {
     const lookup = await db.from("rocket_deals").select("*").eq("id",dealId).maybeSingle();
     if (lookup.error || !lookup.data) { setError("Deal not found or access denied."); setLoading(false); return; }
     const d = lookup.data as Deal;
-    const [offerRows, agreementRows, checklistRows, approvalRows, eventMessages, attachmentRows, appRow, profileRows] = await Promise.all([
+    const [offerRows, agreementRows, checklistRows, approvalRows, eventMessages, attachmentRows, appRow, profileRows, financialRow] = await Promise.all([
       db.from("rocket_deal_offers").select("*").eq("deal_id",d.id).order("sequence",{ascending:true}),
       db.from("rocket_deal_agreements").select("*").eq("deal_id",d.id).order("version",{ascending:true}),
       db.from("rocket_deal_checklists").select("*").eq("deal_id",d.id).order("version",{ascending:true}),
@@ -56,13 +60,15 @@ export default function DealRoom() {
       db.from("rocket_deal_attachments").select("*").eq("deal_id",d.id).order("created_at",{ascending:false}),
       db.from("public_discoverable_apps").select("id,name,logo_url,slug").eq("id",d.app_id).maybeSingle(),
       db.from("member_public_profiles").select("user_id,full_name,username").in("user_id",[d.buyer_id,d.seller_id]),
+      db.from("rocket_deal_financials").select("*").eq("deal_id",d.id).maybeSingle(),
     ]);
-    if ([offerRows,agreementRows,checklistRows,approvalRows,eventMessages,attachmentRows].some((r) => r.error)) {
+    if ([offerRows,agreementRows,checklistRows,approvalRows,eventMessages,attachmentRows,financialRow].some((r) => r.error)) {
       setError("Deal details could not be loaded."); setLoading(false); return;
     }
     setDeal(d); setOffers(offerRows.data || []); setAgreements(agreementRows.data || []);
     setChecklists(checklistRows.data || []); setApprovals(approvalRows.data || []);
     setMessages(eventMessages.data || []); setAttachments(attachmentRows.data || []);
+    setFinancial(financialRow.data || null);
     setApp(appRow.data || null); setProfiles(profileRows.data || []);
     if (agreementRows.data?.length) setTerms(agreementRows.data.at(-1).terms);
     if (checklistRows.data?.length) setItems(checklistRows.data.at(-1).items);
@@ -81,8 +87,14 @@ export default function DealRoom() {
   }
   async function respond(action: "accept" | "reject" | "counter" | "withdraw") {
     if (!deal) return;
-    const cents = action === "counter" ? centsFromInput(counterAmount) : null;
-    if (action === "counter" && cents === null) { setError("Enter a valid USD counteroffer amount."); return; }
+    const lastOffer = offers.at(-1);
+    const cents = action === "counter" ? centsFromInput(counterAmount,lastOffer?.currency as DealCurrency) : null;
+    if (action === "accept" && (!lastOffer || latestQuote?.acquisition_price_minor !== lastOffer.amount_cents || latestQuote.currency !== lastOffer.currency)) {
+      setError("Review the closing fee quote before accepting."); return;
+    }
+    if (action === "counter" && (cents === null || counterQuote?.acquisition_price_minor !== cents)) {
+      setError("Review a valid counteroffer and fee estimate."); return;
+    }
     await act(() => db.rpc("rocket_deal_respond",{ p_deal_id:deal.id,p_action:action,p_request_id:crypto.randomUUID(),
       p_amount_cents:cents,p_message:counterMessage,p_conditions:counterConditions,p_timeframe:counterTimeframe }),
       action === "accept" ? "Offer accepted." : action === "counter" ? "Counteroffer sent." : "Offer closed.");
@@ -124,7 +136,8 @@ export default function DealRoom() {
   const ownAgreementApproval = agreement && approvals.some((a) => a.kind==="agreement" && a.version===agreement.version && a.user_id===user?.id);
   const ownChecklistApproval = checklist && approvals.some((a) => a.kind==="checklist" && a.version===checklist.version && a.user_id===user?.id);
   const countApprovals = (kind: "agreement" | "checklist", version: number) => approvals.filter((a) => a.kind===kind && a.version===version).length;
-  const preparation = ["offer_accepted","preparing_terms","awaiting_approvals","terms_agreed","awaiting_escrow"].includes(deal.status);
+  const preparation = ["offer_accepted","preparing_terms","awaiting_approvals","terms_agreed","awaiting_escrow"].includes(deal.status)
+    && !["completed","cancelled","disputed","refunded"].includes(financial?.transaction_status || "");
   const agreed = countApprovals("agreement",agreement?.version || 0)===2;
   const checklistAgreed = countApprovals("checklist",checklist?.version || 0)===2;
   const unsavedTerms = !!agreement && JSON.stringify(terms) !== JSON.stringify(agreement.terms);
@@ -147,18 +160,23 @@ export default function DealRoom() {
           <div className="flex flex-wrap justify-between gap-2"><strong>{party(offer.actor_id)} offered {money(offer.amount_cents,offer.currency)}</strong><time className="text-neutral-500">{new Date(offer.created_at).toLocaleString()}</time></div>
           {offer.message && <p className="mt-2 whitespace-pre-wrap">{offer.message}</p>}{offer.conditions && <p className="mt-2 whitespace-pre-wrap">Conditions: {offer.conditions}</p>}
           {offer.handover_timeframe && <p className="mt-2">Handover: {offer.handover_timeframe}</p>}</li>)}</ol>
+        {last && <div className="mt-5"><DealFeeBreakdown priceMinor={last.amount_cents} currency={last.currency as DealCurrency}
+          role={isSeller ? "seller" : "buyer"} locked={financial} onQuote={setLatestQuote} /></div>}
+        {financial && <p className="mt-3 text-sm text-neutral-600">Transaction: {financial.transaction_status.replaceAll("_"," ")} · Rocket fee: {financial.fee_status.replaceAll("_"," ")}{financial.closed_at ? ` · Closed ${new Date(financial.closed_at).toLocaleDateString()}` : ""}</p>}
         {canRespond && <div className="mt-6 border-t pt-5"><h3 className="font-semibold">Respond to latest offer</h3>
-          {last?.actor_id!==user?.id ? <div className="mt-3 flex flex-wrap gap-2"><button disabled={busy} className={buttonClass} onClick={() => void respond("accept")}>Accept offer</button>
+          {last?.actor_id!==user?.id ? <div className="mt-3 flex flex-wrap gap-2"><button disabled={busy || !latestQuote} className={buttonClass} onClick={() => void respond("accept")}>Accept offer</button>
             <button disabled={busy} className="min-h-11 rounded-xl border px-5" onClick={() => void respond("reject")}>Reject</button></div> : isSeller ? <p className="mt-2 text-sm text-neutral-600">Waiting for buyer response.</p> : <button disabled={busy} className="mt-3 min-h-11 rounded-xl border px-5" onClick={() => void respond("withdraw")}>Withdraw offer</button>}
           {last?.actor_id!==user?.id && <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Counteroffer ({last.currency})<input value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} inputMode="decimal" className={inputClass} /></label>
+            <div className="sm:col-span-2"><DealFeeBreakdown priceMinor={centsFromInput(counterAmount,last.currency as DealCurrency)} currency={last.currency as DealCurrency}
+              role={isSeller ? "seller" : "buyer"} onQuote={setCounterQuote} /></div>
             <label className="text-sm">Handover timeframe<input value={counterTimeframe} onChange={(e) => setCounterTimeframe(e.target.value)} maxLength={200} className={inputClass} /></label>
             <label className="text-sm">Message<textarea value={counterMessage} onChange={(e) => setCounterMessage(e.target.value)} maxLength={2000} className={inputClass} /></label>
             <label className="text-sm">Conditions<textarea value={counterConditions} onChange={(e) => setCounterConditions(e.target.value)} maxLength={2000} className={inputClass} /></label>
-            <button disabled={busy} className={`${buttonClass} sm:col-span-2 sm:justify-self-start`} onClick={() => void respond("counter")}>Send counteroffer</button></div>}
+            <button disabled={busy || !counterQuote} className={`${buttonClass} sm:col-span-2 sm:justify-self-start`} onClick={() => void respond("counter")}>Send counteroffer</button></div>}
         </div>}</>}
       {tab==="Agreement" && <><h2 className="text-xl font-semibold">Transaction terms</h2>
         <p className="mt-2 text-sm text-neutral-600">This is a Rocket deal summary, not a signed or legally executed purchase agreement. Agreeing here does not move money or transfer assets.</p>
-        <p className="mt-3 text-sm">{app?.name} · {party(deal.buyer_id)} buying from {party(deal.seller_id)} · {last && money(last.amount_cents,last.currency)}</p>
+        <p className="mt-3 text-sm">{app?.name} · {party(deal.buyer_id)} buying from {party(deal.seller_id)} · {financial ? money(financial.acquisition_price_minor,financial.currency) : last && money(last.amount_cents,last.currency)}</p>
         {preparation ? <><div className="mt-5 grid gap-4 sm:grid-cols-2">{agreementFields.map(([key,label]) => <label key={key} className="text-sm font-medium">{label}<textarea value={terms[key] || ""} onChange={(e) => setTerms({...terms,[key]:e.target.value})} maxLength={3000} rows={3} className={inputClass} /></label>)}</div>
           <div className="mt-5 flex flex-wrap items-center gap-3"><button disabled={busy} onClick={() => void save("agreement")} className={buttonClass}>Save new version</button>
             {agreement && <span className="text-sm">Version {agreement.version} · {countApprovals("agreement",agreement.version)}/2 approved</span>}
@@ -192,10 +210,10 @@ export default function DealRoom() {
         <form onSubmit={(e) => void sendMessage(e)} className="mt-5 flex gap-2 border-t pt-4"><textarea required value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={4000} rows={2} placeholder="Message the other party…" className={`${inputClass} flex-1`} /><button disabled={busy || !draft.trim()} className={buttonClass}>Send</button></form>
         <p className="mt-2 text-xs text-neutral-500">Messages use your existing private Rocket Inbox. Never send secrets or customer records here.</p></>}
       {tab==="Escrow" && <><h2 className="text-xl font-semibold">Escrow Setup Required</h2><p className="mt-3 max-w-2xl text-sm text-neutral-700">Both parties have agreed on the proposed transaction terms. Payment must be arranged through an approved third-party escrow provider before asset handover begins.</p>
-        <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2"><p><strong>Purchase price:</strong> {last ? money(last.amount_cents,last.currency) : "—"}</p>
+        <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2"><p><strong>Purchase price:</strong> {financial ? money(financial.acquisition_price_minor,financial.currency) : last ? money(last.amount_cents,last.currency) : "—"}</p>
           <p><strong>Agreement:</strong> {agreed ? "Both approved" : `${agreement ? countApprovals("agreement",agreement.version) : 0}/2 approved`}</p>
           <p><strong>Handover checklist:</strong> {checklistAgreed ? "Both approved" : `${checklist ? countApprovals("checklist",checklist.version) : 0}/2 approved`}</p>
-          <p><strong>Escrow status:</strong> Not initiated</p></div>
+          <p><strong>Escrow status:</strong> {financial?.transaction_status === "awaiting_escrow" || !financial ? "Not initiated" : financial.transaction_status.replaceAll("_"," ")}</p></div>
         {deal.status==="terms_agreed" && agreed && checklistAgreed && <button disabled={busy} onClick={() => void act(() => db.rpc("rocket_deal_prepare_escrow",{p_deal_id:deal.id}),"Deal is ready for third-party escrow setup.")} className={`${buttonClass} mt-5`}>Mark preparation complete</button>}
         <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Rocket does not currently hold or secure transaction funds. Do not begin asset handover until an approved third-party escrow provider confirms funding outside Rocket.</p></>}
     </section>

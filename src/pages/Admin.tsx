@@ -12,6 +12,7 @@ import AdminNewsletter from "@/components/AdminNewsletter";
 import AdminRocket100 from "@/components/AdminRocket100";
 import AdminAppScreenshots from "@/components/AdminAppScreenshots";
 import AdminAcquisitionReview from "@/components/AdminAcquisitionReview";
+import AdminDealFees from "@/components/AdminDealFees";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "screenshots" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -220,6 +221,7 @@ export default function Admin() {
       {section === "home" && <Panel title="Apps for Sale">
         <StatGrid data={{ approved_listings: acquisitionMetrics?.approved_listings, pending_listings: acquisitionMetrics?.pending_listings }} />
       </Panel>}
+      {section === "home" && <AdminDealFees />}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>

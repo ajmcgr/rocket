@@ -1,17 +1,37 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const dealsDb = supabase as any;
+export const currencyDigits = { USD: 2, EUR: 2, GBP: 2, AUD: 2, CAD: 2, JPY: 0, KWD: 3 } as const;
+export type DealCurrency = keyof typeof currencyDigits;
+export type FeeQuote = {
+  acquisition_price_minor: number; currency: DealCurrency; minor_digits: number;
+  buyer_fee_minor: number; seller_fee_minor: number; total_rocket_fee_minor: number;
+  buyer_total_minor: number; seller_net_minor: number; fee_version: number; usd_minimum_applied: boolean;
+};
+export type DealFinancial = FeeQuote & {
+  deal_id: string; accepted_offer_id: string; fee_status: string; transaction_status: string;
+  escrow_provider: string | null; external_escrow_id: string | null;
+  provider_fee_minor: number | null; processing_fee_minor: number | null;
+  fee_collected_minor: number; fee_refunded_minor: number; closed_at: string | null;
+};
 export type DealStatus = "offer_pending" | "negotiating" | "offer_accepted" | "preparing_terms" | "awaiting_approvals" | "terms_agreed" | "awaiting_escrow" | "cancelled" | "expired";
 export type Deal = { id: string; app_id: string; buyer_id: string; seller_id: string; conversation_id: string; status: DealStatus; updated_at: string; offer_expires_at?: string };
 export type Offer = { id: string; deal_id: string; actor_id: string; amount_cents: number; currency: string; message: string; conditions: string; handover_timeframe: string; created_at: string };
 export type Version<T> = { id: string; version: number; editor_id: string; created_at: string } & T;
 export type Approval = { deal_id: string; kind: "agreement" | "checklist"; version: number; user_id: string; approved_at: string };
-export const money = (cents: number, currency = "USD") => new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(cents / 100);
-export const centsFromInput = (value: string): number | null => {
-  if (!/^\d{1,9}(\.\d{1,2})?$/.test(value)) return null;
+export const money = (minor: number, currency = "USD") => {
+  const digits = currencyDigits[currency as DealCurrency];
+  if (digits === undefined) return `${minor} ${currency}`;
+  return new Intl.NumberFormat("en-US", { style: "currency", currency,
+    minimumFractionDigits: digits, maximumFractionDigits: digits }).format(minor / 10 ** digits);
+};
+export const centsFromInput = (value: string, currency: DealCurrency = "USD"): number | null => {
+  const digits = currencyDigits[currency];
+  const pattern = digits === 0 ? /^\d{1,9}$/ : new RegExp(`^\\d{1,9}(\\.\\d{1,${digits}})?$`);
+  if (!pattern.test(value)) return null;
   const [whole, fraction = ""] = value.split(".");
-  const cents = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
-  return Number.isSafeInteger(cents) && cents >= 100 && cents <= 100000000000 ? cents : null;
+  const minor = Number(whole) * 10 ** digits + Number(fraction.padEnd(digits, "0"));
+  return Number.isSafeInteger(minor) && minor >= (currency === "USD" ? 4950 : 100) && minor <= 100000000000 ? minor : null;
 };
 export const statusLabel = (status: DealStatus) => ({
   offer_pending: "Offer pending", negotiating: "Negotiating", offer_accepted: "Offer accepted",

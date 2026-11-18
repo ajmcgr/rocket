@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { centsFromInput, nextAction, type Deal, type Offer } from "./rocketDeals";
+import { centsFromInput, money, nextAction, type Deal, type Offer } from "./rocketDeals";
 
 const deal = (status: Deal["status"]): Deal => ({
   id: "deal", app_id: "app", buyer_id: "buyer", seller_id: "seller", conversation_id: "conversation", status, updated_at: "2026-11-18T00:00:00Z",
@@ -10,11 +10,17 @@ const offer = (actor_id: string): Offer => ({
 describe("Rocket Deals amounts", () => {
   it("converts decimal input to integer cents without floating point arithmetic", () => {
     expect(centsFromInput("0.99")).toBeNull();
-    expect(centsFromInput("1")).toBe(100);
+    expect(centsFromInput("1")).toBeNull();
+    expect(centsFromInput("49.50")).toBe(4950);
     expect(centsFromInput("123.45")).toBe(12345);
     expect(centsFromInput("1.234")).toBeNull();
     expect(centsFromInput("1e5")).toBeNull();
     expect(centsFromInput("1000000001")).toBeNull();
+    expect(centsFromInput("1000", "JPY")).toBe(1000);
+    expect(centsFromInput("1000.1", "JPY")).toBeNull();
+    expect(centsFromInput("100.125", "KWD")).toBe(100125);
+    expect(centsFromInput("100.1254", "KWD")).toBeNull();
+    expect(money(100125, "KWD")).toContain("100.125");
   });
 });
 describe("Rocket Deals next action", () => {
