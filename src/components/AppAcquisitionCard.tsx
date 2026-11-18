@@ -20,7 +20,9 @@ export default function AppAcquisitionCard({ appId }: { appId: string }) {
     <p className="mt-2 text-sm text-neutral-700">{listing.status === "for_sale" ? "Interested in acquiring this app? Contact the owner directly." : "This app’s owner is open to discussing a potential acquisition."}</p>
     {listing.description && <p className="mt-3 whitespace-pre-wrap text-sm text-neutral-700">{listing.description}</p>}
     <p className="mt-3 text-xs text-neutral-500">Seller-provided information. Rocket has reviewed listing eligibility but does not guarantee legal ownership. Public verification badges elsewhere on this profile use their existing visibility settings.</p>
-    <Link to={`/inbox?start=${encodeURIComponent(appId)}`} onClick={() => track("contact_founder_clicked", { app_id: appId, authenticated: !!user })} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Contact Founder →</Link>
-    <Link to={`/deals?offer=${encodeURIComponent(appId)}`} className="ml-3 mt-4 inline-flex min-h-11 items-center rounded-xl border border-sky-600 bg-white px-5 text-sm font-semibold text-sky-700 hover:bg-sky-100">Make Offer</Link>
+    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+      <Link to={`/deals?offer=${encodeURIComponent(appId)}`} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Make Offer</Link>
+      <Link to={`/inbox?start=${encodeURIComponent(appId)}`} onClick={() => track("contact_founder_clicked", { app_id: appId, authenticated: !!user })} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-sky-600 bg-white px-5 text-sm font-semibold text-sky-700 hover:bg-sky-100">Contact Founder →</Link>
+    </div>
   </section>;
 }
