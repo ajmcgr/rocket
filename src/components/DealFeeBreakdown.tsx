@@ -10,7 +10,7 @@ export default function DealFeeBreakdown({ priceMinor, currency, role, locked, o
   useEffect(() => {
     if (locked) { setQuote(locked); setError(""); onQuote?.(locked); return; }
     if (priceMinor === null) { setQuote(null); setError(""); onQuote?.(null); return; }
-    onQuote?.(null);
+    setQuote(null); setError(""); onQuote?.(null);
     let active = true;
     const timer = setTimeout(() => {
       void dealsDb.rpc("rocket_deal_fee_quote", { p_price_minor: priceMinor, p_currency: currency })
@@ -36,7 +36,7 @@ export default function DealFeeBreakdown({ priceMinor, currency, role, locked, o
     {quote?.usd_minimum_applied && <p className="mt-2 text-xs text-neutral-600">The $99 combined minimum applies here; each party pays $49.50.</p>}
     <p className="mt-3 text-xs text-neutral-700">Rocket charges a 3% closing fee, split equally between buyer and seller, with a $99 combined minimum for USD deals. Fees are only payable when a transaction successfully closes.</p>
     <p className="mt-1 text-xs text-neutral-600">Third-party escrow and processing fees are separate and are not included in Rocket’s fee.</p>
-    {locked && <p className="mt-1 text-xs text-neutral-600">Price and fee version {locked.fee_version} were locked when the offer was accepted. No funds have been collected by Rocket.</p>}
+    {locked && <p className="mt-1 text-xs text-neutral-600">Price and fee version {locked.fee_version} were locked when the offer was accepted. Rocket fee status: {locked.fee_status.replaceAll("_", " ")}.</p>}
     {locked?.provider_fee_minor != null && <p className="mt-2 text-xs">External escrow provider fee: {money(locked.provider_fee_minor, locked.currency)}</p>}
     {locked?.processing_fee_minor != null && <p className="text-xs">External processing fee: {money(locked.processing_fee_minor, locked.currency)}</p>}
   </div>;

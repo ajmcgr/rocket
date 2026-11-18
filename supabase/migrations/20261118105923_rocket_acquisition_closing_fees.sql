@@ -108,6 +108,7 @@ create table public.rocket_deal_financials (
   buyer_total_minor bigint not null check (buyer_total_minor = acquisition_price_minor + buyer_fee_minor),
   seller_net_minor bigint not null check (seller_net_minor = acquisition_price_minor - seller_fee_minor),
   fee_version integer not null check (fee_version = 1),
+  usd_minimum_applied boolean not null default false,
   fee_status text not null default 'agreed' check (fee_status in ('agreed','pending_collection','collected','waived','refunded')),
   transaction_status text not null default 'offer_accepted' check (transaction_status in
     ('offer_accepted','awaiting_escrow','escrow_initiated','funds_secured','transfer_in_progress','buyer_inspection','completed','cancelled','disputed','refunded')),
@@ -162,12 +163,12 @@ begin
   v_quote := deals_private.rocket_closing_fee(v_offer.amount_cents,v_offer.currency);
   insert into public.rocket_deal_financials (
     deal_id,accepted_offer_id,acquisition_price_minor,currency,minor_digits,buyer_fee_minor,seller_fee_minor,
-    total_rocket_fee_minor,buyer_total_minor,seller_net_minor,fee_version
+    total_rocket_fee_minor,buyer_total_minor,seller_net_minor,fee_version,usd_minimum_applied
   ) values (
     new.deal_id,v_offer.id,v_offer.amount_cents,v_offer.currency,(v_quote->>'minor_digits')::integer,
     (v_quote->>'buyer_fee_minor')::bigint,(v_quote->>'seller_fee_minor')::bigint,
     (v_quote->>'total_rocket_fee_minor')::bigint,(v_quote->>'buyer_total_minor')::bigint,
-    (v_quote->>'seller_net_minor')::bigint,1
+    (v_quote->>'seller_net_minor')::bigint,1,(v_quote->>'usd_minimum_applied')::boolean
   );
   return new;
 end $$;
