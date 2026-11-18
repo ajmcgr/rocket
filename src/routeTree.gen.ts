@@ -100,6 +100,8 @@ import { Route as AppBrandsIdRouteImport } from './routes/_app/brands.$id'
 import { Route as AppCreateIndexRouteImport } from './routes/_app/create.index'
 import { Route as AppCreateChatRouteImport } from './routes/_app/create.chat'
 import { Route as AppCreateGenerateRouteImport } from './routes/_app/create.generate'
+import { Route as AppDealsIndexRouteImport } from './routes/_app/deals.index'
+import { Route as AppDealsDealIdRouteImport } from './routes/_app/deals.$dealId'
 import { Route as AppDesignsIndexRouteImport } from './routes/_app/designs.index'
 import { Route as AppDesignsIdRouteImport } from './routes/_app/designs.$id'
 import { Route as AppDeveloperActivateRouteImport } from './routes/_app/developer.activate'
@@ -600,6 +602,16 @@ const AppCreateGenerateRoute = AppCreateGenerateRouteImport.update({
   path: '/create/generate',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDealsIndexRoute = AppDealsIndexRouteImport.update({
+  id: '/deals/',
+  path: '/deals/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDealsDealIdRoute = AppDealsDealIdRouteImport.update({
+  id: '/deals/$dealId',
+  path: '/deals/$dealId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDesignsIndexRoute = AppDesignsIndexRouteImport.update({
   id: '/designs/',
   path: '/designs/',
@@ -911,6 +923,7 @@ export interface FileRoutesByFullPath {
   '/brands/$id': typeof AppBrandsIdRouteWithChildren
   '/create/chat': typeof AppCreateChatRoute
   '/create/generate': typeof AppCreateGenerateRoute
+  '/deals/$dealId': typeof AppDealsDealIdRoute
   '/designs/$id': typeof AppDesignsIdRoute
   '/developer/activate': typeof AppDeveloperActivateRoute
   '/my-collections/$slug': typeof AppMyCollectionsSlugRoute
@@ -934,6 +947,7 @@ export interface FileRoutesByFullPath {
   '/brand/': typeof AppBrandIndexRoute
   '/brands/': typeof AppBrandsIndexRoute
   '/create/': typeof AppCreateIndexRoute
+  '/deals/': typeof AppDealsIndexRoute
   '/designs/': typeof AppDesignsIndexRoute
   '/my-apps/': typeof AppMyAppsIndexRoute
   '/my-collections/': typeof AppMyCollectionsIndexRoute
@@ -1045,6 +1059,7 @@ export interface FileRoutesByTo {
   '/brand/$id': typeof AppBrandIdRoute
   '/create/chat': typeof AppCreateChatRoute
   '/create/generate': typeof AppCreateGenerateRoute
+  '/deals/$dealId': typeof AppDealsDealIdRoute
   '/designs/$id': typeof AppDesignsIdRoute
   '/developer/activate': typeof AppDeveloperActivateRoute
   '/my-collections/$slug': typeof AppMyCollectionsSlugRoute
@@ -1068,6 +1083,7 @@ export interface FileRoutesByTo {
   '/brand': typeof AppBrandIndexRoute
   '/brands': typeof AppBrandsIndexRoute
   '/create': typeof AppCreateIndexRoute
+  '/deals': typeof AppDealsIndexRoute
   '/designs': typeof AppDesignsIndexRoute
   '/my-apps': typeof AppMyAppsIndexRoute
   '/my-collections': typeof AppMyCollectionsIndexRoute
@@ -1183,6 +1199,7 @@ export interface FileRoutesById {
   '/_app/brands/$id': typeof AppBrandsIdRouteWithChildren
   '/_app/create/chat': typeof AppCreateChatRoute
   '/_app/create/generate': typeof AppCreateGenerateRoute
+  '/_app/deals/$dealId': typeof AppDealsDealIdRoute
   '/_app/designs/$id': typeof AppDesignsIdRoute
   '/_app/developer/activate': typeof AppDeveloperActivateRoute
   '/_app/my-collections/$slug': typeof AppMyCollectionsSlugRoute
@@ -1206,6 +1223,7 @@ export interface FileRoutesById {
   '/_app/brand/': typeof AppBrandIndexRoute
   '/_app/brands/': typeof AppBrandsIndexRoute
   '/_app/create/': typeof AppCreateIndexRoute
+  '/_app/deals/': typeof AppDealsIndexRoute
   '/_app/designs/': typeof AppDesignsIndexRoute
   '/_app/my-apps/': typeof AppMyAppsIndexRoute
   '/_app/my-collections/': typeof AppMyCollectionsIndexRoute
@@ -1321,6 +1339,7 @@ export interface FileRouteTypes {
     | '/brands/$id'
     | '/create/chat'
     | '/create/generate'
+    | '/deals/$dealId'
     | '/designs/$id'
     | '/developer/activate'
     | '/my-collections/$slug'
@@ -1344,6 +1363,7 @@ export interface FileRouteTypes {
     | '/brand/'
     | '/brands/'
     | '/create/'
+    | '/deals/'
     | '/designs/'
     | '/my-apps/'
     | '/my-collections/'
@@ -1455,6 +1475,7 @@ export interface FileRouteTypes {
     | '/brand/$id'
     | '/create/chat'
     | '/create/generate'
+    | '/deals/$dealId'
     | '/designs/$id'
     | '/developer/activate'
     | '/my-collections/$slug'
@@ -1478,6 +1499,7 @@ export interface FileRouteTypes {
     | '/brand'
     | '/brands'
     | '/create'
+    | '/deals'
     | '/designs'
     | '/my-apps'
     | '/my-collections'
@@ -1592,6 +1614,7 @@ export interface FileRouteTypes {
     | '/_app/brands/$id'
     | '/_app/create/chat'
     | '/_app/create/generate'
+    | '/_app/deals/$dealId'
     | '/_app/designs/$id'
     | '/_app/developer/activate'
     | '/_app/my-collections/$slug'
@@ -1615,6 +1638,7 @@ export interface FileRouteTypes {
     | '/_app/brand/'
     | '/_app/brands/'
     | '/_app/create/'
+    | '/_app/deals/'
     | '/_app/designs/'
     | '/_app/my-apps/'
     | '/_app/my-collections/'
@@ -2347,6 +2371,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCreateGenerateRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/deals/': {
+      id: '/_app/deals/'
+      path: '/deals'
+      fullPath: '/deals/'
+      preLoaderRoute: typeof AppDealsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/deals/$dealId': {
+      id: '/_app/deals/$dealId'
+      path: '/deals/$dealId'
+      fullPath: '/deals/$dealId'
+      preLoaderRoute: typeof AppDealsDealIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/designs/': {
       id: '/_app/designs/'
       path: '/designs'
@@ -2744,6 +2782,7 @@ interface AppRouteChildren {
   AppBrandsIdRoute: typeof AppBrandsIdRouteWithChildren
   AppCreateChatRoute: typeof AppCreateChatRoute
   AppCreateGenerateRoute: typeof AppCreateGenerateRoute
+  AppDealsDealIdRoute: typeof AppDealsDealIdRoute
   AppDesignsIdRoute: typeof AppDesignsIdRoute
   AppDeveloperActivateRoute: typeof AppDeveloperActivateRoute
   AppMyCollectionsSlugRoute: typeof AppMyCollectionsSlugRoute
@@ -2756,6 +2795,7 @@ interface AppRouteChildren {
   AppBrandIndexRoute: typeof AppBrandIndexRoute
   AppBrandsIndexRoute: typeof AppBrandsIndexRoute
   AppCreateIndexRoute: typeof AppCreateIndexRoute
+  AppDealsIndexRoute: typeof AppDealsIndexRoute
   AppDesignsIndexRoute: typeof AppDesignsIndexRoute
   AppMyAppsIndexRoute: typeof AppMyAppsIndexRoute
   AppMyCollectionsIndexRoute: typeof AppMyCollectionsIndexRoute
@@ -2805,6 +2845,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBrandsIdRoute: AppBrandsIdRouteWithChildren,
   AppCreateChatRoute: AppCreateChatRoute,
   AppCreateGenerateRoute: AppCreateGenerateRoute,
+  AppDealsDealIdRoute: AppDealsDealIdRoute,
   AppDesignsIdRoute: AppDesignsIdRoute,
   AppDeveloperActivateRoute: AppDeveloperActivateRoute,
   AppMyCollectionsSlugRoute: AppMyCollectionsSlugRoute,
@@ -2817,6 +2858,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBrandIndexRoute: AppBrandIndexRoute,
   AppBrandsIndexRoute: AppBrandsIndexRoute,
   AppCreateIndexRoute: AppCreateIndexRoute,
+  AppDealsIndexRoute: AppDealsIndexRoute,
   AppDesignsIndexRoute: AppDesignsIndexRoute,
   AppMyAppsIndexRoute: AppMyAppsIndexRoute,
   AppMyCollectionsIndexRoute: AppMyCollectionsIndexRoute,

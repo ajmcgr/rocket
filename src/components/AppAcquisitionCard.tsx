@@ -21,5 +21,6 @@ export default function AppAcquisitionCard({ appId }: { appId: string }) {
     {listing.description && <p className="mt-3 whitespace-pre-wrap text-sm text-neutral-700">{listing.description}</p>}
     <p className="mt-3 text-xs text-neutral-500">Seller-provided information. Rocket has reviewed listing eligibility but does not guarantee legal ownership. Public verification badges elsewhere on this profile use their existing visibility settings.</p>
     <Link to={`/inbox?start=${encodeURIComponent(appId)}`} onClick={() => track("contact_founder_clicked", { app_id: appId, authenticated: !!user })} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#167ac6] px-5 text-sm font-semibold text-white hover:bg-[#1268aa]">Contact Founder →</Link>
+    <Link to={`/deals?offer=${encodeURIComponent(appId)}`} className="ml-3 mt-4 inline-flex min-h-11 items-center rounded-xl border border-sky-600 bg-white px-5 text-sm font-semibold text-sky-700 hover:bg-sky-100">Make Offer</Link>
   </section>;
 }

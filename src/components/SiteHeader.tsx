@@ -25,6 +25,7 @@ import {
   Clock3,
   Star,
   MessageCircle,
+  Handshake,
   CreditCard,
   Share2,
 } from "lucide-react";
@@ -102,6 +103,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: "Submit my app", to: "/submit", icon: Plus },
       { label: "My Apps", to: "/your-apps", icon: Layers3 },
       { label: "My Purchases", to: "/library", icon: CreditCard },
+      { label: "My Deals", to: "/deals", icon: Handshake },
       { label: "Saved", to: "/my-collections", icon: Bookmark },
     ],
   },
