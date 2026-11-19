@@ -6,6 +6,10 @@ export interface EscrowProvider {
   linkTransaction(dealId: string, ref: EscrowTransactionRef): Promise<void>;
   getStatus(ref: EscrowTransactionRef): Promise<EscrowProviderStatus>;
   verifyFunding(ref: EscrowTransactionRef): Promise<boolean>;
+  verifyCompletion(ref: EscrowTransactionRef): Promise<boolean>;
+  getProviderFees(ref: EscrowTransactionRef): Promise<{ escrowFeeMinor: bigint | null; processingFeeMinor: bigint | null }>;
+  getRefundStatus(ref: EscrowTransactionRef): Promise<"none" | "pending" | "refunded">;
+  getRocketFeeCollectionStatus(ref: EscrowTransactionRef): Promise<"unavailable" | "pending" | "collected" | "refunded">;
   authenticateNotification(headers: Headers, body: Uint8Array): Promise<boolean>;
   reconcile(dealId: string, ref: EscrowTransactionRef): Promise<EscrowProviderStatus>;
 }

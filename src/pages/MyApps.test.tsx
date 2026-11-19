@@ -97,7 +97,7 @@ describe("My Apps next actions", () => {
         container.querySelector('a[href="/apps/add?app=app-submitted"]')?.textContent,
       ).toContain("Submitted app");
       expect(container.textContent).toContain("Submitted · ownership unverified");
-      expect(container.textContent).not.toContain("Domain verified");
+      expect(container.textContent).not.toContain("Your domain is verified");
       expect(container.textContent).toContain("Claim pending");
       expect(
         container.querySelector('[aria-label="Owned app analytics preview"]'),
@@ -148,7 +148,7 @@ describe("My Apps next actions", () => {
       expect(
         container.querySelector('a[href="/apps/add?app=app-1"]'),
       ).not.toBeNull();
-      expect(container.textContent).not.toContain("Domain verified");
+      expect(container.textContent).not.toContain("Your domain is verified");
       expect(container.textContent).not.toContain("Connect Google Analytics");
       expect(container.textContent).not.toContain("Connect Stripe");
     } finally {
@@ -159,7 +159,7 @@ describe("My Apps next actions", () => {
   it("shows domain verification only for an active owner relationship", async () => {
     const { container, cleanup } = await render(true);
     try {
-      expect(container.textContent).toContain("Domain verified");
+      expect(container.textContent).toContain("Your domain is verified");
       expect(container.textContent).toContain("Connect Google Analytics");
       expect(container.textContent).toContain("Connect Stripe");
       const connections = container.querySelector(
