@@ -6,7 +6,10 @@ export type CurrencyTotals = {
   completed_volume_minor: number; gross_earned_minor: number; fees_collected_minor: number;
   fees_refunded_minor: number; fees_outstanding_minor: number; average_transaction_minor: number;
 };
-export type DealReport = { currencies: CurrencyTotals[]; transactions: DealFinancial[] };
+type AdminTransaction = DealFinancial & { environment?: string | null; provider_status?: string | null;
+  attempt_status?: string | null; last_synced_at?: string | null; last_error?: string | null;
+  buyer_id?: string; seller_id?: string; app_name?: string };
+export type DealReport = { currencies: CurrencyTotals[]; transactions: AdminTransaction[] };
 const actionLabels: Record<string,string> = {
   escrow_initiated: "Record external escrow setup", funds_secured: "Record externally verified funding",
   transfer_in_progress: "Record transfer in progress", buyer_inspection: "Record buyer inspection",
@@ -15,7 +18,8 @@ const actionLabels: Record<string,string> = {
   fee_collected: "Record verified Rocket fee collection", fee_waived: "Waive Rocket fee",
   fee_refunded: "Record Rocket fee refund",
 };
-function actions(row: DealFinancial): string[] {
+function actions(row: AdminTransaction): string[] {
+  if (row.escrow_provider === "escrow.com" || row.attempt_status) return [];
   switch (row.transaction_status) {
     case "offer_accepted": return ["cancelled"];
     case "awaiting_escrow": return ["escrow_initiated","cancelled"];
@@ -67,7 +71,7 @@ export default function AdminDealFees({ onReport }: { onReport?: (report: DealRe
   }
   return <section className="rocket-admin-panel">
     <h2>Acquisition closing fees</h2>
-    <p className="rocket-admin-muted">3% Rocket closing fee, split equally. The $99 combined minimum applies to USD only. Figures are grouped by currency; outstanding fees are not collected revenue. No escrow provider is connected.</p>
+    <p className="rocket-admin-muted">3% Rocket closing fee, split equally. The $99 combined minimum applies to USD only. Figures are grouped by currency; outstanding fees are not collected revenue. Escrow.com sandbox transactions are provider verified.</p>
     {error && <p role="alert" className="rocket-admin-error">{error}</p>}
     {feedback && <p role="status" className="rocket-admin-note">{feedback}</p>}
     {!report && !error && <p className="rocket-admin-muted">Loading acquisition finance…</p>}
@@ -87,11 +91,21 @@ export default function AdminDealFees({ onReport }: { onReport?: (report: DealRe
     </div>)}
     {!!report?.transactions.length && <><h3 className="mt-6 font-semibold">Transactions</h3><div className="rocket-admin-list">
       {report.transactions.map((row) => <article key={row.deal_id}>
-        <strong><a href={`/deals/${row.deal_id}`}>Deal {row.deal_id.slice(0,8)} ↗</a> · {money(row.acquisition_price_minor,row.currency)}</strong>
+        <strong><a href={`/deals/${row.deal_id}`}>{row.app_name || "Deal"} · {row.deal_id.slice(0,8)} ↗</a> · {money(row.acquisition_price_minor,row.currency)}</strong>
+        {row.buyer_id && row.seller_id && <p>Buyer {row.buyer_id.slice(0,8)} · Seller {row.seller_id.slice(0,8)}</p>}
         <p>Rocket fee {money(row.total_rocket_fee_minor,row.currency)} · buyer {money(row.buyer_fee_minor,row.currency)} · seller {money(row.seller_fee_minor,row.currency)}</p>
         <p>Transaction {row.transaction_status.replaceAll("_"," ")} · fee {row.fee_status.replaceAll("_"," ")} · collected {money(row.fee_collected_minor,row.currency)} · refunded {money(row.fee_refunded_minor,row.currency)}</p>
         {row.external_escrow_id && <p>External reference: {row.escrow_provider} · {row.external_escrow_id}</p>}
+        {row.provider_status && <p>Provider status: {row.provider_status.replaceAll("_"," ")} · {row.environment} · last sync {row.last_synced_at ? new Date(row.last_synced_at).toLocaleString() : "never"}</p>}
+        {row.last_error && <p className="text-amber-800">Reconciliation: {row.last_error}</p>}
         {row.provider_fee_minor != null && <p>External provider fee: {money(row.provider_fee_minor,row.currency)}</p>}
+        {row.escrow_provider === "escrow.com" && row.external_escrow_id && <button disabled={busy} onClick={async () => {
+          setBusy(true); setError("");
+          const result = await db.functions.invoke("rocket-escrow",{body:{action:"sync",deal_id:row.deal_id}});
+          setBusy(false);
+          if (result.error || result.data?.error) setError(result.data?.error || "Provider sync failed");
+          else await refresh();
+        }} className="mt-2 rounded-lg border px-3 py-2 text-sm">Sync with Escrow.com</button>}
         <div className="rocket-admin-actions">{actions(row).map((action) => <button key={action} disabled={busy} onClick={() => {setSelected({dealId:row.deal_id,action});setEvidence("");setError("");}}>{actionLabels[action]}</button>)}</div>
         {selected?.dealId === row.deal_id && <form onSubmit={(event) => {void submit(event);}} className="mt-3 grid gap-2">
           <strong>{actionLabels[selected.action]}</strong>

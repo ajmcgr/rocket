@@ -138,3 +138,6 @@ verify_jwt = false # OAuth callback and scheduled sync authenticate in the funct
 [functions.launch-rocket-acceptance]
 # Normal actions verify Supabase user; proof verifies Rocket access token/client/scope plus Launch ES256 identity.
 verify_jwt = false
+
+[functions.rocket-escrow]
+verify_jwt = false # User actions verify Auth.getUser; webhook token only triggers a provider fetch.
