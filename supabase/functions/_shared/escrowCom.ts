@@ -1,4 +1,4 @@
-// Escrow.com v2017-09-01 adapter. No browser import and no production writes.
+// Escrow.com v2017-09-01 adapter. Server-only; callers choose the environment.
 export type EscrowEnvironment = "sandbox" | "production";
 export type EscrowTransaction = {
   id: number;

@@ -136,4 +136,16 @@ describe("Escrow.com adapter", () => {
     await expect(api.create(terms)).rejects.toBeInstanceOf(EscrowApiError);
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
+  it("routes live transactions only to the production API endpoint", async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify(transaction()), {
+      status: 200,
+    }));
+    const api = new EscrowComClient("production", terms.brokerEmail,
+      "live-test-key", fetcher as typeof fetch);
+    await api.create(terms);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0][0]).toBe(
+      "https://api.escrow.com/2017-09-01/transaction",
+    );
+  });
 });

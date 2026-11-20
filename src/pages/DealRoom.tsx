@@ -37,7 +37,7 @@ export default function DealRoom() {
   const [escrow, setEscrow] = useState<DealEscrow | null>(null);
   const [handover, setHandover] = useState<Handover[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
-  const [sandboxAvailable, setSandboxAvailable] = useState(false);
+  const [escrowAvailability, setEscrowAvailability] = useState({sandbox: false, production: false});
   const [latestQuote, setLatestQuote] = useState<FeeQuote | null>(null);
   const [counterQuote, setCounterQuote] = useState<FeeQuote | null>(null);
   const [app, setApp] = useState<App | null>(null);
@@ -93,8 +93,10 @@ export default function DealRoom() {
     if (checklistRows.data?.length) setItems(checklistRows.data.at(-1).items);
     setLoading(false);
     void db.functions.invoke("rocket-escrow",{body:{action:"availability",deal_id:d.id}})
-      .then((availability: {data?: {sandbox_available?: boolean}}) => setSandboxAvailable(availability.data?.sandbox_available === true))
-      .catch(() => setSandboxAvailable(false));
+      .then((availability: {data?: {sandbox_available?: boolean; production_available?: boolean}}) =>
+        setEscrowAvailability({sandbox: availability.data?.sandbox_available === true,
+          production: availability.data?.production_available === true}))
+      .catch(() => setEscrowAvailability({sandbox: false, production: false}));
   }, [dealId,user]);
   useEffect(() => { void refresh(); }, [refresh]);
 
@@ -154,7 +156,7 @@ export default function DealRoom() {
     await act(async () => {
       const result = await db.functions.invoke("rocket-escrow",{body:{action,deal_id:deal.id}});
       return {error:result.error || (result.data?.error ? {message:result.data.error} : null)};
-    },action === "create" ? "Escrow.com sandbox transaction created. Both parties must continue on Escrow.com." : "Escrow.com status refreshed.");
+    },action === "create" ? "Escrow.com transaction created. Both parties must continue on Escrow.com." : "Escrow.com status refreshed.");
   }
   async function updateHandover(index: number, status: string) {
     if (!deal) return;
@@ -175,6 +177,8 @@ export default function DealRoom() {
   const checklistAgreed = countApprovals("checklist",checklist?.version || 0)===2;
   const unsavedTerms = !!agreement && JSON.stringify(terms) !== JSON.stringify(agreement.terms);
   const unsavedChecklist = !!checklist && JSON.stringify(items) !== JSON.stringify(checklist.items);
+  const escrowSite = escrow?.environment === "sandbox" ? "https://www.escrow-sandbox.com" : "https://www.escrow.com";
+  const escrowCanSync = escrow?.environment === "sandbox" ? escrowAvailability.sandbox : escrowAvailability.production;
   return <main className="mx-auto max-w-6xl px-4 py-7 text-neutral-900 sm:px-6">
     <Link to="/deals" className="text-sm text-sky-700">← My Deals</Link>
     <header className="mt-5 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-7">
@@ -273,14 +277,14 @@ export default function DealRoom() {
         {checklist && <div className="mt-5 rounded-xl border p-4 text-sm"><strong>Approved handover assets</strong><ul className="mt-2 list-inside list-disc">{checklist.items.map((item,index) => <li key={`${item.name}-${index}`}>{item.name}</li>)}</ul></div>}
         {agreement && <details className="mt-4 rounded-xl border p-4 text-sm"><summary className="cursor-pointer font-medium">Approved transaction terms</summary><dl className="mt-3 space-y-2">{agreementFields.map(([key,label]) => <div key={key}><dt className="font-medium">{label}</dt><dd className="whitespace-pre-wrap text-neutral-600">{agreement.terms[key]}</dd></div>)}</dl></details>}
         {deal.status==="terms_agreed" && agreed && checklistAgreed && <button disabled={busy} onClick={() => void act(() => db.rpc("rocket_deal_prepare_escrow",{p_deal_id:deal.id}),"Deal is ready for third-party escrow setup.")} className={`${buttonClass} mt-5`}>Mark preparation complete</button>}
-        {deal.status==="awaiting_escrow" && !escrow && sandboxAvailable && <button disabled={busy} onClick={() => void escrowAction("create")} className={`${buttonClass} mt-5`}>Start sandbox transaction</button>}
-        {escrow?.transaction_id && sandboxAvailable && <button disabled={busy} onClick={() => void escrowAction("sync")} className="mt-5 min-h-11 rounded-xl border px-5 font-medium">Refresh Escrow.com status</button>}
+        {deal.status==="awaiting_escrow" && !escrow && escrowAvailability.production && <button disabled={busy} onClick={() => void escrowAction("create")} className={`${buttonClass} mt-5`}>Start secure transaction</button>}
+        {escrow?.transaction_id && escrowCanSync && <button disabled={busy} onClick={() => void escrowAction("sync")} className="mt-5 min-h-11 rounded-xl border px-5 font-medium">Refresh Escrow.com status</button>}
         {escrow?.last_synced_at && <p className="mt-3 text-xs text-neutral-500">Last verified {new Date(escrow.last_synced_at).toLocaleString()}</p>}
         {escrow?.attempt_status === "reconciliation_required" && <p className="mt-3 text-sm text-amber-900">Escrow creation needs review. Rocket will not submit a second transaction automatically.</p>}
-        {escrow?.transaction_id && <div className="mt-4 space-y-2 text-sm"><p>Complete identity checks and acceptance on <a href="https://www.escrow-sandbox.com/" target="_blank" rel="noopener noreferrer" className="text-sky-700 underline">Escrow.com sandbox ↗</a> using transaction {escrow.transaction_id}.</p>
-          {!isSeller && <p>If card or PayPal payment is offered for this transaction, <a href={`https://www.escrow-sandbox.com/transactions/${escrow.transaction_id}/payment`} target="_blank" rel="noopener noreferrer" className="text-sky-700 underline">continue to Escrow.com payment ↗</a>. Escrow.com will show available methods and its own fees.</p>}
+        {escrow?.transaction_id && <div className="mt-4 space-y-2 text-sm"><p>Complete identity checks and acceptance on <a href={escrowSite} target="_blank" rel="noopener noreferrer" className="text-sky-700 underline">Escrow.com ↗</a> using transaction {escrow.transaction_id}.</p>
+          {!isSeller && <p>If card or PayPal payment is offered for this transaction, <a href={`${escrowSite}/transactions/${escrow.transaction_id}/payment`} target="_blank" rel="noopener noreferrer" className="text-sky-700 underline">continue to Escrow.com payment ↗</a>. Escrow.com will show available methods and its own fees.</p>}
           <p>Rocket never collects acquisition funds. Escrow.com controls verification, payment and release.</p></div>}
-        <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{escrow?.funds_secured ? "Escrow.com reports the purchase funds are secured. Follow the approved handover checklist." : "Do not begin asset handover until Escrow.com confirms funding. Production transactions are not enabled."}</p></>}
+        <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{escrow?.funds_secured ? "Escrow.com reports the purchase funds are secured. Follow the approved handover checklist." : "Do not begin asset handover until Escrow.com confirms funding."}</p></>}
       {tab==="Activity" && <><h2 className="text-xl font-semibold">Deal activity</h2><ol className="mt-4 space-y-2">{activity.map((event) => <li key={`${event.id}-${event.created_at}`} className="flex flex-wrap justify-between gap-2 rounded-xl border p-3 text-sm"><span>{event.label}</span><time className="text-neutral-500">{new Date(event.created_at).toLocaleString()}</time></li>)}</ol></>}
     </section>
   </main>;
