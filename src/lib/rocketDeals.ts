@@ -49,7 +49,7 @@ export const nextAction = (deal: Deal, userId: string, offers: Offer[], agreemen
     if (!approvals.some((a) => a.kind === "checklist" && a.version === checklist.version && a.user_id === userId)) return "Review handover checklist";
     return deal.status === "terms_agreed" ? "Proceed to escrow preparation" : "Await other party approval";
   }
-  return deal.status === "awaiting_escrow" ? "Awaiting escrow integration" : "No action required";
+  return deal.status === "awaiting_escrow" ? "Review Escrow tab" : "No action required";
 };
 export type ChecklistItem = { name: string; description: string; responsible_party: "buyer" | "seller"; required: boolean; delivery_method: "ownership_transfer" | "project_migration" | "account_recreation" | "provider_approval" | "other" | "document" | "not_applicable"; acceptance_criteria: string; notes: string };
 export const checklistTemplate: ChecklistItem[] = [
