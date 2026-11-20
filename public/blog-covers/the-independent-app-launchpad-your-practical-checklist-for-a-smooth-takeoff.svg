@@ -1,27 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" data-variant="2" role="img" aria-labelledby="title desc">
   <title id="title">The Independent App Launchpad: Your Practical Checklist for a Smooth Takeoff</title>
-  <desc id="desc">A Rocket editorial illustration about building and launching an app.</desc>
-  <rect width="1600" height="900" fill="#F5F5F3"/>
-  <rect x="382" y="175" width="836" height="550" rx="42" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="10"/>
-  <rect x="461" y="256" width="678" height="352" rx="24" fill="#1676E3"/>
-  <rect x="461" y="256" width="678" height="47" rx="24" fill="#0A0A0A"/>
-  <circle cx="501" cy="280" r="8" fill="#F2683C"/>
-  <circle cx="527" cy="280" r="8" fill="#E1E1DE"/>
-  <circle cx="553" cy="280" r="8" fill="#FFFFFF"/>
-  <rect x="496" y="334" width="170" height="239" rx="16" fill="#FFFFFF"/>
-  <circle cx="581" cy="421" r="49" fill="#F2683C"/>
-  <path d="M550 448l31-69 31 69h-21l-10-25-10 25z" fill="#0A0A0A"/>
-  <rect x="527" y="499" width="108" height="14" rx="7" fill="#0A0A0A"/>
-  <rect x="703" y="334" width="400" height="110" rx="16" fill="#0A0A0A"/>
-  <rect x="738" y="368" width="170" height="18" rx="9" fill="#F5F5F3"/>
-  <rect x="738" y="403" width="259" height="12" rx="6" fill="#B8B8B5"/>
-  <rect x="703" y="466" width="190" height="107" rx="16" fill="#F2683C"/>
-  <rect x="913" y="466" width="190" height="107" rx="16" fill="#E1E1DE"/>
-  <path d="M750 542l48-63 48 63z" fill="#FFFFFF"/>
-  <circle cx="1008" cy="519" r="31" fill="#1676E3"/>
-  <rect x="541" y="650" width="518" height="17" rx="8.5" fill="#0A0A0A"/>
-  <circle cx="354" cy="206" r="24" fill="#F2683C"/>
-  <circle cx="1242" cy="700" r="30" fill="#1676E3"/>
-  <path d="M1211 165h65v65" fill="none" stroke="#0A0A0A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <desc id="desc">A Rocket Journal illustration for this article.</desc>
+  <rect width="1600" height="900" fill="#F2FBF6"/>
+  <g font-family="Arial, Helvetica, sans-serif" style="color:#0D5947">
+    <text x="100" y="112" fill="#1676E3" font-size="29" font-weight="700" letter-spacing="5">ROCKET JOURNAL</text>
+    <text x="100" y="280" font-size="50" font-weight="750" fill="currentColor">The Independent App</text>
+    <text x="100" y="343" font-size="50" font-weight="750" fill="currentColor">Launchpad: Your Practical</text>
+    <text x="100" y="406" font-size="50" font-weight="750" fill="currentColor">Checklist for a Smooth</text>
+    <text x="100" y="469" font-size="50" font-weight="750" fill="currentColor">Takeoff</text>
+    <path d="M100 730h630" stroke="#1676E3" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="110" cy="795" r="15" fill="#1676E3"/>
+    <circle cx="155" cy="795" r="15" fill="#0D5947"/>
+    <circle cx="200" cy="795" r="15" fill="#F2683C"/>
+  </g>
+  <circle cx="1280" cy="434" r="310" fill="#D9F3EA"/><rect x="962" y="160" width="576" height="565" rx="46" fill="#FFFFFF" stroke="#0D5947" stroke-width="12"/>
+   <rect x="1020" y="217" width="196" height="190" rx="28" fill="#1676E3"/><circle cx="1118" cy="313" r="48" fill="#FFFFFF"/>
+   <rect x="1260" y="217" width="196" height="190" rx="28" fill="#F2683C"/><path d="M1310 356l48-85 48 85Z" fill="#FFFFFF"/>
+   <rect x="1020" y="450" width="196" height="190" rx="28" fill="#173B64"/><path d="M1070 547h97M1118 500v94" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round"/>
+   <rect x="1260" y="450" width="196" height="190" rx="28" fill="#8ECFB2"/><path d="m1305 550 43 43 68-98" fill="none" stroke="#0D5947" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
