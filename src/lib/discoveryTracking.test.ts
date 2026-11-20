@@ -1,10 +1,30 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { recordDiscoverySearch } from "./discoveryTracking";
+import { recordAppCardClick, recordDiscoveryProfileView, recordDiscoverySearch } from "./discoveryTracking";
 const { invoke, track } = vi.hoisted(() => ({ invoke: vi.fn(), track: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke } } }));
 vi.mock("@/lib/analytics", () => ({ track }));
 afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 describe("Persistent discovery submissions", () => {
+  it("attributes search result navigation and the resulting profile view to the same search", async () => {
+    const values = new Map<string, string>();
+    const location = { origin: "https://tryrocket.ai", pathname: "/discover", search: "?q=design" };
+    vi.stubGlobal("window", { location, innerWidth: 390,
+      sessionStorage: { getItem: (key: string) => values.get(key) || null, setItem: (key: string, value: string) => values.set(key, value) } });
+    vi.stubGlobal("navigator", { doNotTrack: "0", globalPrivacyControl: false });
+    invoke.mockResolvedValue({ data: true, error: null });
+    await recordDiscoverySearch("design", "discover");
+    const searchId = invoke.mock.calls.find(([, args]) => args.body.kind === "search")?.[1].body.event_id;
+    const anchor = document.createElement("a");
+    anchor.href = "/apps/test-app";
+    recordAppCardClick({ target: anchor } as React.MouseEvent<HTMLElement>, "a4c1ed93-9d6e-4fc3-b978-0d2b72d6a4f1");
+    location.pathname = "/apps/test-app";
+    location.search = "";
+    recordDiscoveryProfileView("a4c1ed93-9d6e-4fc3-b978-0d2b72d6a4f1");
+    const journeys = invoke.mock.calls.filter(([, args]) => args.body.kind === "journey").map(([, args]) => args.body);
+    expect(journeys.filter((event) => event.event_kind === "app_card_click" || event.event_kind === "app_profile_view"))
+      .toEqual([expect.objectContaining({ event_kind: "app_card_click", surface: "search", search_id: searchId, device: "mobile" }),
+        expect.objectContaining({ event_kind: "app_profile_view", surface: "search", search_id: searchId, device: "mobile" })]);
+  });
   it("records each submission once with an opaque event ID and no query text", async () => {
     const values = new Map<string, string>();
     vi.stubGlobal("window", { location: { origin: "https://tryrocket.ai", search: "" }, innerWidth: 1200,

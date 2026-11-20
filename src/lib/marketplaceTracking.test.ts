@@ -102,6 +102,31 @@ describe("Existing view endpoint extended for outbound clicks", () => {
 
 
 describe("Search telemetry on the existing endpoint", () => {
+  it("accepts search-linked card and profile journeys without exposing a query", async () => {
+    const h = tracking();
+    for (const eventKind of ["app_card_click", "app_profile_view"] as const) {
+      const res = await h.handler(h.request({
+        kind: "journey", event_id: crypto.randomUUID(), session_id: crypto.randomUUID(),
+        event_kind: eventKind, surface: "search", app_id: app,
+        search_id: crypto.randomUUID(), device: "mobile", acquisition_source: "direct",
+      }));
+      expect(res.status).toBe(200);
+      expect(h.rpc.mock.lastCall?.[0]).toBe("record_discovery_journey");
+      expect(h.rpc.mock.lastCall?.[1]).toMatchObject({ p_event_kind: eventKind, p_app_id: app, p_search_id: expect.any(String) });
+    }
+  });
+  it("rejects missing or misplaced journey search IDs", async () => {
+    const h = tracking();
+    const base = { kind: "journey", event_id: crypto.randomUUID(), session_id: crypto.randomUUID(),
+      device: "mobile", acquisition_source: "direct" };
+    for (const body of [
+      { ...base, event_kind: "search", surface: "search" },
+      { ...base, event_kind: "app_card_click", surface: "search", app_id: app, search_id: "bad" },
+      { ...base, event_kind: "surface_view", surface: "search", search_id: crypto.randomUUID() },
+      { ...base, event_kind: "app_profile_view", surface: "direct", app_id: app, search_id: crypto.randomUUID() },
+    ]) expect((await h.handler(h.request(body))).status).toBe(400);
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
   it("accepts anonymous search submissions without an app and sends no raw query or IP to storage", async () => {
     const h = tracking();
     const res = await h.handler(h.request({ kind: "search", event_id: app, source: "header", query: "private query" }));
