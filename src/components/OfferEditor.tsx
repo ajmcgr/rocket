@@ -87,8 +87,8 @@ export default function OfferEditor({
       </a>
       <p className="mt-2 text-xs text-neutral-500">
         Publish explicitly below before selling. Unpublishing stops new
-        checkout; existing subscriptions retain paid access. Use the same key
-        for monthly and annual prices of the same tier.
+        checkout; existing paid access remains governed by the purchase record.
+        Use the same key for monthly and annual prices of the same tier.
       </p>
     </details>
   );

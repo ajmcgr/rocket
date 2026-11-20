@@ -28,6 +28,7 @@ async function render(
     registered: boolean;
   }>,
   optional = false,
+  salesSummary: Record<string, unknown> = { partial: false, currencies: [], recent: [] },
 ) {
   invoke.mockClear();
   const status = {
@@ -62,7 +63,9 @@ async function render(
               : { data: { connected: true }, error: null },
           )
         : Promise.resolve(
-            options.body.action === "stripe_catalog" && catalogPrices
+            options.body.action === "sales"
+              ? { data: salesSummary, error: null }
+              : options.body.action === "stripe_catalog" && catalogPrices
               ? {
                   data: { prices: catalogPrices, next_cursor: null },
                   error: null,
@@ -99,6 +102,23 @@ async function render(
   };
 }
 describe("Buy with Rocket activation UI", () => {
+  it("separates one-time and subscription sales and marks incomplete legacy records", async () => {
+    const { container, cleanup } = await render(false, false, null, undefined, false, {
+      partial: true,
+      currencies: [{ currency: "usd", payment_count: 4, one_time_purchase_count: 2,
+        gross_cents: 7900, revenue_cents: 7400, subscription_revenue_cents: 2000,
+        one_time_revenue_cents: 5400, gross_platform_fee_cents: 395, refund_cents: 500 }],
+      recent: [{ payment_id: "sale", product_name: "Licence", billing_type: "one_time",
+        paid_at: "2026-11-12T00:00:00Z", amount_cents: 2000,
+        application_fee_cents: 100, refund_cents: 500, currency: "usd", legacy: false }],
+    });
+    try {
+      expect(container.textContent).toContain("One-time revenue$54.00");
+      expect(container.textContent).toContain("Subscription revenue$20.00");
+      expect(container.textContent).toContain("past renewals and partial refunds may be missing");
+      expect(container.textContent).toContain("One-time purchases2");
+    } finally { await cleanup(); }
+  });
   it("allows Launch Pro activation without test proof, but still requires live readiness", async () => {
     for (const ready of [false, true]) {
       const { container, cleanup } = await render(

@@ -1,7 +1,7 @@
 import { createElement, useEffect, useRef } from "react";
 
 export type RocketButtonProps = {
-  action: "continue" | "buy";
+  action: "continue" | "buy" | "subscribe";
   variant?: "primary" | "dark" | "light";
   loading?: boolean;
   disabled?: boolean;

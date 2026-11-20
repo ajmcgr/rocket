@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
-import PlanPicker, { type CommercePlan } from "./PlanPicker";
+import PlanPicker, { isOneTime, type CommercePlan } from "./PlanPicker";
 import RocketButton from "./RocketButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,7 +207,7 @@ export default function AppProfileBuyAction({
         <span className="font-semibold">You&apos;re in.</span> {appName} ·{" "}
         {entitlement.plan_name || ownedPlan?.name || "Purchased plan"}
         <a href="/library" className="ml-3 underline">
-          Manage subscription
+          {entitlement.billing_type === "one_time" ? "View purchase" : "Manage subscription"}
         </a>
         <a
           href={websiteUrl}
@@ -340,7 +340,7 @@ export default function AppProfileBuyAction({
       )}
       {canBuy && (
         <RocketButton
-          action="buy"
+          action={plan && !isOneTime(plan) ? "subscribe" : "buy"}
           onActivate={buy}
           loading={busy}
           disabled={!plan || processing || (pilot && !acceptedTerms)}
@@ -355,12 +355,11 @@ export default function AppProfileBuyAction({
         <p className="text-sm text-neutral-600">Select a plan to continue.</p>
       )}
       <p className="text-xs text-neutral-500">
-        Already subscribed? Manage your subscription in{" "}
+        {plan && isOneTime(plan) ? "View your purchases in " : "Already subscribed? Manage your subscription in "}
         <a className="underline" href="/library">
           My Purchases
         </a>
-        . Plan changes are not supported yet; cancel your current subscription
-        and wait for it to end before buying another.
+        . {(!plan || !isOneTime(plan)) && "Plan changes are not supported yet; cancel your current subscription and wait for it to end before buying another."}
       </p>
     </section>
   );

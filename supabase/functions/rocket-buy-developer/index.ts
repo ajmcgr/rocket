@@ -76,6 +76,14 @@ Deno.serve(async (req) => {
         launch_ready: configuration.live_checkout_enabled && liveWebhookConfigured(Deno.env.get("STRIPE_CONNECT_LIVE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET")) });
     }
 
+    if (action === "sales") {
+      const { data: sales, error: salesError } = await admin.rpc("get_owned_buy_sales", {
+        p_app_id: appId, p_user_id: user.id,
+      });
+      if (salesError) throw salesError;
+      return json(sales);
+    }
+
     if (action === "stripe_onboarding") {
       let account = await currentAccount(admin, client.client_id, user.id);
       if (account?.account_configuration?.connection_method === "oauth") return json({ error: "existing_account_uses_stripe_dashboard" }, 409);

@@ -92,6 +92,37 @@ Deno.serve(async (req) => {
       if (error) throw error;
       return reply({ received: true, ignored: true });
     };
+    if (event.type === "checkout.session.async_payment_failed" && object.mode === "payment") {
+      const { data: attempt, error } = await admin.from("connect_checkout_attempts")
+        .select("id,product_id").eq("stripe_checkout_session_id", object.id)
+        .eq("stripe_account_id", accountId).eq("client_id", account.client_id).maybeSingle();
+      if (error) throw error;
+      if (!attempt) return await ignoreUnrelatedCheckout(object.id);
+      const { error: receiptError } = await admin.from("connect_webhook_events").update({
+        processing_result: "applied", detail: { status: "payment_failed", checkout_attempt_id: attempt.id, product_id: attempt.product_id },
+      }).eq("event_id", event.id);
+      if (receiptError) throw receiptError;
+      return reply({ received: true });
+    }
+    if (event.type === "payment_intent.payment_failed") {
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: object.id, limit: 1 }, { stripeAccount: accountId });
+      const session = sessions.data[0];
+      if (!session || session.mode !== "payment") {
+        const { error: receiptError } = await admin.from("connect_webhook_events").update({ processing_result: "stale", detail: { message: "unmapped one-time failed payment" } }).eq("event_id", event.id);
+        if (receiptError) throw receiptError;
+        return reply({ received: true, ignored: true });
+      }
+      const { data: attempt, error } = await admin.from("connect_checkout_attempts")
+        .select("id,product_id").eq("stripe_checkout_session_id", session.id)
+        .eq("stripe_account_id", accountId).eq("client_id", account.client_id).maybeSingle();
+      if (error) throw error;
+      if (!attempt) return await ignoreUnrelatedCheckout(session.id);
+      const { error: receiptError } = await admin.from("connect_webhook_events").update({
+        processing_result: "applied", detail: { status: "payment_failed", checkout_attempt_id: attempt.id, product_id: attempt.product_id },
+      }).eq("event_id", event.id);
+      if (receiptError) throw receiptError;
+      return reply({ received: true });
+    }
     if (["charge.dispute.created", "charge.dispute.closed"].includes(event.type) &&
       (event.type === "charge.dispute.created" || object.status === "won")) {
       try {
