@@ -3,6 +3,7 @@ import {
   EscrowApiError,
   EscrowComClient,
   verifyAndMap,
+  type EscrowEnvironment,
   type EscrowTerms,
   type EscrowTransaction,
 } from "../_shared/escrowCom.ts";
@@ -10,8 +11,16 @@ import {
 const projectUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const brokerEmail = (Deno.env.get("ESCROW_SANDBOX_EMAIL") ?? "").trim();
-const apiKey = Deno.env.get("ESCROW_SANDBOX_API_KEY") ?? "";
+const credentials = {
+  sandbox: {
+    email: (Deno.env.get("ESCROW_SANDBOX_EMAIL") ?? "").trim(),
+    key: Deno.env.get("ESCROW_SANDBOX_API_KEY") ?? "",
+  },
+  production: {
+    email: (Deno.env.get("ESCROW_PRODUCTION_EMAIL") ?? "").trim(),
+    key: Deno.env.get("ESCROW_PRODUCTION_API_KEY") ?? "",
+  },
+};
 const testUsers = new Set(
   (Deno.env.get("ROCKET_ESCROW_SANDBOX_TEST_USERS") ?? "")
     .split(",")
@@ -38,7 +47,8 @@ const json = (value: unknown, status = 200) =>
   });
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const admin = createClient(projectUrl, serviceKey);
-const client = () => new EscrowComClient("sandbox", brokerEmail, apiKey);
+const client = (environment: EscrowEnvironment) =>
+  new EscrowComClient(environment, credentials[environment].email, credentials[environment].key);
 type Claim = {
   claimed: boolean;
   reference: string;
@@ -51,7 +61,7 @@ type Claim = {
   seller_fee_minor: number;
 };
 
-async function termsForDeal(dealId: string): Promise<EscrowTerms> {
+async function termsForDeal(dealId: string, environment: EscrowEnvironment): Promise<EscrowTerms> {
   const [{ data: finance }, { data: identity }, { data: escrow }] =
     await Promise.all([
       admin
@@ -76,7 +86,7 @@ async function termsForDeal(dealId: string): Promise<EscrowTerms> {
     !finance ||
     !identity ||
     !escrow ||
-    escrow.environment !== "sandbox" ||
+    escrow.environment !== environment ||
     finance.currency !== "USD"
   )
     throw new Error("Escrow terms unavailable");
@@ -85,7 +95,7 @@ async function termsForDeal(dealId: string): Promise<EscrowTerms> {
     appName: identity.app_name,
     buyerEmail: identity.buyer_email,
     sellerEmail: identity.seller_email,
-    brokerEmail,
+    brokerEmail: credentials[environment].email,
     priceMinor: finance.acquisition_price_minor,
     buyerFeeMinor: finance.buyer_fee_minor,
     sellerFeeMinor: finance.seller_fee_minor,
@@ -97,8 +107,9 @@ async function apply(
   dealId: string,
   transaction: EscrowTransaction,
   terms: EscrowTerms,
+  environment: EscrowEnvironment,
 ) {
-  const snapshot = verifyAndMap(transaction, terms, "sandbox");
+  const snapshot = verifyAndMap(transaction, terms, environment);
   const { error } = await admin.rpc("rocket_escrow_apply_snapshot", {
     p_deal_id: dealId,
     p_transaction_id: transaction.id,
@@ -108,9 +119,15 @@ async function apply(
   return snapshot;
 }
 async function reconcile(dealId: string, transactionId: number) {
-  const terms = await termsForDeal(dealId);
-  const transaction = await client().byId(transactionId);
-  return apply(dealId, transaction, terms);
+  const { data: linked } = await admin.from("rocket_deal_escrow")
+    .select("environment,transaction_id").eq("deal_id", dealId).single();
+  if (!linked || linked.transaction_id !== transactionId ||
+    !["sandbox", "production"].includes(linked.environment))
+    throw new Error("Escrow transaction mismatch");
+  const environment = linked.environment as EscrowEnvironment;
+  const terms = await termsForDeal(dealId, environment);
+  const transaction = await client(environment).byId(transactionId);
+  return apply(dealId, transaction, terms, environment);
 }
 
 Deno.serve(async (request: Request) => {
@@ -145,10 +162,13 @@ Deno.serve(async (request: Request) => {
       Number(body.transaction_id) <= 0
     )
       return json({ error: "Invalid event" }, 400);
+    const environment = new URL(request.url).searchParams.get("environment") === "sandbox"
+      ? "sandbox" : "production";
     const { data: linked } = await admin
       .from("rocket_deal_escrow")
       .select("deal_id,transaction_id,last_synced_at")
       .eq("transaction_id", body.transaction_id)
+      .eq("environment", environment)
       .maybeSingle();
     if (!linked) return json({ ok: true });
     if (
@@ -199,25 +219,28 @@ Deno.serve(async (request: Request) => {
   );
   if (!participant && isAdmin !== true)
     return json({ error: "Forbidden" }, 403);
-  const available =
+  const sandboxAvailable =
     sandboxEnabled &&
     testUsers.has(deal.buyer_id) &&
     testUsers.has(deal.seller_id) &&
-    !!brokerEmail &&
-    !!apiKey;
+    !!credentials.sandbox.email &&
+    !!credentials.sandbox.key;
+  const productionAvailable = !!credentials.production.email && !!credentials.production.key;
   if (body.action === "availability")
-    return json({ sandbox_available: available, production_available: false });
+    return json({ sandbox_available: sandboxAvailable, production_available: productionAvailable });
   if (body.action !== "create" && body.action !== "sync")
     return json({ error: "Invalid action" }, 400);
   if (body.action === "create" && !participant)
     return json({ error: "Only a deal participant can start escrow" }, 403);
-  if (!available)
-    return json({ error: "Escrow sandbox is unavailable for this deal" }, 503);
   const { data: linked } = await admin
     .from("rocket_deal_escrow")
     .select("*")
     .eq("deal_id", dealId)
     .maybeSingle();
+  const environment: EscrowEnvironment = linked?.environment === "sandbox"
+    ? "sandbox" : "production";
+  if (environment === "production" ? !productionAvailable : !sandboxAvailable)
+    return json({ error: "Escrow is unavailable for this deal" }, 503);
   if (body.action === "sync") {
     if (!linked?.transaction_id)
       return json({ error: "Escrow transaction not created" }, 409);
@@ -244,6 +267,7 @@ Deno.serve(async (request: Request) => {
     const result = await admin.rpc("rocket_escrow_claim", {
       p_deal_id: dealId,
       p_actor: identity.user.id,
+      p_environment: environment,
     });
     if (result.error || !result.data)
       return json({ error: "Deal is not eligible for escrow" }, 409);
@@ -254,13 +278,13 @@ Deno.serve(async (request: Request) => {
   if (claim.transaction_id)
     return json({ ok: true, transaction_id: claim.transaction_id });
   try {
-    const terms = await termsForDeal(dealId);
-    const provider = client();
+    const terms = await termsForDeal(dealId, environment);
+    const provider = client(environment);
     // The reference is a reconciliation key, not a documented idempotency key.
     // Once creation is claimed, never POST a second time on timeout or 404.
     try {
       const found = await provider.byReference(claim.reference);
-      const snapshot = await apply(dealId, found, terms);
+      const snapshot = await apply(dealId, found, terms, environment);
       return json({ ok: true, transaction_id: found.id, snapshot });
     } catch (error) {
       if (!(error instanceof EscrowApiError && error.status === 404))
@@ -273,7 +297,7 @@ Deno.serve(async (request: Request) => {
     }
     const created = await provider.create(terms);
     const verified = await provider.byId(created.id);
-    const snapshot = await apply(dealId, verified, terms);
+    const snapshot = await apply(dealId, verified, terms, environment);
     return json({ ok: true, transaction_id: verified.id, snapshot });
   } catch {
     await admin

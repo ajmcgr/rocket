@@ -1,6 +1,6 @@
 # Rocket Deals Escrow.com sandbox deployment
 
-This integration extends the existing Deal Room and its locked 3% closing fee. **Production transaction creation is not implemented or enabled.** The Edge Function has a fixed sandbox endpoint, and creation requires a server flag plus two allowlisted Rocket test users. It never calls Stripe for acquisition funds.
+This integration extends the existing Deal Room and its locked 3% closing fee. Production creation uses the separate live Escrow.com API account and is available to eligible Deal Room participants when both `ESCROW_PRODUCTION_EMAIL` and `ESCROW_PRODUCTION_API_KEY` are configured in Supabase Edge Function secrets. Existing sandbox transactions remain bound to sandbox credentials. It never calls Stripe for acquisition funds.
 
 ## Provider contract
 
@@ -26,12 +26,12 @@ Escrow.com fees are separate from Rocket's broker fee. Rocket reports its fee as
 4. Register one sandbox webhook URL with Escrow.com: `https://lcujmvdgczkjxdstzhnr.supabase.co/functions/v1/rocket-escrow?webhook=<private token>`. Do not paste or log the token. Register using the [documented webhook endpoint](https://www.escrow.com/api/docs/webhooks). The function never trusts incoming status fields.
 5. Deploy the frontend only after the migration and function are live. Confirm two allowlisted accounts can load the Deal Room and all other users see no sandbox initiation action.
 6. Run a full controlled sandbox lifecycle: accepted offer; two current agreement approvals; two current checklist approvals; Escrow.com creation; provider acceptance; funding; shipping/handover; receipt/inspection; completion; broker-fee disbursement. Test cancellation, refund, duplicate create clicks, timeout reconciliation, webhook replay, wrong-transaction webhook, and admin access.
-7. Keep the sandbox flag off for ordinary production users. A separate production credential path and an explicit future enablement change are required after provider approval, legal disclosures, backup/recovery review, and sandbox evidence.
+7. Keep the sandbox flag off for ordinary production users. Production credentials must be stored separately as `ESCROW_PRODUCTION_EMAIL` and `ESCROW_PRODUCTION_API_KEY`; never copy a live key into a sandbox variable. A live creation is irreversible from Rocket's side and is never retried after an ambiguous provider response.
 
 ## Recovery and limitations
 
 Creation is claimed once in the database. If Escrow.com times out after a POST, Rocket will not POST again. Investigate the reference in Escrow.com's dashboard/API and reconcile it before any manual recovery. An unmatched claimed attempt remains `reconciliation_required`; never reset it without provider evidence.
 
-The provider account's broker commission permissions, supported software-asset category, payment methods, customer countries, and full disbursement lifecycle have not been verified against Rocket's actual account. No sandbox credentials or controlled buyer/seller accounts were available in this implementation session. Do not infer readiness from a passing mocked test or from a deployed function.
+The provider account's broker commission permissions, supported software-asset category, payment methods, customer countries, and full disbursement lifecycle have not been verified against Rocket's actual account. No controlled buyer/seller accounts were available in this implementation session. A successful deployment or mocked test does not prove a live transaction will be accepted or its broker fee paid.
 
 Provider status is refreshed by an allowlisted participant/admin or a webhook; no scheduled polling is configured. Provider-hosted acceptance and payment are used. Rocket does not submit acceptance, shipping, inspection, cancellation, or dispute actions on behalf of a participant. Escrow.com controls those actions.
