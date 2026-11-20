@@ -76,6 +76,9 @@ Deno.serve(async (req) => {
     const search = journeyBody.search_id;
     const section = journeyBody.section;
     const resultCount = journeyBody.result_count;
+    const searchEvent = ["search", "search_results"].includes(String(eventKind));
+    const searchLinkedAppEvent = journeyBody.surface === "search" &&
+      ["app_card_click", "app_profile_view", "outbound_click"].includes(String(eventKind));
     if (typeof journeyBody.event_id !== "string" || !uuid.test(journeyBody.event_id) ||
       typeof journeyBody.session_id !== "string" || !uuid.test(journeyBody.session_id) ||
       !["surface_view", "search", "search_results", "app_card_click", "app_profile_view", "outbound_click"].includes(String(eventKind)) ||
@@ -84,7 +87,9 @@ Deno.serve(async (req) => {
       !["organic", "direct", "social", "referral", "mcp"].includes(String(journeyBody.acquisition_source)) ||
       (section != null && (typeof section !== "string" || !/^[a-z0-9_-]{1,48}$/.test(section))) ||
       (["app_card_click", "app_profile_view", "outbound_click"].includes(String(eventKind)) !== (typeof app === "string" && uuid.test(app))) ||
-      (["search", "search_results"].includes(String(eventKind)) !== (typeof search === "string" && uuid.test(search))) ||
+      (searchEvent && !(typeof search === "string" && uuid.test(search))) ||
+      (search != null && (!(typeof search === "string" && uuid.test(search)) ||
+        (!searchEvent && !searchLinkedAppEvent))) ||
       ((eventKind === "search_results") !== (Number.isInteger(resultCount) && Number(resultCount) >= 0 && Number(resultCount) <= 100000)))
       return response(400, origin, { error: "Invalid discovery event" });
     const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
