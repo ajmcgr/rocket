@@ -148,4 +148,17 @@ describe("Escrow.com adapter", () => {
       "https://api.escrow.com/2017-09-01/transaction",
     );
   });
+  it("checks the live account before an irreversible create claim", async () => {
+    const fetcher = vi.fn(async () =>
+      new Response(JSON.stringify({id: 123}), {status: 200}));
+    const api = new EscrowComClient("production", terms.brokerEmail,
+      "live-test-key", fetcher as typeof fetch);
+    await api.verifyAccount();
+    expect(fetcher.mock.calls[0][0]).toBe(
+      "https://api.escrow.com/2017-09-01/customer/me",
+    );
+    const bad = new EscrowComClient("production", terms.brokerEmail,
+      "bad-key", async () => new Response("Unauthorized", {status: 401}));
+    await expect(bad.verifyAccount()).rejects.toBeInstanceOf(EscrowApiError);
+  });
 });

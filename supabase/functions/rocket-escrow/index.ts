@@ -264,6 +264,9 @@ Deno.serve(async (request: Request) => {
   }
   let claim: Claim;
   try {
+    // Verify live credentials before the one-time database claim. A bad key
+    // must not strand an otherwise eligible deal in reconciliation_required.
+    await client(environment).verifyAccount();
     const result = await admin.rpc("rocket_escrow_claim", {
       p_deal_id: dealId,
       p_actor: identity.user.id,
