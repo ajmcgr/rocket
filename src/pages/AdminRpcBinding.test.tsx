@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   requests: [] as { name: string; args: Record<string, unknown> }[],
   snapshot: {} as Record<string, unknown>,
   claims: [] as Record<string, unknown>[],
+  dealReport: { currencies: [] as Record<string, unknown>[], transactions: [] as Record<string, unknown>[] },
 }));
 vi.mock("@/lib/adminOverviewCsv", () => ({ downloadAdminOverviewCsv: mocks.exportCsv }));
 
@@ -70,6 +71,8 @@ vi.mock("@/integrations/supabase/client", async () => {
                   ? { search_sessions: 0, acquisition_sessions: [], surfaces: [] }
                 : name === "rocket_admin_acquisition_metrics"
                   ? { approved_listings: 1, pending_listings: 0 }
+                : name === "rocket_admin_deal_financial_report"
+                  ? mocks.dealReport
                 : name === "rocket_redeem_claim_invitation"
                   ? { app_id: args.p_app_id }
                 : name === "rocket_admin_claims"
@@ -116,6 +119,7 @@ beforeEach(() => {
   mocks.requests.length = 0;
   mocks.snapshot = { catalogue: { public_apps: 12 } };
   mocks.claims = [];
+  mocks.dealReport = { currencies: [], transactions: [] };
   sessionStorage.clear();
   window.history.replaceState({}, "", "/admin");
 });
@@ -130,6 +134,22 @@ describe("admin Supabase client binding", () => {
     expect(panel.textContent).toMatch(/Approved Listings.*1.*Pending Listings.*0/s);
     expect(panel.querySelector("a")).toBeNull();
     expect(mocks.requests).toContainEqual({ name: "rocket_admin_acquisition_metrics", args: {} });
+  });
+  it("shows completed deal volume and average per currency in Apps for Sale", async () => {
+    mocks.dealReport = { currencies: [
+      { currency: "USD", completed_acquisitions: 2, completed_volume_minor: 1500000, average_transaction_minor: 750000 },
+      { currency: "EUR", completed_acquisitions: 1, completed_volume_minor: 400000, average_transaction_minor: 400000 },
+    ], transactions: [] };
+    render(<Admin />);
+    const panel = (await screen.findByText("Apps for Sale")).closest("section")!;
+    await waitFor(() => expect(panel.textContent).toContain("$15,000.00"));
+    expect(panel.textContent).toContain("Completed deals");
+    expect(panel.textContent).toContain("3");
+    expect(panel.textContent).toContain("$7,500.00");
+    expect(panel.textContent).toContain("€4,000.00");
+    expect(panel.textContent).toContain("Total marketplace sales · USD");
+    expect(panel.textContent).toContain("Total marketplace sales · EUR");
+    expect(mocks.requests).toContainEqual({ name: "rocket_admin_deal_financial_report", args: {} });
   });
   it.each([
     ["home", "Catalogue"],

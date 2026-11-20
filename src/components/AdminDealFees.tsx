@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { dealsDb as db, money, type DealFinancial } from "@/lib/rocketDeals";
 
-type CurrencyTotals = {
+export type CurrencyTotals = {
   currency: string; completed_acquisitions: number; cancelled_transactions: number;
   completed_volume_minor: number; gross_earned_minor: number; fees_collected_minor: number;
   fees_refunded_minor: number; fees_outstanding_minor: number; average_transaction_minor: number;
 };
-type Report = { currencies: CurrencyTotals[]; transactions: DealFinancial[] };
+export type DealReport = { currencies: CurrencyTotals[]; transactions: DealFinancial[] };
 const actionLabels: Record<string,string> = {
   escrow_initiated: "Record external escrow setup", funds_secured: "Record externally verified funding",
   transfer_in_progress: "Record transfer in progress", buyer_inspection: "Record buyer inspection",
@@ -29,8 +29,8 @@ function actions(row: DealFinancial): string[] {
     default: return [];
   }
 }
-export default function AdminDealFees() {
-  const [report,setReport] = useState<Report | null>(null);
+export default function AdminDealFees({ onReport }: { onReport?: (report: DealReport) => void }) {
+  const [report,setReport] = useState<DealReport | null>(null);
   const [error,setError] = useState("");
   const [feedback,setFeedback] = useState("");
   const [busy,setBusy] = useState(false);
@@ -43,8 +43,9 @@ export default function AdminDealFees() {
   const refresh = useCallback(async () => {
     const {data,error:issue} = await db.rpc("rocket_admin_deal_financial_report");
     if (issue) { setError(issue.message); return; }
-    setReport(data as Report); setError("");
-  },[]);
+    const nextReport = data as DealReport;
+    setReport(nextReport); onReport?.(nextReport); setError("");
+  },[onReport]);
   useEffect(() => { void refresh(); },[refresh]);
   async function submit(event: React.FormEvent) {
     event.preventDefault();

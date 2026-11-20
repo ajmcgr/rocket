@@ -12,7 +12,8 @@ import AdminNewsletter from "@/components/AdminNewsletter";
 import AdminRocket100 from "@/components/AdminRocket100";
 import AdminAppScreenshots from "@/components/AdminAppScreenshots";
 import AdminAcquisitionReview from "@/components/AdminAcquisitionReview";
-import AdminDealFees from "@/components/AdminDealFees";
+import AdminDealFees, { type DealReport } from "@/components/AdminDealFees";
+import { money } from "@/lib/rocketDeals";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "screenshots" | "outreach" | "developer-testing";
 type Period = "today" | "7d" | "30d" | "all";
@@ -95,6 +96,7 @@ export default function Admin() {
   const [investor, setInvestor] = useState<Row | null>(null);
   const [journeys, setJourneys] = useState<Row | null>(null);
   const [acquisitionMetrics, setAcquisitionMetrics] = useState<Row | null>(null);
+  const [dealReport, setDealReport] = useState<DealReport | null>(null);
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
   const [error, setError] = useState("");
@@ -195,6 +197,8 @@ export default function Admin() {
   };
   const picks = rows(data?.picks).filter((row) => row.status === "featured");
   const candidates = rows(data?.candidates);
+  const completedDeals = dealReport?.currencies.reduce((sum, row) => sum + row.completed_acquisitions, 0) ?? 0;
+  const dealCurrencies = dealReport?.currencies.filter((row) => row.completed_acquisitions > 0) || [];
 
   return <main className="rocket-admin">
     <header className="rocket-admin-heading"><div><p className="rocket-admin-eyebrow">Rocket operating system</p><h1>{section === "home" ? "Admin overview" : label(section)}</h1><p>Production data, explicit decisions, and auditable changes.</p></div>
@@ -220,8 +224,27 @@ export default function Admin() {
       </Panel>}
       {section === "home" && <Panel title="Apps for Sale">
         <StatGrid data={{ approved_listings: acquisitionMetrics?.approved_listings, pending_listings: acquisitionMetrics?.pending_listings }} />
+        <div className="rocket-admin-stats mt-4">
+          <div className="rocket-admin-stat">
+            <div className="rocket-admin-stat-header"><span>Completed deals</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
+            <div className="rocket-admin-stat-figure"><span aria-hidden="true">🤝</span><strong>{dealReport ? completedDeals.toLocaleString() : "—"}</strong></div>
+            <small>Externally verified completions</small>
+          </div>
+          {(dealCurrencies.length ? dealCurrencies : [{ currency: "USD", completed_volume_minor: 0, average_transaction_minor: 0 }]).flatMap((row) => [
+            <div className="rocket-admin-stat" key={`${row.currency}-volume`}>
+              <div className="rocket-admin-stat-header"><span>Total marketplace sales · {row.currency}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
+              <div className="rocket-admin-stat-figure"><span aria-hidden="true">💰</span><strong>{dealReport ? money(row.completed_volume_minor, row.currency) : "—"}</strong></div>
+              <small>Completed deal prices, not Rocket revenue</small>
+            </div>,
+            <div className="rocket-admin-stat" key={`${row.currency}-average`}>
+              <div className="rocket-admin-stat-header"><span>Average deal amount · {row.currency}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
+              <div className="rocket-admin-stat-figure"><span aria-hidden="true">📊</span><strong>{dealReport ? money(row.average_transaction_minor, row.currency) : "—"}</strong></div>
+              <small>Across completed deals</small>
+            </div>,
+          ])}
+        </div>
       </Panel>}
-      {section === "home" && <AdminDealFees />}
+      {section === "home" && <AdminDealFees onReport={setDealReport} />}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>
