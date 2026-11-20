@@ -28,6 +28,8 @@ Escrow.com fees are separate from Rocket's broker fee. Rocket reports its fee as
 6. Run a full controlled sandbox lifecycle: accepted offer; two current agreement approvals; two current checklist approvals; Escrow.com creation; provider acceptance; funding; shipping/handover; receipt/inspection; completion; broker-fee disbursement. Test cancellation, refund, duplicate create clicks, timeout reconciliation, webhook replay, wrong-transaction webhook, and admin access.
 7. Keep the sandbox flag off for ordinary production users. Production credentials must be stored separately as `ESCROW_PRODUCTION_EMAIL` and `ESCROW_PRODUCTION_API_KEY`; never copy a live key into a sandbox variable. A live creation is irreversible from Rocket's side and is never retried after an ambiguous provider response.
 
+Before claiming a new transaction, the backend checks the configured account with Escrow.com's read-only `GET /customer/me`. This catches an invalid live key without locking the deal; it does not prove broker-fee permissions or disbursement behavior.
+
 ## Recovery and limitations
 
 Creation is claimed once in the database. If Escrow.com times out after a POST, Rocket will not POST again. Investigate the reference in Escrow.com's dashboard/API and reconcile it before any manual recovery. An unmatched claimed attempt remains `reconciliation_required`; never reset it without provider evidence.

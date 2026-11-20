@@ -303,6 +303,27 @@ export class EscrowComClient {
     if (!emailPattern.test(email) || !apiKey)
       throw new Error("Escrow.com is not configured");
   }
+  async verifyAccount(): Promise<void> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await this.fetcher(`${bases[this.environment]}/customer/me`, {
+        method: "GET",
+        headers: { Authorization: `Basic ${btoa(`${this.email}:${this.apiKey}`)}` },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new EscrowApiError(response.status);
+      const body = await response.text();
+      if (body.length > 65536) throw new Error("Invalid Escrow.com account response");
+      let account: unknown;
+      try { account = JSON.parse(body); } catch { throw new Error("Invalid Escrow.com account response"); }
+      if (!account || typeof account !== "object" ||
+        !Number.isSafeInteger((account as {id?: number}).id))
+        throw new Error("Invalid Escrow.com account response");
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
   private async request(
     path: string,
     method: "GET" | "POST",
