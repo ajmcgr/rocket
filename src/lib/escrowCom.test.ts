@@ -53,12 +53,17 @@ describe("Escrow.com adapter", () => {
       "broker_fee",
     ]);
     expect(payload.items.map((item) => item.schedule[0].amount)).toEqual([
-      "10000.00",
-      "150.00",
-      "150.00",
+      10000,
+      150,
+      150,
     ]);
     expect(payload.items[0].inspection_period).toBe(7 * 86400);
     expect(payload.reference).toBe(terms.reference);
+  });
+  it("serializes cent amounts as JSON numbers for Escrow.com", () => {
+    const payload = createPayload({ ...terms, priceMinor: 10099, buyerFeeMinor: 501, sellerFeeMinor: 499 });
+    expect(payload.items.map((item) => item.schedule[0].amount)).toEqual([100.99, 5.01, 4.99]);
+    expect(JSON.parse(JSON.stringify(payload)).items[0].schedule[0].amount).toBe(100.99);
   });
   it("accepts only a whole 1 to 30 day inspection period", () => {
     expect(inspectionDays("7 days")).toBe(7);

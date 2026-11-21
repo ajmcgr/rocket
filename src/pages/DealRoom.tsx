@@ -166,6 +166,7 @@ export default function DealRoom() {
   if (loading) return <main className="mx-auto max-w-5xl p-6">Loading deal…</main>;
   if (!deal) return <main className="mx-auto max-w-5xl p-6"><p role="alert">{error || "Deal not found."}</p><Link to="/deals" className="text-sky-700 underline">My Deals</Link></main>;
   const last = offers.at(-1), agreement = agreements.at(-1), checklist = checklists.at(-1);
+  const unsupportedCurrency = (financial?.currency || last?.currency) !== undefined && (financial?.currency || last?.currency) !== "USD";
   const canRespond = (deal.status === "offer_pending" || deal.status === "negotiating") && !!last;
   const isSeller = user?.id === deal.seller_id;
   const ownAgreementApproval = agreement && approvals.some((a) => a.kind==="agreement" && a.version===agreement.version && a.user_id===user?.id);
@@ -189,6 +190,7 @@ export default function DealRoom() {
     </header>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
+    {unsupportedCurrency && <p role="status" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">This deal uses a currency that Rocket cannot take to Escrow.com. Your existing offer and terms remain visible. Close this offer and make a new USD offer to proceed.</p>}
     <nav aria-label="Deal sections" className="mt-6 flex gap-2 overflow-x-auto pb-2">{tabs.map((name) => <button key={name} type="button" onClick={() => setTab(name)} aria-current={tab===name ? "page" : undefined}
       className={`min-h-11 shrink-0 rounded-xl border px-4 text-sm font-medium ${tab===name ? "border-sky-600 bg-sky-50 text-sky-700" : "border-neutral-200 bg-white"}`}>{name}</button>)}</nav>
     <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-7">
@@ -201,9 +203,9 @@ export default function DealRoom() {
           role={isSeller ? "seller" : "buyer"} locked={financial} onQuote={setLatestQuote} /></div>}
         {financial && <p className="mt-3 text-sm text-neutral-600">Transaction: {financial.transaction_status.replaceAll("_"," ")} · Rocket fee: {financial.fee_status.replaceAll("_"," ")}{financial.closed_at ? ` · Closed ${new Date(financial.closed_at).toLocaleDateString()}` : ""}</p>}
         {canRespond && <div className="mt-6 border-t pt-5"><h3 className="font-semibold">Respond to latest offer</h3>
-          {last?.actor_id!==user?.id ? <div className="mt-3 flex flex-wrap gap-2"><button disabled={busy || !latestQuote} className={buttonClass} onClick={() => void respond("accept")}>Accept offer</button>
+          {last?.actor_id!==user?.id ? <div className="mt-3 flex flex-wrap gap-2">{!unsupportedCurrency && <button disabled={busy || !latestQuote} className={buttonClass} onClick={() => void respond("accept")}>Accept offer</button>}
             <button disabled={busy} className="min-h-11 rounded-xl border px-5" onClick={() => void respond("reject")}>Reject</button></div> : isSeller ? <p className="mt-2 text-sm text-neutral-600">Waiting for buyer response.</p> : <button disabled={busy} className="mt-3 min-h-11 rounded-xl border px-5" onClick={() => void respond("withdraw")}>Withdraw offer</button>}
-          {last?.actor_id!==user?.id && <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Counteroffer ({last.currency})<input value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} inputMode="decimal" className={inputClass} /></label>
+          {last?.actor_id!==user?.id && !unsupportedCurrency && <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="text-sm">Counteroffer ({last.currency})<input value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} inputMode="decimal" className={inputClass} /></label>
             <div className="sm:col-span-2"><DealFeeBreakdown priceMinor={centsFromInput(counterAmount,last.currency as DealCurrency)} currency={last.currency as DealCurrency}
               role={isSeller ? "seller" : "buyer"} onQuote={setCounterQuote} /></div>
             <label className="text-sm">Handover timeframe<input value={counterTimeframe} onChange={(e) => setCounterTimeframe(e.target.value)} maxLength={200} className={inputClass} /></label>
@@ -217,7 +219,7 @@ export default function DealRoom() {
         {preparation ? <><div className="mt-5 grid gap-4 sm:grid-cols-2">{agreementFields.map(([key,label]) => <label key={key} className="text-sm font-medium">{label}<textarea value={terms[key] || ""} onChange={(e) => setTerms({...terms,[key]:e.target.value})} maxLength={3000} rows={3} className={inputClass} /></label>)}</div>
           <div className="mt-5 flex flex-wrap items-center gap-3"><button disabled={busy} onClick={() => void save("agreement")} className={buttonClass}>Save new version</button>
             {agreement && <span className="text-sm">Version {agreement.version} · {countApprovals("agreement",agreement.version)}/2 approved</span>}
-            {agreement && !ownAgreementApproval && <button disabled={busy || unsavedTerms} onClick={() => void approve("agreement",agreement.version)} className="min-h-11 rounded-xl border border-sky-600 px-5 font-semibold text-sky-700 disabled:opacity-50">Approve version {agreement.version}</button>}</div>
+            {agreement && !ownAgreementApproval && !unsupportedCurrency && <button disabled={busy || unsavedTerms} onClick={() => void approve("agreement",agreement.version)} className="min-h-11 rounded-xl border border-sky-600 px-5 font-semibold text-sky-700 disabled:opacity-50">Approve version {agreement.version}</button>}</div>
           <p className="mt-3 text-xs text-neutral-500">Editing creates a new version and invalidates approval of previous versions.</p>
           <div className="mt-6 border-t pt-5"><h3 className="font-semibold">Your signed agreement</h3><p className="mt-1 text-sm text-neutral-600">Upload your own signed PDF if you have one. Rocket does not generate or execute legal agreements.</p>
             <input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={(e) => { const file=e.target.files?.[0]; if(file) void upload(file); }} className="mt-3 block max-w-full text-sm" />
@@ -276,8 +278,8 @@ export default function DealRoom() {
         </div>
         {checklist && <div className="mt-5 rounded-xl border p-4 text-sm"><strong>Approved handover assets</strong><ul className="mt-2 list-inside list-disc">{checklist.items.map((item,index) => <li key={`${item.name}-${index}`}>{item.name}</li>)}</ul></div>}
         {agreement && <details className="mt-4 rounded-xl border p-4 text-sm"><summary className="cursor-pointer font-medium">Approved transaction terms</summary><dl className="mt-3 space-y-2">{agreementFields.map(([key,label]) => <div key={key}><dt className="font-medium">{label}</dt><dd className="whitespace-pre-wrap text-neutral-600">{agreement.terms[key]}</dd></div>)}</dl></details>}
-        {deal.status==="terms_agreed" && agreed && checklistAgreed && <button disabled={busy} onClick={() => void act(() => db.rpc("rocket_deal_prepare_escrow",{p_deal_id:deal.id}),"Deal is ready for third-party escrow setup.")} className={`${buttonClass} mt-5`}>Mark preparation complete</button>}
-        {deal.status==="awaiting_escrow" && !escrow && escrowAvailability.production && <button disabled={busy} onClick={() => void escrowAction("create")} className={`${buttonClass} mt-5`}>Start secure transaction</button>}
+        {deal.status==="terms_agreed" && agreed && checklistAgreed && !unsupportedCurrency && <button disabled={busy} onClick={() => void act(() => db.rpc("rocket_deal_prepare_escrow",{p_deal_id:deal.id}),"Deal is ready for third-party escrow setup.")} className={`${buttonClass} mt-5`}>Mark preparation complete</button>}
+        {deal.status==="awaiting_escrow" && !escrow && escrowAvailability.production && !unsupportedCurrency && <button disabled={busy} onClick={() => void escrowAction("create")} className={`${buttonClass} mt-5`}>Start secure transaction</button>}
         {escrow?.transaction_id && escrowCanSync && <button disabled={busy} onClick={() => void escrowAction("sync")} className="mt-5 min-h-11 rounded-xl border px-5 font-medium">Refresh Escrow.com status</button>}
         {escrow?.last_synced_at && <p className="mt-3 text-xs text-neutral-500">Last verified {new Date(escrow.last_synced_at).toLocaleString()}</p>}
         {escrow?.attempt_status === "reconciliation_required" && <p className="mt-3 text-sm text-amber-900">Escrow creation needs review. Rocket will not submit a second transaction automatically.</p>}

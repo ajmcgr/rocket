@@ -15,7 +15,7 @@ export default function Deals() {
   const [rows, setRows] = useState<Row[]>([]);
   const [app, setApp] = useState<App | null>(null);
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const currency = "USD";
   const [message, setMessage] = useState("");
   const [conditions, setConditions] = useState("");
   const [timeframe, setTimeframe] = useState("");
@@ -86,7 +86,8 @@ export default function Deals() {
     {offerAppId && app && <form onSubmit={(e) => void submit(e)} className="mt-7 space-y-4 rounded-2xl border border-sky-200 bg-white p-5 sm:p-7">
       <h2 className="text-xl font-semibold">Make Offer for {app.name}</h2>
       <div className="grid gap-3 sm:grid-cols-[1fr_150px]"><label className="block text-sm font-medium">Offer amount<input required value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="10000.00" className="mt-1 block min-h-11 w-full rounded-xl border px-3" /></label>
-        <label className="block text-sm font-medium">Currency<select value={currency} onChange={(e) => setCurrency(e.target.value)} className="mt-1 block min-h-11 w-full rounded-xl border px-3">{["USD","EUR","GBP","AUD","CAD","JPY","KWD"].map((code) => <option key={code}>{code}</option>)}</select></label></div>
+        <label className="block text-sm font-medium">Currency<input readOnly value="USD" className="mt-1 block min-h-11 w-full rounded-xl border bg-neutral-50 px-3" /></label></div>
+      <p className="text-sm text-neutral-600">Secure acquisition transactions currently support USD only.</p>
       <DealFeeBreakdown priceMinor={centsFromInput(amount,currency as DealCurrency)} currency={currency as DealCurrency} role="buyer" onQuote={setQuote} />
       <label className="block text-sm font-medium">Optional message<textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} className="mt-1 block min-h-20 w-full rounded-xl border p-3" /></label>
       <label className="block text-sm font-medium">Proposed conditions<textarea value={conditions} onChange={(e) => setConditions(e.target.value)} maxLength={2000} className="mt-1 block min-h-20 w-full rounded-xl border p-3" /></label>

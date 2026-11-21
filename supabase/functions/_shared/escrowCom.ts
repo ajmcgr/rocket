@@ -78,10 +78,10 @@ export const inspectionDays = (value: string): number | null => {
   const days = Number(match?.[1]);
   return days >= 1 && days <= 30 ? days : null;
 };
-const dollars = (minor: number): string => {
+const dollars = (minor: number): number => {
   if (!Number.isSafeInteger(minor) || minor < 0 || minor > 100000000000)
     throw new Error("Invalid amount");
-  return `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, "0")}`;
+  return minor / 100;
 };
 const minorAmount = (value: string | number): number => {
   const raw = String(value);
