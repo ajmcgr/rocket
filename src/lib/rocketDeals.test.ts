@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { centsFromInput, money, nextAction, type Deal, type Offer } from "./rocketDeals";
+import { canBeginEscrowHandover, centsFromInput, money, nextAction, type Deal, type Offer } from "./rocketDeals";
 
 const deal = (status: Deal["status"]): Deal => ({
   id: "deal", app_id: "app", buyer_id: "buyer", seller_id: "seller", conversation_id: "conversation", status, updated_at: "2026-11-18T00:00:00Z",
@@ -33,5 +33,15 @@ describe("Rocket Deals next action", () => {
     const checklists = [{id:"list",version:1,editor_id:"seller",created_at:"",items:[]}];
     const approvals = [{deal_id:"deal",kind:"agreement" as const,version:1,user_id:"buyer",approved_at:""}];
     expect(nextAction(deal("awaiting_approvals"),"buyer",[offer("buyer")],agreements,checklists,approvals)).toBe("Approve transaction terms");
+  });
+});
+describe("Escrow handover gate", () => {
+  it("requires verified funding in an active provider state", () => {
+    expect(canBeginEscrowHandover(null)).toBe(false);
+    expect(canBeginEscrowHandover({ funds_secured: false, provider_status: "funds_secured" })).toBe(false);
+    for (const provider_status of ["funds_secured", "handover", "inspection"])
+      expect(canBeginEscrowHandover({ funds_secured: true, provider_status })).toBe(true);
+    for (const provider_status of ["awaiting_payment", "completed", "cancelled", "refunded", "disputed"])
+      expect(canBeginEscrowHandover({ funds_secured: true, provider_status })).toBe(false);
   });
 });
