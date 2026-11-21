@@ -59,8 +59,6 @@ function StatGrid({ data }: { data: Row }) {
     <div className="rocket-admin-stat" key={name}>
       <div className="rocket-admin-stat-header"><span>{label(name)}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
       <div className={`rocket-admin-stat-figure${typeof value === "number" ? "" : " rocket-admin-stat-figure-untracked"}`}><span aria-hidden="true">{statEmojis[name] || "📊"}</span><strong>{count(value)}</strong></div>
-      {name === "outbound_clicks" && <small>Daily-deduplicated · UTC calendar days</small>}
-      {name === "searches" && <small>Submitted searches · tracked from 24 Oct 2026</small>}
     </div>)}</div>;
 }
 
@@ -228,18 +226,15 @@ export default function Admin() {
           <div className="rocket-admin-stat">
             <div className="rocket-admin-stat-header"><span>Completed deals</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
             <div className="rocket-admin-stat-figure"><span aria-hidden="true">🤝</span><strong>{dealReport ? completedDeals.toLocaleString() : "—"}</strong></div>
-            <small>Externally verified completions</small>
           </div>
           {(dealCurrencies.length ? dealCurrencies : [{ currency: "USD", completed_volume_minor: 0, average_transaction_minor: 0 }]).flatMap((row) => [
             <div className="rocket-admin-stat" key={`${row.currency}-volume`}>
               <div className="rocket-admin-stat-header"><span>Total marketplace sales · {row.currency}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
               <div className="rocket-admin-stat-figure"><span aria-hidden="true">💰</span><strong>{dealReport ? money(row.completed_volume_minor, row.currency) : "—"}</strong></div>
-              <small>Completed deal prices, not Rocket revenue</small>
             </div>,
             <div className="rocket-admin-stat" key={`${row.currency}-average`}>
               <div className="rocket-admin-stat-header"><span>Average deal amount · {row.currency}</span><img src="/rocket-email-logo.png" alt="" aria-hidden="true" /></div>
               <div className="rocket-admin-stat-figure"><span aria-hidden="true">📊</span><strong>{dealReport ? money(row.average_transaction_minor, row.currency) : "—"}</strong></div>
-              <small>Across completed deals</small>
             </div>,
           ])}
         </div>
