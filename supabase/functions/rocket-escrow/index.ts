@@ -7,6 +7,7 @@ import {
   type EscrowTerms,
   type EscrowTransaction,
 } from "../_shared/escrowCom.ts";
+import { diagnosticErrorCategory, diagnosticResult } from "../_shared/escrowAuthDiagnostic.ts";
 
 const projectUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -189,14 +190,33 @@ Deno.serve(async (request: Request) => {
   }
 
   const jwt = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!jwt) return json({ error: "Unauthorized" }, 401);
+  const diagnostic = body.action === "diagnose_auth";
+  if (!jwt) return diagnostic ? json(diagnosticResult(false, "unauthorized"), 401) : json({ error: "Unauthorized" }, 401);
   const userClient = createClient(projectUrl, anonKey, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
   });
   const { data: identity, error: identityError } =
     await userClient.auth.getUser(jwt);
   if (identityError || !identity.user)
-    return json({ error: "Unauthorized" }, 401);
+    return diagnostic ? json(diagnosticResult(false, "unauthorized"), 401) : json({ error: "Unauthorized" }, 401);
+  if (diagnostic) {
+    const { data: isAdmin, error: adminError } = await userClient.rpc("is_rocket_admin");
+    if (adminError) return json(diagnosticResult(false, "internal_error"), 503);
+    if (isAdmin !== true) return json(diagnosticResult(false, "forbidden"), 403);
+    if (!credentials.production.email || !credentials.production.key)
+      return json(diagnosticResult(false, "not_configured"), 503);
+    const { data: reserved, error: reserveError } = await admin.rpc("rocket_escrow_auth_diagnostic_reserve", {
+      p_admin: identity.user.id,
+    });
+    if (reserveError) return json(diagnosticResult(false, "internal_error"), 503);
+    if (reserved !== true) return json(diagnosticResult(false, "rate_limited"), 429);
+    try {
+      await client("production").verifyAccount();
+      return json(diagnosticResult(true, null));
+    } catch (error) {
+      return json(diagnosticResult(false, diagnosticErrorCategory(error)), 503);
+    }
+  }
   const dealId = body.deal_id;
   if (typeof dealId !== "string" || !uuid.test(dealId))
     return json({ error: "Invalid deal" }, 400);

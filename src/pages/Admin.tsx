@@ -13,6 +13,7 @@ import AdminRocket100 from "@/components/AdminRocket100";
 import AdminAppScreenshots from "@/components/AdminAppScreenshots";
 import AdminAcquisitionReview from "@/components/AdminAcquisitionReview";
 import AdminDealFees, { type DealReport } from "@/components/AdminDealFees";
+import AdminEscrowAuthDiagnostic from "@/components/AdminEscrowAuthDiagnostic";
 import { money } from "@/lib/rocketDeals";
 
 type Section = "home" | "metrics" | "ops" | "marketing" | "screenshots" | "outreach" | "developer-testing";
@@ -207,6 +208,7 @@ export default function Admin() {
     <nav className="rocket-admin-tabs" aria-label="Admin sections">{sections.map((item) => <Link key={item.id} to={item.id === "home" ? "/admin" : `/admin/${item.id}`} className={section === item.id ? "active" : ""}>{item.label}</Link>)}</nav>
     {data && section === "developer-testing" && <AdminDeveloperTesting />}
     {data && section === "ops" && <AdminAcquisitionReview />}
+    {data && section === "ops" && <Panel title="Escrow.com authentication"><AdminEscrowAuthDiagnostic /></Panel>}
     {data && section === "screenshots" && <AdminAppScreenshots />}
     {error && <p className="rocket-admin-error" role="alert">{error}</p>}
     {!data && !error && <div className="rocket-admin-loading" role="status" aria-label="Loading admin data"><div /><div /><div /><div /></div>}
