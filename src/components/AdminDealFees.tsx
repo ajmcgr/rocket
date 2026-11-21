@@ -71,7 +71,7 @@ export default function AdminDealFees({ onReport }: { onReport?: (report: DealRe
   }
   return <section className="rocket-admin-panel">
     <h2>Acquisition closing fees</h2>
-    <p className="rocket-admin-muted">3% Rocket closing fee, split equally. The $99 combined minimum applies to USD only. Figures are grouped by currency; outstanding fees are not collected revenue. Escrow.com sandbox transactions are provider verified.</p>
+    <p className="rocket-admin-muted">3% Rocket closing fee, split equally. The $99 combined minimum applies to USD only. Figures are grouped by currency; outstanding fees are not collected revenue. Escrow.com transaction figures reflect the last provider verification.</p>
     {error && <p role="alert" className="rocket-admin-error">{error}</p>}
     {feedback && <p role="status" className="rocket-admin-note">{feedback}</p>}
     {!report && !error && <p className="rocket-admin-muted">Loading acquisition finance…</p>}

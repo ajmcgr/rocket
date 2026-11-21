@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import DealFeeBreakdown from "@/components/DealFeeBreakdown";
-import { agreementFields, centsFromInput, checklistTemplate, dealsDb as db, money, nextAction, statusLabel,
+import { agreementFields, canBeginEscrowHandover, centsFromInput, checklistTemplate, dealsDb as db, money, nextAction, statusLabel,
   type Approval, type ChecklistItem, type Deal, type DealCurrency, type DealFinancial, type FeeQuote, type Offer, type Version } from "@/lib/rocketDeals";
 
 type Agreement = Version<{ terms: Record<string,string> }>;
@@ -246,7 +246,7 @@ export default function DealRoom() {
           <p className="mt-3 text-xs text-neutral-500">Do not place passwords, API keys, or customer records in checklist notes or messages.</p>
         </> : checklist ? <div className="mt-5 space-y-3">{checklist.items.map((item,index) => {
           const status = handover.find((row) => row.item_index===index)?.status || "pending";
-          const available = escrow?.funds_secured && !["cancelled","refunded","disputed"].includes(escrow.provider_status);
+          const available = canBeginEscrowHandover(escrow);
           const actions = !available ? [] : isSeller ? status === "pending" || status === "needs_attention" ? ["in_progress"]
             : status === "in_progress" ? ["delivered"] : []
             : status === "delivered" ? ["accepted","needs_attention"] : [];
@@ -284,7 +284,7 @@ export default function DealRoom() {
         {escrow?.transaction_id && <div className="mt-4 space-y-2 text-sm"><p>Complete identity checks and acceptance on <a href={escrowSite} target="_blank" rel="noopener noreferrer" className="text-sky-700 underline">Escrow.com ↗</a> using transaction {escrow.transaction_id}.</p>
           {!isSeller && <p>If card or PayPal payment is offered for this transaction, <a href={`${escrowSite}/transactions/${escrow.transaction_id}/payment`} target="_blank" rel="noopener noreferrer" className="text-sky-700 underline">continue to Escrow.com payment ↗</a>. Escrow.com will show available methods and its own fees.</p>}
           <p>Rocket never collects acquisition funds. Escrow.com controls verification, payment and release.</p></div>}
-        <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{escrow?.funds_secured ? "Escrow.com reports the purchase funds are secured. Follow the approved handover checklist." : "Do not begin asset handover until Escrow.com confirms funding."}</p></>}
+        <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{canBeginEscrowHandover(escrow) ? "Escrow.com reports the purchase funds are secured. Follow the approved handover checklist." : "Do not begin asset handover. Check the current Escrow.com transaction status and wait for confirmed funding."}</p></>}
       {tab==="Activity" && <><h2 className="text-xl font-semibold">Deal activity</h2><ol className="mt-4 space-y-2">{activity.map((event) => <li key={`${event.id}-${event.created_at}`} className="flex flex-wrap justify-between gap-2 rounded-xl border p-3 text-sm"><span>{event.label}</span><time className="text-neutral-500">{new Date(event.created_at).toLocaleString()}</time></li>)}</ol></>}
     </section>
   </main>;

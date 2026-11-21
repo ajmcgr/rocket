@@ -38,6 +38,8 @@ export const statusLabel = (status: DealStatus) => ({
   preparing_terms: "Preparing terms", awaiting_approvals: "Awaiting approvals", terms_agreed: "Terms agreed",
   awaiting_escrow: "Awaiting escrow setup", cancelled: "Cancelled", expired: "Expired",
 })[status];
+export const canBeginEscrowHandover = (escrow: { funds_secured: boolean; provider_status: string } | null): boolean =>
+  !!escrow?.funds_secured && ["funds_secured", "handover", "inspection"].includes(escrow.provider_status);
 export const nextAction = (deal: Deal, userId: string, offers: Offer[], agreements: Version<{terms: Record<string,string>}>[], checklists: Version<{items: ChecklistItem[]}>[], approvals: Approval[]) => {
   const last = offers.at(-1);
   if (deal.status === "offer_pending" || deal.status === "negotiating") return last?.actor_id === userId ? "Await response" : "Review offer";
