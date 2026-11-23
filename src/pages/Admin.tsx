@@ -48,6 +48,10 @@ const statEmojis: Record<string, string> = {
   referral_registrations: "📝", verified_revenue_connections: "💰",
   verified_analytics_connections: "📡", referred_developers_with_claims: "🏷️",
   approved_listings: "🏷️", pending_listings: "📋",
+  valuation_page_viewed: "👀", valuation_started: "🚀", valuation_completed: "✅",
+  valuation_signup_started: "👤", valuation_app_selected: "📱", valuation_stripe_connected: "💳",
+  valuation_ga4_connected: "📈", valuation_saved: "💾", valuation_shared: "📣",
+  valuation_listing_started: "🏷️", valuation_listing_published: "🤝", completed_to_listing_started: "➡️",
 };
 const acquisitionEmojis: Record<string, string> = { direct: "🎯", organic: "🌱", referral: "🔗", social: "💬" };
 const discoveryEmojis: Record<string, string> = { catalogue: "📚", categories: "🗂️", collections: "🔖", homepage: "🏠", rankings: "🏆", search: "🔎" };
@@ -95,6 +99,7 @@ export default function Admin() {
   const [investor, setInvestor] = useState<Row | null>(null);
   const [journeys, setJourneys] = useState<Row | null>(null);
   const [acquisitionMetrics, setAcquisitionMetrics] = useState<Row | null>(null);
+  const [valuationFunnel, setValuationFunnel] = useState<Row | null>(null);
   const [dealReport, setDealReport] = useState<DealReport | null>(null);
   const [today, setToday] = useState<Row[]>([]);
   const [internalTests, setInternalTests] = useState<Row[]>([]);
@@ -103,8 +108,8 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState<{ target: string; message: string; error: boolean } | null>(null);
   const refresh = useCallback(async () => {
-    setError(""); setData(null); setInvestor(null); setJourneys(null); setAcquisitionMetrics(null); setToday([]); setInternalTests([]);
-    const [result, batch, claims, tests, investorResult, journeyResult, acquisitionResult] = await Promise.all([
+    setError(""); setData(null); setInvestor(null); setJourneys(null); setAcquisitionMetrics(null); setValuationFunnel(null); setToday([]); setInternalTests([]);
+    const [result, batch, claims, tests, investorResult, journeyResult, acquisitionResult, valuationResult] = await Promise.all([
       adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section === "screenshots" ? "marketing" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_first_batch", {}) : Promise.resolve(null),
       section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
@@ -112,6 +117,7 @@ export default function Admin() {
       section === "metrics" ? adminRpc("rocket_admin_investor_metrics", {}) : Promise.resolve(null),
       section === "home" || section === "metrics" ? adminRpc("rocket_admin_discovery_journeys", { p_period: period }) : Promise.resolve(null),
       section === "home" ? adminRpc("rocket_admin_acquisition_metrics", {}) : Promise.resolve(null),
+      section === "home" || section === "metrics" ? adminRpc("rocket_admin_valuation_funnel", { p_period: period }) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
     if (batch?.error) { setError(batch.error.message); return; }
@@ -125,6 +131,7 @@ export default function Admin() {
     setInvestor(investorResult ? obj(investorResult.data) : null);
     setJourneys(journeyResult && !journeyResult.error ? obj(journeyResult.data) : null);
     setAcquisitionMetrics(acquisitionResult && !acquisitionResult.error ? obj(acquisitionResult.data) : null);
+    setValuationFunnel(valuationResult && !valuationResult.error ? obj(valuationResult.data) : null);
   }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
   useEffect(() => {
@@ -217,6 +224,20 @@ export default function Admin() {
       <Panel title="Catalogue"><StatGrid data={obj(data.catalogue)} /></Panel>
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
+      <Panel title="Sell My App funnel">
+        <StatGrid data={{ valuation_page_viewed: Number(obj(valuationFunnel?.stages).valuation_page_viewed || 0),
+          valuation_started: Number(obj(valuationFunnel?.stages).valuation_started || 0),
+          valuation_completed: Number(obj(valuationFunnel?.stages).valuation_completed || 0),
+          valuation_app_selected: Number(obj(valuationFunnel?.stages).valuation_app_selected || 0),
+          valuation_stripe_connected: Number(obj(valuationFunnel?.stages).valuation_stripe_connected || 0),
+          valuation_ga4_connected: Number(obj(valuationFunnel?.stages).valuation_ga4_connected || 0),
+          valuation_saved: Number(obj(valuationFunnel?.stages).valuation_saved || 0),
+          valuation_shared: Number(obj(valuationFunnel?.stages).valuation_shared || 0),
+          valuation_listing_started: Number(obj(valuationFunnel?.stages).valuation_listing_started || 0),
+          valuation_listing_published: Number(obj(valuationFunnel?.stages).valuation_listing_published || 0),
+          completed_to_listing_started: Number(valuationFunnel?.completed_to_listing_started || 0) }} />
+        <p className="rocket-admin-muted">Completed → listing started: {valuationFunnel?.completion_to_listing_rate == null ? "No completed valuations yet" : `${valuationFunnel.completion_to_listing_rate}%`} of sessions. Tracked from this release.</p>
+      </Panel>
       {journeys && <Panel title="Discovery journeys">
         <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />
         <JourneyCards data={rows(journeys.acquisition_sessions)} kind="acquisition" />

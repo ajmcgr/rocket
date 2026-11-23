@@ -250,6 +250,51 @@ async function handle(request: Request) {
     }
     return json({ connection: safeConnection(row), visibility: vis.data, latest, growth });
   }
+  if (body.action === "valuation_snapshot") {
+    if (!row || row.status !== "active" || typeof row.property_id !== "string"
+      || typeof row.verified_hostname !== "string" || typeof row.time_zone !== "string"
+      || !row.last_successful_sync || Date.now() - Date.parse(String(row.last_successful_sync)) > 7 * 86_400_000)
+      return fail("Sync a verified Google Analytics connection first", 409);
+    const token = await accessToken(row);
+    const selected = (await streams(row.property_id, token)).find((stream) => stream.name === row.stream_id);
+    if (!selected || !matchingStreamHost(app.canonical_host, selected.webStreamData.defaultUri)
+      || new URL(selected.webStreamData.defaultUri).hostname.toLowerCase() !== row.verified_hostname.toLowerCase())
+      return fail("The verified website stream changed; reconnect Google Analytics", 409);
+    const current = completeDateWindow(row.time_zone, 30);
+    const previous = { start: new Date(Date.parse(`${current.start}T00:00:00Z`) - 30 * 86_400_000).toISOString().slice(0, 10),
+      end: new Date(Date.parse(`${current.start}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10) };
+    const report = async (startDate: string, endDate: string, channels: boolean) => {
+      const response = await readGoogle(`https://analyticsdata.googleapis.com/v1beta/${row.property_id}:runReport`, {
+        method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ dateRanges: [{ startDate, endDate }],
+          ...(channels ? { dimensions: [{ name: "sessionDefaultChannelGroup" }] } : {}),
+          metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+          dimensionFilter: { filter: { fieldName: "hostName", stringFilter: { matchType: "EXACT", value: row.verified_hostname, caseSensitive: false } } },
+          limit: "100" }),
+      }, 30_000);
+      if (!response.ok) return fail("Google Analytics report failed", 502);
+      const value = await response.json();
+      if (value.metadata?.subjectToThresholding || Number(value.rowCount || 0) > 100) return fail("Google Analytics report cannot be verified", 409);
+      return value;
+    };
+    const [total, channels, prior] = await Promise.all([
+      report(current.start, current.end, false), report(current.start, current.end, true), report(previous.start, previous.end, false),
+    ]);
+    if ([total, channels, prior].some((item) => item instanceof Response)) return fail("Google Analytics report cannot be verified", 409);
+    const metric = (item: Record<string, unknown>, index: number) => {
+      const raw = (item.rows as Array<{ metricValues?: Array<{ value?: string }> }> | undefined)?.[0]?.metricValues?.[index]?.value || "0";
+      if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) throw new Error("Invalid Google Analytics metric");
+      return Number(raw);
+    };
+    const sessions = metric(total, 0), activeUsers = metric(total, 1), previousSessions = metric(prior, 0);
+    const organicSessions = ((channels.rows || []) as Array<{ dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }> )
+      .filter((item) => item.dimensionValues?.[0]?.value === "Organic Search")
+      .reduce((sum, item) => sum + metric({ rows: [item] }, 0), 0);
+    return json({ valuation: { verified: true, sessions, active_users: activeUsers,
+      organic_search_share_pct: sessions ? Math.round(organicSessions / sessions * 1000) / 10 : 0,
+      traffic_growth_pct: previousSessions ? Math.round((sessions - previousSessions) / previousSessions * 1000) / 10 : null,
+      start_date: current.start, end_date: current.end, hostname: row.verified_hostname } });
+  }
   if (body.action === "start") {
     if (!clientId || !clientSecret) return fail("Google Analytics connection is not configured", 503);
     const state = random(), verifier = random();
