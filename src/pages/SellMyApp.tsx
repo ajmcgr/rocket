@@ -185,8 +185,7 @@ export default function SellMyApp() {
   return <div className="min-h-screen bg-[#f5f8fc] text-slate-950"><SiteHeader />
     <main className="mx-auto max-w-6xl px-5 pb-24 sm:px-8">
       <section className="grid gap-10 py-14 lg:grid-cols-[1.2fr_.8fr] lg:items-center lg:py-20">
-        <div><p className="text-xs font-bold uppercase tracking-[.25em] text-sky-700">Sell My App · by Rocket</p>
-          <h1 className="mt-5 max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">What’s your app worth?</h1>
+        <div><h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">What’s your app worth?</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">Discover what your software could sell for. Get an instant estimate based on revenue, growth and traffic.</p>
           <div className="mt-8 flex flex-wrap gap-3"><button onClick={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl bg-sky-700 px-6 font-semibold text-white hover:bg-sky-800">Calculate valuation</button>
             <button onClick={() => { if (!user) { track("valuation_signup_started"); window.location.href = "/login?next=%2Fsell"; } else formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Connect my app</button></div>
