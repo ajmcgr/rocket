@@ -189,7 +189,7 @@ export default function SellMyApp() {
           <h1 className="mt-5 max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">What’s your app worth?</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">Discover what your software could sell for. Get an instant estimate based on revenue, growth and traffic.</p>
           <div className="mt-8 flex flex-wrap gap-3"><button onClick={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl bg-sky-700 px-6 font-semibold text-white hover:bg-sky-800">Calculate valuation</button>
-            <button onClick={() => { if (!user) { track("valuation_signup_started"); window.location.href = "/login?next=%2Fsell"; } else formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Connect my Rocket app</button></div>
+            <button onClick={() => { if (!user) { track("valuation_signup_started"); window.location.href = "/login?next=%2Fsell"; } else formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Connect my app</button></div>
           <p className="mt-5 text-sm text-slate-500">Free to use · No account required · No financial data made public</p>
         </div>
         <div className="grid gap-3 rounded-3xl border border-sky-100 bg-white p-6 shadow-lg shadow-sky-100/60">
