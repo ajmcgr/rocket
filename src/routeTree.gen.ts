@@ -40,6 +40,7 @@ import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RisingRouteImport } from './routes/rising'
 import { Route as RocketIdRouteImport } from './routes/rocket-id'
+import { Route as SellRouteImport } from './routes/sell'
 import { Route as SellmyappRouteImport } from './routes/sellmyapp'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -303,6 +304,11 @@ const RisingRoute = RisingRouteImport.update({
 const RocketIdRoute = RocketIdRouteImport.update({
   id: '/rocket-id',
   path: '/rocket-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellRoute = SellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SellmyappRoute = SellmyappRouteImport.update({
@@ -885,6 +891,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
+  '/sell': typeof SellRoute
   '/sellmyapp': typeof SellmyappRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1026,6 +1033,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
+  '/sell': typeof SellRoute
   '/sellmyapp': typeof SellmyappRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1167,6 +1175,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
+  '/sell': typeof SellRoute
   '/sellmyapp': typeof SellmyappRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1310,6 +1319,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rising'
     | '/rocket-id'
+    | '/sell'
     | '/sellmyapp'
     | '/signup'
     | '/sitemap.xml'
@@ -1451,6 +1461,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rising'
     | '/rocket-id'
+    | '/sell'
     | '/sellmyapp'
     | '/signup'
     | '/sitemap.xml'
@@ -1591,6 +1602,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rising'
     | '/rocket-id'
+    | '/sell'
     | '/sellmyapp'
     | '/signup'
     | '/sitemap.xml'
@@ -1734,6 +1746,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RisingRoute: typeof RisingRoute
   RocketIdRoute: typeof RocketIdRoute
+  SellRoute: typeof SellRoute
   SellmyappRoute: typeof SellmyappRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -1988,6 +2001,13 @@ declare module '@tanstack/react-router' {
       path: '/rocket-id'
       fullPath: '/rocket-id'
       preLoaderRoute: typeof RocketIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sell': {
+      id: '/sell'
+      path: '/sell'
+      fullPath: '/sell'
+      preLoaderRoute: typeof SellRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sellmyapp': {
@@ -2974,6 +2994,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RisingRoute: RisingRoute,
   RocketIdRoute: RocketIdRoute,
+  SellRoute: SellRoute,
   SellmyappRoute: SellmyappRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/valuation-methodology")({
 
 function Methodology() {
   return <div className="min-h-screen bg-[#f5f8fc] text-slate-900"><SiteHeader /><main className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
-    <a href="/sellmyapp" className="text-sm font-semibold text-sky-700">← Back to Sell My App</a>
+    <a href="/sell" className="text-sm font-semibold text-sky-700">← Back to Sell My App</a>
     <h1 className="mt-6 text-4xl font-bold">Valuation methodology</h1>
     <p className="mt-4 text-slate-600">Model v1.0.0 · Illustrative estimates for independent software businesses. This is not a formal appraisal, buyer offer or guaranteed sale price.</p>
     <h2 className="mt-10 text-2xl font-bold">Basis</h2>
