@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { toPng } from "html-to-image";
 import { useAuth } from "@/contexts/AuthContext";
 import SiteHeader from "@/components/SiteHeader";
 import type { MyApp } from "@/components/AppJourney";
@@ -8,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type ValuationResult } from "@/lib/rocketValuation";
 import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
+import "./SellMyApp.css";
 
 type Saved = { id: string; app_id: string | null; inputs: ValuationInputs; result: ValuationResult; calculated_at: string };
 const initial: ValuationInputs = { currency: "USD", mrr: 0, monthlyTraffic: 0, monthlyRevenueGrowthPct: 0, ageMonths: 0, businessModel: "saas" };
@@ -44,9 +44,8 @@ export default function SellMyApp() {
   const [evidence, setEvidence] = useState({ stripe: false, ga4: false });
   const [ga4Period, setGa4Period] = useState("");
   const [monthlyActiveUsers, setMonthlyActiveUsers] = useState<number | null>(null);
-  const [shareAmount, setShareAmount] = useState(false);
+  const [shareAmount, setShareAmount] = useState(true);
   const [shareName, setShareName] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLElement>(null);
   const startedRef = useRef(false);
@@ -154,24 +153,92 @@ export default function SellMyApp() {
     if (deleteError) { setError("Could not delete this valuation."); return; }
     setHistory((current) => current.filter((entry) => entry.id !== id));
   };
-  const share = (platform: "x" | "linkedin") => {
+  const share = (platform: "x" | "reddit" | "linkedin") => {
     if (!result) return;
     const url = "https://tryrocket.ai/sell";
     const value = shareAmount && result.central !== null ? `My app's illustrative value is ${format(result.central, result.currency)}. ` : "Find out what your app could be worth. ";
     const name = shareName && inputs.appName ? `${inputs.appName}: ` : "";
     const text = `${name}${value}Calculated with Rocket Sell My App.`;
     const target = platform === "x" ? `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+      : platform === "reddit" ? `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`
       : `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
     window.open(target, "_blank", "noopener,noreferrer");
     track("valuation_shared", { platform, included_amount: shareAmount, included_name: shareName });
   };
+  const renderCard = async () => {
+    if (!result) throw new Error("Share card is unavailable.");
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 630;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas is unavailable.");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, 1200, 630);
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, 1198, 628);
+    const logo = new Image();
+    logo.src = "/rocket-email-logo.png";
+    try { await logo.decode(); ctx.drawImage(logo, 60, 49, 240, 84); }
+    catch { ctx.fillStyle = "#0284c7"; ctx.font = "bold 52px Arial, sans-serif"; ctx.fillText("rocket", 60, 108); }
+    ctx.fillStyle = "#f0f9ff";
+    ctx.beginPath(); ctx.roundRect(925, 60, 215, 50, 25); ctx.fill();
+    ctx.fillStyle = "#0369a1";
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillText("SELL MY APP", 953, 92);
+    ctx.font = "bold 25px Arial, sans-serif";
+    ctx.fillText("YOUR APP’S ESTIMATED VALUE", 60, 270);
+    const value = shareAmount && result.central !== null ? format(result.central, result.currency) : "What’s your app worth?";
+    let fontSize = shareAmount && result.central !== null ? 104 : 78;
+    do { ctx.font = `bold ${fontSize}px Arial, sans-serif`; fontSize -= 2; } while (ctx.measureText(value).width > 1080 && fontSize > 32);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillText(value, 60, 385);
+    if (shareName && inputs.appName) {
+      ctx.font = "34px Arial, sans-serif";
+      let name = inputs.appName;
+      while (ctx.measureText(name).width > 1080 && name.length > 1) name = `${name.slice(0, -2)}…`;
+      ctx.fillStyle = "#475569";
+      ctx.fillText(name, 60, 444);
+    }
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.beginPath(); ctx.moveTo(60, 540); ctx.lineTo(1140, 540); ctx.stroke();
+    ctx.fillStyle = "#475569";
+    ctx.font = "22px Arial, sans-serif";
+    ctx.fillText("Illustrative estimate · Not an offer or appraisal", 60, 586);
+    ctx.fillStyle = "#0369a1";
+    ctx.font = "bold 22px Arial, sans-serif";
+    ctx.fillText("tryrocket.ai/sell", 948, 586);
+    return canvas.toDataURL("image/png");
+  };
   const download = async () => {
-    if (!cardRef.current) return;
     try {
-      const dataUrl = await toPng(cardRef.current, { pixelRatio: 2, backgroundColor: "#ffffff" });
-      const link = document.createElement("a"); link.download = "rocket-sell-my-app.png"; link.href = dataUrl; link.click();
+      setError("");
+      const dataUrl = await renderCard();
+      const link = document.createElement("a"); link.download = "rocket-sell-my-app.png"; link.href = dataUrl; document.body.append(link); link.click(); link.remove();
       track("valuation_shared", { platform: "download", included_amount: shareAmount, included_name: shareName });
     } catch { setError("The share image could not be generated. Please try again."); }
+  };
+  const shareCard = async () => {
+    try {
+      setError("");
+      const dataUrl = await renderCard();
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], "rocket-sell-my-app.png", { type: "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "My app's estimated value", url: "https://tryrocket.ai/sell" });
+          track("valuation_shared", { platform: "native", included_amount: shareAmount, included_name: shareName });
+          return;
+        } catch (cause) {
+          if (cause instanceof DOMException && cause.name === "AbortError") return;
+        }
+      }
+      const link = document.createElement("a"); link.download = file.name; link.href = dataUrl; document.body.append(link); link.click(); link.remove();
+      setNotice("Card downloaded. Attach the PNG to your post on X, Reddit or LinkedIn.");
+      track("valuation_shared", { platform: "download", included_amount: shareAmount, included_name: shareName });
+    } catch (cause) {
+      setError("The share image could not be generated. Please try again.");
+    }
   };
   const selected = apps.find((app) => app.app_id === appId);
   const canList = Boolean(user && selected?.owned && selected.owner_verification_level === "domain_verified" && result?.central != null && inputs.currency === "USD");
@@ -183,7 +250,7 @@ export default function SellMyApp() {
   </label>;
 
   return <div className="min-h-screen bg-[#f5f8fc] text-slate-950"><SiteHeader />
-    <main className="mx-auto max-w-6xl px-5 pb-24 sm:px-8">
+    <main className="rocket-sell-page mx-auto max-w-6xl px-5 pb-24 sm:px-8">
       <section className="grid gap-10 py-14 lg:grid-cols-[1.2fr_.8fr] lg:items-center lg:py-20">
         <div><h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">What’s your app worth?</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">Discover what your software could sell for. Get an instant estimate based on revenue, growth and traffic.</p>
@@ -196,7 +263,7 @@ export default function SellMyApp() {
         </div>
       </section>
       <section ref={formRef} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8" aria-labelledby="calculator-title">
-        <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your estimate</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Model v1.0.0</span></div>
+        <div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your estimate</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div>
         {user && <label className="mt-7 block max-w-xl text-sm font-medium text-slate-700">Your Rocket app (optional)<select value={appId} onChange={(event) => selectApp(event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="">An app not on Rocket</option>{apps.map((item) => <option key={item.app_id} value={item.app_id}>{item.app?.name || "Untitled app"} · {item.owner_verification_level === "domain_verified" ? "verified" : "claimed"}</option>)}</select></label>}
         {appId && selected?.owner_verification_level === "domain_verified" && <div className="mt-4 space-y-3 text-sm"><div className="flex flex-wrap gap-3"><button type="button" disabled={!!importing} onClick={() => void importMetrics("stripe")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "stripe" ? "Importing…" : "Import verified Stripe revenue"}</button><button type="button" disabled={!!importing} onClick={() => void importMetrics("ga4")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "ga4" ? "Importing…" : "Import verified Google Analytics traffic"}</button></div><div className="flex flex-wrap gap-4"><a className="font-semibold text-sky-700 underline" href={`/my-apps/${encodeURIComponent(appId)}/revenue`}>Manage Stripe connection</a><a className="font-semibold text-sky-700 underline" href={`/my-apps/${encodeURIComponent(appId)}/analytics`}>Manage Google Analytics connection</a></div><p className="text-slate-600">{evidence.stripe ? "Stripe revenue verified · " : ""}{evidence.ga4 ? `Google Analytics traffic verified for ${ga4Period} · ` : ""}Connected metrics stay private. Editing an imported metric removes its verified status until you import it again.</p></div>}
         <form onFocus={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } }} onSubmit={calculate} className="mt-7"><div className="grid gap-5 sm:grid-cols-2">
@@ -212,16 +279,28 @@ export default function SellMyApp() {
       </section>
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}{notice && <p role="status" className="mt-5 rounded-xl bg-sky-50 p-4 text-sky-800">{notice}</p>}
       {result && <section ref={resultsRef} className="mt-10 space-y-6" aria-label="Valuation results">
-        <div className="rounded-3xl bg-[#072743] p-6 text-white sm:p-10"><p className="text-sm font-bold uppercase tracking-widest text-sky-300">Your app’s estimated value</p>
-          {result.central !== null ? <><h2 className="mt-4 text-4xl font-bold sm:text-6xl">{format(result.central, result.currency)}</h2><p className="mt-3 text-lg text-sky-100">Illustrative range: {format(result.low!, result.currency)} – {format(result.high!, result.currency)}</p><div className="mt-8 grid gap-2 sm:grid-cols-3"><div className="rounded-xl bg-white/10 p-4">Low<br /><strong className="text-xl">{format(result.low!, result.currency)}</strong></div><div className="rounded-xl bg-white/10 p-4">Central<br /><strong className="text-xl">{format(result.central, result.currency)}</strong></div><div className="rounded-xl bg-white/10 p-4">High<br /><strong className="text-xl">{format(result.high!, result.currency)}</strong></div></div></> : <><h2 className="mt-4 text-3xl font-bold">More evidence needed</h2><p className="mt-3 max-w-2xl text-sky-100">A pre-revenue app can be valuable, but traffic alone cannot support a defensible sale-price estimate. Add profit or recurring revenue history as it develops.</p></>}
-          <p className="mt-7 text-sm text-sky-100">Confidence: <strong className="capitalize">{result.confidence}</strong> · {result.basis === "annual_profit" ? "Annual profit" : result.basis === "annual_recurring_revenue" ? "Annual recurring revenue" : "Insufficient financial evidence"}{result.impliedMultiple !== null && ` · ${result.impliedMultiple.toFixed(2)}× basis`}</p>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
+          <div className="flex flex-wrap items-center justify-between gap-4"><p className="text-sm font-bold uppercase tracking-widest text-sky-700">Your app’s estimated value</p><img src="/rocket-email-logo.png" alt="Rocket" className="h-8 w-auto" /></div>
+          {result.central !== null ? <><h2 className="mt-6 text-5xl font-bold tracking-tight text-slate-950 sm:text-7xl">{format(result.central, result.currency)}</h2><p className="mt-3 text-lg text-slate-600">Illustrative range: {format(result.low!, result.currency)} – {format(result.high!, result.currency)}</p><div className="mt-8 grid gap-3 sm:grid-cols-3"><div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">Low<br /><strong className="text-xl text-slate-950">{format(result.low!, result.currency)}</strong></div><div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">Central<br /><strong className="text-xl text-slate-950">{format(result.central, result.currency)}</strong></div><div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">High<br /><strong className="text-xl text-slate-950">{format(result.high!, result.currency)}</strong></div></div></> : <><h2 className="mt-6 text-3xl font-bold">More evidence needed</h2><p className="mt-3 max-w-2xl text-slate-600">A pre-revenue app can be valuable, but traffic alone cannot support a defensible sale-price estimate. Add profit or recurring revenue history as it develops.</p></>}
+          <p className="mt-7 text-sm text-slate-600">Confidence: <strong className="capitalize">{result.confidence}</strong> · {result.basis === "annual_profit" ? "Annual profit" : result.basis === "annual_recurring_revenue" ? "Annual recurring revenue" : "Insufficient financial evidence"}{result.impliedMultiple !== null && ` · ${result.impliedMultiple.toFixed(2)}× basis`}</p>
+        </div>
+        <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Rocket Marketplace</p><h3 className="mt-2 text-2xl font-bold">Thinking about selling?</h3><p className="mt-2 text-slate-600">Rocket helps founders buy and sell software. Your estimated midpoint can be a starting asking price, which you can edit before submitting for review.</p><div className="mt-5 flex flex-wrap gap-3"><a href={listingUrl} onClick={() => track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: canList })} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">List my app for sale</a><a href="/marketplace" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Explore Rocket Marketplace</a></div>{!canList && <p className="mt-3 text-sm text-slate-600">To prefill a listing, select a domain-verified Rocket app and calculate in USD. The existing seller review still applies.</p>}</div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+          <h3 className="text-xl font-bold">Share your valuation</h3>
+          <p className="mt-2 text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown.</p>
+          <div className="mt-5 flex flex-wrap gap-5 text-sm text-slate-700"><label className="flex items-center gap-2"><input type="checkbox" checked={shareAmount} onChange={(event) => setShareAmount(event.target.checked)} /> Show estimated value</label><label className="flex items-center gap-2"><input type="checkbox" checked={shareName} onChange={(event) => setShareName(event.target.checked)} /> Show app name</label></div>
+          <div className="relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
+            <div className="flex items-start justify-between gap-4"><img src="/rocket-email-logo.png" alt="Rocket" style={{ width: "21cqw" }} /><span className="rounded-full bg-sky-50 px-[2.2cqw] py-[1cqw] font-semibold text-sky-700" style={{ fontSize: "2cqw" }}>SELL MY APP</span></div>
+            <div><p className="font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2.2cqw" }}>Your app’s estimated value</p><h4 className="mt-[1.5cqw] font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "8cqw" }}>{shareAmount && result.central !== null ? format(result.central, result.currency) : "What’s your app worth?"}</h4>{shareName && inputs.appName && <p className="mt-[2cqw] truncate font-medium text-slate-600" style={{ fontSize: "2.8cqw" }}>{inputs.appName}</p>}</div>
+            <div className="flex items-end justify-between gap-4 border-t border-slate-200 pt-[2cqw] text-slate-600" style={{ fontSize: "1.9cqw" }}><span>Illustrative estimate · Not an offer or appraisal</span><span className="shrink-0 font-semibold text-sky-700">tryrocket.ai/sell</span></div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3"><button type="button" onClick={() => void shareCard()} className="min-h-11 rounded-xl bg-sky-700 px-5 font-semibold text-white">Share image</button><button type="button" onClick={() => void download()} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Download PNG</button><button type="button" onClick={() => share("x")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on X</button><button type="button" onClick={() => share("reddit")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on Reddit</button><button type="button" onClick={() => share("linkedin")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on LinkedIn</button></div>
+          <p className="mt-3 text-xs text-slate-500">Social post buttons open a draft with the Rocket link. To include the card image, attach the downloaded PNG to your post.</p>
         </div>
         <div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Why this estimate?</h3><p className="mt-3 text-sm leading-6 text-slate-600">{result.methodology}</p><h4 className="mt-6 font-semibold">Key drivers</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{(result.drivers.length ? result.drivers : ["No positive drivers were supplied yet."]).map((item) => <li key={item}>{item}</li>)}</ul><h4 className="mt-6 font-semibold">Principal risks</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.risks.map((item) => <li key={item}>{item}</li>)}</ul></div>
           <div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Your inputs</h3><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="text-slate-500">MRR</dt><dd className="font-semibold">{format(inputs.mrr, inputs.currency)}</dd></div><div><dt className="text-slate-500">Monthly sessions</dt><dd className="font-semibold">{inputs.monthlyTraffic.toLocaleString()}</dd></div>{result.evidence.ga4 && monthlyActiveUsers !== null && <div><dt className="text-slate-500">Monthly active users</dt><dd className="font-semibold">{monthlyActiveUsers.toLocaleString()}</dd></div>}<div><dt className="text-slate-500">Revenue growth</dt><dd className="font-semibold">{inputs.monthlyRevenueGrowthPct}%</dd></div><div><dt className="text-slate-500">Operating history</dt><dd className="font-semibold">{inputs.ageMonths} months</dd></div>{inputs.monthlyProfit !== undefined && <div><dt className="text-slate-500">Monthly profit</dt><dd className="font-semibold">{format(inputs.monthlyProfit, inputs.currency)}</dd></div>}</dl><p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Data status: {result.evidence.stripe ? "MRR verified through Stripe. " : "Revenue manually entered. "}{result.evidence.ga4 ? `Sessions and traffic sources verified through Google Analytics${ga4Period ? ` (${ga4Period})` : ""}. ` : "Traffic manually entered. "}Other fields remain self-reported. This is an illustrative estimate.</p><h4 className="mt-6 font-semibold">How to strengthen the business</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.suggestions.map((item) => <li key={item}>{item}</li>)}</ul></div></div>
         <details className="rounded-2xl border bg-white p-6"><summary className="cursor-pointer font-semibold">Methodology and assumptions</summary><ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-600">{result.assumptions.map((item) => <li key={item}>{item}</li>)}</ul><p className="mt-4 text-sm text-slate-600">This is an estimate, not a formal appraisal or guaranteed sale price. <a href="/valuation-methodology" className="text-sky-700 underline">Read the full methodology</a>.</p></details>
         {user ? <button disabled={busy} onClick={() => void save()} className="min-h-12 rounded-xl border border-sky-700 px-6 font-semibold text-sky-700 disabled:opacity-50">{busy ? "Saving…" : "Save privately to my account"}</button> : <a href="/login?next=%2Fsell" onClick={() => track("valuation_signup_started")} className="inline-flex min-h-12 items-center rounded-xl border border-sky-700 px-6 font-semibold text-sky-700">Sign in to save this valuation</a>}
-        <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Rocket Marketplace</p><h3 className="mt-2 text-2xl font-bold">Thinking about selling?</h3><p className="mt-2 text-slate-600">Rocket helps founders buy and sell software. Your estimated midpoint can be a starting asking price, which you can edit before submitting for review.</p><div className="mt-5 flex flex-wrap gap-3"><a href={listingUrl} onClick={() => track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: canList })} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">List my app for sale</a><a href="/marketplace" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Explore Rocket Marketplace</a></div>{!canList && <p className="mt-3 text-sm text-slate-600">To prefill a listing, select a domain-verified Rocket app and calculate in USD. The existing seller review still applies.</p>}</div>
-        <div className="rounded-3xl border bg-white p-6 sm:p-8"><h3 className="text-xl font-bold">Share my valuation</h3><p className="mt-2 text-sm text-slate-600">Your result is private. Choose what to reveal; no revenue or traffic figures are included.</p><div className="mt-4 flex flex-wrap gap-5 text-sm"><label><input type="checkbox" checked={shareAmount} onChange={(event) => setShareAmount(event.target.checked)} /> Include estimated value</label><label><input type="checkbox" checked={shareName} onChange={(event) => setShareName(event.target.checked)} /> Include app name</label></div><div ref={cardRef} className="mt-5 max-w-xl rounded-2xl border border-slate-200 bg-white p-8"><p className="text-sm font-extrabold uppercase tracking-[.2em] text-sky-700">✿ Rocket · Sell My App</p><h4 className="mt-6 text-3xl font-bold">{shareName && inputs.appName ? inputs.appName : "What’s your app worth?"}</h4><p className="mt-3 text-xl text-slate-600">{shareAmount && result.central !== null ? `Illustrative value: ${format(result.central, result.currency)}` : "Discover an illustrative software valuation."}</p><p className="mt-8 text-sm font-semibold text-sky-700">tryrocket.ai/sell</p></div><div className="mt-5 flex flex-wrap gap-3"><button onClick={() => share("x")} className="min-h-11 rounded-xl bg-slate-900 px-5 font-semibold text-white">Share on X</button><button onClick={() => share("linkedin")} className="min-h-11 rounded-xl bg-[#0a66c2] px-5 font-semibold text-white">Share on LinkedIn</button><button onClick={() => void download()} className="min-h-11 rounded-xl border px-5 font-semibold">Download image</button></div></div>
       </section>}
       {user && history.length > 0 && <section className="mt-12"><h2 className="text-2xl font-bold">Your private history</h2><p className="mt-2 text-sm text-slate-600">Only you can see these saved estimates. Recalculate with current inputs to compare over time.</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{history.map((entry) => <div key={entry.id} className="rounded-2xl border bg-white p-5"><p className="text-sm text-slate-500">{new Date(entry.calculated_at).toLocaleDateString()}</p><h3 className="mt-2 font-semibold">{entry.inputs.appName || "Unnamed app"}</h3><p className="mt-2 text-xl font-bold">{entry.result.central === null ? "Insufficient evidence" : format(entry.result.central, entry.result.currency)}</p><div className="mt-4 flex gap-4 text-sm"><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setEvidence(entry.result.evidence); setMonthlyActiveUsers(null); setGa4Period(""); setResult(entry.result); resultsRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">View</button><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setEvidence({ stripe: false, ga4: false }); setMonthlyActiveUsers(null); setGa4Period(""); setResult(null); formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">Recalculate</button><button onClick={() => void remove(entry.id)} className="font-semibold text-red-700">Delete</button></div></div>)}</div></section>}
       <section className="mt-16 max-w-3xl"><h2 className="text-2xl font-bold">Common questions</h2><div className="mt-5 space-y-3">{[
