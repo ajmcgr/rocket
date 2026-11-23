@@ -28,6 +28,7 @@ import {
   Handshake,
   CreditCard,
   Share2,
+  Tag,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import GrowthAttribution from "./GrowthAttribution";
@@ -68,7 +69,7 @@ export const isMarketplaceSidebarItemActive = (
   pathname: string,
   search: string,
 ) => {
-  if (label === "Advertise" || label === "Buy with Rocket" || label === "Rocket ID")
+  if (label === "Advertise" || label === "Buy with Rocket" || label === "Rocket ID" || label === "Sell my App")
     return pathname === to;
   return (
     pathname + search === to ||
@@ -113,6 +114,7 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: "Advertise", to: "/advertise", icon: Megaphone },
       { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
+      { label: "Sell my App", to: "/sell", icon: Tag },
     ],
   },
   {
@@ -144,7 +146,7 @@ export default function SiteHeader({
     )
     .map((section) => {
       if (section.heading === "Monetize" && !user)
-        return { ...section, items: section.items.filter((item) => item.label === "Advertise") };
+        return { ...section, items: section.items.filter((item) => item.label === "Advertise" || item.label === "Sell my App") };
       if (section.heading !== "Apps") return section;
       if (!user)
         return {
