@@ -7,6 +7,7 @@ import { loadMyApps } from "@/lib/myApps";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type ValuationResult } from "@/lib/rocketValuation";
+import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
 
 type Saved = { id: string; app_id: string | null; inputs: ValuationInputs; result: ValuationResult; calculated_at: string };
 const initial: ValuationInputs = { currency: "USD", mrr: 0, monthlyTraffic: 0, monthlyRevenueGrowthPct: 0, ageMonths: 0, businessModel: "saas" };
@@ -39,6 +40,10 @@ export default function SellMyApp() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [importing, setImporting] = useState<"stripe" | "ga4" | null>(null);
+  const [evidence, setEvidence] = useState({ stripe: false, ga4: false });
+  const [ga4Period, setGa4Period] = useState("");
+  const [monthlyActiveUsers, setMonthlyActiveUsers] = useState<number | null>(null);
   const [shareAmount, setShareAmount] = useState(false);
   const [shareName, setShareName] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -63,6 +68,7 @@ export default function SellMyApp() {
 
   const selectApp = (id: string) => {
     setAppId(id);
+    setEvidence({ stripe: false, ga4: false }); setGa4Period(""); setMonthlyActiveUsers(null);
     const item = apps.find((app) => app.app_id === id);
     if (item?.app) {
       setInputs((current) => ({ ...current, appName: item.app?.name || "", appUrl: item.app?.website_url || "" }));
@@ -71,6 +77,9 @@ export default function SellMyApp() {
     setResult(null);
   };
   const setNumber = (key: keyof ValuationInputs, value: string) => {
+    if (["mrr", "annualRecurringRevenue"].includes(key)) setEvidence((current) => ({ ...current, stripe: false }));
+    if (["monthlyTraffic", "organicTrafficPct", "trafficGrowthPct"].includes(key)) setEvidence((current) => ({ ...current, ga4: false }));
+    setResult(null);
     setInputs((current) => {
       const next = { ...current } as Record<string, unknown>;
       if (value === "" && !numberFields.find((field) => field.key === key)?.required) delete next[key];
@@ -78,10 +87,40 @@ export default function SellMyApp() {
       return next as ValuationInputs;
     });
   };
+  const importMetrics = async (provider: "stripe" | "ga4") => {
+    if (!appId || !selected || selected.owner_verification_level !== "domain_verified") return;
+    setImporting(provider); setError(""); setNotice("");
+    try {
+      if (provider === "stripe") {
+        const { data, error: providerError } = await supabase.functions.invoke("rocket-stripe-revenue", {
+          body: { action: "status", app_id: appId, installation: "marketplace" } });
+        if (providerError) throw providerError;
+        const mrr = verifiedStripeMrr(data, inputs.currency);
+        setInputs((current) => ({ ...current, mrr, annualRecurringRevenue: undefined }));
+        setEvidence((current) => ({ ...current, stripe: true }));
+        setNotice(`Imported ${format(mrr, inputs.currency)} monthly recurring revenue from verified live Stripe products.`);
+        track("valuation_stripe_connected", { app_id: appId });
+      } else {
+        const { data, error: providerError } = await supabase.functions.invoke("rocket-ga4", {
+          body: { action: "valuation_snapshot", app_id: appId } });
+        if (providerError) throw providerError;
+        const metrics = verifiedGa4Metrics(data);
+        setInputs((current) => ({ ...current, monthlyTraffic: metrics.sessions,
+          organicTrafficPct: metrics.organicSharePct, trafficGrowthPct: metrics.trafficGrowthPct ?? undefined }));
+        setMonthlyActiveUsers(metrics.activeUsers); setGa4Period(metrics.period);
+        setEvidence((current) => ({ ...current, ga4: true }));
+        setAdvanced(true);
+        setNotice(`Imported ${metrics.sessions.toLocaleString()} sessions from verified Google Analytics (${metrics.period}).`);
+        track("valuation_ga4_connected", { app_id: appId });
+      }
+      setResult(null);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not import verified metrics."); }
+    finally { setImporting(null); }
+  };
   const calculate = (event: React.FormEvent) => {
     event.preventDefault(); setError(""); setNotice("");
     try {
-      const next = calculateValuation(inputs);
+      const next = calculateValuation(inputs, evidence);
       setResult(next); track("valuation_completed", { basis: next.basis, confidence: next.confidence, has_rocket_app: Boolean(appId) });
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 0);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Please check your inputs."); }
@@ -89,6 +128,16 @@ export default function SellMyApp() {
   const save = async () => {
     if (!user || !result) return;
     setBusy(true); setError(""); setNotice("");
+    if (evidence.stripe || evidence.ga4) {
+      if (!appId) { setBusy(false); setError("Select your verified Rocket app before saving connected metrics."); return; }
+      const { data, error: verifiedError } = await supabase.functions.invoke("rocket-valuation", {
+        body: { action: "save", app_id: appId, inputs, evidence } });
+      setBusy(false);
+      if (verifiedError || !data?.valuation) { setError(data?.error || "Could not verify the imported metrics. Reimport and try again."); return; }
+      setHistory((current) => [data.valuation as Saved, ...current].slice(0, 30));
+      setNotice("Saved privately with verified provider sources."); track("valuation_saved", { has_rocket_app: true, verified: true });
+      return;
+    }
     const row = { user_id: user.id, app_id: appId || null, inputs, result, currency: inputs.currency,
       low_amount: result.low, central_amount: result.central, high_amount: result.high,
       confidence: result.confidence, model_version: result.modelVersion,
@@ -150,12 +199,12 @@ export default function SellMyApp() {
       <section ref={formRef} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8" aria-labelledby="calculator-title">
         <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your estimate</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Model v1.0.0</span></div>
         {user && <label className="mt-7 block max-w-xl text-sm font-medium text-slate-700">Your Rocket app (optional)<select value={appId} onChange={(event) => selectApp(event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="">An app not on Rocket</option>{apps.map((item) => <option key={item.app_id} value={item.app_id}>{item.app?.name || "Untitled app"} · {item.owner_verification_level === "domain_verified" ? "verified" : "claimed"}</option>)}</select></label>}
-        {appId && selected?.owner_verification_level === "domain_verified" && <div className="mt-4 flex flex-wrap gap-4 text-sm"><a className="font-semibold text-sky-700 underline" href={`/my-apps/${encodeURIComponent(appId)}/revenue`}>Connect Stripe on Rocket</a><a className="font-semibold text-sky-700 underline" href={`/my-apps/${encodeURIComponent(appId)}/analytics`}>Connect Google Analytics on Rocket</a><span className="text-slate-500">Connected metrics are managed on your private app pages; this calculator still uses the values you enter here.</span></div>}
+        {appId && selected?.owner_verification_level === "domain_verified" && <div className="mt-4 space-y-3 text-sm"><div className="flex flex-wrap gap-3"><button type="button" disabled={!!importing} onClick={() => void importMetrics("stripe")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "stripe" ? "Importing…" : "Import verified Stripe revenue"}</button><button type="button" disabled={!!importing} onClick={() => void importMetrics("ga4")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "ga4" ? "Importing…" : "Import verified Google Analytics traffic"}</button></div><div className="flex flex-wrap gap-4"><a className="font-semibold text-sky-700 underline" href={`/my-apps/${encodeURIComponent(appId)}/revenue`}>Manage Stripe connection</a><a className="font-semibold text-sky-700 underline" href={`/my-apps/${encodeURIComponent(appId)}/analytics`}>Manage Google Analytics connection</a></div><p className="text-slate-600">{evidence.stripe ? "Stripe revenue verified · " : ""}{evidence.ga4 ? `Google Analytics traffic verified for ${ga4Period} · ` : ""}Connected metrics stay private. Editing an imported metric removes its verified status until you import it again.</p></div>}
         <form onFocus={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } }} onSubmit={calculate} className="mt-7"><div className="grid gap-5 sm:grid-cols-2">
           <label className="text-sm font-medium text-slate-700">App name (optional)<input maxLength={120} value={inputs.appName || ""} onChange={(event) => setInputs({ ...inputs, appName: event.target.value })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
           <label className="text-sm font-medium text-slate-700">App URL (optional)<input type="url" maxLength={500} value={inputs.appUrl || ""} onChange={(event) => setInputs({ ...inputs, appUrl: event.target.value })} placeholder="https://example.com" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
-          <label className="text-sm font-medium text-slate-700">Currency<select value={inputs.currency} onChange={(event) => setInputs({ ...inputs, currency: event.target.value as ValuationInputs["currency"] })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option>USD</option><option>EUR</option><option>GBP</option></select></label>
-          <label className="text-sm font-medium text-slate-700">Business model<select value={inputs.businessModel} onChange={(event) => setInputs({ ...inputs, businessModel: event.target.value as ValuationInputs["businessModel"] })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4">{BUSINESS_MODELS.map((model) => <option key={model} value={model}>{models[model]}</option>)}</select></label>
+          <label className="text-sm font-medium text-slate-700">Currency<select value={inputs.currency} onChange={(event) => { setInputs({ ...inputs, currency: event.target.value as ValuationInputs["currency"] }); setEvidence((current) => ({ ...current, stripe: false })); setResult(null); }} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option>USD</option><option>EUR</option><option>GBP</option></select></label>
+          <label className="text-sm font-medium text-slate-700">Business model<select value={inputs.businessModel} onChange={(event) => { setInputs({ ...inputs, businessModel: event.target.value as ValuationInputs["businessModel"] }); setResult(null); }} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4">{BUSINESS_MODELS.map((model) => <option key={model} value={model}>{models[model]}</option>)}</select></label>
           {required.map(field)}
         </div><button type="button" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)} className="mt-7 text-sm font-semibold text-sky-700">{advanced ? "Hide" : "Show"} advanced inputs ↓</button>
           {advanced && <div className="mt-5 grid gap-5 rounded-2xl bg-slate-50 p-5 sm:grid-cols-2">{optional.map(field)}<label className="text-sm font-medium text-slate-700">Platform dependence<select value={inputs.platformDependence || ""} onChange={(event) => setInputs({ ...inputs, platformDependence: event.target.value as ValuationInputs["platformDependence"] || undefined })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="">Not provided</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label className="text-sm font-medium text-slate-700">Operational complexity<select value={inputs.operationalComplexity || ""} onChange={(event) => setInputs({ ...inputs, operationalComplexity: event.target.value as ValuationInputs["operationalComplexity"] || undefined })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="">Not provided</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label></div>}
@@ -169,13 +218,13 @@ export default function SellMyApp() {
           <p className="mt-7 text-sm text-sky-100">Confidence: <strong className="capitalize">{result.confidence}</strong> · {result.basis === "annual_profit" ? "Annual profit" : result.basis === "annual_recurring_revenue" ? "Annual recurring revenue" : "Insufficient financial evidence"}{result.impliedMultiple !== null && ` · ${result.impliedMultiple.toFixed(2)}× basis`}</p>
         </div>
         <div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Why this estimate?</h3><p className="mt-3 text-sm leading-6 text-slate-600">{result.methodology}</p><h4 className="mt-6 font-semibold">Key drivers</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{(result.drivers.length ? result.drivers : ["No positive drivers were supplied yet."]).map((item) => <li key={item}>{item}</li>)}</ul><h4 className="mt-6 font-semibold">Principal risks</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.risks.map((item) => <li key={item}>{item}</li>)}</ul></div>
-          <div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Your inputs</h3><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="text-slate-500">MRR</dt><dd className="font-semibold">{format(inputs.mrr, inputs.currency)}</dd></div><div><dt className="text-slate-500">Monthly visits</dt><dd className="font-semibold">{inputs.monthlyTraffic.toLocaleString()}</dd></div><div><dt className="text-slate-500">Revenue growth</dt><dd className="font-semibold">{inputs.monthlyRevenueGrowthPct}%</dd></div><div><dt className="text-slate-500">Operating history</dt><dd className="font-semibold">{inputs.ageMonths} months</dd></div>{inputs.monthlyProfit !== undefined && <div><dt className="text-slate-500">Monthly profit</dt><dd className="font-semibold">{format(inputs.monthlyProfit, inputs.currency)}</dd></div>}</dl><p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Data status: manual and unverified. Connecting a provider in Rocket does not change this calculation unless its metrics are imported and validated.</p><h4 className="mt-6 font-semibold">How to strengthen the business</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.suggestions.map((item) => <li key={item}>{item}</li>)}</ul></div></div>
+          <div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Your inputs</h3><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="text-slate-500">MRR</dt><dd className="font-semibold">{format(inputs.mrr, inputs.currency)}</dd></div><div><dt className="text-slate-500">Monthly sessions</dt><dd className="font-semibold">{inputs.monthlyTraffic.toLocaleString()}</dd></div>{result.evidence.ga4 && monthlyActiveUsers !== null && <div><dt className="text-slate-500">Monthly active users</dt><dd className="font-semibold">{monthlyActiveUsers.toLocaleString()}</dd></div>}<div><dt className="text-slate-500">Revenue growth</dt><dd className="font-semibold">{inputs.monthlyRevenueGrowthPct}%</dd></div><div><dt className="text-slate-500">Operating history</dt><dd className="font-semibold">{inputs.ageMonths} months</dd></div>{inputs.monthlyProfit !== undefined && <div><dt className="text-slate-500">Monthly profit</dt><dd className="font-semibold">{format(inputs.monthlyProfit, inputs.currency)}</dd></div>}</dl><p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Data status: {result.evidence.stripe ? "MRR verified through Stripe. " : "Revenue manually entered. "}{result.evidence.ga4 ? `Sessions and traffic sources verified through Google Analytics${ga4Period ? ` (${ga4Period})` : ""}. ` : "Traffic manually entered. "}Other fields remain self-reported. This is an illustrative estimate.</p><h4 className="mt-6 font-semibold">How to strengthen the business</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.suggestions.map((item) => <li key={item}>{item}</li>)}</ul></div></div>
         <details className="rounded-2xl border bg-white p-6"><summary className="cursor-pointer font-semibold">Methodology and assumptions</summary><ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-600">{result.assumptions.map((item) => <li key={item}>{item}</li>)}</ul><p className="mt-4 text-sm text-slate-600">This is an estimate, not a formal appraisal or guaranteed sale price. <a href="/valuation-methodology" className="text-sky-700 underline">Read the full methodology</a>.</p></details>
         {user ? <button disabled={busy} onClick={() => void save()} className="min-h-12 rounded-xl border border-sky-700 px-6 font-semibold text-sky-700 disabled:opacity-50">{busy ? "Saving…" : "Save privately to my account"}</button> : <a href="/login?next=%2Fsellmyapp" onClick={() => track("valuation_signup_started")} className="inline-flex min-h-12 items-center rounded-xl border border-sky-700 px-6 font-semibold text-sky-700">Sign in to save this valuation</a>}
         <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Rocket Marketplace</p><h3 className="mt-2 text-2xl font-bold">Thinking about selling?</h3><p className="mt-2 text-slate-600">Rocket helps founders buy and sell software. Your estimated midpoint can be a starting asking price, which you can edit before submitting for review.</p><div className="mt-5 flex flex-wrap gap-3"><a href={listingUrl} onClick={() => track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: canList })} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">List my app for sale</a><a href="/marketplace" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Explore Rocket Marketplace</a></div>{!canList && <p className="mt-3 text-sm text-slate-600">To prefill a listing, select a domain-verified Rocket app and calculate in USD. The existing seller review still applies.</p>}</div>
         <div className="rounded-3xl border bg-white p-6 sm:p-8"><h3 className="text-xl font-bold">Share my valuation</h3><p className="mt-2 text-sm text-slate-600">Your result is private. Choose what to reveal; no revenue or traffic figures are included.</p><div className="mt-4 flex flex-wrap gap-5 text-sm"><label><input type="checkbox" checked={shareAmount} onChange={(event) => setShareAmount(event.target.checked)} /> Include estimated value</label><label><input type="checkbox" checked={shareName} onChange={(event) => setShareName(event.target.checked)} /> Include app name</label></div><div ref={cardRef} className="mt-5 max-w-xl rounded-2xl border border-slate-200 bg-white p-8"><p className="text-sm font-extrabold uppercase tracking-[.2em] text-sky-700">✿ Rocket · Sell My App</p><h4 className="mt-6 text-3xl font-bold">{shareName && inputs.appName ? inputs.appName : "What’s your app worth?"}</h4><p className="mt-3 text-xl text-slate-600">{shareAmount && result.central !== null ? `Illustrative value: ${format(result.central, result.currency)}` : "Discover an illustrative software valuation."}</p><p className="mt-8 text-sm font-semibold text-sky-700">tryrocket.ai/sellmyapp</p></div><div className="mt-5 flex flex-wrap gap-3"><button onClick={() => share("x")} className="min-h-11 rounded-xl bg-slate-900 px-5 font-semibold text-white">Share on X</button><button onClick={() => share("linkedin")} className="min-h-11 rounded-xl bg-[#0a66c2] px-5 font-semibold text-white">Share on LinkedIn</button><button onClick={() => void download()} className="min-h-11 rounded-xl border px-5 font-semibold">Download image</button></div></div>
       </section>}
-      {user && history.length > 0 && <section className="mt-12"><h2 className="text-2xl font-bold">Your private history</h2><p className="mt-2 text-sm text-slate-600">Only you can see these saved estimates. Recalculate with current inputs to compare over time.</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{history.map((entry) => <div key={entry.id} className="rounded-2xl border bg-white p-5"><p className="text-sm text-slate-500">{new Date(entry.calculated_at).toLocaleDateString()}</p><h3 className="mt-2 font-semibold">{entry.inputs.appName || "Unnamed app"}</h3><p className="mt-2 text-xl font-bold">{entry.result.central === null ? "Insufficient evidence" : format(entry.result.central, entry.result.currency)}</p><div className="mt-4 flex gap-4 text-sm"><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setResult(entry.result); resultsRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">View</button><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setResult(null); formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">Recalculate</button><button onClick={() => void remove(entry.id)} className="font-semibold text-red-700">Delete</button></div></div>)}</div></section>}
+      {user && history.length > 0 && <section className="mt-12"><h2 className="text-2xl font-bold">Your private history</h2><p className="mt-2 text-sm text-slate-600">Only you can see these saved estimates. Recalculate with current inputs to compare over time.</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{history.map((entry) => <div key={entry.id} className="rounded-2xl border bg-white p-5"><p className="text-sm text-slate-500">{new Date(entry.calculated_at).toLocaleDateString()}</p><h3 className="mt-2 font-semibold">{entry.inputs.appName || "Unnamed app"}</h3><p className="mt-2 text-xl font-bold">{entry.result.central === null ? "Insufficient evidence" : format(entry.result.central, entry.result.currency)}</p><div className="mt-4 flex gap-4 text-sm"><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setEvidence(entry.result.evidence); setMonthlyActiveUsers(null); setGa4Period(""); setResult(entry.result); resultsRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">View</button><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setEvidence({ stripe: false, ga4: false }); setMonthlyActiveUsers(null); setGa4Period(""); setResult(null); formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">Recalculate</button><button onClick={() => void remove(entry.id)} className="font-semibold text-red-700">Delete</button></div></div>)}</div></section>}
       <section className="mt-16 max-w-3xl"><h2 className="text-2xl font-bold">Common questions</h2><div className="mt-5 space-y-3">{[
         ["How much is my app worth?", "A sale price depends on actual profit, recurring revenue, transferability and buyer diligence. This calculator gives an illustrative range where there is sufficient financial evidence."],
         ["How are SaaS businesses valued?", "Small SaaS transactions often use a multiple of annual profit. Where profit is unknown, this calculator uses a cautious annual recurring revenue approach and lowers confidence."],

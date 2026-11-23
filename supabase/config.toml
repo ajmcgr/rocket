@@ -141,3 +141,9 @@ verify_jwt = false
 
 [functions.rocket-escrow]
 verify_jwt = false # User actions verify Auth.getUser; webhook token only triggers a provider fetch.
+
+[functions.rocket-valuation]
+verify_jwt = true # Auth.getUser and domain-verified ownership are checked again inside.
+
+[functions.rocket-valuation-event]
+verify_jwt = true # Anonymous visitors use the public anon JWT; the handler limits event names and rates.

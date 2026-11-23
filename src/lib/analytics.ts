@@ -2,6 +2,7 @@
 // window (PostHog, Plausible, GA/gtag) — otherwise buffers to console + a
 // bounded in-memory queue for debugging via `window.__rocketEvents`.
 // Zero cost when no provider is loaded.
+import { supabase } from "@/integrations/supabase/client";
 
 export type AnalyticsEvent =
   | "verification_entry_viewed"
@@ -127,6 +128,14 @@ export function track(event: AnalyticsEvent, props: Record<string, any> = {}) {
     const q: any[] = (w[QUEUE_KEY] ||= []);
     q.push({ event, props, at: new Date().toISOString() });
     if (q.length > MAX_QUEUE) q.splice(0, q.length - MAX_QUEUE);
+    if (event.startsWith("valuation_")) {
+      const key = "rocket_valuation_session";
+      let sessionId = window.sessionStorage.getItem(key);
+      if (!sessionId) { sessionId = crypto.randomUUID(); window.sessionStorage.setItem(key, sessionId); }
+      void supabase.functions.invoke("rocket-valuation-event", { body: {
+        event_id: crypto.randomUUID(), session_id: sessionId, event,
+      } }).catch(() => { /* Analytics must never interrupt the product. */ });
+    }
     if (import.meta.env?.DEV) console.debug("[track]", event, props);
   } catch {
     // Never let telemetry break the app.
