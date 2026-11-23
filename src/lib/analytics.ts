@@ -94,7 +94,18 @@ export type AnalyticsEvent =
   | "acquisition_enquiry_initiated"
   | "acquisition_listing_created"
   | "acquisition_listing_disabled"
-  | "rocket_message_sent";
+  | "rocket_message_sent"
+  | "valuation_page_viewed"
+  | "valuation_started"
+  | "valuation_completed"
+  | "valuation_signup_started"
+  | "valuation_app_selected"
+  | "valuation_stripe_connected"
+  | "valuation_ga4_connected"
+  | "valuation_saved"
+  | "valuation_shared"
+  | "valuation_listing_started"
+  | "valuation_listing_published";
 
 const QUEUE_KEY = "__rocketEvents";
 const MAX_QUEUE = 200;
