@@ -111,10 +111,10 @@ const sections: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Monetize",
     items: [
+      { label: "Sell my App", to: "/sell", icon: Tag },
       { label: "Advertise", to: "/advertise", icon: Megaphone },
       { label: "Buy with Rocket", to: "/buy-with-rocket", icon: Wallet },
       { label: "Rocket ID", to: "/rocket-id", icon: ShieldCheck },
-      { label: "Sell my App", to: "/sell", icon: Tag },
     ],
   },
   {
