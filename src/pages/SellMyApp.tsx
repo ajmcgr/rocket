@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type ValuationResult } from "@/lib/rocketValuation";
 import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
+import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
 import "./SellMyApp.css";
 
 type Saved = { id: string; app_id: string | null; inputs: ValuationInputs; result: ValuationResult; calculated_at: string };
@@ -46,10 +47,14 @@ export default function SellMyApp() {
   const [monthlyActiveUsers, setMonthlyActiveUsers] = useState<number | null>(null);
   const [shareAmount, setShareAmount] = useState(true);
   const [shareName, setShareName] = useState(false);
+  const [iconBroken, setIconBroken] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLElement>(null);
   const startedRef = useRef(false);
   const db = supabase as any;
+  const appIconSource = valuationShareIconUrl(inputs.appUrl);
+
+  useEffect(() => { setIconBroken(false); }, [appIconSource]);
 
   useEffect(() => { track("valuation_page_viewed", { route: "/sell" }); }, []);
   useEffect(() => {
@@ -186,19 +191,38 @@ export default function SellMyApp() {
     ctx.fillStyle = "#0369a1";
     ctx.font = "bold 20px Arial, sans-serif";
     ctx.fillText("SELL MY APP", 953, 92);
+    let iconVisible = false;
+    if (appIconSource && !iconBroken) {
+      const icon = new Image();
+      icon.crossOrigin = "anonymous";
+      icon.referrerPolicy = "no-referrer";
+      icon.src = appIconSource;
+      try {
+        await icon.decode();
+        const size = Math.min(90 / icon.naturalWidth, 90 / icon.naturalHeight);
+        const width = icon.naturalWidth * size;
+        const height = icon.naturalHeight * size;
+        ctx.fillStyle = "#f8fafc";
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.beginPath(); ctx.roundRect(60, 225, 110, 110, 20); ctx.fill(); ctx.stroke();
+        ctx.drawImage(icon, 115 - width / 2, 280 - height / 2, width, height);
+        iconVisible = true;
+      } catch { /* An unavailable icon leaves the Rocket-only card usable. */ }
+    }
+    const textLeft = iconVisible ? 195 : 60;
     ctx.font = "bold 25px Arial, sans-serif";
-    ctx.fillText("YOUR APP’S ESTIMATED VALUE", 60, 270);
+    ctx.fillText("YOUR APP’S ESTIMATED VALUE", textLeft, 270);
     const value = shareAmount && result.central !== null ? format(result.central, result.currency) : "What’s your app worth?";
     let fontSize = shareAmount && result.central !== null ? 104 : 78;
-    do { ctx.font = `bold ${fontSize}px Arial, sans-serif`; fontSize -= 2; } while (ctx.measureText(value).width > 1080 && fontSize > 32);
+    do { ctx.font = `bold ${fontSize}px Arial, sans-serif`; fontSize -= 2; } while (ctx.measureText(value).width > 1140 - textLeft && fontSize > 32);
     ctx.fillStyle = "#0f172a";
-    ctx.fillText(value, 60, 385);
+    ctx.fillText(value, textLeft, 385);
     if (shareName && inputs.appName) {
       ctx.font = "34px Arial, sans-serif";
       let name = inputs.appName;
-      while (ctx.measureText(name).width > 1080 && name.length > 1) name = `${name.slice(0, -2)}…`;
+      while (ctx.measureText(name).width > 1140 - textLeft && name.length > 1) name = `${name.slice(0, -2)}…`;
       ctx.fillStyle = "#475569";
-      ctx.fillText(name, 60, 444);
+      ctx.fillText(name, textLeft, 444);
     }
     ctx.strokeStyle = "#e2e8f0";
     ctx.beginPath(); ctx.moveTo(60, 540); ctx.lineTo(1140, 540); ctx.stroke();
@@ -287,11 +311,11 @@ export default function SellMyApp() {
         <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Rocket Marketplace</p><h3 className="mt-2 text-2xl font-bold">Thinking about selling?</h3><p className="mt-2 text-slate-600">Rocket helps founders buy and sell software. Your estimated midpoint can be a starting asking price, which you can edit before submitting for review.</p><div className="mt-5 flex flex-wrap gap-3"><a href={listingUrl} onClick={() => track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: canList })} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">List my app for sale</a><a href="/marketplace" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Explore Rocket Marketplace</a></div>{!canList && <p className="mt-3 text-sm text-slate-600">To prefill a listing, select a domain-verified Rocket app and calculate in USD. The existing seller review still applies.</p>}</div>
         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
           <h3 className="text-xl font-bold">Share your valuation</h3>
-          <p className="mt-2 text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown.</p>
+          <p className="mt-2 text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown. If you enter an App URL, its public icon may identify the app.</p>
           <div className="mt-5 flex flex-wrap gap-5 text-sm text-slate-700"><label className="flex items-center gap-2"><input type="checkbox" checked={shareAmount} onChange={(event) => setShareAmount(event.target.checked)} /> Show estimated value</label><label className="flex items-center gap-2"><input type="checkbox" checked={shareName} onChange={(event) => setShareName(event.target.checked)} /> Show app name</label></div>
           <div className="relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
             <div className="flex items-start justify-between gap-4"><img src="/rocket-email-logo.png" alt="Rocket" style={{ width: "21cqw" }} /><span className="rounded-full bg-sky-50 px-[2.2cqw] py-[1cqw] font-semibold text-sky-700" style={{ fontSize: "2cqw" }}>SELL MY APP</span></div>
-            <div><p className="font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2.2cqw" }}>Your app’s estimated value</p><h4 className="mt-[1.5cqw] font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "8cqw" }}>{shareAmount && result.central !== null ? format(result.central, result.currency) : "What’s your app worth?"}</h4>{shareName && inputs.appName && <p className="mt-[2cqw] truncate font-medium text-slate-600" style={{ fontSize: "2.8cqw" }}>{inputs.appName}</p>}</div>
+            <div className="flex min-w-0 items-center gap-[2cqw]">{appIconSource && !iconBroken && <div className="flex h-[10cqw] w-[10cqw] shrink-0 items-center justify-center rounded-[2cqw] border border-slate-200 bg-slate-50 p-[1cqw]"><img crossOrigin="anonymous" referrerPolicy="no-referrer" src={appIconSource} alt={`${inputs.appName || "App"} icon`} onError={() => setIconBroken(true)} className="h-full w-full object-contain" /></div>}<div className="min-w-0"><p className="font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2.2cqw" }}>Your app’s estimated value</p><h4 className="mt-[1.5cqw] truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "8cqw" }}>{shareAmount && result.central !== null ? format(result.central, result.currency) : "What’s your app worth?"}</h4>{shareName && inputs.appName && <p className="mt-[2cqw] truncate font-medium text-slate-600" style={{ fontSize: "2.8cqw" }}>{inputs.appName}</p>}</div></div>
             <div className="flex items-end justify-between gap-4 border-t border-slate-200 pt-[2cqw] text-slate-600" style={{ fontSize: "1.9cqw" }}><span>Illustrative estimate · Not an offer or appraisal</span><span className="shrink-0 font-semibold text-sky-700">tryrocket.ai/sell</span></div>
           </div>
           <div className="mt-5 flex flex-wrap gap-3"><button type="button" onClick={() => void shareCard()} className="min-h-11 rounded-xl bg-sky-700 px-5 font-semibold text-white">Share image</button><button type="button" onClick={() => void download()} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Download PNG</button><button type="button" onClick={() => share("x")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on X</button><button type="button" onClick={() => share("reddit")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on Reddit</button><button type="button" onClick={() => share("linkedin")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on LinkedIn</button></div>
