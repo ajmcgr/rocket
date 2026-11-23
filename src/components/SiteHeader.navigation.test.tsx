@@ -127,7 +127,7 @@ describe("Sidebar destinations", () => {
           ).toBe("/create");
           expect(sidebar.getByText("Monetize")).toBeTruthy();
           expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
-          const sell = sidebar.getByRole("link", { name: "Sell my App" });
+          const sell = sidebar.getByRole("link", { name: "Sell my app" });
           const advertise = sidebar.getByRole("link", { name: "Advertise" });
           expect(sell.getAttribute("href")).toBe("/sell");
           expect(sell.compareDocumentPosition(advertise) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -150,7 +150,7 @@ describe("Sidebar destinations", () => {
           expect(sidebar.queryByRole("link", { name: "Rocket ID" })).toBeNull();
           expect(sidebar.getByText("Monetize")).toBeTruthy();
           expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
-          const sell = sidebar.getByRole("link", { name: "Sell my App" });
+          const sell = sidebar.getByRole("link", { name: "Sell my app" });
           const advertise = sidebar.getByRole("link", { name: "Advertise" });
           expect(sell.getAttribute("href")).toBe("/sell");
           expect(sell.compareDocumentPosition(advertise) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
