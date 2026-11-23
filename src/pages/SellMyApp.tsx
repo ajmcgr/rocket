@@ -125,7 +125,7 @@ export default function SellMyApp() {
     } catch { setError("The share image could not be generated. Please try again."); }
   };
   const selected = apps.find((app) => app.app_id === appId);
-  const canList = Boolean(user && selected?.owned && selected.owner_verification_level === "domain_verified" && result?.central !== null && inputs.currency === "USD");
+  const canList = Boolean(user && selected?.owned && selected.owner_verification_level === "domain_verified" && result?.central != null && inputs.currency === "USD");
   const listingUrl = canList ? `/my-apps/${encodeURIComponent(appId)}?valuation_price=${Math.round(result!.central!)}#acquisition` : user ? appId ? `/my-apps/${encodeURIComponent(appId)}#acquisition` : "/your-apps" : "/login?next=%2Fsellmyapp";
   const required = numberFields.filter((field) => field.required);
   const optional = numberFields.filter((field) => !field.required);
