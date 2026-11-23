@@ -210,6 +210,7 @@ export default function SellMyApp() {
       } catch { /* An unavailable icon leaves the Rocket-only card usable. */ }
     }
     const textLeft = iconVisible ? 195 : 60;
+    ctx.fillStyle = "#0369a1";
     ctx.font = "bold 25px Arial, sans-serif";
     ctx.fillText("YOUR APP’S ESTIMATED VALUE", textLeft, 270);
     const value = shareAmount && result.central !== null ? format(result.central, result.currency) : "What’s your app worth?";
