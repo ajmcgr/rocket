@@ -3,6 +3,13 @@ import { Link } from "@/lib/router-compat";
 import { acquisitionDb as db, askingPrice, type AcquisitionListing } from "@/lib/rocketAcquisition";
 import { track } from "@/lib/analytics";
 
+export function valuationPriceSuggestion(search: string): string {
+  const value = new URLSearchParams(search).get("valuation_price");
+  if (!value || !/^\d{1,9}$/.test(value)) return "";
+  const amount = Number(value);
+  return amount >= 1 ? String(amount) : "";
+}
+
 export default function AcquisitionSettings({ appId }: { appId: string }) {
   const [listing, setListing] = useState<AcquisitionListing | null>(null);
   const [status, setStatus] = useState<AcquisitionListing["status"]>("not_for_sale");
@@ -23,8 +30,8 @@ export default function AcquisitionSettings({ appId }: { appId: string }) {
       if (!active) return;
       if (listingResult.error) { setError("Acquisition settings could not be loaded."); return; }
       const row = listingResult.data as AcquisitionListing | null;
-      setListing(row); setStatus(row?.status || "not_for_sale");
-      setPrice(row?.asking_price_cents ? String(row.asking_price_cents / 100) : "");
+      setListing(row); setStatus(row?.status || (valuationPriceSuggestion(window.location.search) ? "for_sale" : "not_for_sale"));
+      setPrice(row?.asking_price_cents ? String(row.asking_price_cents / 100) : row ? "" : valuationPriceSuggestion(window.location.search));
       setDescription(row?.description || ""); setReason(row?.reason_for_selling || ""); setBuyer(row?.preferred_buyer || "");
       if (!enquiryResult.error) setEnquiries(enquiryResult.count || 0);
     });
@@ -48,6 +55,8 @@ export default function AcquisitionSettings({ appId }: { appId: string }) {
       status, review_status: result.data, asking_price_cents: status === "for_sale" && amount !== null ? Math.round(amount * 100) : null,
       description: description.trim(), reason_for_selling: reason.trim(), preferred_buyer: buyer.trim() });
     track(status === "not_for_sale" ? "acquisition_listing_disabled" : "acquisition_listing_created", { app_id: appId });
+    if (!listing && valuationPriceSuggestion(window.location.search) && status !== "not_for_sale" && result.data === "approved")
+      track("valuation_listing_published", { app_id: appId });
     setNotice(status === "not_for_sale" ? "Listing disabled. Existing conversations remain in Inbox." :
       result.data === "approved" ? `Saved. ${askingPrice(status === "for_sale" && amount !== null ? Math.round(amount * 100) : null)}` :
       previousStatus === "not_for_sale" ? "Submitted for review. It will appear after approval." : "Changes submitted for review. Your listing is hidden until approved.");
@@ -55,6 +64,7 @@ export default function AcquisitionSettings({ appId }: { appId: string }) {
   return <section id="acquisition" className="mt-8 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Apps for Sale</h2>
     <p className="mt-1 text-sm text-neutral-600">Let potential buyers contact you on Rocket. Domain verification and a review are required before a listing appears. Rocket does not guarantee legal ownership.</p>
+    {!listing && valuationPriceSuggestion(typeof window !== "undefined" ? window.location.search : "") && <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-900">An illustrative valuation has been suggested as the asking price. Edit or clear it, then choose Save acquisition settings to submit for review.</p>}
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-medium">Acquisition status
         <select value={status} onChange={(event) => setStatus(event.target.value as AcquisitionListing["status"])} className="mt-1 block min-h-11 w-full rounded-xl border border-neutral-300 bg-white px-3">

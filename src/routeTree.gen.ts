@@ -40,11 +40,14 @@ import { Route as ReserveRouteImport } from './routes/reserve'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RisingRouteImport } from './routes/rising'
 import { Route as RocketIdRouteImport } from './routes/rocket-id'
+import { Route as SellmyappRouteImport } from './routes/sellmyapp'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ValuationRouteImport } from './routes/valuation'
+import { Route as ValuationMethodologyRouteImport } from './routes/valuation-methodology'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
@@ -302,6 +305,11 @@ const RocketIdRoute = RocketIdRouteImport.update({
   path: '/rocket-id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellmyappRoute = SellmyappRouteImport.update({
+  id: '/sellmyapp',
+  path: '/sellmyapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -325,6 +333,16 @@ const SubmitRoute = SubmitRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValuationRoute = ValuationRouteImport.update({
+  id: '/valuation',
+  path: '/valuation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValuationMethodologyRoute = ValuationMethodologyRouteImport.update({
+  id: '/valuation-methodology',
+  path: '/valuation-methodology',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -867,11 +885,14 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
+  '/sellmyapp': typeof SellmyappRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
   '/terms': typeof TermsRoute
+  '/valuation': typeof ValuationRoute
+  '/valuation-methodology': typeof ValuationMethodologyRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
   '/admin': typeof AppAdminRouteWithChildren
@@ -1005,11 +1026,14 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
+  '/sellmyapp': typeof SellmyappRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
   '/terms': typeof TermsRoute
+  '/valuation': typeof ValuationRoute
+  '/valuation-methodology': typeof ValuationMethodologyRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account': typeof AppAccountRoute
   '/admin': typeof AppAdminRouteWithChildren
@@ -1143,11 +1167,14 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/rising': typeof RisingRoute
   '/rocket-id': typeof RocketIdRoute
+  '/sellmyapp': typeof SellmyappRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/submit': typeof SubmitRoute
   '/terms': typeof TermsRoute
+  '/valuation': typeof ValuationRoute
+  '/valuation-methodology': typeof ValuationMethodologyRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
@@ -1283,11 +1310,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rising'
     | '/rocket-id'
+    | '/sellmyapp'
     | '/signup'
     | '/sitemap.xml'
     | '/start'
     | '/submit'
     | '/terms'
+    | '/valuation'
+    | '/valuation-methodology'
     | '/verify-email'
     | '/account'
     | '/admin'
@@ -1421,11 +1451,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rising'
     | '/rocket-id'
+    | '/sellmyapp'
     | '/signup'
     | '/sitemap.xml'
     | '/start'
     | '/submit'
     | '/terms'
+    | '/valuation'
+    | '/valuation-methodology'
     | '/verify-email'
     | '/account'
     | '/admin'
@@ -1558,11 +1591,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rising'
     | '/rocket-id'
+    | '/sellmyapp'
     | '/signup'
     | '/sitemap.xml'
     | '/start'
     | '/submit'
     | '/terms'
+    | '/valuation'
+    | '/valuation-methodology'
     | '/verify-email'
     | '/_app/account'
     | '/_app/admin'
@@ -1698,11 +1734,14 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RisingRoute: typeof RisingRoute
   RocketIdRoute: typeof RocketIdRoute
+  SellmyappRoute: typeof SellmyappRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   SubmitRoute: typeof SubmitRoute
   TermsRoute: typeof TermsRoute
+  ValuationRoute: typeof ValuationRoute
+  ValuationMethodologyRoute: typeof ValuationMethodologyRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AppsIdRoute: typeof AppsIdRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1951,6 +1990,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RocketIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sellmyapp': {
+      id: '/sellmyapp'
+      path: '/sellmyapp'
+      fullPath: '/sellmyapp'
+      preLoaderRoute: typeof SellmyappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -1984,6 +2030,20 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/valuation': {
+      id: '/valuation'
+      path: '/valuation'
+      fullPath: '/valuation'
+      preLoaderRoute: typeof ValuationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/valuation-methodology': {
+      id: '/valuation-methodology'
+      path: '/valuation-methodology'
+      fullPath: '/valuation-methodology'
+      preLoaderRoute: typeof ValuationMethodologyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -2914,11 +2974,14 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RisingRoute: RisingRoute,
   RocketIdRoute: RocketIdRoute,
+  SellmyappRoute: SellmyappRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   SubmitRoute: SubmitRoute,
   TermsRoute: TermsRoute,
+  ValuationRoute: ValuationRoute,
+  ValuationMethodologyRoute: ValuationMethodologyRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AppsIdRoute: AppsIdRoute,
   AuthCallbackRoute: AuthCallbackRoute,
