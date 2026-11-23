@@ -1,0 +1,58 @@
+/* The valuation result and exported card keep Rocket's light palette even when
+   the rest of the site is using its dark appearance. */
+html.dark main.rocket-sell-page {
+  color: #0f172a;
+}
+
+html.dark main.rocket-sell-page .bg-white {
+  background-color: #fff !important;
+}
+
+html.dark main.rocket-sell-page .bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+
+html.dark main.rocket-sell-page .bg-sky-50 {
+  background-color: #f0f9ff !important;
+}
+
+html.dark main.rocket-sell-page .bg-amber-50 {
+  background-color: #fffbeb !important;
+}
+
+html.dark main.rocket-sell-page .text-slate-950,
+html.dark main.rocket-sell-page .text-slate-900 {
+  color: #0f172a !important;
+}
+
+html.dark main.rocket-sell-page .text-slate-700 {
+  color: #334155 !important;
+}
+
+html.dark main.rocket-sell-page .text-slate-600 {
+  color: #475569 !important;
+}
+
+html.dark main.rocket-sell-page .text-slate-500 {
+  color: #64748b !important;
+}
+
+html.dark main.rocket-sell-page .text-sky-700 {
+  color: #0369a1 !important;
+}
+
+html.dark main.rocket-sell-page .text-amber-900 {
+  color: #78350f !important;
+}
+
+html.dark main.rocket-sell-page .border-slate-200 {
+  border-color: #e2e8f0 !important;
+}
+
+html.dark main.rocket-sell-page .border-slate-300 {
+  border-color: #cbd5e1 !important;
+}
+
+html.dark main.rocket-sell-page .border-sky-200 {
+  border-color: #bae6fd !important;
+}
