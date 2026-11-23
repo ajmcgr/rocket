@@ -22,7 +22,7 @@ const numberFields: Array<{ key: keyof ValuationInputs; label: string; required?
   { key: "grossMarginPct", label: "Gross margin (%)", min: 0, max: 100 },
   { key: "monthlyChurnPct", label: "Monthly customer churn (%)", min: 0, max: 100, step: 0.1 },
   { key: "revenueConcentrationPct", label: "Revenue from largest customer (%)", min: 0, max: 100 },
-  { key: "organicTrafficPct", label: "Organic traffic share (%)", min: 0, max: 100 },
+  { key: "organicTrafficPct", label: "Organic traffic share (%)", min: 0, max: 100, step: 0.1 },
   { key: "annualRecurringRevenue", label: "Annual recurring revenue (optional override)", min: 0 },
   { key: "payingCustomers", label: "Paying customers", min: 0 },
   { key: "monthlyOperatingExpenses", label: "Monthly operating expenses", min: 0 },
