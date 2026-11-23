@@ -127,10 +127,10 @@ describe("Sidebar destinations", () => {
           ).toBe("/create");
           expect(sidebar.getByText("Monetize")).toBeTruthy();
           expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
-          const rocketId = sidebar.getByRole("link", { name: "Rocket ID" });
           const sell = sidebar.getByRole("link", { name: "Sell my App" });
+          const advertise = sidebar.getByRole("link", { name: "Advertise" });
           expect(sell.getAttribute("href")).toBe("/sell");
-          expect(rocketId.compareDocumentPosition(sell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+          expect(sell.compareDocumentPosition(advertise) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
           expect(sidebar.getByText("Create")).toBeTruthy();
         } else {
           expect(sidebar.queryByText("Grow")).toBeNull();
@@ -150,7 +150,10 @@ describe("Sidebar destinations", () => {
           expect(sidebar.queryByRole("link", { name: "Rocket ID" })).toBeNull();
           expect(sidebar.getByText("Monetize")).toBeTruthy();
           expect(sidebar.getByRole("link", { name: "Advertise" }).getAttribute("href")).toBe("/advertise");
-          expect(sidebar.getByRole("link", { name: "Sell my App" }).getAttribute("href")).toBe("/sell");
+          const sell = sidebar.getByRole("link", { name: "Sell my App" });
+          const advertise = sidebar.getByRole("link", { name: "Advertise" });
+          expect(sell.getAttribute("href")).toBe("/sell");
+          expect(sell.compareDocumentPosition(advertise) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
           expect(sidebar.queryByText("Create")).toBeNull();
         }
         expect(
