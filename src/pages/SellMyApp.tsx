@@ -275,7 +275,7 @@ export default function SellMyApp() {
           <button type="button" onClick={() => setShareOpen(true)} className="mt-5 min-h-11 rounded-xl bg-sky-700 px-5 font-semibold text-white">Open share card</button>
         </div>
         <Dialog open={shareOpen} onOpenChange={(open) => { setShareOpen(open); if (!open) setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 0); }}>
-          <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto bg-white p-5 text-slate-950 sm:p-8">
+          <DialogContent motion="gentle" className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto bg-white p-5 text-slate-950 sm:p-8">
             <DialogHeader className="pr-8"><DialogTitle className="text-xl font-bold">Share your valuation</DialogTitle>
               <DialogDescription className="text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown. Add an app name for the card, or enter an App URL to show its domain and public icon.</DialogDescription></DialogHeader>
           <div className="relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
