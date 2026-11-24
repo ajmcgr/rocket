@@ -41,7 +41,6 @@ export default function SellMyApp() {
   const [advanced, setAdvanced] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState<"stripe" | "ga4" | null>(null);
   const [evidence, setEvidence] = useState({ stripe: false, ga4: false });
   const [ga4Period, setGa4Period] = useState("");
@@ -131,30 +130,6 @@ export default function SellMyApp() {
       setResult(next); setShareOpen(true);
       track("valuation_completed", { basis: next.basis, confidence: next.confidence, has_rocket_app: Boolean(appId) });
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Please check your inputs."); }
-  };
-  const save = async () => {
-    if (!user || !result) return;
-    setBusy(true); setError(""); setNotice("");
-    if (evidence.stripe || evidence.ga4) {
-      if (!appId) { setBusy(false); setError("Select your verified Rocket app before saving connected metrics."); return; }
-      const { data, error: verifiedError } = await supabase.functions.invoke("rocket-valuation", {
-        body: { action: "save", app_id: appId, inputs, evidence } });
-      setBusy(false);
-      if (verifiedError || !data?.valuation) { setError(data?.error || "Could not verify the imported metrics. Reimport and try again."); return; }
-      setHistory((current) => [data.valuation as Saved, ...current].slice(0, 30));
-      setNotice("Saved privately with verified provider sources."); track("valuation_saved", { has_rocket_app: true, verified: true });
-      return;
-    }
-    const row = { user_id: user.id, app_id: appId || null, inputs, result, currency: inputs.currency,
-      low_amount: result.low, central_amount: result.central, high_amount: result.high,
-      confidence: result.confidence, model_version: result.modelVersion,
-      data_sources: ["manual"], verification_status: "manual" };
-    const { data, error: saveError } = await db.from("rocket_valuations").insert(row)
-      .select("id,app_id,inputs,result,calculated_at").single();
-    setBusy(false);
-    if (saveError) { setError("Could not save this private valuation. Please try again."); return; }
-    setHistory((current) => [data as Saved, ...current].slice(0, 30));
-    setNotice("Saved privately to your Rocket account."); track("valuation_saved", { has_rocket_app: Boolean(appId) });
   };
   const remove = async (id: string) => {
     const { error: deleteError } = await db.from("rocket_valuations").delete().eq("id", id);
@@ -335,7 +310,6 @@ export default function SellMyApp() {
         <div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Why this estimate?</h3><p className="mt-3 text-sm leading-6 text-slate-600">{result.methodology}</p><h4 className="mt-6 font-semibold">Key drivers</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{(result.drivers.length ? result.drivers : ["No positive drivers were supplied yet."]).map((item) => <li key={item}>{item}</li>)}</ul><h4 className="mt-6 font-semibold">Principal risks</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.risks.map((item) => <li key={item}>{item}</li>)}</ul></div>
           <div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Your inputs</h3><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="text-slate-500">MRR</dt><dd className="font-semibold">{format(inputs.mrr, inputs.currency)}</dd></div><div><dt className="text-slate-500">Monthly sessions</dt><dd className="font-semibold">{inputs.monthlyTraffic.toLocaleString()}</dd></div>{result.evidence.ga4 && monthlyActiveUsers !== null && <div><dt className="text-slate-500">Monthly active users</dt><dd className="font-semibold">{monthlyActiveUsers.toLocaleString()}</dd></div>}<div><dt className="text-slate-500">Revenue growth</dt><dd className="font-semibold">{inputs.monthlyRevenueGrowthPct}%</dd></div><div><dt className="text-slate-500">Operating history</dt><dd className="font-semibold">{inputs.ageMonths} months</dd></div>{inputs.monthlyProfit !== undefined && <div><dt className="text-slate-500">Monthly profit</dt><dd className="font-semibold">{format(inputs.monthlyProfit, inputs.currency)}</dd></div>}</dl><p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Data status: {result.evidence.stripe ? "MRR verified through Stripe. " : "Revenue manually entered. "}{result.evidence.ga4 ? `Sessions and traffic sources verified through Google Analytics${ga4Period ? ` (${ga4Period})` : ""}. ` : "Traffic manually entered. "}Other fields remain self-reported. This is an illustrative estimate.</p><h4 className="mt-6 font-semibold">How to strengthen the business</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.suggestions.map((item) => <li key={item}>{item}</li>)}</ul></div></div>
         <details className="rounded-2xl border bg-white p-6"><summary className="cursor-pointer font-semibold">Methodology and assumptions</summary><ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-600">{result.assumptions.map((item) => <li key={item}>{item}</li>)}</ul><p className="mt-4 text-sm text-slate-600">This is an estimate, not a formal appraisal or guaranteed sale price. <a href="/valuation-methodology" className="text-sky-700 underline">Read the full methodology</a>.</p></details>
-        {user ? <button disabled={busy} onClick={() => void save()} className="min-h-12 rounded-xl border border-sky-700 px-6 font-semibold text-sky-700 disabled:opacity-50">{busy ? "Saving…" : "Save privately to my account"}</button> : <a href="/login?next=%2Fsell" onClick={() => track("valuation_signup_started")} className="inline-flex min-h-12 items-center rounded-xl border border-sky-700 px-6 font-semibold text-sky-700">Sign in to save this valuation</a>}
       </section>}
       {user && history.length > 0 && <section className="mt-12"><h2 className="text-2xl font-bold">Your private history</h2><p className="mt-2 text-sm text-slate-600">Only you can see these saved estimates. Recalculate with current inputs to compare over time.</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{history.map((entry) => <div key={entry.id} className="rounded-2xl border bg-white p-5"><p className="text-sm text-slate-500">{new Date(entry.calculated_at).toLocaleDateString()}</p><h3 className="mt-2 font-semibold">{entry.inputs.appName || "Unnamed app"}</h3><p className="mt-2 text-xl font-bold">{entry.result.central === null ? "Insufficient evidence" : format(entry.result.central, entry.result.currency)}</p><div className="mt-4 flex gap-4 text-sm"><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setEvidence(entry.result.evidence); setMonthlyActiveUsers(null); setGa4Period(""); setResult(entry.result); resultsRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">View</button><button onClick={() => { setInputs(entry.inputs); setAppId(entry.app_id && apps.some((item) => item.app_id === entry.app_id) ? entry.app_id : ""); setEvidence({ stripe: false, ga4: false }); setMonthlyActiveUsers(null); setGa4Period(""); setResult(null); formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="font-semibold text-sky-700">Recalculate</button><button onClick={() => void remove(entry.id)} className="font-semibold text-red-700">Delete</button></div></div>)}</div></section>}
       <section className="mt-16 max-w-3xl"><h2 className="text-2xl font-bold">Common questions</h2><div className="mt-5 space-y-3">{[
