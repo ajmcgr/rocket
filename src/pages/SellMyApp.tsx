@@ -8,6 +8,7 @@ import { track } from "@/lib/analytics";
 import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type ValuationResult } from "@/lib/rocketValuation";
 import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
 import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
+import { acquisitionDb } from "@/lib/rocketAcquisition";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import "./SellMyApp.css";
 
@@ -45,6 +46,7 @@ export default function SellMyApp() {
   const [monthlyActiveUsers, setMonthlyActiveUsers] = useState<number | null>(null);
   const [iconBroken, setIconBroken] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [listedForSale, setListedForSale] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLElement>(null);
   const startedRef = useRef(false);
@@ -52,8 +54,21 @@ export default function SellMyApp() {
   const appDomain = appIconSource ? new URL(inputs.appUrl || "").hostname.replace(/^www\./i, "") : "";
   const shareDisplayName = inputs.appName?.trim() || appDomain || "Your app";
   const hasSharedAppIdentity = Boolean(inputs.appName?.trim() || appDomain);
+  const selected = apps.find((app) => app.app_id === appId);
+  const shareBadge = listedForSale && Boolean(selected?.app) && selected?.app?.name === inputs.appName && selected?.app?.website_url === inputs.appUrl
+    ? "For Sale" : "Estimated Value";
 
   useEffect(() => { setIconBroken(false); }, [appIconSource]);
+  useEffect(() => {
+    setListedForSale(false);
+    if (!appId) return;
+    let active = true;
+    void acquisitionDb.from("public_rocket_acquisition_listings").select("status").eq("app_id", appId).maybeSingle()
+      .then(({ data }: { data: { status: string } | null }) => {
+        if (active) setListedForSale(data?.status === "for_sale");
+      }).catch(() => { if (active) setListedForSale(false); });
+    return () => { active = false; };
+  }, [appId]);
 
   useEffect(() => { track("valuation_page_viewed", { route: "/sell" }); }, []);
   useEffect(() => {
@@ -151,11 +166,11 @@ export default function SellMyApp() {
     try { await logo.decode(); ctx.drawImage(logo, 60, 49, 240, 84); }
     catch { ctx.fillStyle = "#0284c7"; ctx.font = "bold 52px Arial, sans-serif"; ctx.fillText("rocket", 60, 108); }
     ctx.fillStyle = "#f0f9ff";
-    ctx.beginPath(); ctx.roundRect(925, 60, 215, 50, 25); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(870, 60, 270, 50, 25); ctx.fill();
     ctx.fillStyle = "#0369a1";
     ctx.font = "bold 20px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("For Sale", 1032, 92);
+    ctx.fillText(shareBadge, 1005, 92);
     ctx.textAlign = "left";
     let iconVisible = false;
     if (appIconSource && !iconBroken) {
@@ -186,7 +201,7 @@ export default function SellMyApp() {
     ctx.font = "bold 23px Arial, sans-serif";
     ctx.fillText("YOUR APP’S ESTIMATED VALUE", textLeft, 320);
     const value = result.central !== null ? format(result.central, result.currency) : "What’s your app worth?";
-    let fontSize = result.central !== null ? 104 : 78;
+    let fontSize = result.central !== null ? 94 : 72;
     do { ctx.font = `bold ${fontSize}px Arial, sans-serif`; fontSize -= 2; } while (ctx.measureText(value).width > 1140 - textLeft && fontSize > 32);
     ctx.fillStyle = "#0f172a";
     ctx.fillText(value, textLeft, 435);
@@ -230,7 +245,6 @@ export default function SellMyApp() {
       setError("The share image could not be generated. Please try again.");
     }
   };
-  const selected = apps.find((app) => app.app_id === appId);
   const canList = Boolean(user && selected?.owned && selected.owner_verification_level === "domain_verified" && result?.central != null && inputs.currency === "USD");
   const listingUrl = canList ? `/my-apps/${encodeURIComponent(appId)}?valuation_price=${Math.round(result!.central!)}#acquisition` : user ? appId ? `/my-apps/${encodeURIComponent(appId)}#acquisition` : "/your-apps" : "/login?next=%2Fsell";
   const required = numberFields.filter((field) => field.required);
@@ -279,8 +293,8 @@ export default function SellMyApp() {
             <DialogHeader className="pr-8"><DialogTitle className="text-xl font-bold">Share your valuation</DialogTitle>
               <DialogDescription className="text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown. Add an app name for the card, or enter an App URL to show its domain and public icon.</DialogDescription></DialogHeader>
           <div className="relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
-            <div className="flex items-start justify-between gap-4"><img src="/rocket-email-logo.png" alt="Rocket" style={{ width: "21cqw" }} /><span className="rounded-full bg-sky-50 px-[2.2cqw] py-[1cqw] font-semibold text-sky-700" style={{ fontSize: "2cqw" }}>For Sale</span></div>
-            <div className="flex min-w-0 items-center gap-[2cqw]">{appIconSource && !iconBroken && <div className="flex h-[10cqw] w-[10cqw] shrink-0 items-center justify-center rounded-[2cqw] border border-slate-200 bg-slate-50 p-[1cqw]"><img crossOrigin="anonymous" referrerPolicy="no-referrer" src={appIconSource} alt={`${inputs.appName || "App"} icon`} onError={() => setIconBroken(true)} className="h-full w-full object-contain" /></div>}<div className="min-w-0"><h4 className="truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "5cqw" }}>{shareDisplayName}</h4><p className="mt-[2cqw] font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2cqw" }}>Your app’s estimated value</p><p className="mt-[1cqw] truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "8cqw" }}>{result.central !== null ? format(result.central, result.currency) : "What’s your app worth?"}</p></div></div>
+            <div className="flex items-start justify-between gap-4"><img src="/rocket-email-logo.png" alt="Rocket" style={{ width: "21cqw" }} /><span className="rounded-full bg-sky-50 px-[2.2cqw] py-[1cqw] font-semibold text-sky-700" style={{ fontSize: "2cqw" }}>{shareBadge}</span></div>
+            <div className="flex min-w-0 items-center gap-[2cqw]">{appIconSource && !iconBroken && <div className="flex h-[10cqw] w-[10cqw] shrink-0 items-center justify-center rounded-[2cqw] border border-slate-200 bg-slate-50 p-[1cqw]"><img crossOrigin="anonymous" referrerPolicy="no-referrer" src={appIconSource} alt={`${inputs.appName || "App"} icon`} onError={() => setIconBroken(true)} className="h-full w-full object-contain" /></div>}<div className="min-w-0"><h4 className="truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "5cqw" }}>{shareDisplayName}</h4><p className="mt-[2cqw] font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2cqw" }}>Your app’s estimated value</p><p className="mt-[1cqw] truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "7.3cqw" }}>{result.central !== null ? format(result.central, result.currency) : "What’s your app worth?"}</p></div></div>
             <div className="flex items-end justify-between gap-4 border-t border-slate-200 pt-[2cqw] text-slate-600" style={{ fontSize: "1.9cqw" }}><span>Illustrative estimate · Not an offer or appraisal</span><span className="shrink-0 font-semibold text-sky-700">tryrocket.ai/sell</span></div>
           </div>
           <div className="mt-5 flex flex-wrap gap-3"><button type="button" onClick={() => void shareCard()} className="min-h-11 rounded-xl bg-sky-700 px-5 font-semibold text-white">Share image</button><button type="button" onClick={() => void download()} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Download PNG</button><button type="button" onClick={() => share("x")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on X</button><button type="button" onClick={() => share("reddit")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on Reddit</button><button type="button" onClick={() => share("linkedin")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on LinkedIn</button></div>
