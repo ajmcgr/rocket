@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppProfileRouteSkeleton } from "@/components/MarketplaceLoadingSkeletons";
 import { loadAppMedia } from "@/lib/appMedia";
 import { shareCardUrl, shareCardVersion } from "@/lib/shareLinks";
+import { selectSimilarApps } from "@/lib/similarApps";
 
 const siteUrl = "https://tryrocket.ai";
 const Profile = lazy(() => import("@/pages/PublicAppProfile"));
@@ -39,8 +40,17 @@ export const Route = createFileRoute("/apps/$id")({
     }
     // Primary gallery metadata reserves its final geometry in the SSR response.
     // Images still load responsively/lazily; reviews/evidence remain independent.
-    const media = (await loadAppMedia([data.id], false)).get(data.id) || [];
-    return { app: data, media };
+    const [media, related] = await Promise.all([
+      loadAppMedia([data.id], false),
+      data.categories?.length
+        ? supabase.from("public_discoverable_apps").select("*")
+            .contains("categories", [data.categories[0]])
+            .neq("id", data.id)
+            .order("launched_at", { ascending: false, nullsFirst: false })
+            .limit(8)
+        : Promise.resolve({ data: [] }),
+    ]);
+    return { app: data, media: media.get(data.id) || [], similar: selectSimilarApps(data, related.data || []) };
   },
   head: ({ loaderData }) => {
     const app = loaderData?.app;
@@ -80,12 +90,12 @@ export const Route = createFileRoute("/apps/$id")({
     };
   },
   component: AppProfileRoute,
-  notFoundComponent: () => <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={null} initialMedia={[]} /></Suspense>,
+  notFoundComponent: () => <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={null} initialMedia={[]} initialSimilar={[]} /></Suspense>,
 });
 
 function AppProfileRoute() {
-  const { app, media } = Route.useLoaderData();
-  if (!app) return <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} /></Suspense>;
+  const { app, media, similar } = Route.useLoaderData();
+  if (!app) return <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} initialSimilar={similar} /></Suspense>;
   const canonical = `${siteUrl}/apps/${app.slug || app.id}`;
   const description = app.description?.trim() || app.tagline?.trim() || undefined;
   const category = app.categories?.[0] || undefined;
@@ -111,6 +121,6 @@ function AppProfileRoute() {
   ];
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
-    <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} /></Suspense>
+    <Suspense fallback={<AppProfileRouteSkeleton />}><Profile initialApp={app} initialMedia={media} initialSimilar={similar} /></Suspense>
   </>;
 }
