@@ -94,6 +94,12 @@ it("includes useful profile identity in server-rendered HTML", () => {
   expect(html).toContain("Visit website");
   expect(html).not.toContain('aria-label="Loading app profile"');
 });
+it("renders related app links in the initial HTML", () => {
+  const related = { ...app, id: "app2", slug: "related-app", name: "Related App" };
+  const html = renderToStaticMarkup(<PublicAppProfile initialApp={app} initialSimilar={[related]} />);
+  expect(html).toContain('href="/apps/related-app"');
+  expect(html).toContain("Related App");
+});
 it("attributes website visits to Rocket without changing the original destination query", () => {
   render(<PublicAppProfile initialApp={{ ...app, website_url: "https://whisperit.ai/?plan=pro#signup" }} />);
   expect(screen.getByRole("link", { name: "Visit website", exact: true }).getAttribute("href")).toBe("https://whisperit.ai/?plan=pro&utm_source=rocket&utm_medium=referral&utm_campaign=app_listing#signup");

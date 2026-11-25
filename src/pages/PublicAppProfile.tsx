@@ -57,6 +57,7 @@ import AppAgentIntegrations, {
 } from "@/components/AppAgentIntegrations";
 import AppAcquisitionCard from "@/components/AppAcquisitionCard";
 import { APP_CATEGORIES } from "@/lib/appCategories";
+import { selectSimilarApps } from "@/lib/similarApps";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -92,7 +93,8 @@ const destinationLabel = (url: string) => {
 export default function PublicAppProfile({
   initialApp,
   initialMedia,
-}: { initialApp?: App | null; initialMedia?: PublicAppMedia[] } = {}) {
+  initialSimilar,
+}: { initialApp?: App | null; initialMedia?: PublicAppMedia[]; initialSimilar?: App[] } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -111,7 +113,7 @@ export default function PublicAppProfile({
   const [signals, setSignals] = useState<AppSignal[]>([]);
   const [trust, setTrust] = useState<AppTrust | null>(null);
   const [media, setMedia] = useState<PublicAppMedia[]>(initialMedia || []);
-  const [similar, setSimilar] = useState<App[]>([]);
+  const [similar, setSimilar] = useState<App[]>(initialSimilar || []);
   const similarSaveControls = useSavedAppControls(
     similar.map((item) => item.id),
   );
@@ -317,6 +319,10 @@ export default function PublicAppProfile({
       setSimilar([]);
       return;
     }
+    if (initialSimilar && initialApp?.id === app.id) {
+      setSimilar(initialSimilar);
+      return;
+    }
     let canceled = false;
     supabase
       .from("public_discoverable_apps")
@@ -327,26 +333,12 @@ export default function PublicAppProfile({
       .limit(8)
       .then(({ data }) => {
         if (canceled) return;
-        const tags = new Set(app.tags);
-        setSimilar(
-          (data || [])
-            .sort((left, right) => {
-              const score = (candidate: App) =>
-                candidate.tags.filter((tag) => tags.has(tag)).length * 2 +
-                candidate.platforms.filter((platform) =>
-                  app.platforms.includes(platform),
-                ).length;
-              return (
-                score(right) - score(left) || left.id.localeCompare(right.id)
-              );
-            })
-            .slice(0, 4),
-        );
+        setSimilar(selectSimilarApps(app, data || []));
       });
     return () => {
       canceled = true;
     };
-  }, [app]);
+  }, [app, initialApp?.id, initialSimilar]);
 
   useEffect(() => {
     let canceled = false;
