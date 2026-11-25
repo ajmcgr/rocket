@@ -95,6 +95,7 @@ export type AnalyticsEvent =
   | "acquisition_enquiry_initiated"
   | "acquisition_listing_created"
   | "acquisition_listing_disabled"
+  | "acquisition_offer_submitted"
   | "rocket_message_sent"
   | "valuation_page_viewed"
   | "valuation_started"
