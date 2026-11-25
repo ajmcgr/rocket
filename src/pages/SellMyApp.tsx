@@ -9,6 +9,7 @@ import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type Valuati
 import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
 import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
 import { acquisitionDb } from "@/lib/rocketAcquisition";
+import AcquisitionSettings from "@/components/AcquisitionSettings";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import "./SellMyApp.css";
 
@@ -50,6 +51,7 @@ export default function SellMyApp() {
   const resultsRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLElement>(null);
   const startedRef = useRef(false);
+  const listingStartedRef = useRef(false);
   const appIconSource = valuationShareIconUrl(inputs.appUrl);
   const appDomain = appIconSource ? new URL(inputs.appUrl || "").hostname.replace(/^www\./i, "") : "";
   const shareDisplayName = inputs.appName?.trim() || appDomain || "Your app";
@@ -80,6 +82,7 @@ export default function SellMyApp() {
 
   const selectApp = (id: string) => {
     setAppId(id);
+    listingStartedRef.current = false;
     setEvidence({ stripe: false, ga4: false }); setGa4Period(""); setMonthlyActiveUsers(null);
     const item = apps.find((app) => app.app_id === id);
     if (item?.app) {
@@ -200,7 +203,7 @@ export default function SellMyApp() {
     ctx.fillStyle = "#0369a1";
     ctx.font = "bold 23px Arial, sans-serif";
     ctx.fillText("YOUR APP’S ESTIMATED VALUE", textLeft, 320);
-    const value = result.central !== null ? format(result.central, result.currency) : "What’s your app worth?";
+    const value = result.central !== null ? format(result.central, result.currency) : "Value unavailable";
     let fontSize = result.central !== null ? 94 : 72;
     do { ctx.font = `bold ${fontSize}px Arial, sans-serif`; fontSize -= 2; } while (ctx.measureText(value).width > 1140 - textLeft && fontSize > 32);
     ctx.fillStyle = "#0f172a";
@@ -245,8 +248,13 @@ export default function SellMyApp() {
       setError("The share image could not be generated. Please try again.");
     }
   };
-  const canList = Boolean(user && selected?.owned && selected.owner_verification_level === "domain_verified" && result?.central != null && inputs.currency === "USD");
-  const listingUrl = canList ? `/my-apps/${encodeURIComponent(appId)}?valuation_price=${Math.round(result!.central!)}#acquisition` : user ? appId ? `/my-apps/${encodeURIComponent(appId)}#acquisition` : "/your-apps" : "/login?next=%2Fsell";
+  const canManageListing = Boolean(user && selected?.owned && selected.owner_verification_level === "domain_verified");
+  const suggestedAskingPrice = inputs.currency === "USD" && result?.central != null ? Math.round(result.central) : null;
+  const markListingStarted = () => {
+    if (listingStartedRef.current) return;
+    listingStartedRef.current = true;
+    track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: suggestedAskingPrice !== null });
+  };
   const required = numberFields.filter((field) => field.required);
   const optional = numberFields.filter((field) => !field.required);
   const field = ({ key, label, min, max, step }: typeof numberFields[number]) => <label key={key} className="block text-sm font-medium text-slate-700">{label}
@@ -256,7 +264,7 @@ export default function SellMyApp() {
   return <div className="min-h-screen bg-[#f5f8fc] text-slate-950"><SiteHeader />
     <main className="rocket-sell-page mx-auto max-w-6xl px-5 pb-24 sm:px-8">
       <section className="grid gap-10 py-14 lg:grid-cols-[1.2fr_.8fr] lg:items-center lg:py-20">
-        <div><h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">What’s your app worth?</h1>
+        <div><h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">Sell my app</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">Discover what your software could sell for. Get an instant estimate based on revenue, growth and traffic.</p>
           <div className="mt-8 flex flex-wrap gap-3"><button onClick={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl bg-sky-700 px-6 font-semibold text-white hover:bg-sky-800">Calculate valuation</button>
             <button onClick={() => { if (!user) { track("valuation_signup_started"); window.location.href = "/login?next=%2Fsell"; } else formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Connect my app</button></div>
@@ -278,7 +286,7 @@ export default function SellMyApp() {
           {required.map(field)}
         </div><button type="button" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)} className="mt-7 text-sm font-semibold text-sky-700">{advanced ? "Hide" : "Show"} advanced inputs ↓</button>
           {advanced && <div className="mt-5 grid gap-5 rounded-2xl bg-slate-50 p-5 sm:grid-cols-2">{optional.map(field)}<label className="text-sm font-medium text-slate-700">Platform dependence<select value={inputs.platformDependence || ""} onChange={(event) => setInputs({ ...inputs, platformDependence: event.target.value as ValuationInputs["platformDependence"] || undefined })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="">Not provided</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label className="text-sm font-medium text-slate-700">Operational complexity<select value={inputs.operationalComplexity || ""} onChange={(event) => setInputs({ ...inputs, operationalComplexity: event.target.value as ValuationInputs["operationalComplexity"] || undefined })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="">Not provided</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label></div>}
-          <div className="mt-8 flex flex-wrap items-center gap-4"><button type="submit" className="min-h-12 rounded-xl bg-sky-700 px-7 font-semibold text-white hover:bg-sky-800">Calculate my valuation</button><p className="text-sm text-slate-500">Manual inputs stay in your browser unless you choose Save.</p></div>
+          <div className="mt-8 flex flex-wrap items-center gap-4"><button type="submit" className="min-h-12 rounded-xl bg-sky-700 px-7 font-semibold text-white hover:bg-sky-800">Calculate my valuation</button><p className="text-sm text-slate-500">Calculator inputs stay in your browser. Submitting a sale listing is a separate step.</p></div>
         </form>
       </section>
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}{notice && <p role="status" className="mt-5 rounded-xl bg-sky-50 p-4 text-sky-800">{notice}</p>}
@@ -294,7 +302,7 @@ export default function SellMyApp() {
               <DialogDescription className="text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown. Add an app name for the card, or enter an App URL to show its domain and public icon.</DialogDescription></DialogHeader>
           <div className="relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
             <div className="flex items-start justify-between gap-4"><img src="/rocket-email-logo.png" alt="Rocket" style={{ width: "21cqw" }} /><span className="rounded-full bg-sky-50 px-[2.2cqw] py-[1cqw] font-semibold text-sky-700" style={{ fontSize: "2cqw" }}>{shareBadge}</span></div>
-            <div className="flex min-w-0 items-center gap-[2cqw]">{appIconSource && !iconBroken && <div className="flex h-[10cqw] w-[10cqw] shrink-0 items-center justify-center rounded-[2cqw] border border-slate-200 bg-slate-50 p-[1cqw]"><img crossOrigin="anonymous" referrerPolicy="no-referrer" src={appIconSource} alt={`${inputs.appName || "App"} icon`} onError={() => setIconBroken(true)} className="h-full w-full object-contain" /></div>}<div className="min-w-0"><h4 className="truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "5cqw" }}>{shareDisplayName}</h4><p className="mt-[2cqw] font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2cqw" }}>Your app’s estimated value</p><p className="mt-[1cqw] truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "7.3cqw" }}>{result.central !== null ? format(result.central, result.currency) : "What’s your app worth?"}</p></div></div>
+            <div className="flex min-w-0 items-center gap-[2cqw]">{appIconSource && !iconBroken && <div className="flex h-[10cqw] w-[10cqw] shrink-0 items-center justify-center rounded-[2cqw] border border-slate-200 bg-slate-50 p-[1cqw]"><img crossOrigin="anonymous" referrerPolicy="no-referrer" src={appIconSource} alt={`${inputs.appName || "App"} icon`} onError={() => setIconBroken(true)} className="h-full w-full object-contain" /></div>}<div className="min-w-0"><h4 className="truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "5cqw" }}>{shareDisplayName}</h4><p className="mt-[2cqw] font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2cqw" }}>Your app’s estimated value</p><p className="mt-[1cqw] truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "7.3cqw" }}>{result.central !== null ? format(result.central, result.currency) : "Value unavailable"}</p></div></div>
             <div className="flex items-end justify-between gap-4 border-t border-slate-200 pt-[2cqw] text-slate-600" style={{ fontSize: "1.9cqw" }}><span>Illustrative estimate · Not an offer or appraisal</span><span className="shrink-0 font-semibold text-sky-700">tryrocket.ai/sell</span></div>
           </div>
           <div className="mt-5 flex flex-wrap gap-3"><button type="button" onClick={() => void shareCard()} className="min-h-11 rounded-xl bg-sky-700 px-5 font-semibold text-white">Share image</button><button type="button" onClick={() => void download()} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Download PNG</button><button type="button" onClick={() => share("x")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on X</button><button type="button" onClick={() => share("reddit")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on Reddit</button><button type="button" onClick={() => share("linkedin")} className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-900">Post on LinkedIn</button></div>
@@ -306,7 +314,21 @@ export default function SellMyApp() {
           {result.central !== null ? <><h2 className="mt-6 text-5xl font-bold tracking-tight text-slate-950 sm:text-7xl">{format(result.central, result.currency)}</h2><p className="mt-3 text-lg text-slate-600">Illustrative range: {format(result.low!, result.currency)} – {format(result.high!, result.currency)}</p><div className="mt-8 grid gap-3 sm:grid-cols-3"><div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">Low<br /><strong className="text-xl text-slate-950">{format(result.low!, result.currency)}</strong></div><div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">Central<br /><strong className="text-xl text-slate-950">{format(result.central, result.currency)}</strong></div><div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">High<br /><strong className="text-xl text-slate-950">{format(result.high!, result.currency)}</strong></div></div></> : <><h2 className="mt-6 text-3xl font-bold">More evidence needed</h2><p className="mt-3 max-w-2xl text-slate-600">A pre-revenue app can be valuable, but traffic alone cannot support a defensible sale-price estimate. Add profit or recurring revenue history as it develops.</p></>}
           <p className="mt-7 text-sm text-slate-600">Confidence: <strong className="capitalize">{result.confidence}</strong> · {result.basis === "annual_profit" ? "Annual profit" : result.basis === "annual_recurring_revenue" ? "Annual recurring revenue" : "Insufficient financial evidence"}{result.impliedMultiple !== null && ` · ${result.impliedMultiple.toFixed(2)}× basis`}</p>
         </div>
-        <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Rocket Marketplace</p><h3 className="mt-2 text-2xl font-bold">Thinking about selling?</h3><p className="mt-2 text-slate-600">Rocket helps founders buy and sell software. Your estimated midpoint can be a starting asking price, which you can edit before submitting for review.</p><div className="mt-5 flex flex-wrap gap-3"><a href={listingUrl} onClick={() => track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: canList })} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">List my app for sale</a><a href="/marketplace" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Explore Marketplace</a></div>{!canList && <p className="mt-3 text-sm text-slate-600">To prefill a listing, select a domain-verified Rocket app and calculate in USD. The existing seller review still applies.</p>}</div>
+        {canManageListing ? <div onFocusCapture={markListingStarted}>
+          {inputs.currency !== "USD" && <p className="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Rocket Marketplace listings use USD. You can enter a USD asking price below or leave it blank.</p>}
+          <AcquisitionSettings key={`${appId}:${suggestedAskingPrice ?? "none"}`} appId={appId} suggestedPrice={suggestedAskingPrice} startForSale title="Sell my app" />
+        </div> : <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-sky-700">Rocket Marketplace</p>
+          <h2 className="mt-2 text-2xl font-bold">Sell my app</h2>
+          <p className="mt-2 text-slate-600">To list your app, sign in and verify ownership of its domain. You can then submit the listing for review; an asking price is optional.</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {!user ? <a href="/login?next=%2Fsell" className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Sign in to sell</a>
+              : appId ? <a href={`/my-apps/${encodeURIComponent(appId)}#verification`} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Verify this app</a>
+              : <button type="button" onClick={() => formRef.current?.scrollIntoView({ behavior: "smooth" })} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Choose my app</button>}
+            <a href="/submit" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Submit an app</a>
+          </div>
+          <p className="mt-3 text-sm text-slate-600">After selecting or verifying your app, calculate again to open the listing form here.</p>
+        </div>}
         <div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Why this estimate?</h3><p className="mt-3 text-sm leading-6 text-slate-600">{result.methodology}</p><h4 className="mt-6 font-semibold">Key drivers</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{(result.drivers.length ? result.drivers : ["No positive drivers were supplied yet."]).map((item) => <li key={item}>{item}</li>)}</ul><h4 className="mt-6 font-semibold">Principal risks</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.risks.map((item) => <li key={item}>{item}</li>)}</ul></div>
           <div className="rounded-2xl border bg-white p-6"><h3 className="text-xl font-bold">Your inputs</h3><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="text-slate-500">MRR</dt><dd className="font-semibold">{format(inputs.mrr, inputs.currency)}</dd></div><div><dt className="text-slate-500">Monthly sessions</dt><dd className="font-semibold">{inputs.monthlyTraffic.toLocaleString()}</dd></div>{result.evidence.ga4 && monthlyActiveUsers !== null && <div><dt className="text-slate-500">Monthly active users</dt><dd className="font-semibold">{monthlyActiveUsers.toLocaleString()}</dd></div>}<div><dt className="text-slate-500">Revenue growth</dt><dd className="font-semibold">{inputs.monthlyRevenueGrowthPct}%</dd></div><div><dt className="text-slate-500">Operating history</dt><dd className="font-semibold">{inputs.ageMonths} months</dd></div>{inputs.monthlyProfit !== undefined && <div><dt className="text-slate-500">Monthly profit</dt><dd className="font-semibold">{format(inputs.monthlyProfit, inputs.currency)}</dd></div>}</dl><p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Data status: {result.evidence.stripe ? "MRR verified through Stripe. " : "Revenue manually entered. "}{result.evidence.ga4 ? `Sessions and traffic sources verified through Google Analytics${ga4Period ? ` (${ga4Period})` : ""}. ` : "Traffic manually entered. "}Other fields remain self-reported. This is an illustrative estimate.</p><h4 className="mt-6 font-semibold">How to strengthen the business</h4><ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700">{result.suggestions.map((item) => <li key={item}>{item}</li>)}</ul></div></div>
         <details className="rounded-2xl border bg-white p-6"><summary className="cursor-pointer font-semibold">Methodology and assumptions</summary><ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-600">{result.assumptions.map((item) => <li key={item}>{item}</li>)}</ul><p className="mt-4 text-sm text-slate-600">This is an estimate, not a formal appraisal or guaranteed sale price. <a href="/valuation-methodology" className="text-sky-700 underline">Read the full methodology</a>.</p></details>
