@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { acquisitionDb as db, askingPrice, type AcquisitionListing } from "@/lib/rocketAcquisition";
 import { track } from "@/lib/analytics";
@@ -20,6 +20,7 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
     && suggestedPrice >= 1 && suggestedPrice <= 999_999_999
     ? String(suggestedPrice)
     : valuationPriceSuggestion(typeof window === "undefined" ? "" : window.location.search);
+  const initialPriceSuggestion = useRef(priceSuggestion);
   const [listing, setListing] = useState<AcquisitionListing | null>(null);
   const [status, setStatus] = useState<AcquisitionListing["status"]>("not_for_sale");
   const [price, setPrice] = useState("");
@@ -39,13 +40,13 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
       if (!active) return;
       if (listingResult.error) { setError("Acquisition settings could not be loaded."); return; }
       const row = listingResult.data as AcquisitionListing | null;
-      setListing(row); setStatus(row?.status || (startForSale || priceSuggestion ? "for_sale" : "not_for_sale"));
-      setPrice(row?.asking_price_cents ? String(row.asking_price_cents / 100) : row ? "" : priceSuggestion);
+      setListing(row); setStatus(row?.status || (startForSale || initialPriceSuggestion.current ? "for_sale" : "not_for_sale"));
+      setPrice(row?.asking_price_cents ? String(row.asking_price_cents / 100) : row ? "" : initialPriceSuggestion.current);
       setDescription(row?.description || ""); setReason(row?.reason_for_selling || ""); setBuyer(row?.preferred_buyer || "");
       if (!enquiryResult.error) setEnquiries(enquiryResult.count || 0);
     });
     return () => { active = false; };
-  }, [appId, priceSuggestion, startForSale]);
+  }, [appId, startForSale]);
   const save = async () => {
     setError(""); setNotice("");
     const amount = price.trim() === "" ? null : Number(price);
@@ -77,7 +78,8 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
   return <section id="acquisition" className="mt-8 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
     <h2 className="text-xl font-semibold">{title}</h2>
     <p className="mt-1 text-sm text-neutral-600">Let potential buyers contact you on Rocket. Domain verification and a review are required before a listing appears. Rocket does not guarantee legal ownership.</p>
-    {!listing && priceSuggestion && <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-900">An illustrative valuation has been suggested as the asking price. Edit or clear it, then choose Save acquisition settings to submit for review.</p>}
+    {!listing && initialPriceSuggestion.current && <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-900">An illustrative valuation has been suggested as the asking price. Edit or clear it, then choose Save acquisition settings to submit for review.</p>}
+    {typeof suggestedPrice === "number" && priceSuggestion && priceSuggestion !== price && <button type="button" onClick={() => setPrice(priceSuggestion)} className="mt-3 text-sm font-semibold text-sky-700 hover:underline">Use ${Number(priceSuggestion).toLocaleString()} valuation as asking price</button>}
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-medium">Acquisition status
         <select value={status} onChange={(event) => setStatus(event.target.value as AcquisitionListing["status"])} className="mt-1 block min-h-11 w-full rounded-xl border border-neutral-300 bg-white px-3">
