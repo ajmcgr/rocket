@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import DealFeeBreakdown from "@/components/DealFeeBreakdown";
+import { track } from "@/lib/analytics";
 import { centsFromInput, dealsDb as db, money, nextAction, statusLabel, type Approval, type ChecklistItem, type Deal, type DealCurrency, type FeeQuote, type Offer, type Version } from "@/lib/rocketDeals";
 
 type App = { id: string; name: string; logo_url: string | null; slug: string | null };
@@ -72,6 +73,7 @@ export default function Deals() {
     });
     setBusy(false);
     if (issue) { setError(issue.message || "Offer could not be submitted."); return; }
+    track("acquisition_offer_submitted", { app_id: offerAppId });
     window.location.assign(`/deals/${data}`);
   }
   const card = (row: Row) => <Link key={row.id} to={`/deals/${row.id}`} className="block rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:border-sky-400">
