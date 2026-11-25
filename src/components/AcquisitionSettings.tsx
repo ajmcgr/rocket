@@ -54,7 +54,11 @@ export default function AcquisitionSettings({ appId }: { appId: string }) {
     setListing({ ...(listing || { app_id: appId, seller_user_id: "", updated_at: new Date().toISOString() }),
       status, review_status: result.data, asking_price_cents: status === "for_sale" && amount !== null ? Math.round(amount * 100) : null,
       description: description.trim(), reason_for_selling: reason.trim(), preferred_buyer: buyer.trim() });
-    track(status === "not_for_sale" ? "acquisition_listing_disabled" : "acquisition_listing_created", { app_id: appId });
+    if (status === "not_for_sale") {
+      if (previousStatus !== "not_for_sale") track("acquisition_listing_disabled", { app_id: appId });
+    } else if (previousStatus === "not_for_sale") {
+      track("acquisition_listing_created", { app_id: appId });
+    }
     if (!listing && valuationPriceSuggestion(window.location.search) && status !== "not_for_sale" && result.data === "approved")
       track("valuation_listing_published", { app_id: appId });
     setNotice(status === "not_for_sale" ? "Listing disabled. Existing conversations remain in Inbox." :
