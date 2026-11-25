@@ -12,7 +12,7 @@ import AdminNewsletter from "@/components/AdminNewsletter";
 import AdminRocket100 from "@/components/AdminRocket100";
 import AdminAppScreenshots from "@/components/AdminAppScreenshots";
 import AdminAcquisitionReview from "@/components/AdminAcquisitionReview";
-import AdminDealFees, { type DealReport } from "@/components/AdminDealFees";
+import { type DealReport } from "@/components/AdminDealFees";
 import AdminEscrowAuthDiagnostic from "@/components/AdminEscrowAuthDiagnostic";
 import { money } from "@/lib/rocketDeals";
 
@@ -108,8 +108,8 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState<{ target: string; message: string; error: boolean } | null>(null);
   const refresh = useCallback(async () => {
-    setError(""); setData(null); setInvestor(null); setJourneys(null); setAcquisitionMetrics(null); setValuationFunnel(null); setToday([]); setInternalTests([]);
-    const [result, batch, claims, tests, investorResult, journeyResult, acquisitionResult, valuationResult] = await Promise.all([
+    setError(""); setData(null); setInvestor(null); setJourneys(null); setAcquisitionMetrics(null); setValuationFunnel(null); setDealReport(null); setToday([]); setInternalTests([]);
+    const [result, batch, claims, tests, investorResult, journeyResult, acquisitionResult, valuationResult, dealResult] = await Promise.all([
       adminRpc("rocket_admin_snapshot", { p_section: section === "developer-testing" ? "home" : section === "screenshots" ? "marketing" : section, p_period: period }),
       section === "outreach" ? adminRpc("rocket_admin_outreach_first_batch", {}) : Promise.resolve(null),
       section === "ops" ? adminRpc("rocket_admin_claims", { p_claim: claimId }) : Promise.resolve(null),
@@ -118,6 +118,7 @@ export default function Admin() {
       section === "home" || section === "metrics" ? adminRpc("rocket_admin_discovery_journeys", { p_period: period }) : Promise.resolve(null),
       section === "home" ? adminRpc("rocket_admin_acquisition_metrics", {}) : Promise.resolve(null),
       section === "home" || section === "metrics" ? adminRpc("rocket_admin_valuation_funnel", { p_period: period }) : Promise.resolve(null),
+      section === "home" ? adminRpc("rocket_admin_deal_financial_report", {}) : Promise.resolve(null),
     ]);
     if (result.error) { setError(result.error.message.includes("Admin access denied") ? "Access denied. This workspace is limited to Rocket’s confirmed admin account." : result.error.message); return; }
     if (batch?.error) { setError(batch.error.message); return; }
@@ -132,6 +133,7 @@ export default function Admin() {
     setJourneys(journeyResult && !journeyResult.error ? obj(journeyResult.data) : null);
     setAcquisitionMetrics(acquisitionResult && !acquisitionResult.error ? obj(acquisitionResult.data) : null);
     setValuationFunnel(valuationResult && !valuationResult.error ? obj(valuationResult.data) : null);
+    setDealReport(dealResult && !dealResult.error ? dealResult.data as DealReport : null);
   }, [section, period, claimId]);
   useEffect(() => { refresh().catch((cause) => setError((cause as Error).message)); }, [refresh]);
   useEffect(() => {
@@ -236,7 +238,6 @@ export default function Admin() {
           valuation_listing_started: Number(obj(valuationFunnel?.stages).valuation_listing_started || 0),
           valuation_listing_published: Number(obj(valuationFunnel?.stages).valuation_listing_published || 0),
           completed_to_listing_started: Number(valuationFunnel?.completed_to_listing_started || 0) }} />
-        <p className="rocket-admin-muted">Completed → listing started: {valuationFunnel?.completion_to_listing_rate == null ? "No completed valuations yet" : `${valuationFunnel.completion_to_listing_rate}%`} of sessions. Tracked from this release.</p>
       </Panel>
       {journeys && <Panel title="Discovery journeys">
         <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />
@@ -262,7 +263,6 @@ export default function Admin() {
           ])}
         </div>
       </Panel>}
-      {section === "home" && <AdminDealFees onReport={setDealReport} />}
       <Panel title="Developer growth loop"><StatGrid data={obj(data.growth)} /></Panel>
       <Panel title="Developer funnel"><StatGrid data={obj(data.funnel)} /></Panel>
       <Panel title="Needs attention"><StatGrid data={obj(data.attention)} /></Panel>
