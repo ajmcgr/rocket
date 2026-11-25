@@ -42,6 +42,7 @@ describe("dynamic public sitemap", () => {
           ],
           public_app_categories: [
             { category: "Design & Creative", app_count: 4 },
+            { category: "Creator Tools", app_count: 2 },
           ],
           public_user_collections: [
             { slug: "staff-picks", updated_at: null, app_count: 2 },
@@ -63,10 +64,12 @@ describe("dynamic public sitemap", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toContain("application/xml");
     expect(xml).toContain("https://tryrocket.ai/apps/fresh-app");
+    expect(xml).toContain("<loc>https://tryrocket.ai/marketplace</loc>");
     expect(xml).toContain(
       "https://tryrocket.ai/discover?view=all&amp;category=Design+%26+Creative",
     );
     expect(xml).toContain("https://tryrocket.ai/collections/staff-picks");
+    expect(xml).not.toContain("category=Creator+Tools");
     expect(xml).toContain("https://tryrocket.ai/@builder_1");
     expect(xml).toContain("<loc>https://tryrocket.ai/docs</loc>");
     for (const article of docArticles)

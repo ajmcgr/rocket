@@ -110,6 +110,7 @@ it("shows category and readable platform labels below the app description", () =
   for (const label of ["Web", "iOS", "Android", "Hardware"]) {
     expect(html).toContain(`>${label}</span>`);
   }
+  expect(html).toContain('href="/discover?view=all&amp;category=Productivity"');
 });
 it("does not hide the profile while optional queries remain pending", () => {
   render(<PublicAppProfile initialApp={app} />);
