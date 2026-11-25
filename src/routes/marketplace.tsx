@@ -25,9 +25,10 @@ export const Route = createFileRoute("/marketplace")({
   },
   head: () => ({
     meta: [
-      { title: "Marketplace | Rocket" },
-      { name: "description", content: "Discover software businesses available for acquisition. Connect directly with founders on Rocket." },
-      { property: "og:title", content: "Marketplace | Rocket" },
+      { title: "Software Businesses for Sale | Rocket Marketplace" },
+      { name: "description", content: "Explore public software businesses for sale and open to offers on Rocket. Review app details and connect with founders." },
+      { property: "og:title", content: "Software Businesses for Sale | Rocket Marketplace" },
+      { property: "og:description", content: "Explore public software businesses for sale and open to offers on Rocket. Review app details and connect with founders." },
       { property: "og:url", content: "https://tryrocket.ai/marketplace" },
     ],
     links: [{ rel: "canonical", href: "https://tryrocket.ai/marketplace" }],

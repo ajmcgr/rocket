@@ -56,6 +56,7 @@ import AppAgentIntegrations, {
   type PublicAgentIntegrations,
 } from "@/components/AppAgentIntegrations";
 import AppAcquisitionCard from "@/components/AppAcquisitionCard";
+import { APP_CATEGORIES } from "@/lib/appCategories";
 
 type App = Tables<"public_apps">;
 type Source = Tables<"public_app_sources">;
@@ -716,8 +717,20 @@ export default function PublicAppProfile({
                       )}
                       <div>
                         <dt className="text-neutral-500">Category</dt>
-                        <dd className="mt-1 font-medium">
-                          {app.categories.join(", ") || "Not specified"}
+                        <dd className="mt-1 flex flex-wrap gap-x-1 font-medium">
+                          {app.categories.length ? app.categories.map((category, index) => (
+                            <span key={category}>
+                              {index > 0 && ", "}
+                              {APP_CATEGORIES.some(({ name }) => name === category) ? (
+                                <Link
+                                  to={`/discover?view=all&category=${encodeURIComponent(category)}`}
+                                  className="text-sky-800 hover:underline"
+                                >
+                                  {category}
+                                </Link>
+                              ) : category}
+                            </span>
+                          )) : "Not specified"}
                         </dd>
                       </div>
                       <div>

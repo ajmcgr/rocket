@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import staticSitemap from "@/data/sitemap-static.xml?raw";
 import { docArticles } from "@/content/rocketDocs";
+import { APP_CATEGORIES } from "@/lib/appCategories";
 
 const baseUrl = "https://tryrocket.ai";
 const pageSize = 1000;
@@ -118,7 +119,7 @@ async function getSitemap() {
   for (const row of categories) {
     if (
       typeof row.category !== "string" ||
-      !row.category.trim() ||
+      !APP_CATEGORIES.some(({ name }) => name === row.category) ||
       Number(row.app_count) <= 0
     )
       continue;
