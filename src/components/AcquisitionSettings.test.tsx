@@ -65,4 +65,16 @@ describe("selling after a valuation", () => {
       p_asking_price_cents: null, p_status: "for_sale",
     })));
   });
+
+  it("offers a later valuation without discarding unsaved listing details", async () => {
+    const { rerender } = render(<AcquisitionSettings appId="owned-app" suggestedPrice={null} startForSale />);
+    const description = await screen.findByRole("textbox", { name: "Short description" }) as HTMLTextAreaElement;
+    fireEvent.change(description, { target: { value: "A buyer-ready listing" } });
+    rerender(<AcquisitionSettings appId="owned-app" suggestedPrice={16200} startForSale />);
+    expect(description.value).toBe("A buyer-ready listing");
+    expect((screen.getByRole("spinbutton", { name: "Asking price (USD, optional)" }) as HTMLInputElement).value).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: "Use $16,200 valuation as asking price" }));
+    expect((screen.getByRole("spinbutton", { name: "Asking price (USD, optional)" }) as HTMLInputElement).value).toBe("16200");
+    expect(description.value).toBe("A buyer-ready listing");
+  });
 });
