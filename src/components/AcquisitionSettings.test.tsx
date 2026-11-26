@@ -26,13 +26,13 @@ vi.mock("@/lib/rocketAcquisition", () => ({
 
 beforeEach(() => {
   mocks.listing = null;
-  mocks.rpc.mockReset().mockResolvedValue({ data: "pending", error: null });
+  mocks.rpc.mockReset().mockResolvedValue({ data: "approved", error: null });
   mocks.track.mockReset();
 });
 afterEach(cleanup);
 
 describe("selling after a valuation", () => {
-  it("prefills a new USD listing, but submits it for review", async () => {
+  it("prefills a new USD listing and publishes it for a verified owner", async () => {
     render(<AcquisitionSettings appId="owned-app" suggestedPrice={16200} startForSale title="Sell my app" />);
     expect(await screen.findByRole("heading", { name: "Sell my app" })).not.toBeNull();
     const status = screen.getByRole("combobox", { name: "Acquisition status" }) as HTMLSelectElement;
@@ -43,7 +43,8 @@ describe("selling after a valuation", () => {
       p_app_id: "owned-app", p_status: "for_sale", p_asking_price_cents: 1_620_000,
       p_description: "", p_reason: "", p_preferred_buyer: "",
     }));
-    expect((await screen.findByRole("status")).textContent).toContain("Submitted for review");
+    expect((await screen.findByRole("status")).textContent).toContain("Listing is live");
+    expect(screen.queryByText(/review is required/i)).toBeNull();
     expect(mocks.track).toHaveBeenCalledWith("acquisition_listing_created", { app_id: "owned-app" });
   });
 
