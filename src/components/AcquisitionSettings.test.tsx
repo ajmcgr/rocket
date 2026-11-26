@@ -58,6 +58,29 @@ describe("selling after a valuation", () => {
     expect((screen.getByRole("textbox", { name: "Short description" }) as HTMLTextAreaElement).value).toBe("Existing listing");
   });
 
+  it("prefills sale details entered before sign-up for a new listing", async () => {
+    render(<AcquisitionSettings appId="owned-app" startForSale initialDraft={{
+      appName: "Launch", appUrl: "https://trylaunch.ai", status: "for_sale", price: "79000",
+      description: "Available for buyers", reason: "New focus", buyer: "Operator",
+    }} />);
+    await waitFor(() => expect((screen.getByRole("spinbutton", { name: "Asking price (USD, optional)" }) as HTMLInputElement).value).toBe("79000"));
+    expect((screen.getByRole("textbox", { name: "Short description" }) as HTMLTextAreaElement).value).toBe("Available for buyers");
+    expect((screen.getByRole("textbox", { name: "Reason for selling (optional)" }) as HTMLInputElement).value).toBe("New focus");
+  });
+
+  it("uses the new draft when an older listing was disabled", async () => {
+    mocks.listing = {
+      app_id: "owned-app", seller_user_id: "owner", status: "not_for_sale", review_status: "pending",
+      asking_price_cents: null, description: "Old description", reason_for_selling: "", preferred_buyer: "",
+    };
+    render(<AcquisitionSettings appId="owned-app" initialDraft={{
+      appName: "Launch", appUrl: "https://trylaunch.ai", status: "open_to_offers", price: "",
+      description: "Fresh details", reason: "", buyer: "",
+    }} />);
+    await waitFor(() => expect((screen.getByRole("combobox", { name: "Acquisition status" }) as HTMLSelectElement).value).toBe("open_to_offers"));
+    expect((screen.getByRole("textbox", { name: "Short description" }) as HTMLTextAreaElement).value).toBe("Fresh details");
+  });
+
   it("allows a sale listing without an asking price", async () => {
     render(<AcquisitionSettings appId="owned-app" suggestedPrice={null} startForSale />);
     await waitFor(() => expect((screen.getByRole("combobox", { name: "Acquisition status" }) as HTMLSelectElement).value).toBe("for_sale"));
