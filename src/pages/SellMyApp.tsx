@@ -10,6 +10,8 @@ import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMe
 import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
 import { acquisitionDb } from "@/lib/rocketAcquisition";
 import AcquisitionSettings from "@/components/AcquisitionSettings";
+import { emptySubmission } from "../../supabase/functions/_shared/appSubmission";
+import { emptySellListingDraft, readSellListingDraft, saveSellListingDraft, validSellListingIdentity, type SellListingDraft } from "@/lib/sellListingDraft";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import "./SellMyApp.css";
 
@@ -38,6 +40,9 @@ export default function SellMyApp() {
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [apps, setApps] = useState<MyApp[]>([]);
   const [appId, setAppId] = useState("");
+  const [listingDraft, setListingDraft] = useState<SellListingDraft>(emptySellListingDraft);
+  const [draftReady, setDraftReady] = useState(false);
+  const [listingError, setListingError] = useState("");
   const [advanced, setAdvanced] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -58,10 +63,20 @@ export default function SellMyApp() {
   const shareDisplayName = inputs.appName?.trim() || appDomain || "Your app";
   const hasSharedAppIdentity = Boolean(inputs.appName?.trim() || appDomain);
   const selected = apps.find((app) => app.app_id === appId);
+  const draftMatchesSelected = (() => {
+    if (!selected?.app?.website_url || !listingDraft.appUrl) return false;
+    try {
+      const selectedUrl = new URL(selected.app.website_url);
+      const draftUrl = new URL(listingDraft.appUrl);
+      return selectedUrl.hostname === draftUrl.hostname && selectedUrl.pathname.replace(/\/$/, "") === draftUrl.pathname.replace(/\/$/, "");
+    } catch { return false; }
+  })();
   const shareBadge = listedForSale && Boolean(selected?.app) && selected?.app?.name === inputs.appName && selected?.app?.website_url === inputs.appUrl
     ? "For Sale" : "Estimated Value";
 
   useEffect(() => { setIconBroken(false); }, [appIconSource]);
+  useEffect(() => { setListingDraft(readSellListingDraft()); setDraftReady(true); }, []);
+  useEffect(() => { if (draftReady) saveSellListingDraft(listingDraft); }, [draftReady, listingDraft]);
   useEffect(() => {
     setListedForSale(false);
     if (!appId) return;
@@ -77,7 +92,24 @@ export default function SellMyApp() {
   useEffect(() => {
     if (!user) { setApps([]); setAppId(""); return; }
     let active = true;
-    void loadMyApps().then((items) => { if (active) setApps(items.filter((item) => item.owned)); }).catch(() => { if (active) setError("Your Rocket apps could not be loaded right now."); });
+    void loadMyApps().then((items) => {
+      if (!active) return;
+      const owned = items.filter((item) => item.owned);
+      setApps(owned);
+      const draftUrl = readSellListingDraft().appUrl;
+      if (!draftUrl) return;
+      try {
+        const target = new URL(draftUrl);
+        const match = owned.find((item) => {
+          if (!item.app?.website_url) return false;
+          try {
+            const website = new URL(item.app.website_url);
+            return website.hostname === target.hostname && website.pathname.replace(/\/$/, "") === target.pathname.replace(/\/$/, "");
+          } catch { return false; }
+        });
+        if (match) setAppId((current) => current || match.app_id);
+      } catch { /* Invalid drafts remain editable. */ }
+    }).catch(() => { if (active) setError("Your Rocket apps could not be loaded right now."); });
     return () => { active = false; };
   }, [user?.id]);
 
@@ -91,6 +123,36 @@ export default function SellMyApp() {
       track("valuation_app_selected", { app_id: id });
     }
     setResult(null);
+  };
+  const updateListingDraft = (key: keyof SellListingDraft, value: string) => {
+    setListingError("");
+    setListingDraft((current) => ({ ...current, [key]: value }));
+  };
+  const validateListingDraft = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!validSellListingIdentity(listingDraft)) {
+      event.preventDefault();
+      setListingError("Enter your app name and a valid HTTPS website URL to continue.");
+      return false;
+    }
+    if (listingDraft.status === "for_sale" && listingDraft.price.trim()) {
+      const amount = Number(listingDraft.price);
+      if (!Number.isSafeInteger(amount) || amount < 1 || amount > 999_999_999) {
+        event.preventDefault();
+        setListingError("Enter a whole-dollar asking price of at least $1, or leave it blank.");
+        return false;
+      }
+    }
+    saveSellListingDraft(listingDraft);
+    return true;
+  };
+  const prepareAppSubmission = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!validateListingDraft(event)) return;
+    try {
+      sessionStorage.setItem("rocket:app-submission-v2", JSON.stringify({
+        url: listingDraft.appUrl, importUrl: listingDraft.appUrl,
+        details: { ...emptySubmission(), name: listingDraft.appName.trim() }, step: 0, editing: false,
+      }));
+    } catch { /* The submission form can still be completed without browser storage. */ }
   };
   const setNumber = (key: keyof ValuationInputs, value: string) => {
     if (["mrr", "annualRecurringRevenue"].includes(key)) setEvidence((current) => ({ ...current, stripe: false }));
@@ -269,15 +331,15 @@ export default function SellMyApp() {
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">List your app on Rocket Marketplace. You can also get an optional estimate based on revenue, growth and traffic.</p>
           <div className="mt-8 flex flex-wrap gap-3"><button onClick={() => sellRef.current?.scrollIntoView({ behavior: "smooth" })} className="min-h-12 rounded-xl bg-sky-700 px-6 font-semibold text-white hover:bg-sky-800">Sell my app</button>
             <button onClick={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Calculate valuation</button></div>
-          <p className="mt-5 text-sm text-slate-500">Free to use · No account required · No financial data made public</p>
+          <p className="mt-5 text-sm text-slate-500">Start without an account · Sign up to publish · Valuation inputs stay private</p>
         </div>
         <div className="grid gap-3 rounded-3xl border border-sky-100 bg-white p-6 shadow-lg shadow-sky-100/60">
-          {["Choose your app|Select an app you own or submit a new one.", "Create your listing|Domain-verified owners can publish a listing. A price is optional.", "Estimate its value|Use the calculator below if you want a starting price."].map((item, index) => { const [title, description] = item.split("|"); return <div key={title} className="flex gap-4 rounded-2xl bg-slate-50 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 font-bold text-sky-700">{index + 1}</span><div><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-slate-600">{description}</p></div></div>; })}
+          {["Enter your app|Add your website and sale details before signing up.", "Create your account|Your details stay in this browser while you sign up.", "Verify and publish|Verify your app’s domain to make the listing public. A price is optional."].map((item, index) => { const [title, description] = item.split("|"); return <div key={title} className="flex gap-4 rounded-2xl bg-slate-50 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 font-bold text-sky-700">{index + 1}</span><div><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-slate-600">{description}</p></div></div>; })}
         </div>
       </section>
       <section ref={sellRef} aria-labelledby="sell-listing-title" className="mb-10 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <h2 id="sell-listing-title" className="text-3xl font-bold">Sell my app</h2>
-        <p className="mt-2 text-slate-600">Choose an app you own to create or manage its Rocket Marketplace listing. An asking price is optional.</p>
+        <p className="mt-2 text-slate-600">Enter your app and sale details now. Sign up when you are ready to continue. An asking price is optional.</p>
         {user ? <>
           <label className="mt-6 block max-w-xl text-sm font-medium text-slate-700">Choose your Rocket app
             <select value={appId} onChange={(event) => selectApp(event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4">
@@ -288,10 +350,22 @@ export default function SellMyApp() {
           <p className="mt-4 text-sm text-slate-600">App not here? <a href="/submit" className="font-semibold text-sky-700 hover:underline">Submit a new app</a> or <a href="/your-apps" className="font-semibold text-sky-700 hover:underline">claim an existing listing</a>.</p>
           {canManageListing ? <div onFocusCapture={markListingStarted}>
             {inputs.currency !== "USD" && <p className="mt-5 rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Rocket Marketplace listings use USD. Enter a USD asking price below or leave it blank.</p>}
-            <AcquisitionSettings key={appId} appId={appId} suggestedPrice={suggestedAskingPrice} startForSale title="Listing details" />
-          </div> : appId ? <p className="mt-6 rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Verify ownership of this app’s domain before listing it. <a href={`/my-apps/${encodeURIComponent(appId)}#verification`} className="font-semibold underline">Verify this app</a></p>
-            : <p className="mt-6 text-sm text-slate-600">Select one of your apps above to start a listing, or submit a new app.</p>}
-        </> : <div className="mt-6 flex flex-wrap items-center gap-4"><a href="/login?next=%2Fsell" className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Sign in to sell</a><a href="/submit" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Submit a new app</a></div>}
+            <AcquisitionSettings key={`${appId}:${draftReady}`} appId={appId} suggestedPrice={suggestedAskingPrice} startForSale title="Listing details" initialDraft={draftMatchesSelected ? listingDraft : undefined} />
+          </div> : appId ? <p className="mt-6 rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Verify ownership of this app’s domain before publishing. <a href={`/my-apps/${encodeURIComponent(appId)}#verification`} className="font-semibold underline">Verify this app</a></p> : null}
+        </> : null}
+        {!canManageListing && <div className="mt-6 space-y-5" onFocusCapture={markListingStarted}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-medium text-slate-700">App name<input maxLength={120} value={listingDraft.appName} onChange={(event) => updateListingDraft("appName", event.target.value)} placeholder="Your app name" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
+            <label className="text-sm font-medium text-slate-700">App website<input type="url" maxLength={500} value={listingDraft.appUrl} onChange={(event) => updateListingDraft("appUrl", event.target.value)} placeholder="https://example.com" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
+            <label className="text-sm font-medium text-slate-700">Acquisition status<select value={listingDraft.status} onChange={(event) => updateListingDraft("status", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="for_sale">For sale</option><option value="open_to_offers">Open to offers</option></select></label>
+            {listingDraft.status === "for_sale" && <label className="text-sm font-medium text-slate-700">Asking price (USD, optional)<input type="number" min="1" step="1" value={listingDraft.price} onChange={(event) => updateListingDraft("price", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>}
+          </div>
+          <label className="block text-sm font-medium text-slate-700">Short description<textarea maxLength={1000} rows={3} value={listingDraft.description} onChange={(event) => updateListingDraft("description", event.target.value)} className="mt-2 block w-full rounded-xl border border-slate-300 p-4 text-base" /></label>
+          <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-medium text-slate-700">Reason for selling (optional)<input maxLength={500} value={listingDraft.reason} onChange={(event) => updateListingDraft("reason", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label><label className="text-sm font-medium text-slate-700">Preferred buyer (optional)<input maxLength={500} value={listingDraft.buyer} onChange={(event) => updateListingDraft("buyer", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label></div>
+          {listingError && <p role="alert" className="text-sm text-red-700">{listingError}</p>}
+          <p className="text-sm text-slate-600">Your details stay in this browser until you sign up. Publishing requires domain verification.</p>
+          <div className="flex flex-wrap gap-3">{user ? !appId && <a href="/submit" onClick={prepareAppSubmission} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Submit this app to Rocket</a> : <a href="/signup?next=%2Fsell" onClick={validateListingDraft} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Continue to sign up</a>}{!user && <a href="/login?next=%2Fsell" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Already have an account? Log in</a>}</div>
+        </div>}
       </section>
       <section ref={formRef} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8" aria-labelledby="calculator-title">
         <div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your valuation</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div>
