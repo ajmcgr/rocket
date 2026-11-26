@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { acquisitionDb as db, askingPrice, type AcquisitionListing } from "@/lib/rocketAcquisition";
 import { track } from "@/lib/analytics";
+import type { SellListingDraft } from "@/lib/sellListingDraft";
 
 export function valuationPriceSuggestion(search: string): string {
   const value = new URLSearchParams(search).get("valuation_price");
@@ -10,11 +11,12 @@ export function valuationPriceSuggestion(search: string): string {
   return amount >= 1 ? String(amount) : "";
 }
 
-export default function AcquisitionSettings({ appId, suggestedPrice, startForSale = false, title = "Apps for Sale" }: {
+export default function AcquisitionSettings({ appId, suggestedPrice, startForSale = false, title = "Apps for Sale", initialDraft }: {
   appId: string;
   suggestedPrice?: number | null;
   startForSale?: boolean;
   title?: string;
+  initialDraft?: SellListingDraft;
 }) {
   const priceSuggestion = typeof suggestedPrice === "number" && Number.isSafeInteger(suggestedPrice)
     && suggestedPrice >= 1 && suggestedPrice <= 999_999_999
@@ -40,9 +42,10 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
       if (!active) return;
       if (listingResult.error) { setError("Acquisition settings could not be loaded."); return; }
       const row = listingResult.data as AcquisitionListing | null;
-      setListing(row); setStatus(row?.status || (startForSale || initialPriceSuggestion.current ? "for_sale" : "not_for_sale"));
-      setPrice(row?.asking_price_cents ? String(row.asking_price_cents / 100) : row ? "" : initialPriceSuggestion.current);
-      setDescription(row?.description || ""); setReason(row?.reason_for_selling || ""); setBuyer(row?.preferred_buyer || "");
+      const draftToUse = initialDraft && (!row || row.status === "not_for_sale") ? initialDraft : null;
+      setListing(row); setStatus(draftToUse?.status || row?.status || (startForSale || initialPriceSuggestion.current ? "for_sale" : "not_for_sale"));
+      setPrice(draftToUse?.price ?? (row?.asking_price_cents ? String(row.asking_price_cents / 100) : row ? "" : initialPriceSuggestion.current));
+      setDescription(draftToUse?.description ?? row?.description ?? ""); setReason(draftToUse?.reason ?? row?.reason_for_selling ?? ""); setBuyer(draftToUse?.buyer ?? row?.preferred_buyer ?? "");
       if (!enquiryResult.error) setEnquiries(enquiryResult.count || 0);
     });
     return () => { active = false; };
