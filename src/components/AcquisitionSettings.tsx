@@ -72,13 +72,13 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
     if (!listing && priceSuggestion && status !== "not_for_sale" && result.data === "approved")
       track("valuation_listing_published", { app_id: appId });
     setNotice(status === "not_for_sale" ? "Listing disabled. Existing conversations remain in Inbox." :
-      result.data === "approved" ? `Saved. ${askingPrice(status === "for_sale" && amount !== null ? Math.round(amount * 100) : null)}` :
-      previousStatus === "not_for_sale" ? "Submitted for review. It will appear after approval." : "Changes submitted for review. Your listing is hidden until approved.");
+      result.data === "approved" ? `Listing is live. ${askingPrice(status === "for_sale" && amount !== null ? Math.round(amount * 100) : null)}` :
+      "Listing saved but is not yet public. Please try again shortly.");
   };
   return <section id="acquisition" className="mt-8 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
     <h2 className="text-xl font-semibold">{title}</h2>
-    <p className="mt-1 text-sm text-neutral-600">Let potential buyers contact you on Rocket. Domain verification and a review are required before a listing appears. Rocket does not guarantee legal ownership.</p>
-    {!listing && initialPriceSuggestion.current && <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-900">An illustrative valuation has been suggested as the asking price. Edit or clear it, then choose Save acquisition settings to submit for review.</p>}
+    <p className="mt-1 text-sm text-neutral-600">Let potential buyers contact you on Rocket. Verify your app’s domain to publish a listing. Rocket does not guarantee legal ownership.</p>
+    {!listing && initialPriceSuggestion.current && <p className="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-900">An illustrative valuation has been suggested as the asking price. Edit or clear it, then save your listing.</p>}
     {typeof suggestedPrice === "number" && priceSuggestion && priceSuggestion !== price && <button type="button" onClick={() => setPrice(priceSuggestion)} className="mt-3 text-sm font-semibold text-sky-700 hover:underline">Use ${Number(priceSuggestion).toLocaleString()} valuation as asking price</button>}
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-medium">Acquisition status
@@ -95,7 +95,6 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
       <label className="text-sm font-medium">Reason for selling (optional)<input maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} className="mt-1 block min-h-11 w-full rounded-xl border border-neutral-300 px-3" /></label>
       <label className="text-sm font-medium">Preferred buyer (optional)<input maxLength={500} value={buyer} onChange={(event) => setBuyer(event.target.value)} className="mt-1 block min-h-11 w-full rounded-xl border border-neutral-300 px-3" /></label>
     </div>}
-    {listing && status !== "not_for_sale" && <p className="mt-4 text-sm text-neutral-600">Review: {listing.review_status}</p>}
     <p className="mt-4 text-sm text-neutral-600">{enquiries} {enquiries === 1 ? "acquisition enquiry" : "acquisition enquiries"} · <Link to="/inbox" className="font-medium text-sky-700 hover:underline">Open Inbox</Link></p>
     {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
     {notice && <p role="status" className="mt-3 text-sm text-green-700">{notice}</p>}
