@@ -11,7 +11,7 @@ import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
 import { acquisitionDb } from "@/lib/rocketAcquisition";
 import AcquisitionSettings from "@/components/AcquisitionSettings";
 import { emptySubmission } from "../../supabase/functions/_shared/appSubmission";
-import { emptySellListingDraft, readSellListingDraft, saveSellListingDraft, validSellListingIdentity, type SellListingDraft } from "@/lib/sellListingDraft";
+import { emptySellListingDraft, readSellListingDraft, sameAppWebsite, saveSellListingDraft, validSellListingIdentity, type SellListingDraft } from "@/lib/sellListingDraft";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import "./SellMyApp.css";
 
@@ -63,14 +63,7 @@ export default function SellMyApp() {
   const shareDisplayName = inputs.appName?.trim() || appDomain || "Your app";
   const hasSharedAppIdentity = Boolean(inputs.appName?.trim() || appDomain);
   const selected = apps.find((app) => app.app_id === appId);
-  const draftMatchesSelected = (() => {
-    if (!selected?.app?.website_url || !listingDraft.appUrl) return false;
-    try {
-      const selectedUrl = new URL(selected.app.website_url);
-      const draftUrl = new URL(listingDraft.appUrl);
-      return selectedUrl.hostname === draftUrl.hostname && selectedUrl.pathname.replace(/\/$/, "") === draftUrl.pathname.replace(/\/$/, "");
-    } catch { return false; }
-  })();
+  const draftMatchesSelected = Boolean(selected?.app?.website_url && sameAppWebsite(selected.app.website_url, listingDraft.appUrl));
   const shareBadge = listedForSale && Boolean(selected?.app) && selected?.app?.name === inputs.appName && selected?.app?.website_url === inputs.appUrl
     ? "For Sale" : "Estimated Value";
 
@@ -98,17 +91,8 @@ export default function SellMyApp() {
       setApps(owned);
       const draftUrl = readSellListingDraft().appUrl;
       if (!draftUrl) return;
-      try {
-        const target = new URL(draftUrl);
-        const match = owned.find((item) => {
-          if (!item.app?.website_url) return false;
-          try {
-            const website = new URL(item.app.website_url);
-            return website.hostname === target.hostname && website.pathname.replace(/\/$/, "") === target.pathname.replace(/\/$/, "");
-          } catch { return false; }
-        });
-        if (match) setAppId((current) => current || match.app_id);
-      } catch { /* Invalid drafts remain editable. */ }
+      const match = owned.find((item) => item.app?.website_url && sameAppWebsite(item.app.website_url, draftUrl));
+      if (match) setAppId((current) => current || match.app_id);
     }).catch(() => { if (active) setError("Your Rocket apps could not be loaded right now."); });
     return () => { active = false; };
   }, [user?.id]);
