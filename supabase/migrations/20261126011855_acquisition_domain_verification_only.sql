@@ -34,7 +34,7 @@ begin
     asking_price_cents=excluded.asking_price_cents,description=excluded.description,
     reason_for_selling=excluded.reason_for_selling,preferred_buyer=excluded.preferred_buyer,
     approved_at=case when excluded.review_status='approved'
-      then coalesce(public.rocket_acquisition_listings.approved_at,excluded.approved_at) else null end,
+      then coalesce(rocket_acquisition_listings.approved_at,excluded.approved_at) else null end,
     updated_at=now();
   return v_review;
 end $$;
