@@ -39,7 +39,7 @@ describe("Sell my app flow", () => {
     expect(screen.getByRole("heading", { name: "Sell my app", level: 1 })).not.toBeNull();
     await screen.findByRole("option", { name: /Launch.*verified/ });
     const selector = screen.getByRole("combobox", { name: "Choose your Rocket app" });
-    const calculator = screen.getByRole("heading", { name: "Calculate your estimate" });
+    const calculator = screen.getByRole("heading", { name: "Calculate your valuation" });
     expect(selector.compareDocumentPosition(calculator) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole("link", { name: "Submit a new app" }).getAttribute("href")).toBe("/submit");
     fireEvent.change(selector, { target: { value: "owned-app" } });
