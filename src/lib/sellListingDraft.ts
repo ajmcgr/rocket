@@ -40,3 +40,13 @@ export function validSellListingIdentity(draft: SellListingDraft): boolean {
     return url.protocol === "https:" && Boolean(url.hostname.includes(".")) && !url.username && !url.password;
   } catch { return false; }
 }
+
+export function sameAppWebsite(first: string, second: string): boolean {
+  try {
+    const a = new URL(first);
+    const b = new URL(second);
+    const host = (url: URL) => url.hostname.toLowerCase().replace(/^www\./, "");
+    const path = (url: URL) => url.pathname.replace(/\/$/, "");
+    return host(a) === host(b) && path(a) === path(b);
+  } catch { return false; }
+}
