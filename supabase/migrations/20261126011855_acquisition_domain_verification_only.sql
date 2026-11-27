@@ -40,3 +40,52 @@ begin
 end $$;
 revoke all on function public.set_rocket_acquisition_listing(uuid,text,bigint,text,text,text) from public,anon;
 grant execute on function public.set_rocket_acquisition_listing(uuid,text,bigint,text,text,text) to authenticated;
+
+-- Private, owner-scoped seller drafts. Anonymous visitors prepare drafts in their browser.
+create table public.rocket_sell_listing_drafts (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  draft jsonb not null check (jsonb_typeof(draft) = 'object' and octet_length(draft::text) <= 16384),
+  updated_at timestamptz not null default now()
+);
+alter table public.rocket_sell_listing_drafts enable row level security;
+revoke all on public.rocket_sell_listing_drafts from public, anon, authenticated;
+grant select, insert, update, delete on public.rocket_sell_listing_drafts to authenticated;
+create policy rocket_sell_draft_owner on public.rocket_sell_listing_drafts
+  for all to authenticated using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+create function public.set_rocket_sell_draft_updated_at() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+create trigger rocket_sell_draft_updated_at before insert or update on public.rocket_sell_listing_drafts
+for each row execute function public.set_rocket_sell_draft_updated_at();
+
+alter table app_graph.valuation_funnel_events drop constraint valuation_funnel_events_event_kind_check;
+alter table app_graph.valuation_funnel_events add constraint valuation_funnel_events_event_kind_check
+  check (event_kind in ('valuation_page_viewed','valuation_started','valuation_completed','valuation_signup_started',
+    'valuation_signup_completed','valuation_draft_restored','valuation_app_submitted','valuation_ownership_verified',
+    'valuation_app_selected','valuation_stripe_connected','valuation_ga4_connected','valuation_saved',
+    'valuation_shared','valuation_listing_started','valuation_listing_published'));
+
+create or replace function public.record_rocket_valuation_event(p_event_id uuid, p_session_id uuid,
+  p_visitor_hash text, p_event_kind text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (select auth.role()) <> 'service_role' then raise exception 'Access denied'; end if;
+  if p_event_kind not in ('valuation_page_viewed','valuation_started','valuation_completed','valuation_signup_started',
+    'valuation_signup_completed','valuation_draft_restored','valuation_app_submitted','valuation_ownership_verified',
+    'valuation_app_selected','valuation_stripe_connected','valuation_ga4_connected','valuation_saved',
+    'valuation_shared','valuation_listing_started','valuation_listing_published')
+    or p_visitor_hash !~ '^[0-9a-f]{64}$' then raise exception 'Invalid event'; end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_visitor_hash, 0));
+  if (select count(*) from app_graph.valuation_funnel_events
+      where visitor_hash = p_visitor_hash and created_at >= now() - interval '1 day') >= 100 then return false; end if;
+  insert into app_graph.valuation_funnel_events(event_id,session_id,visitor_hash,event_kind)
+    values(p_event_id,p_session_id,p_visitor_hash,p_event_kind) on conflict (event_id) do nothing;
+  return true;
+end;
+$$;
+revoke all on function public.record_rocket_valuation_event(uuid,uuid,text,text) from public,anon,authenticated;
+grant execute on function public.record_rocket_valuation_event(uuid,uuid,text,text) to service_role;

@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import AppLogo from "@/components/AppLogo";
-import { track } from "@/lib/analytics";
+import { track, trackValuationOnce } from "@/lib/analytics";
 import { APP_CATEGORIES } from "@/lib/appCategories";
 import {
   emptySubmission,
@@ -312,6 +312,8 @@ export default function LaunchPreview() {
       }
       sessionStorage.setItem("rocket:just-published", result.app_id);
       track("launch_new_app_created", { app_id: result.app_id });
+      if (sessionStorage.getItem("rocket:sell-journey") === "1")
+        trackValuationOnce("valuation_app_submitted", result.app_id, { app_id: result.app_id });
       navigate(`/apps/${encodeURIComponent(result.slug || result.app_id)}`);
     } catch (cause) {
       consuming.current = false;

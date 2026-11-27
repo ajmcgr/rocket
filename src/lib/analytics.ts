@@ -101,6 +101,10 @@ export type AnalyticsEvent =
   | "valuation_started"
   | "valuation_completed"
   | "valuation_signup_started"
+  | "valuation_signup_completed"
+  | "valuation_draft_restored"
+  | "valuation_app_submitted"
+  | "valuation_ownership_verified"
   | "valuation_app_selected"
   | "valuation_stripe_connected"
   | "valuation_ga4_connected"
@@ -141,4 +145,14 @@ export function track(event: AnalyticsEvent, props: Record<string, any> = {}) {
   } catch {
     // Never let telemetry break the app.
   }
+}
+
+/** Record a seller milestone once per browser session and milestone identity. */
+export function trackValuationOnce(event: AnalyticsEvent, identity: string, props: Record<string, any> = {}) {
+  const key = `rocket:sell-event:${event}:${identity}`;
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch { /* Analytics may still run when browser storage is blocked. */ }
+  track(event, props);
 }

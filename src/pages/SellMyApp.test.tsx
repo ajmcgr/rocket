@@ -2,8 +2,9 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import SellMyApp from "./SellMyApp";
 
-const mocks = vi.hoisted(() => ({ user: { id: "owner" } as { id: string } | null }));
+const mocks = vi.hoisted(() => ({ user: { id: "owner", email: "owner@example.com" } as { id: string; email: string } | null, saveError: false }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: mocks.user }) }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }), upsert: async () => ({ error: mocks.saveError ? new Error("offline") : null }) }) } }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/lib/myApps", () => ({ loadMyApps: async () => [{
   app_id: "owned-app", owned: true, owner_verification_level: "domain_verified",
@@ -12,7 +13,7 @@ vi.mock("@/lib/myApps", () => ({ loadMyApps: async () => [{
   app_id: "claimed-app", owned: true, owner_verification_level: "claimed",
   app: { name: "Claimed App", website_url: "https://example.com" },
 }] }));
-vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
+vi.mock("@/lib/analytics", () => ({ track: vi.fn(), trackValuationOnce: vi.fn() }));
 vi.mock("@/lib/valuationShareIcon", () => ({ valuationShareIconUrl: () => null }));
 vi.mock("@/lib/rocketAcquisition", () => ({
   acquisitionDb: { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) }) },
@@ -31,13 +32,22 @@ vi.mock("@/components/ui/dialog", () => ({
   DialogDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-beforeEach(() => { mocks.user = { id: "owner" }; sessionStorage.clear(); });
+const persistent = new Map<string, string>();
+beforeEach(() => {
+  mocks.user = { id: "owner", email: "owner@example.com" }; mocks.saveError = false; sessionStorage.clear(); persistent.clear();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => persistent.get(key) ?? null,
+    setItem: (key: string, value: string) => persistent.set(key, value),
+    removeItem: (key: string) => persistent.delete(key),
+    clear: () => persistent.clear(),
+  });
+});
 afterEach(cleanup);
 
 describe("Sell my app flow", () => {
   it("shows the app selector and listing form above the calculator without a valuation", async () => {
     render(<SellMyApp />);
-    expect(screen.getByRole("heading", { name: "Sell my app", level: 1 })).not.toBeNull();
+    expect(await screen.findByRole("heading", { name: "Sell my app", level: 1 })).not.toBeNull();
     await screen.findByRole("option", { name: /Launch.*verified/ });
     const selector = screen.getByRole("combobox", { name: "Choose your Rocket app" });
     const calculator = screen.getByRole("heading", { name: "Calculate your valuation" });
@@ -72,10 +82,14 @@ describe("Sell my app flow", () => {
     expect(screen.getByRole("alert").textContent).toContain("app name");
     fireEvent.change(screen.getByRole("textbox", { name: "App name" }), { target: { value: "Launch" } });
     fireEvent.change(screen.getByRole("textbox", { name: "App website" }), { target: { value: "https://trylaunch.ai" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Your email" }), { target: { value: "owner@example.com" } });
     fireEvent.change(screen.getByRole("textbox", { name: "Short description" }), { target: { value: "Available for buyers" } });
+    const continueButton = screen.getByRole("link", { name: "Continue to sign up" });
+    continueButton.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(continueButton);
     await waitFor(() => expect(sessionStorage.getItem("rocket:sell-listing-draft-v1")).toContain("Available for buyers"));
     unmount();
-    mocks.user = { id: "owner" };
+    mocks.user = { id: "owner", email: "owner@example.com" };
     render(<SellMyApp />);
     await waitFor(() => expect(screen.getByTestId("sale-listing").getAttribute("data-app-id")).toBe("owned-app"));
     expect(screen.getByTestId("sale-listing").getAttribute("data-draft-description")).toBe("Available for buyers");
@@ -92,5 +106,35 @@ describe("Sell my app flow", () => {
     const submission = JSON.parse(sessionStorage.getItem("rocket:app-submission-v2") || "null");
     expect(submission.url).toBe("https://new-startup.example");
     expect(submission.details.name).toBe("New Startup");
+  });
+
+  it("keeps the signup handoff draft when the account save fails", async () => {
+    mocks.user = null;
+    const guest = render(<SellMyApp />);
+    fireEvent.change(screen.getByRole("textbox", { name: "App name" }), { target: { value: "Launch" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "App website" }), { target: { value: "https://trylaunch.ai" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Your email" }), { target: { value: "owner@example.com" } });
+    const continueButton = screen.getByRole("link", { name: "Continue to sign up" });
+    continueButton.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(continueButton);
+    guest.unmount();
+    mocks.user = { id: "owner", email: "owner@example.com" }; mocks.saveError = true;
+    render(<SellMyApp />);
+    await screen.findByTestId("sale-listing");
+    expect(sessionStorage.getItem("rocket:sell-listing-draft-v1")).toContain("Launch");
+    expect(localStorage.getItem("rocket:sell-pending-signup-draft-v1")).toContain("Launch");
+    expect(screen.getByRole("alert").textContent).toContain("could not be saved");
+  });
+
+  it("does not render one account's sale draft after switching accounts", async () => {
+    sessionStorage.setItem("rocket:sell-account-draft-v1:owner", JSON.stringify({ savedAt: Date.now(),
+      draft: { appName: "Private Startup", appUrl: "https://private.example", contactEmail: "owner@example.com",
+        status: "for_sale", price: "80000", description: "Private sale details", reason: "", buyer: "", valuationInputs: null } }));
+    const view = render(<SellMyApp />);
+    expect((await screen.findByRole("textbox", { name: "App name" }) as HTMLInputElement).value).toBe("Private Startup");
+    mocks.user = { id: "other", email: "other@example.com" };
+    view.rerender(<SellMyApp />);
+    expect(screen.queryByDisplayValue("Private Startup")).toBeNull();
+    expect((await screen.findByRole("textbox", { name: "App name" }) as HTMLInputElement).value).toBe("");
   });
 });

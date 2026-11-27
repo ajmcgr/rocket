@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
-import { track } from "@/lib/analytics";
+import { track, trackValuationOnce } from "@/lib/analytics";
 import DeveloperActivationNextSteps from "@/components/DeveloperActivationNextSteps";
 import RocketShare from "@/components/RocketShare";
 
@@ -119,6 +119,8 @@ export default function AddApp() {
         track("app_verification_completed", { app_id: app?.id, method: challenge.method });
         track("app_claim_completed", { app_id: app?.id, method: challenge.method });
         track("claim_verified", { app_id: app?.id, method: challenge.method });
+        if (app?.id && sessionStorage.getItem("rocket:sell-journey") === "1")
+          trackValuationOnce("valuation_ownership_verified", app.id, { app_id: app.id });
         setSuccess("Domain verified. This app is now in My Apps."); setChallenge(null);
       }
       else setError("Ownership needs manual review.");
@@ -141,7 +143,7 @@ export default function AddApp() {
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     {success && <p role="status" className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">{success}</p>}
     {success && app && <DeveloperActivationNextSteps appId={app.id} />}
-    {success && app && <div className="mt-4 flex flex-wrap gap-3"><RocketShare kind="app" identifier={app.id} title={app.name} label="Share app" /><Link to={`/apps/${app.id}`} className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm">View app</Link></div>}
+    {success && app && <div className="mt-4 flex flex-wrap gap-3"><RocketShare kind="app" identifier={app.id} title={app.name} label="Share app" /><Link to={`/apps/${app.id}`} className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm">View app</Link>{typeof window !== "undefined" && sessionStorage.getItem("rocket:sell-journey") === "1" && <Link to="/sell" className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm">Continue your sale listing</Link>}</div>}
     {job?.status === "needs_review" && <div className="mt-6 rounded-xl border bg-white p-6">
       <h2 className="font-semibold">We found more than one possible app</h2><p className="mt-2 text-sm text-neutral-600">We won't guess which one is yours. Review the URL or contact Rocket for help.</p>
     </div>}

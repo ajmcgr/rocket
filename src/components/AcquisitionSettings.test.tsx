@@ -38,7 +38,8 @@ describe("selling after a valuation", () => {
     const status = screen.getByRole("combobox", { name: "Acquisition status" }) as HTMLSelectElement;
     await waitFor(() => expect(status.value).toBe("for_sale"));
     expect((screen.getByRole("spinbutton", { name: "Asking price (USD, optional)" }) as HTMLInputElement).value).toBe("16200");
-    fireEvent.click(screen.getByRole("button", { name: "Save acquisition settings" }));
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Publish listing" }));
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("set_rocket_acquisition_listing", {
       p_app_id: "owned-app", p_status: "for_sale", p_asking_price_cents: 1_620_000,
       p_description: "", p_reason: "", p_preferred_buyer: "",
@@ -84,7 +85,7 @@ describe("selling after a valuation", () => {
   it("allows a sale listing without an asking price", async () => {
     render(<AcquisitionSettings appId="owned-app" suggestedPrice={null} startForSale />);
     await waitFor(() => expect((screen.getByRole("combobox", { name: "Acquisition status" }) as HTMLSelectElement).value).toBe("for_sale"));
-    fireEvent.click(screen.getByRole("button", { name: "Save acquisition settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publish listing" }));
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("set_rocket_acquisition_listing", expect.objectContaining({
       p_asking_price_cents: null, p_status: "for_sale",
     })));

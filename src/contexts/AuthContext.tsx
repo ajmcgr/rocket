@@ -3,6 +3,15 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { seedDemoBrandOnce } from "@/lib/seedDemoBrand";
 import { syncNewAccountToBeehiiv } from "@/lib/beehiivAccountSync";
+import { clearLocalSellListingDrafts, readPendingSignupDraftForEmail } from "@/lib/sellListingDraft";
+import { trackValuationOnce } from "@/lib/analytics";
+
+function trackSellerSignup(user: User) {
+  const pending = readPendingSignupDraftForEmail(user.email);
+  const createdAt = new Date(user.created_at || "").getTime();
+  if (pending?.signupStarted && Number.isFinite(createdAt) && createdAt >= pending.savedAt - 60_000)
+    trackValuationOnce("valuation_signup_completed", user.id);
+}
 
 type Ctx = { user: User | null; session: Session | null; loading: boolean; signOut: () => Promise<void> };
 const AuthContext = createContext<Ctx>({ user: null, session: null, loading: true, signOut: async () => {} });
@@ -18,7 +27,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch {}
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      if (_e === "SIGNED_OUT") clearLocalSellListingDrafts();
       if (s?.user?.id) {
+        trackSellerSignup(s.user);
         setTimeout(() => { seedDemoBrandOnce(s.user!.id); }, 0);
         setTimeout(() => { void syncNewAccountToBeehiiv(s.user!); }, 0);
       }
@@ -27,6 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .then(({ data }) => {
         setSession(data.session);
         if (data.session?.user?.id) {
+          trackSellerSignup(data.session.user);
           setTimeout(() => { seedDemoBrandOnce(data.session!.user.id); }, 0);
           setTimeout(() => { void syncNewAccountToBeehiiv(data.session!.user); }, 0);
         }
@@ -51,6 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signOut: async () => {
           try { await supabase.auth.signOut({ scope: "local" }); } catch (e) { console.warn("signOut error", e); }
           setSession(null);
+          clearLocalSellListingDrafts();
           try {
             Object.keys(localStorage)
               .filter((k) => k.startsWith("sb-") || k.includes("supabase.auth"))
