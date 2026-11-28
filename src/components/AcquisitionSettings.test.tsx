@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/router-compat", () => ({ Link: ({ to, children, ...props }: any) => <a href={to} {...props}>{children}</a> }));
-vi.mock("@/lib/analytics", () => ({ track: mocks.track }));
+vi.mock("@/lib/analytics", () => ({ track: mocks.track, trackValuationOnce: mocks.track }));
 vi.mock("@/lib/rocketAcquisition", () => ({
   askingPrice: (cents: number | null) => cents === null ? "Price on request" : `$${cents / 100}`,
   acquisitionDb: {
