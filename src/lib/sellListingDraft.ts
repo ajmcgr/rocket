@@ -1,4 +1,5 @@
 import { BUSINESS_MODELS, type ValuationInputs } from "@/lib/rocketValuation";
+import { sellerAnalyticsHandoff, type SellerAnalyticsHandoff } from "@/lib/sellerAttribution";
 
 export type SellListingDraft = {
   appName: string;
@@ -94,17 +95,18 @@ export function clearSellListingDraft(): void {
 export function savePendingSignupDraft(draft: SellListingDraft, signupStarted = true): void {
   if (!validContactEmail(draft.contactEmail)) return;
   // Cross-tab signup handoff carries listing fields, never private revenue inputs.
-  try { localStorage.setItem(PENDING_SIGNUP_DRAFT_KEY, JSON.stringify({ draft: { ...draft, valuationInputs: null }, savedAt: Date.now(), signupStarted })); }
+  try { localStorage.setItem(PENDING_SIGNUP_DRAFT_KEY, JSON.stringify({ draft: { ...draft, valuationInputs: null }, savedAt: Date.now(), signupStarted, analytics: sellerAnalyticsHandoff() })); }
   catch { /* Same-tab storage remains available. */ }
 }
 
-export function readPendingSignupDraftForEmail(email: string | undefined): { draft: SellListingDraft; savedAt: number; signupStarted: boolean } | null {
+export function readPendingSignupDraftForEmail(email: string | undefined): { draft: SellListingDraft; savedAt: number; signupStarted: boolean; analytics: SellerAnalyticsHandoff | null } | null {
   if (!email) return null;
   try {
     const raw = localStorage.getItem(PENDING_SIGNUP_DRAFT_KEY);
     const saved = readEnvelope(raw);
     return saved && draftBelongsToUser(saved.draft, email)
-      ? { ...saved, signupStarted: JSON.parse(raw || "null")?.signupStarted === true } : null;
+      ? { ...saved, signupStarted: JSON.parse(raw || "null")?.signupStarted === true,
+        analytics: JSON.parse(raw || "null")?.analytics || null } : null;
   } catch { return null; }
 }
 

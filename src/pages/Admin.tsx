@@ -53,7 +53,12 @@ const statEmojis: Record<string, string> = {
   valuation_signup_completed: "✅", valuation_draft_restored: "📂", valuation_app_submitted: "🚀",
   valuation_ownership_verified: "🛡️",
   valuation_ga4_connected: "📈", valuation_saved: "💾", valuation_shared: "📣",
-  valuation_listing_started: "🏷️", valuation_listing_published: "🤝", completed_to_listing_started: "➡️",
+  valuation_listing_started: "🏷️", valuation_listing_completed: "📋", valuation_card_generated: "🖼️",
+  valuation_listing_published: "🤝", completed_to_listing_started: "➡️",
+  organic_search: "🌱", x: "𝕏", linkedin: "🔗", developer_outreach: "✉️",
+  backlink_campaign: "🔗", distribution_partner: "🤝", reddit: "👽",
+  other_referral: "🧭", direct: "🎯", unattributed: "❔",
+  seller_claim_a: "🅰️", seller_valuation_b: "🅱️", valuation_card: "🖼️",
 };
 const acquisitionEmojis: Record<string, string> = { direct: "🎯", organic: "🌱", referral: "🔗", social: "💬" };
 const discoveryEmojis: Record<string, string> = { catalogue: "📚", categories: "🗂️", collections: "🔖", homepage: "🏠", rankings: "🏆", search: "🔎" };
@@ -209,6 +214,7 @@ export default function Admin() {
   const candidates = rows(data?.candidates);
   const completedDeals = dealReport?.currencies.reduce((sum, row) => sum + row.completed_acquisitions, 0) ?? 0;
   const dealCurrencies = dealReport?.currencies.filter((row) => row.completed_acquisitions > 0) || [];
+  const funnelCount = (name: string) => valuationFunnel ? Number(obj(valuationFunnel.stages)[name] ?? 0) : null;
 
   return <main className="rocket-admin">
     <header className="rocket-admin-heading"><div><p className="rocket-admin-eyebrow">Rocket operating system</p><h1>{section === "home" ? "Admin overview" : label(section)}</h1><p>Production data, explicit decisions, and auditable changes.</p></div>
@@ -229,22 +235,32 @@ export default function Admin() {
       <Panel title="People"><StatGrid data={obj(data.users)} /></Panel>
       <Panel title="Discovery"><StatGrid data={obj(data.discovery)} /></Panel>
       <Panel title="Sell My App funnel">
-        <StatGrid data={{ valuation_page_viewed: Number(obj(valuationFunnel?.stages).valuation_page_viewed || 0),
-          valuation_started: Number(obj(valuationFunnel?.stages).valuation_started || 0),
-          valuation_completed: Number(obj(valuationFunnel?.stages).valuation_completed || 0),
-          valuation_signup_started: Number(obj(valuationFunnel?.stages).valuation_signup_started || 0),
-          valuation_signup_completed: Number(obj(valuationFunnel?.stages).valuation_signup_completed || 0),
-          valuation_draft_restored: Number(obj(valuationFunnel?.stages).valuation_draft_restored || 0),
-          valuation_app_submitted: Number(obj(valuationFunnel?.stages).valuation_app_submitted || 0),
-          valuation_ownership_verified: Number(obj(valuationFunnel?.stages).valuation_ownership_verified || 0),
-          valuation_app_selected: Number(obj(valuationFunnel?.stages).valuation_app_selected || 0),
-          valuation_stripe_connected: Number(obj(valuationFunnel?.stages).valuation_stripe_connected || 0),
-          valuation_ga4_connected: Number(obj(valuationFunnel?.stages).valuation_ga4_connected || 0),
-          valuation_saved: Number(obj(valuationFunnel?.stages).valuation_saved || 0),
-          valuation_shared: Number(obj(valuationFunnel?.stages).valuation_shared || 0),
-          valuation_listing_started: Number(obj(valuationFunnel?.stages).valuation_listing_started || 0),
-          valuation_listing_published: Number(obj(valuationFunnel?.stages).valuation_listing_published || 0),
-          completed_to_listing_started: Number(valuationFunnel?.completed_to_listing_started || 0) }} />
+        <StatGrid data={{ valuation_page_viewed: funnelCount("valuation_page_viewed"),
+          valuation_listing_started: funnelCount("valuation_listing_started"),
+          valuation_listing_completed: funnelCount("valuation_listing_completed"),
+          valuation_started: funnelCount("valuation_started"),
+          valuation_completed: funnelCount("valuation_completed"),
+          valuation_card_generated: funnelCount("valuation_card_generated"),
+          valuation_signup_started: funnelCount("valuation_signup_started"),
+          valuation_signup_completed: funnelCount("valuation_signup_completed"),
+          valuation_draft_restored: funnelCount("valuation_draft_restored"),
+          valuation_app_submitted: funnelCount("valuation_app_submitted"),
+          valuation_ownership_verified: funnelCount("valuation_ownership_verified"),
+          valuation_app_selected: funnelCount("valuation_app_selected"),
+          valuation_stripe_connected: funnelCount("valuation_stripe_connected"),
+          valuation_ga4_connected: funnelCount("valuation_ga4_connected"),
+          valuation_saved: funnelCount("valuation_saved"),
+          valuation_shared: funnelCount("valuation_shared"),
+          valuation_listing_published: funnelCount("valuation_listing_published"),
+          completed_to_listing_started: valuationFunnel ? Number(valuationFunnel.completed_to_listing_started ?? 0) : null }} />
+        <p className="mt-3 text-sm text-neutral-500">Counts are distinct browser sessions. Share actions record intent or a download, not confirmed social posts. Form completion and card generation are tracked from this release.</p>
+      </Panel>
+      <Panel title="Sell My App acquisition sources">
+        <StatGrid data={valuationFunnel ? obj(valuationFunnel.sources) : { source_data: null }} />
+        <p className="mt-3 text-sm text-neutral-500">Unattributed includes visits before source tracking. Sources are campaign categories; no referrer URLs or financial inputs are stored.</p>
+      </Panel>
+      <Panel title="Sell My App campaigns">
+        <StatGrid data={valuationFunnel ? obj(valuationFunnel.campaigns) : { campaign_data: null }} />
       </Panel>
       {journeys && <Panel title="Discovery journeys">
         <StatGrid data={{ visits: journeys.visits, tab_sessions: journeys.tab_sessions, total_searches: journeys.total_searches, search_sessions: journeys.search_sessions, search_result_clicks: journeys.search_result_clicks, zero_result_searches: journeys.zero_result_searches, searches_without_clicks: journeys.searches_without_clicks, search_to_profile: journeys.search_to_profile, search_to_outbound: journeys.search_to_outbound }} />

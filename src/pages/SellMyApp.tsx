@@ -9,6 +9,7 @@ import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type Valuati
 import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
 import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
 import { acquisitionDb } from "@/lib/rocketAcquisition";
+import { adoptSellerAnalyticsHandoff, sellerShareUrl } from "@/lib/sellerAttribution";
 import AcquisitionSettings from "@/components/AcquisitionSettings";
 import { emptySubmission } from "../../supabase/functions/_shared/appSubmission";
 import { clearAccountSellListingDraft, clearPendingSignupDraft, clearSellListingDraft, draftBelongsToUser, emptySellListingDraft, normalizeSellListingDraft, readAccountSellListingDraft, readPendingSignupDraftForEmail, readSellListingDraft, readSellListingDraftForEmail, sameAppWebsite, saveAccountSellListingDraft, savePendingSignupDraft, saveSellListingDraft, validContactEmail, validSellListingIdentity, type SellListingDraft } from "@/lib/sellListingDraft";
@@ -88,6 +89,7 @@ export default function SellMyApp() {
       } else {
         const cached = readAccountSellListingDraft(user.id);
         const pending = readPendingSignupDraftForEmail(user.email);
+        if (pending?.analytics) adoptSellerAnalyticsHandoff(pending.analytics);
         const guest = readSellListingDraftForEmail(user.email);
         let chosen = [cached, pending, guest].filter((item) => item !== null)
           .sort((a, b) => b.savedAt - a.savedAt)[0] || null;
@@ -161,7 +163,7 @@ export default function SellMyApp() {
     return () => { active = false; };
   }, [appId]);
 
-  useEffect(() => { track("valuation_page_viewed", { route: "/sell" }); }, []);
+  useEffect(() => { trackValuationOnce("valuation_page_viewed", "session", { route: "/sell" }); }, []);
   useEffect(() => {
     if (!user || !draftReady || draftScope !== activeScope) return;
     let active = true;
@@ -223,9 +225,10 @@ export default function SellMyApp() {
     else { saveSellListingDraft(listingDraft); savePendingSignupDraft(listingDraft, isSignup);
       if (isSignup) {
         try { sessionStorage.setItem("rocket:sell-signup-intent", String(Date.now())); } catch { /* Analytics is optional. */ }
-        trackValuationOnce("valuation_signup_started", listingDraft.contactEmail.toLowerCase());
+        trackValuationOnce("valuation_signup_started", "session");
       }
     }
+    trackValuationOnce("valuation_listing_completed", "session", { has_rocket_app: Boolean(appId) });
     return true;
   };
   const prepareAppSubmission = (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -285,11 +288,12 @@ export default function SellMyApp() {
       const next = calculateValuation(inputs, evidence);
       setResult(next); setShareOpen(true);
       trackValuationOnce("valuation_completed", "session", { basis: next.basis, confidence: next.confidence, has_rocket_app: Boolean(appId) });
+      trackValuationOnce("valuation_card_generated", "session", { has_rocket_app: Boolean(appId), has_value: next.central !== null });
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Please check your inputs."); }
   };
   const share = (platform: "x" | "reddit" | "linkedin") => {
     if (!result) return;
-    const url = "https://tryrocket.ai/sell";
+    const url = sellerShareUrl(platform);
     const value = result.central !== null ? `My app's illustrative value is ${format(result.central, result.currency)}. ` : "Find out what your app could be worth. ";
     const name = hasSharedAppIdentity ? `${shareDisplayName}: ` : "";
     const text = `${name}${value}Calculated with Rocket Sell My App.`;
@@ -381,7 +385,7 @@ export default function SellMyApp() {
       const file = new File([blob], "rocket-sell-my-app.png", { type: "image/png" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: "My app's estimated value", url: "https://tryrocket.ai/sell" });
+          await navigator.share({ files: [file], title: "My app's estimated value", url: sellerShareUrl("native") });
           trackValuationOnce("valuation_shared", "native", { platform: "native", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
           return;
         } catch (cause) {
@@ -416,7 +420,7 @@ export default function SellMyApp() {
         <div><h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">Sell my app</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">List your app on Rocket Marketplace. You can also get an optional estimate based on revenue, growth and traffic.</p>
           <div className="mt-8 flex flex-wrap gap-3"><button onClick={() => sellRef.current?.scrollIntoView({ behavior: "smooth" })} className="min-h-12 rounded-xl bg-sky-700 px-6 font-semibold text-white hover:bg-sky-800">Sell my app</button>
-            <button onClick={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Calculate valuation</button></div>
+            <button onClick={() => { if (!startedRef.current) { startedRef.current = true; trackValuationOnce("valuation_started", "session"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Calculate valuation</button></div>
           <p className="mt-5 text-sm text-slate-500">Start without an account · Sign up to publish · Valuation inputs stay private</p>
         </div>
         <div className="grid gap-3 rounded-3xl border border-sky-100 bg-white p-6 shadow-lg shadow-sky-100/60">
@@ -464,7 +468,7 @@ export default function SellMyApp() {
         <div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your valuation</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div>
         {appId && <p className="mt-5 text-sm text-slate-600">Calculating for {selected?.app?.name || "your selected app"}. <button type="button" onClick={() => sellRef.current?.scrollIntoView({ behavior: "smooth" })} className="font-semibold text-sky-700 hover:underline">Change app</button></p>}
         {appId && selected?.owner_verification_level === "domain_verified" && <div className="mt-4 space-y-3 text-sm"><div className="flex flex-wrap gap-3"><button type="button" disabled={!!importing} onClick={() => void importMetrics("stripe")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "stripe" ? "Importing…" : "Import verified Stripe revenue"}</button><button type="button" disabled={!!importing} onClick={() => void importMetrics("ga4")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "ga4" ? "Importing…" : "Import verified Google Analytics traffic"}</button></div><p className="text-slate-600">{evidence.stripe ? "Stripe revenue verified · " : ""}{evidence.ga4 ? `Google Analytics traffic verified for ${ga4Period} · ` : ""}Connected metrics stay private. Editing an imported metric removes its verified status until you import it again.</p></div>}
-        <form onFocus={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } }} onSubmit={calculate} className="mt-7"><div className="grid gap-5 sm:grid-cols-2">
+        <form onFocus={() => { if (!startedRef.current) { startedRef.current = true; trackValuationOnce("valuation_started", "session"); } }} onSubmit={calculate} className="mt-7"><div className="grid gap-5 sm:grid-cols-2">
           <label className="text-sm font-medium text-slate-700">App name (optional)<input maxLength={120} value={inputs.appName || ""} onChange={(event) => setInputs({ ...inputs, appName: event.target.value })} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
           <label className="text-sm font-medium text-slate-700">App URL (optional)<input type="url" maxLength={500} value={inputs.appUrl || ""} onChange={(event) => setInputs({ ...inputs, appUrl: event.target.value })} placeholder="https://example.com" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
           <label className="text-sm font-medium text-slate-700">Currency<select value={inputs.currency} onChange={(event) => { setInputs({ ...inputs, currency: event.target.value as ValuationInputs["currency"] }); setEvidence((current) => ({ ...current, stripe: false })); setResult(null); }} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option>USD</option><option>EUR</option><option>GBP</option></select></label>

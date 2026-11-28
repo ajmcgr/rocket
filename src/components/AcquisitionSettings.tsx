@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { acquisitionDb as db, askingPrice, type AcquisitionListing } from "@/lib/rocketAcquisition";
-import { track } from "@/lib/analytics";
+import { track, trackValuationOnce } from "@/lib/analytics";
 import type { SellListingDraft } from "@/lib/sellListingDraft";
 
 export function valuationPriceSuggestion(search: string): string {
@@ -76,6 +76,7 @@ export default function AcquisitionSettings({ appId, suggestedPrice, startForSal
     } else if (previousStatus === "not_for_sale") {
       track("acquisition_listing_created", { app_id: appId });
     }
+    if (status !== "not_for_sale") trackValuationOnce("valuation_listing_completed", appId, { has_rocket_app: true });
     if ((previousStatus === "not_for_sale" || listing?.review_status !== "approved")
       && status !== "not_for_sale" && result.data === "approved") {
       track("valuation_listing_published", { app_id: appId });

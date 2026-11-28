@@ -5,9 +5,11 @@ import { seedDemoBrandOnce } from "@/lib/seedDemoBrand";
 import { syncNewAccountToBeehiiv } from "@/lib/beehiivAccountSync";
 import { clearLocalSellListingDrafts, readPendingSignupDraftForEmail } from "@/lib/sellListingDraft";
 import { trackValuationOnce } from "@/lib/analytics";
+import { adoptSellerAnalyticsHandoff } from "@/lib/sellerAttribution";
 
 function trackSellerSignup(user: User) {
   const pending = readPendingSignupDraftForEmail(user.email);
+  if (pending?.analytics) adoptSellerAnalyticsHandoff(pending.analytics);
   const createdAt = new Date(user.created_at || "").getTime();
   if (pending?.signupStarted && Number.isFinite(createdAt) && createdAt >= pending.savedAt - 60_000)
     trackValuationOnce("valuation_signup_completed", user.id);
