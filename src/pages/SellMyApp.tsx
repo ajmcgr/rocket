@@ -514,6 +514,6 @@ export default function SellMyApp() {
         ["Can I value an app without revenue?", "You can enter a pre-revenue app. We explain why traffic alone cannot support a defensible dollar estimate."],
         ["How accurate is the calculator?", "It is an estimate based on self-reported inputs, not an appraisal or offer. The range can change substantially after verification and due diligence."],
         ["Can I sell my app on Rocket?", "Yes. Domain-verified owners can publish a Marketplace listing. You can add an asking price or invite offers."],
-      ].map(([question, answer]) => <details key={question} className="rounded-xl border bg-white p-5"><summary className="cursor-pointer font-semibold">{question}</summary><p className="mt-3 text-sm leading-6 text-slate-600">{answer}</p></details>)}</div></section>
+      ].map(([question, answer]) => <details key={question} open className="rounded-xl border bg-white p-5"><summary className="cursor-pointer font-semibold">{question}</summary><p className="mt-3 text-sm leading-6 text-slate-600">{answer}</p></details>)}</div></section>
     </main></div>;
 }
