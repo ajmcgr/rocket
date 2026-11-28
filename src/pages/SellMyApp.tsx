@@ -4,12 +4,14 @@ import SiteHeader from "@/components/SiteHeader";
 import type { MyApp } from "@/components/AppJourney";
 import { loadMyApps } from "@/lib/myApps";
 import { supabase } from "@/integrations/supabase/client";
-import { track } from "@/lib/analytics";
+import { track, trackValuationOnce } from "@/lib/analytics";
 import { BUSINESS_MODELS, calculateValuation, type ValuationInputs, type ValuationResult } from "@/lib/rocketValuation";
 import { verifiedGa4Metrics, verifiedStripeMrr } from "@/lib/valuationVerifiedMetrics";
 import { valuationShareIconUrl } from "@/lib/valuationShareIcon";
 import { acquisitionDb } from "@/lib/rocketAcquisition";
 import AcquisitionSettings from "@/components/AcquisitionSettings";
+import { emptySubmission } from "../../supabase/functions/_shared/appSubmission";
+import { clearAccountSellListingDraft, clearPendingSignupDraft, clearSellListingDraft, draftBelongsToUser, emptySellListingDraft, normalizeSellListingDraft, readAccountSellListingDraft, readPendingSignupDraftForEmail, readSellListingDraft, readSellListingDraftForEmail, sameAppWebsite, saveAccountSellListingDraft, savePendingSignupDraft, saveSellListingDraft, validContactEmail, validSellListingIdentity, type SellListingDraft } from "@/lib/sellListingDraft";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import "./SellMyApp.css";
 
@@ -33,11 +35,15 @@ const numberFields: Array<{ key: keyof ValuationInputs; label: string; required?
 ];
 
 export default function SellMyApp() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [inputs, setInputs] = useState<ValuationInputs>(initial);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [apps, setApps] = useState<MyApp[]>([]);
   const [appId, setAppId] = useState("");
+  const [listingDraft, setListingDraft] = useState<SellListingDraft>(emptySellListingDraft);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftScope, setDraftScope] = useState("");
+  const [listingError, setListingError] = useState("");
   const [advanced, setAdvanced] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -53,15 +59,97 @@ export default function SellMyApp() {
   const sellRef = useRef<HTMLElement>(null);
   const startedRef = useRef(false);
   const listingStartedRef = useRef(false);
+  const draftClearedRef = useRef(false);
+  const activeScope = user?.id || "guest";
   const appIconSource = valuationShareIconUrl(inputs.appUrl);
   const appDomain = appIconSource ? new URL(inputs.appUrl || "").hostname.replace(/^www\./i, "") : "";
   const shareDisplayName = inputs.appName?.trim() || appDomain || "Your app";
   const hasSharedAppIdentity = Boolean(inputs.appName?.trim() || appDomain);
   const selected = apps.find((app) => app.app_id === appId);
+  const draftMatchesSelected = Boolean(selected?.app?.website_url && sameAppWebsite(selected.app.website_url, listingDraft.appUrl));
   const shareBadge = listedForSale && Boolean(selected?.app) && selected?.app?.name === inputs.appName && selected?.app?.website_url === inputs.appUrl
     ? "For Sale" : "Estimated Value";
 
   useEffect(() => { setIconBroken(false); }, [appIconSource]);
+  useEffect(() => {
+    if (loading) return;
+    let active = true;
+    setDraftReady(false);
+    draftClearedRef.current = false;
+    setDraftScope("");
+    setAppId(""); setApps([]); setResult(null); setShareOpen(false);
+    setEvidence({ stripe: false, ga4: false }); setMonthlyActiveUsers(null);
+    const restore = async () => {
+      if (!user) {
+        const draft = readSellListingDraft();
+        if (!active) return;
+        setListingDraft(draft);
+        setInputs(draft.valuationInputs || { ...initial, appName: draft.appName, appUrl: draft.appUrl });
+      } else {
+        const cached = readAccountSellListingDraft(user.id);
+        const pending = readPendingSignupDraftForEmail(user.email);
+        const guest = readSellListingDraftForEmail(user.email);
+        let chosen = [cached, pending, guest].filter((item) => item !== null)
+          .sort((a, b) => b.savedAt - a.savedAt)[0] || null;
+        let serverTime = 0;
+        let serverLoaded = false;
+        try {
+          const { data, error: draftError } = await (supabase as any).from("rocket_sell_listing_drafts")
+            .select("draft,updated_at").eq("user_id", user.id).maybeSingle();
+          if (draftError) throw draftError;
+          serverLoaded = true;
+          serverTime = data?.updated_at ? new Date(data.updated_at).getTime() : 0;
+          if (data?.draft && (!chosen || serverTime > chosen.savedAt))
+            chosen = { draft: normalizeSellListingDraft(data.draft), savedAt: serverTime };
+        } catch {
+          if (active) setListingError("Your saved sale draft could not be loaded. Check your connection before publishing.");
+        }
+        if (!active) return;
+        const draft = chosen?.draft || emptySellListingDraft;
+        setListingDraft(draft);
+        setInputs(draft.valuationInputs || { ...initial, appName: draft.appName, appUrl: draft.appUrl });
+        if (pending || guest) {
+          trackValuationOnce("valuation_draft_restored", user.id);
+          try { sessionStorage.removeItem("rocket:sell-signup-intent"); } catch { /* Browser storage may be unavailable. */ }
+        }
+        if (serverLoaded) {
+          try {
+            if (chosen && chosen.savedAt > serverTime) {
+              const { error: saveError } = await (supabase as any).from("rocket_sell_listing_drafts")
+                .upsert({ user_id: user.id, draft });
+              if (saveError) throw saveError;
+            }
+            clearSellListingDraft();
+            if (pending || guest) clearPendingSignupDraft();
+          } catch {
+            if (active) setListingError("Your sale draft is visible here, but could not be saved to your account. Check your connection before leaving this page.");
+          }
+        }
+      }
+      if (!active) return;
+      setDraftScope(activeScope);
+      setDraftReady(true);
+    };
+    void restore();
+    return () => { active = false; };
+  }, [activeScope, loading]);
+  useEffect(() => {
+    if (!draftReady || draftScope !== activeScope || draftClearedRef.current) return;
+    setListingDraft((current) => JSON.stringify(current.valuationInputs) === JSON.stringify(inputs)
+      ? current : { ...current, valuationInputs: inputs });
+  }, [inputs, draftReady, draftScope, activeScope]);
+  useEffect(() => {
+    if (!draftReady || draftScope !== activeScope || draftClearedRef.current) return;
+    if (!user) { saveSellListingDraft(listingDraft); return; }
+    saveAccountSellListingDraft(user.id, listingDraft);
+    const timer = window.setTimeout(() => {
+      void (supabase as any).from("rocket_sell_listing_drafts").upsert({ user_id: user.id, draft: listingDraft })
+        .then(({ error: saveError }: { error: unknown }) => {
+          if (saveError) setListingError("Your sale draft could not be saved to your account. Check your connection before leaving this page.");
+        }).catch(() => setListingError("Your sale draft could not be saved to your account. Check your connection before leaving this page."));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [draftReady, draftScope, activeScope, listingDraft, user?.id]);
   useEffect(() => {
     setListedForSale(false);
     if (!appId) return;
@@ -75,22 +163,80 @@ export default function SellMyApp() {
 
   useEffect(() => { track("valuation_page_viewed", { route: "/sell" }); }, []);
   useEffect(() => {
-    if (!user) { setApps([]); setAppId(""); return; }
+    if (!user || !draftReady || draftScope !== activeScope) return;
     let active = true;
-    void loadMyApps().then((items) => { if (active) setApps(items.filter((item) => item.owned)); }).catch(() => { if (active) setError("Your Rocket apps could not be loaded right now."); });
+    void loadMyApps().then((items) => {
+      if (!active) return;
+      const owned = items.filter((item) => item.owned);
+      setApps(owned);
+      const draftUrl = listingDraft.appUrl;
+      if (!draftUrl) return;
+      const match = owned.find((item) => item.app?.website_url && sameAppWebsite(item.app.website_url, draftUrl));
+      if (match) setAppId((current) => current || match.app_id);
+    }).catch(() => { if (active) setError("Your Rocket apps could not be loaded right now."); });
     return () => { active = false; };
-  }, [user?.id]);
+  }, [user?.id, draftReady, draftScope, activeScope, listingDraft.appUrl]);
 
   const selectApp = (id: string) => {
+    draftClearedRef.current = false;
     setAppId(id);
     listingStartedRef.current = false;
     setEvidence({ stripe: false, ga4: false }); setGa4Period(""); setMonthlyActiveUsers(null);
     const item = apps.find((app) => app.app_id === id);
     if (item?.app) {
       setInputs((current) => ({ ...current, appName: item.app?.name || "", appUrl: item.app?.website_url || "" }));
+      if (!sameAppWebsite(item.app.website_url || "", listingDraft.appUrl))
+        setListingDraft((current) => ({ ...emptySellListingDraft, contactEmail: current.contactEmail,
+          appName: item.app?.name || "", appUrl: item.app?.website_url || "", valuationInputs: null }));
       track("valuation_app_selected", { app_id: id });
     }
     setResult(null);
+  };
+  const updateListingDraft = (key: keyof SellListingDraft, value: string) => {
+    draftClearedRef.current = false;
+    setListingError("");
+    setListingDraft((current) => ({ ...current, [key]: value }));
+  };
+  const validateListingDraft = (event: React.MouseEvent<HTMLAnchorElement>, isSignup = true) => {
+    if (!validSellListingIdentity(listingDraft)) {
+      event.preventDefault();
+      setListingError("Enter your app name and a valid HTTPS website URL to continue.");
+      return false;
+    }
+    if (!user && !validContactEmail(listingDraft.contactEmail)) {
+      event.preventDefault();
+      setListingError("Enter your email address so we can restore your sale draft after signup.");
+      return false;
+    }
+    if (user && listingDraft.contactEmail && !draftBelongsToUser(listingDraft, user.email)) {
+      event.preventDefault(); setListingError("Use the email address on your Rocket account."); return false;
+    }
+    if (listingDraft.status === "for_sale" && listingDraft.price.trim()) {
+      const amount = Number(listingDraft.price);
+      if (!Number.isSafeInteger(amount) || amount < 1 || amount > 999_999_999) {
+        event.preventDefault();
+        setListingError("Enter a whole-dollar asking price of at least $1, or leave it blank.");
+        return false;
+      }
+    }
+    if (user) saveAccountSellListingDraft(user.id, listingDraft);
+    else { saveSellListingDraft(listingDraft); savePendingSignupDraft(listingDraft, isSignup);
+      if (isSignup) {
+        try { sessionStorage.setItem("rocket:sell-signup-intent", String(Date.now())); } catch { /* Analytics is optional. */ }
+        trackValuationOnce("valuation_signup_started", listingDraft.contactEmail.toLowerCase());
+      }
+    }
+    return true;
+  };
+  const prepareAppSubmission = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!validateListingDraft(event)) return;
+    try {
+      try { sessionStorage.setItem("rocket:sell-journey", "1"); } catch { /* Optional journey marker. */ }
+      sessionStorage.setItem("rocket:app-submission-v2", JSON.stringify({
+        url: listingDraft.appUrl, importUrl: listingDraft.appUrl,
+        details: { ...emptySubmission(), name: listingDraft.appName.trim() }, step: 0, editing: false,
+      }));
+    } catch { /* The submission form can still be completed without browser storage. */ }
   };
   const setNumber = (key: keyof ValuationInputs, value: string) => {
     if (["mrr", "annualRecurringRevenue"].includes(key)) setEvidence((current) => ({ ...current, stripe: false }));
@@ -138,7 +284,7 @@ export default function SellMyApp() {
     try {
       const next = calculateValuation(inputs, evidence);
       setResult(next); setShareOpen(true);
-      track("valuation_completed", { basis: next.basis, confidence: next.confidence, has_rocket_app: Boolean(appId) });
+      trackValuationOnce("valuation_completed", "session", { basis: next.basis, confidence: next.confidence, has_rocket_app: Boolean(appId) });
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Please check your inputs."); }
   };
   const share = (platform: "x" | "reddit" | "linkedin") => {
@@ -151,7 +297,7 @@ export default function SellMyApp() {
       : platform === "reddit" ? `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`
       : `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
     window.open(target, "_blank", "noopener,noreferrer");
-    track("valuation_shared", { platform, included_amount: result.central !== null, included_name: hasSharedAppIdentity });
+    trackValuationOnce("valuation_shared", platform, { platform, included_amount: result.central !== null, included_name: hasSharedAppIdentity });
   };
   const renderCard = async () => {
     if (!result) throw new Error("Share card is unavailable.");
@@ -224,7 +370,7 @@ export default function SellMyApp() {
       setError("");
       const dataUrl = await renderCard();
       const link = document.createElement("a"); link.download = "rocket-sell-my-app.png"; link.href = dataUrl; document.body.append(link); link.click(); link.remove();
-      track("valuation_shared", { platform: "download", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
+      trackValuationOnce("valuation_shared", "download", { platform: "download", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
     } catch { setError("The share image could not be generated. Please try again."); }
   };
   const shareCard = async () => {
@@ -236,7 +382,7 @@ export default function SellMyApp() {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: "My app's estimated value", url: "https://tryrocket.ai/sell" });
-          track("valuation_shared", { platform: "native", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
+          trackValuationOnce("valuation_shared", "native", { platform: "native", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
           return;
         } catch (cause) {
           if (cause instanceof DOMException && cause.name === "AbortError") return;
@@ -244,7 +390,7 @@ export default function SellMyApp() {
       }
       const link = document.createElement("a"); link.download = file.name; link.href = dataUrl; document.body.append(link); link.click(); link.remove();
       setNotice("Card downloaded. Attach the PNG to your post on X, Reddit or LinkedIn.");
-      track("valuation_shared", { platform: "download", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
+      trackValuationOnce("valuation_shared", "download", { platform: "download", included_amount: result?.central != null, included_name: hasSharedAppIdentity });
     } catch (cause) {
       setError("The share image could not be generated. Please try again.");
     }
@@ -254,7 +400,7 @@ export default function SellMyApp() {
   const markListingStarted = () => {
     if (listingStartedRef.current) return;
     listingStartedRef.current = true;
-    track("valuation_listing_started", { has_rocket_app: Boolean(appId), can_prefill: suggestedAskingPrice !== null });
+    trackValuationOnce("valuation_listing_started", "session", { has_rocket_app: Boolean(appId), can_prefill: suggestedAskingPrice !== null });
   };
   const required = numberFields.filter((field) => field.required);
   const optional = numberFields.filter((field) => !field.required);
@@ -262,22 +408,25 @@ export default function SellMyApp() {
     <input type="number" min={min} max={max} step={step || 1} value={(inputs[key] as number | undefined) ?? ""} onChange={(event) => setNumber(key, event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-slate-900 outline-none focus:border-sky-500" />
   </label>;
 
-  return <div className="min-h-screen bg-[#f5f8fc] text-slate-950"><SiteHeader />
+  if (loading || !draftReady || draftScope !== activeScope)
+    return <div className="rocket-sell-shell min-h-screen bg-[#f5f8fc] text-slate-950"><SiteHeader /><main className="mx-auto max-w-6xl px-5 py-20" aria-busy="true">Loading your sale form…</main></div>;
+  return <div className="rocket-sell-shell min-h-screen bg-[#f5f8fc] text-slate-950"><SiteHeader />
     <main className="rocket-sell-page mx-auto max-w-6xl px-5 pb-24 sm:px-8">
       <section className="grid gap-10 py-14 lg:grid-cols-[1.2fr_.8fr] lg:items-center lg:py-20">
         <div><h1 className="max-w-2xl text-5xl font-bold tracking-tight sm:text-6xl">Sell my app</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">List your app on Rocket Marketplace. You can also get an optional estimate based on revenue, growth and traffic.</p>
           <div className="mt-8 flex flex-wrap gap-3"><button onClick={() => sellRef.current?.scrollIntoView({ behavior: "smooth" })} className="min-h-12 rounded-xl bg-sky-700 px-6 font-semibold text-white hover:bg-sky-800">Sell my app</button>
             <button onClick={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } formRef.current?.scrollIntoView({ behavior: "smooth" }); }} className="min-h-12 rounded-xl border border-slate-300 bg-white px-6 font-semibold text-slate-900">Calculate valuation</button></div>
-          <p className="mt-5 text-sm text-slate-500">Free to use · No account required · No financial data made public</p>
+          <p className="mt-5 text-sm text-slate-500">Start without an account · Sign up to publish · Valuation inputs stay private</p>
         </div>
         <div className="grid gap-3 rounded-3xl border border-sky-100 bg-white p-6 shadow-lg shadow-sky-100/60">
-          {["Choose your app|Select an app you own or submit a new one.", "Create your listing|Verified owners can submit it for review. A price is optional.", "Estimate its value|Use the calculator below if you want a starting price."].map((item, index) => { const [title, description] = item.split("|"); return <div key={title} className="flex gap-4 rounded-2xl bg-slate-50 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 font-bold text-sky-700">{index + 1}</span><div><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-slate-600">{description}</p></div></div>; })}
+          {["Enter your app|Add your website and sale details before signing up.", "Create your account|Your details stay in this browser while you sign up.", "Verify and publish|Verify your app’s domain to make the listing public. A price is optional."].map((item, index) => { const [title, description] = item.split("|"); return <div key={title} className="flex gap-4 rounded-2xl bg-slate-50 p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 font-bold text-sky-700">{index + 1}</span><div><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-slate-600">{description}</p></div></div>; })}
         </div>
       </section>
       <section ref={sellRef} aria-labelledby="sell-listing-title" className="mb-10 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <h2 id="sell-listing-title" className="text-3xl font-bold">Sell my app</h2>
-        <p className="mt-2 text-slate-600">Choose an app you own to create or manage its Rocket Marketplace listing. An asking price is optional.</p>
+        <p className="mt-2 text-slate-600">Enter your app and sale details now. Sign up when you are ready to continue. An asking price is optional.</p>
+        {listingError && <p role="alert" className="mt-4 text-sm text-red-700">{listingError}</p>}
         {user ? <>
           <label className="mt-6 block max-w-xl text-sm font-medium text-slate-700">Choose your Rocket app
             <select value={appId} onChange={(event) => selectApp(event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4">
@@ -285,16 +434,34 @@ export default function SellMyApp() {
               {apps.map((item) => <option key={item.app_id} value={item.app_id}>{item.app?.name || "Untitled app"} · {item.owner_verification_level === "domain_verified" ? "verified" : "claimed"}</option>)}
             </select>
           </label>
-          <p className="mt-4 text-sm text-slate-600">App not here? <a href="/submit" className="font-semibold text-sky-700 hover:underline">Submit a new app</a> or <a href="/your-apps" className="font-semibold text-sky-700 hover:underline">claim an existing listing</a>.</p>
+          <p className="mt-4 text-sm text-slate-600">App not here? <a href="/submit" onClick={(event) => { if (validSellListingIdentity(listingDraft)) prepareAppSubmission(event); }} className="font-semibold text-sky-700 hover:underline">Submit a new app</a> or <a href="/your-apps" className="font-semibold text-sky-700 hover:underline">claim an existing listing</a>.</p>
           {canManageListing ? <div onFocusCapture={markListingStarted}>
             {inputs.currency !== "USD" && <p className="mt-5 rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Rocket Marketplace listings use USD. Enter a USD asking price below or leave it blank.</p>}
-            <AcquisitionSettings key={appId} appId={appId} suggestedPrice={suggestedAskingPrice} startForSale title="Listing details" />
-          </div> : appId ? <p className="mt-6 rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Verify ownership of this app’s domain before listing it. <a href={`/my-apps/${encodeURIComponent(appId)}#verification`} className="font-semibold underline">Verify this app</a></p>
-            : <p className="mt-6 text-sm text-slate-600">Select one of your apps above to start a listing, or submit a new app.</p>}
-        </> : <div className="mt-6 flex flex-wrap items-center gap-4"><a href="/login?next=%2Fsell" className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Sign in to sell</a><a href="/submit" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Submit a new app</a></div>}
+            <AcquisitionSettings key={`${appId}:${draftReady}`} appId={appId} suggestedPrice={suggestedAskingPrice} startForSale title="Listing details" initialDraft={draftMatchesSelected ? listingDraft : undefined} onPublished={() => {
+              draftClearedRef.current = true;
+              if (user) clearAccountSellListingDraft(user.id);
+              clearSellListingDraft(); clearPendingSignupDraft();
+              if (user) void (supabase as any).from("rocket_sell_listing_drafts").delete().eq("user_id", user.id);
+              setListingDraft(emptySellListingDraft);
+            }} />
+          </div> : appId ? <p className="mt-6 rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Verify ownership of this app’s domain before publishing. <a href={`/my-apps/${encodeURIComponent(appId)}#verification`} className="font-semibold underline">Verify this app</a></p> : null}
+        </> : null}
+        {!canManageListing && <div className="mt-6 space-y-5" onFocusCapture={markListingStarted}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-medium text-slate-700">App name<input maxLength={120} value={listingDraft.appName} onChange={(event) => updateListingDraft("appName", event.target.value)} placeholder="Your app name" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
+            <label className="text-sm font-medium text-slate-700">App website<input type="url" maxLength={500} value={listingDraft.appUrl} onChange={(event) => updateListingDraft("appUrl", event.target.value)} placeholder="https://example.com" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>
+            {!user && <label className="text-sm font-medium text-slate-700">Your email<input type="email" maxLength={254} autoComplete="email" value={listingDraft.contactEmail} onChange={(event) => updateListingDraft("contactEmail", event.target.value)} placeholder="you@example.com" className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>}
+            <label className="text-sm font-medium text-slate-700">Acquisition status<select value={listingDraft.status} onChange={(event) => updateListingDraft("status", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4"><option value="for_sale">For sale</option><option value="open_to_offers">Open to offers</option></select></label>
+            {listingDraft.status === "for_sale" && <label className="text-sm font-medium text-slate-700">Asking price (USD, optional)<input type="number" min="1" step="1" value={listingDraft.price} onChange={(event) => updateListingDraft("price", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label>}
+          </div>
+          <label className="block text-sm font-medium text-slate-700">Short description<textarea maxLength={1000} rows={3} value={listingDraft.description} onChange={(event) => updateListingDraft("description", event.target.value)} className="mt-2 block w-full rounded-xl border border-slate-300 p-4 text-base" /></label>
+          <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-medium text-slate-700">Reason for selling (optional)<input maxLength={500} value={listingDraft.reason} onChange={(event) => updateListingDraft("reason", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label><label className="text-sm font-medium text-slate-700">Preferred buyer (optional)<input maxLength={500} value={listingDraft.buyer} onChange={(event) => updateListingDraft("buyer", event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 px-4 text-base" /></label></div>
+          <p className="text-sm text-slate-600">Your details stay in this browser until you sign up. Publishing requires domain verification.</p>
+          <div className="flex flex-wrap gap-3">{user ? !appId && <a href="/submit" onClick={prepareAppSubmission} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Submit this app to Rocket</a> : <a href="/signup?next=%2Fsell" onClick={validateListingDraft} className="inline-flex min-h-12 items-center rounded-xl bg-sky-700 px-6 font-semibold text-white">Continue to sign up</a>}{!user && <a href="/login?next=%2Fsell" onClick={(event) => validateListingDraft(event, false)} className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-6 font-semibold">Already have an account? Log in</a>}</div>
+        </div>}
       </section>
       <section ref={formRef} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8" aria-labelledby="calculator-title">
-        <div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your estimate</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div>
+        <div><p className="text-xs font-bold uppercase tracking-widest text-sky-700">Sell My App calculator</p><h2 id="calculator-title" className="mt-2 text-3xl font-bold">Calculate your valuation</h2><p className="mt-2 text-slate-600">Use zero where you have no revenue yet. Optional fields improve context.</p></div>
         {appId && <p className="mt-5 text-sm text-slate-600">Calculating for {selected?.app?.name || "your selected app"}. <button type="button" onClick={() => sellRef.current?.scrollIntoView({ behavior: "smooth" })} className="font-semibold text-sky-700 hover:underline">Change app</button></p>}
         {appId && selected?.owner_verification_level === "domain_verified" && <div className="mt-4 space-y-3 text-sm"><div className="flex flex-wrap gap-3"><button type="button" disabled={!!importing} onClick={() => void importMetrics("stripe")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "stripe" ? "Importing…" : "Import verified Stripe revenue"}</button><button type="button" disabled={!!importing} onClick={() => void importMetrics("ga4")} className="min-h-11 rounded-xl border border-sky-500 px-4 font-semibold text-sky-700 disabled:opacity-50">{importing === "ga4" ? "Importing…" : "Import verified Google Analytics traffic"}</button></div><p className="text-slate-600">{evidence.stripe ? "Stripe revenue verified · " : ""}{evidence.ga4 ? `Google Analytics traffic verified for ${ga4Period} · ` : ""}Connected metrics stay private. Editing an imported metric removes its verified status until you import it again.</p></div>}
         <form onFocus={() => { if (!startedRef.current) { startedRef.current = true; track("valuation_started"); } }} onSubmit={calculate} className="mt-7"><div className="grid gap-5 sm:grid-cols-2">
@@ -316,10 +483,10 @@ export default function SellMyApp() {
           <button type="button" onClick={() => setShareOpen(true)} className="mt-5 min-h-11 rounded-xl bg-sky-700 px-5 font-semibold text-white">Open share card</button>
         </div>
         <Dialog open={shareOpen} onOpenChange={(open) => { setShareOpen(open); if (!open) setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 0); }}>
-          <DialogContent motion="gentle" className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto bg-white p-5 text-slate-950 sm:p-8">
+          <DialogContent motion="gentle" className="rocket-sell-dialog max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto bg-white p-5 text-slate-950 sm:p-8">
             <DialogHeader className="pr-8"><DialogTitle className="text-xl font-bold">Share your valuation</DialogTitle>
               <DialogDescription className="text-sm text-slate-600">Preview a clean Rocket card. Your revenue and traffic inputs are never shown. Add an app name for the card, or enter an App URL to show its domain and public icon.</DialogDescription></DialogHeader>
-          <div className="relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
+          <div className="rocket-sell-share-preview relative mt-6 flex aspect-[1200/630] w-full max-w-3xl flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-[5%]" style={{ containerType: "inline-size" }}>
             <div className="flex items-start justify-between gap-4"><img src="/rocket-email-logo.png" alt="Rocket" style={{ width: "21cqw" }} /><span className="rounded-full bg-sky-50 px-[2.2cqw] py-[1cqw] font-semibold text-sky-700" style={{ fontSize: "2cqw" }}>{shareBadge}</span></div>
             <div className="flex min-w-0 items-center gap-[2cqw]">{appIconSource && !iconBroken && <div className="flex h-[10cqw] w-[10cqw] shrink-0 items-center justify-center rounded-[2cqw] border border-slate-200 bg-slate-50 p-[1cqw]"><img crossOrigin="anonymous" referrerPolicy="no-referrer" src={appIconSource} alt={`${inputs.appName || "App"} icon`} onError={() => setIconBroken(true)} className="h-full w-full object-contain" /></div>}<div className="min-w-0"><h4 className="truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "5cqw" }}>{shareDisplayName}</h4><p className="mt-[2cqw] font-semibold uppercase tracking-widest text-sky-700" style={{ fontSize: "2cqw" }}>Your app’s estimated value</p><p className="mt-[1cqw] truncate font-bold leading-none tracking-tight text-slate-950" style={{ fontSize: "7.3cqw" }}>{result.central !== null ? format(result.central, result.currency) : "Value unavailable"}</p></div></div>
             <div className="flex items-end justify-between gap-4 border-t border-slate-200 pt-[2cqw] text-slate-600" style={{ fontSize: "1.9cqw" }}><span>Illustrative estimate · Not an offer or appraisal</span><span className="shrink-0 font-semibold text-sky-700">tryrocket.ai/sell</span></div>
@@ -342,7 +509,7 @@ export default function SellMyApp() {
         ["How are SaaS businesses valued?", "Small SaaS transactions often use a multiple of annual profit. Where profit is unknown, this calculator uses a cautious annual recurring revenue approach and lowers confidence."],
         ["Can I value an app without revenue?", "You can enter a pre-revenue app. We explain why traffic alone cannot support a defensible dollar estimate."],
         ["How accurate is the calculator?", "It is an estimate based on self-reported inputs, not an appraisal or offer. The range can change substantially after verification and due diligence."],
-        ["Can I sell my app on Rocket?", "Yes. Domain-verified owners can submit a Marketplace listing for review. No listing is published automatically."],
+        ["Can I sell my app on Rocket?", "Yes. Domain-verified owners can publish a Marketplace listing. You can add an asking price or invite offers."],
       ].map(([question, answer]) => <details key={question} className="rounded-xl border bg-white p-5"><summary className="cursor-pointer font-semibold">{question}</summary><p className="mt-3 text-sm leading-6 text-slate-600">{answer}</p></details>)}</div></section>
     </main></div>;
 }

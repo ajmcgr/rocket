@@ -204,16 +204,16 @@ An asking price is optional. Listing details and prices come from the seller; Ro
         `1. [Claim and verify ownership](/docs/claim-and-verify) of your app's domain.
 2. Open [My Apps](/your-apps), select the app and find **Apps for Sale** in its settings.
 3. Choose **For sale** or **Open to offers**. Add a short description and, if useful, a reason for selling or preferred buyer. A USD asking price is optional for **For sale**.
-4. Save the listing. It stays hidden until Rocket reviews and approves it.
+4. Save the listing. A domain-verified owner's listing appears publicly immediately while the app remains public and domain verification remains active.
 
-Changes to an approved listing may require another review and hide it in the meantime. Choose **Not for sale** and save to remove the public acquisition listing; existing Inbox conversations remain.`,
+Edits to the listing appear when saved. Choose **Not for sale** and save to remove the public acquisition listing; existing Inbox conversations remain.`,
       ),
       section(
         "contact",
         "Contact the founder",
-        `On an approved app profile, select **Contact Founder** and sign in if needed. The conversation opens in [Inbox](/inbox), where buyer and seller can continue discussing the opportunity. The app owner can also open Inbox from the listing settings.
+        `On an app profile with a public acquisition listing, select **Contact Founder** and sign in if needed. The conversation opens in [Inbox](/inbox), where buyer and seller can continue discussing the opportunity. The app owner can also open Inbox from the listing settings.
 
-Rocket checks domain control and reviews listing eligibility, but does not guarantee legal ownership or the accuracy of seller-provided information. Inbox is for introductions and messages. Arrange due diligence, payment, contracts and ownership transfer independently; Rocket does not provide acquisition checkout or escrow.`,
+Rocket checks domain control, but does not guarantee legal ownership or the accuracy of seller-provided information. Inbox is for introductions and messages. Arrange due diligence, payment, contracts and ownership transfer independently; Rocket does not provide acquisition checkout or escrow.`,
       ),
     ],
   },

@@ -7,6 +7,7 @@ const origin = Deno.env.get("GA4_FRONTEND_ORIGIN") || "https://tryrocket.ai";
 const cors = { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const allowed = new Set(["valuation_page_viewed","valuation_started","valuation_completed","valuation_signup_started",
+  "valuation_signup_completed","valuation_draft_restored","valuation_app_submitted","valuation_ownership_verified",
   "valuation_app_selected","valuation_stripe_connected","valuation_ga4_connected","valuation_saved",
   "valuation_shared","valuation_listing_started","valuation_listing_published"]);
 const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);

@@ -1,58 +1,138 @@
-/* The valuation result and exported card keep Rocket's light palette even when
-   the rest of the site is using its dark appearance. */
-html.dark main.rocket-sell-page {
-  color: #0f172a;
+html.dark .rocket-sell-shell {
+  background-color: #0f0e0c;
+  color: #f8fafc;
 }
 
-html.dark main.rocket-sell-page .bg-white {
+html.dark .rocket-sell-page .bg-white,
+html.dark .rocket-sell-dialog.bg-white {
+  background-color: #171514 !important;
+}
+
+html.dark .rocket-sell-page .bg-sky-100,
+html.dark .rocket-sell-page .bg-neutral-100 {
+  background-color: #243743 !important;
+}
+
+html.dark .rocket-sell-page .bg-neutral-50 {
+  background-color: #24211f !important;
+}
+
+html.dark .rocket-sell-page .bg-slate-50 {
+  background-color: #24211f !important;
+}
+
+html.dark .rocket-sell-page .bg-sky-50 {
+  background-color: #102b3b !important;
+}
+
+html.dark .rocket-sell-page .bg-amber-50 {
+  background-color: #3b2c10 !important;
+}
+
+html.dark .rocket-sell-page .bg-red-50 {
+  background-color: #3b1e22 !important;
+}
+
+html.dark .rocket-sell-page .bg-green-50 {
+  background-color: #163427 !important;
+}
+
+html.dark .rocket-sell-page .text-slate-950,
+html.dark .rocket-sell-page .text-slate-900,
+html.dark .rocket-sell-page .text-neutral-950,
+html.dark .rocket-sell-page .text-neutral-900,
+html.dark .rocket-sell-dialog.text-slate-950,
+html.dark .rocket-sell-dialog .text-slate-950,
+html.dark .rocket-sell-dialog .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+html.dark .rocket-sell-page .text-slate-700,
+html.dark .rocket-sell-page .text-slate-600,
+html.dark .rocket-sell-page .text-neutral-700,
+html.dark .rocket-sell-page .text-neutral-600,
+html.dark .rocket-sell-dialog .text-slate-700,
+html.dark .rocket-sell-dialog .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .rocket-sell-page .text-slate-500,
+html.dark .rocket-sell-dialog .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+html.dark .rocket-sell-page .text-sky-700,
+html.dark .rocket-sell-dialog .text-sky-700 {
+  color: #7dd3fc !important;
+}
+
+html.dark .rocket-sell-page .text-amber-900 {
+  color: #fde68a !important;
+}
+
+html.dark .rocket-sell-page .text-red-700 {
+  color: #fca5a5 !important;
+}
+
+html.dark .rocket-sell-page .text-green-700 {
+  color: #86efac !important;
+}
+
+html.dark .rocket-sell-page .border-slate-200,
+html.dark .rocket-sell-page .border-slate-300,
+html.dark .rocket-sell-page .border-neutral-200,
+html.dark .rocket-sell-page .border-neutral-300,
+html.dark .rocket-sell-dialog .border-slate-200,
+html.dark .rocket-sell-dialog .border-slate-300 {
+  border-color: #414247 !important;
+}
+
+html.dark .rocket-sell-page .border-sky-200 {
+  border-color: #155e75 !important;
+}
+
+html.dark .rocket-sell-page input,
+html.dark .rocket-sell-page select,
+html.dark .rocket-sell-page textarea,
+html.dark .rocket-sell-dialog input,
+html.dark .rocket-sell-dialog select,
+html.dark .rocket-sell-dialog textarea {
+  background-color: #211e1c !important;
+  color: #f8fafc !important;
+  border-color: #52525b !important;
+  color-scheme: dark;
+}
+
+html.dark .rocket-sell-page input::placeholder,
+html.dark .rocket-sell-page textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* The social image itself is deliberately white in both themes. */
+html.dark .rocket-sell-dialog .rocket-sell-share-preview.bg-white {
   background-color: #fff !important;
 }
 
-html.dark main.rocket-sell-page .bg-slate-50 {
-  background-color: #f8fafc !important;
-}
-
-html.dark main.rocket-sell-page .bg-sky-50 {
-  background-color: #f0f9ff !important;
-}
-
-html.dark main.rocket-sell-page .bg-amber-50 {
-  background-color: #fffbeb !important;
-}
-
-html.dark main.rocket-sell-page .text-slate-950,
-html.dark main.rocket-sell-page .text-slate-900 {
+html.dark .rocket-sell-dialog .rocket-sell-share-preview .text-slate-950 {
   color: #0f172a !important;
 }
 
-html.dark main.rocket-sell-page .text-slate-700 {
-  color: #334155 !important;
-}
-
-html.dark main.rocket-sell-page .text-slate-600 {
+html.dark .rocket-sell-dialog .rocket-sell-share-preview .text-slate-600 {
   color: #475569 !important;
 }
 
-html.dark main.rocket-sell-page .text-slate-500 {
-  color: #64748b !important;
-}
-
-html.dark main.rocket-sell-page .text-sky-700 {
+html.dark .rocket-sell-dialog .rocket-sell-share-preview .text-sky-700 {
   color: #0369a1 !important;
 }
 
-html.dark main.rocket-sell-page .text-amber-900 {
-  color: #78350f !important;
+html.dark .rocket-sell-dialog .rocket-sell-share-preview .bg-slate-50 {
+  background-color: #f8fafc !important;
 }
 
-html.dark main.rocket-sell-page .border-slate-200 {
+html.dark .rocket-sell-dialog .rocket-sell-share-preview .bg-sky-50 {
+  background-color: #f0f9ff !important;
+}
+
+html.dark .rocket-sell-dialog .rocket-sell-share-preview .border-slate-200 {
   border-color: #e2e8f0 !important;
-}
-
-html.dark main.rocket-sell-page .border-slate-300 {
-  border-color: #cbd5e1 !important;
-}
-
-html.dark main.rocket-sell-page .border-sky-200 {
-  border-color: #bae6fd !important;
 }
